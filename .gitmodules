@@ -1,0 +1,3 @@
+[submodule "libigl-legacy"]
+	path = libigl-legacy
+	url = https://github.com/libigl/libigl-legacy
