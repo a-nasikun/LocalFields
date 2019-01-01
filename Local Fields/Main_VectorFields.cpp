@@ -20,12 +20,12 @@ int main(int argc, char *argv[])
 
 	/* READING DATA */
 	//string meshFile = "../LocalFields/Models/AIM177_Vase-Lion/177_vase-lion.off";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Cube/Cube_488.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/Plane/squarePlane_regular_784.obj";
 	//string meshFile = "../LocalFields/Models/Plane/squared_small.obj";
