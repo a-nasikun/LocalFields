@@ -2734,20 +2734,20 @@ void VectorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 
 void VectorFields::computeEigenLaplace2D()
 {
-	//computeEigenMatlab(SF2D, MF2D, EigVects, eigVals);
+	computeEigenMatlab(SF2D, MF2D, EigVects, eigVals);
 	cout << "Eigenvalues: " << eigVals << endl << endl;
 	printf("Dimension of eigenvectors %dx%d\n.", EigVects.rows(), EigVects.cols());
 }
 
 void VectorFields::computeEigenLaplace3D()
 {
-	//computeEigenMatlab(SF3D, MF3D, EigVects, eigVals);
+	computeEigenMatlab(SF3D, MF3D, EigVects, eigVals);
 	cout << "Eigenvalues: " << eigVals << endl; 
 }
 
 void VectorFields::computeEigenstructureGradient3D()
 {
-	//computeEigenMatlab(SV, MV, EigVectsDiv, eigValsDiv);
+	computeEigenMatlab(SV, MV, EigVectsDiv, eigValsDiv);
 }
 
 void VectorFields::constructLaplace2D()
@@ -4050,47 +4050,47 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 	}
 }
 
-//void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
-//{
-//	printf("Size of M=%dx%d\n", M.rows(), M.cols());
-//
-//	using namespace matlab::engine;
-//	Engine *ep;
-//	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
-//
-//	const int NNZ_M = M.nonZeros();
-//	int nnzMCounter = 0;
-//
-//	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
-//	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
-//	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
-//
-//	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
-//	srm = mxGetPr(MM);
-//	irm = mxGetIr(MM);
-//	jcm = mxGetJc(MM);
-//
-//	// Getting matrix M
-//	jcm[0] = nnzMCounter;
-//	for (int i = 0; i < M.outerSize(); i++) {
-//		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
-//			srm[nnzMCounter] = it.value();
-//			irm[nnzMCounter] = it.row();
-//			nnzMCounter++;
-//		}
-//		jcm[i + 1] = nnzMCounter;
-//	}
-//
-//	// Start Matlab Engine
-//	ep = engOpen(NULL);
-//	if (!(ep = engOpen(""))) {
-//		fprintf(stderr, "\nCan't start MATLAB engine\n");
-//		cout << "CANNOT START MATLAB " << endl;
-//	}
-//	else {
-//		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
-//	}
-//
-//	engPutVariable(ep, "M", MM);
-//	engEvalString(ep, "spy(M)");
-//}
+void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
+{
+	printf("Size of M=%dx%d\n", M.rows(), M.cols());
+
+	using namespace matlab::engine;
+	Engine *ep;
+	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
+
+	const int NNZ_M = M.nonZeros();
+	int nnzMCounter = 0;
+
+	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
+	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
+	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
+
+	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
+	srm = mxGetPr(MM);
+	irm = mxGetIr(MM);
+	jcm = mxGetJc(MM);
+
+	// Getting matrix M
+	jcm[0] = nnzMCounter;
+	for (int i = 0; i < M.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
+			srm[nnzMCounter] = it.value();
+			irm[nnzMCounter] = it.row();
+			nnzMCounter++;
+		}
+		jcm[i + 1] = nnzMCounter;
+	}
+
+	// Start Matlab Engine
+	ep = engOpen(NULL);
+	if (!(ep = engOpen(""))) {
+		fprintf(stderr, "\nCan't start MATLAB engine\n");
+		cout << "CANNOT START MATLAB " << endl;
+	}
+	else {
+		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
+	}
+
+	engPutVariable(ep, "M", MM);
+	engEvalString(ep, "spy(M)");
+}

@@ -41,11 +41,11 @@
 #include <chrono>
 
 /* [MATLAB] */
-//#include <MatlabDataArray.hpp>
-//#include <MatlabEngine.hpp>
-//#include <tuple>
-//#include "engine.h"
-//#include "mex.h"
+#include <MatlabDataArray.hpp>
+#include <MatlabEngine.hpp>
+#include <tuple>
+#include "engine.h"
+#include "mex.h"
 
 /* [CUDA] */
 #include "cuda_runtime.h"
