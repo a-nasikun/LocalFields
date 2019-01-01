@@ -24,8 +24,9 @@
 #include <Eigen/PardisoSupport>
 //#include <Eigen/PaStiXSupport>
 
-#include "engine.h"
-#include "mex.h"
+// For Matlab
+//#include "engine.h"
+//#include "mex.h"
 
 #include "TestSolver.h"
 
@@ -171,7 +172,7 @@ public:
 	void checkB2DStructure();
 	
 	// VISUALIZATION of TESTING
-	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
+	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 	void visualizeGradient3DArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeGradient2DArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
