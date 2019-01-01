@@ -19,25 +19,21 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	//string meshFile = "../LocalFields/Models/AIM177_Vase-Lion/177_vase-lion.off";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
+	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
-	//string meshFile = "../LocalFields/Models/Cube/Cube_488.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/Plane/squarePlane_regular_784.obj";
-	//string meshFile = "../LocalFields/Models/Plane/squared_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/sphere_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/sphere_half_1321.obj";
+	
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/sphere_tiny.obj";
-	//string meshFile = "../LocalFields/Models/Thorus/Thorus_small.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
-	//string meshFile = "../LocalFields/Models/Monkey/Monkey_967.obj";
+
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
