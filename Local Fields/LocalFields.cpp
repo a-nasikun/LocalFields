@@ -295,22 +295,41 @@ void LocalFields::setupLHSLocalProblemMapped()
 {
 	ALoc.resize(BLoc.rows() + CLoc.rows(), BLoc.cols() + CLoc.rows());
 
-	vector<Eigen::Triplet<double>>	ATriplet;
-
+	vector<Eigen::Triplet<double>>				ATriplet;
+	ATriplet.reserve(10 * BLoc.rows() + CLoc.rows()); // In practice it's only 8, but allocate 10 for safety
+	//vector<Eigen::Triplet<double>>::iterator	it2;
+	//it2 = ATriplet.begin();
+	//it2 = std::prev(ATriplet.end());
 	for (int k = 0; k < BLoc.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BLoc, k); it; ++it) {
 			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+			//it2 = ATriplet.insert(it2, Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+			//it2 = std::next(it2, 1);
+
+			//ATriplet.insert(ATriplet.end(), Eigen::Triplet<double>(it.row(), it.col(), it.value()));
 		}
 	}
 
 	for (int k = 0; k < CLoc.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(CLoc, k); it; ++it) {
+			/* PUSH BACK */
 			ATriplet.push_back(Eigen::Triplet<double>(BLoc.rows() + it.row(), it.col(), it.value()));
 			ATriplet.push_back(Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));
+			
+			/* INSERT with NEXT Iterator*/
+			//it2 = ATriplet.insert(it2, Eigen::Triplet<double>(BLoc.rows() + it.row(), it.col(), it.value()));
+			//it2 = std::next(it2, 1);
+			//it2 = ATriplet.insert(it2, Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));
+			//it2 = std::next(it2, 1);
+
+			/* INSERT at the END */
+			//ATriplet.insert(ATriplet.end(), Eigen::Triplet<double>(BLoc.rows() + it.row(), it.col(), it.value()));
+			//ATriplet.insert(ATriplet.end(), Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));
 		}
 	}
 	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
 
+	//printf("Size of A Triplet = %d\n", ATriplet.size());
 	//cout << "Sample ID [" << id << "]'s LHS is constructed, with " << ALoc.rows() << "x" << ALoc.cols() << "with nonzeros= " << ALoc.nonZeros() << endl;
 
 }
