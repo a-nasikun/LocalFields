@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.6 FATAL_ERROR)
-set(PROJECT_NAME FastSpectrum)
+set(PROJECT_NAME LocalFields)
 
 project (${PROJECT_NAME} LANGUAGES CXX CUDA)
 find_package(CUDA QUIET REQUIRED)
