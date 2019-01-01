@@ -1222,21 +1222,13 @@ void VectorFields::mapSolutionToFullRes()
 
 void VectorFields::obtainUserVectorFields()
 {
-<<<<<<< HEAD
-	computeEigenMatlab(SF2D, MF2D, EigVects, eigVals);
-	cout << "Eigenvalues: " << eigVals << endl << endl;
-	printf("Dimension of eigenvectors %dx%d\n.", EigVects.rows(), EigVects.cols());
-=======
+
 	cout << "Hello there \n" << endl; 
->>>>>>> master
 }
 
 void VectorFields::measureApproxAccuracyL2Norm()
 {
-<<<<<<< HEAD
-	computeEigenMatlab(SF3D, MF3D, EigVects, eigVals);
-	cout << "Eigenvalues: " << eigVals << endl; 
-=======
+
 	Eigen::VectorXd diff = Xf.col(0) - XFullDim.col(0);
 	double xf = Xf.col(0).transpose() * MF2D * Xf.col(0);
 	double L2norm = diff.transpose() * MF2D * diff; 
@@ -1246,15 +1238,11 @@ void VectorFields::measureApproxAccuracyL2Norm()
 	xf = Xf.col(1).transpose() * MF2D * Xf.col(1);
 	L2norm = diff.transpose() * MF2D * diff;
 	printf("Diff 1 = %.10f\n", sqrt(L2norm / xf));
->>>>>>> master
 }
 
 
 void VectorFields::constructLocalElements()
 {
-<<<<<<< HEAD
-	computeEigenMatlab(SV, MV, EigVectsDiv, eigValsDiv);
-=======
 	LocalElements.resize(SubDomain.size() + Boundary.size());
 	GlobToLocMap.resize(F.rows());
 	for (int i = 0; i < F.rows(); i++) GlobToLocMap[i] = -1; 
@@ -1271,7 +1259,6 @@ void VectorFields::constructLocalElements()
 		GlobToLocMap[face] = counter;
 		counter++;
 	}
->>>>>>> master
 }
 
 void VectorFields::constructMatrixBLocal()
