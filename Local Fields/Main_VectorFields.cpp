@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=200, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -19,25 +19,21 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	//string meshFile = "../LocalFields/Models/AIM177_Vase-Lion/177_vase-lion.off";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
+	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
-	//string meshFile = "../LocalFields/Models/Cube/Cube_488.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/Plane/squarePlane_regular_784.obj";
-	//string meshFile = "../LocalFields/Models/Plane/squared_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/sphere_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/sphere_half_1321.obj";
+	
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/sphere_tiny.obj";
-	//string meshFile = "../LocalFields/Models/Thorus/Thorus_small.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
-	//string meshFile = "../LocalFields/Models/Monkey/Monkey_967.obj";
+
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -59,10 +55,6 @@ int main(int argc, char *argv[])
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
 	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-
-	// ID SELECTION
-	// plane, regular => 1130
-	// Armadillo, 1083 => 542, 347, (467), (569)
 
 	/* MATRIX CONSTRUCTIONS */
 	srand(time(NULL));
@@ -109,9 +101,9 @@ int main(int argc, char *argv[])
 
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
 
 	/* =========== Test on EIGENFIELDS-related funcionalities ============= */
 	//vectorFields.testCurlEnergy();
@@ -121,22 +113,21 @@ int main(int argc, char *argv[])
 	//vectorFields.computeEigenstructureGradient3D();
 	//vectorFields.constructLaplace3D();
 
-	//vectorFields.constructFaceAdjacencyMatrix();
 	//vectorFields.constructNeigborRings(randFId);
 	//vectorFields.constructRotationMatrix();
 	//vectorFields.testDijkstraFace();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 
 	/* LOCAL  */
-	vectorFields.visualizeApproxResult(viewer, 0);	
-	vectorFields.visualizeUserConstraints(viewer);
+	//vectorFields.visualizeApproxResult(viewer, 0);	
+	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
-	vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
 	/* FOR TESTING PURPOSE */

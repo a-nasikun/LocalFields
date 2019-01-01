@@ -54,6 +54,7 @@ void VectorFields::constructMassMatrixMVinv()
 
 	MVinv.resize(MV.rows(), MV.cols());
 	vector<Eigen::Triplet<double>> MVTriplet;
+	MVTriplet.reserve(MV.rows());
 
 	/* Getting the sum of every non-zero elements in a row */
 	for (int k = 0; k < MV.outerSize(); ++k) {
@@ -79,6 +80,8 @@ void VectorFields::constructMassMatrixMF2D()
 
 	MF2D.resize(2 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(2 * F.rows());
+
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2;
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, area));
@@ -100,6 +103,7 @@ void VectorFields::constructMassMatrixMF2Dinv()
 
 	MF2Dinv.resize(MF2D.rows(), MF2D.cols());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(MF2D.rows());
 
 	/* Getting the sum of every non-zero elements in a row */
 	for (int k = 0; k < MF2D.outerSize(); ++k) {
@@ -125,6 +129,8 @@ void VectorFields::constructMassMatrixMF3D()
 
 	MF3D.resize(3 * F.rows(), 3 * F.rows());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(2 * F.rows());
+
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2;
 		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, area));
@@ -150,6 +156,7 @@ void VectorFields::constructMassMatrixMF3Dinv()
 
 	MF3Dinv.resize(MF3D.rows(), MF3D.cols());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(3 * F.rows());
 
 	/* Getting the sum of every non-zero elements in a row */
 	for (int k = 0; k < MF3D.outerSize(); ++k) {
@@ -257,6 +264,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3D()
 	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
 	LapCurl3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
@@ -381,6 +389,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
 	LapCurl3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	// For Curl3DPacked
 	Curl3DPacked.resize(3 * F.rows(), 4 * F.cols());
@@ -559,6 +568,7 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit()
 	LapDiv3D.resize(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * 3 * F.rows());
 
 	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
@@ -642,6 +652,7 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 	LapDiv3D.resize(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * 3 * F.rows());
 
 	// For Curl3DPacked
 	Div3DPacked.resize(3 * F.rows(), 4 * F.cols());
@@ -809,7 +820,6 @@ void VectorFields::constructStiffnessMatrixDivPart2D_Direct()
 	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
-
 void VectorFields::constructSF2DPacked() 
 {
 	SF2DPacked.resize(2 * F.rows(), 4 * 2); // 2*|F| by 3 neighbors (+1, the total)
@@ -870,6 +880,7 @@ void VectorFields::rearrangeGradient3D()
 {
 	//MFinv.resize(MF.rows(), MF.cols());
 	vector<Eigen::Triplet<double>> GTriplet;
+	GTriplet.reserve(GF3D.nonZeros());
 	int nRows = F.rows(), nCols = GF3D.cols();
 
 	/* Getting the sum of every non-zero elements in a row */
@@ -895,8 +906,8 @@ void VectorFields::constructRotationMatrix()
 {
 	J.resize(2 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> JTriplet;
+	JTriplet.reserve(2 * 2*F.rows());
 	const double cosT = 0.0, sinT = 1.0;
-	//printf("Cos=%.6f, Sin=%.6f\n", cosT, sinT);
 
 	for (int i = 0; i < F.rows(); i++) {
 		// Constructing the triplet
@@ -922,6 +933,7 @@ void VectorFields::constructMappingMatrix()
 
 	A.resize(3 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(3 * 2 * F.rows());
 	Eigen::Vector3d e, f, n;
 
 	for (int i = 0; i < F.rows(); i++) {
@@ -990,6 +1002,7 @@ void VectorFields::constructConstraints()
 void VectorFields::construct1CentralConstraint()
 {
 	vector<Eigen::Triplet<double>>	CTriplet;
+	CTriplet.reserve(2);
 	const int constNum = 1;
 	//srand(time(NULL));
 	//const int centralID = rand()%F.rows(); 
@@ -1014,6 +1027,7 @@ void VectorFields::constructRingConstraints()
 {
 	// Define necessary data/variables
 	vector<Eigen::Triplet<double>>	CTriplet;
+	
 	const int outerRingID = 9;
 	const int outerBoundaryID = min(outerRingID, (int) NeighRing.size()-3);
 	const int constNum = 1 + (int) NeighRing[outerBoundaryID+1].size() + (int) NeighRing[outerBoundaryID + 2].size();
@@ -1075,6 +1089,8 @@ void VectorFields::constructSpecifiedConstraints()
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * globalConstraints[i] + 0, 1.0));
@@ -1192,6 +1208,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	// HARD CONSTRAINTS
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size() + 2 * 3 * 7 * SingNeighCC.size());
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		// Matrix C
@@ -1298,6 +1315,7 @@ void VectorFields::setupLHSGlobalProblem()
 	A_LHS.resize(B2D.rows() + C.rows(), B2D.cols() + C.rows());
 
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(10 * B2D.rows());
 
 	for (int k = 0; k < B2D.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(B2D, k); it; ++it) {
@@ -1329,6 +1347,8 @@ void VectorFields::setupLHSGlobalProblemMapped()
 	A_LHS.resize(B2D.rows() + C.rows(), B2D.cols() + C.rows());
 
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(10 * B2D.rows());		// It should be #rows x 4 blocks @ 2 elements (8) + #constraints,
+											// but made it 10 for safety + simplicity
 
 	for (int k = 0; k < B2D.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(B2D, k); it; ++it) {
@@ -1686,7 +1706,7 @@ void VectorFields::normalizeBasis()
 			}
 		}
 	vector<Eigen::Triplet<double>> BNTriplet;
-
+	BNTriplet.reserve(BasisTemp.nonZeros());
 
 	// Getting the sum of each pair on each frame AND
 	// Counting the non-zeros per rows
@@ -1844,6 +1864,7 @@ void VectorFields::normalizeBasisAbs()
 	Eigen::MatrixXd normSum(F.rows(), 2);
 	BasisSumN.resize(BasisTemp.rows(), 2);
 	vector<Eigen::Triplet<double>> BNTriplet;
+	BNTriplet.reserve(BasisTemp.nonZeros());
 
 	Eigen::MatrixXd BasisNorm(F.rows(), 2);
 
@@ -1952,6 +1973,8 @@ void VectorFields::getUserConstraintsRandom()
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * userConstraints.size());
+
 	int counter = 0;
 	for (int i = 0; i < userConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 0, 1.0));
@@ -2015,6 +2038,7 @@ void VectorFields::getUserConstraintsSpecified()
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * userConstraints.size());
 	int counter = 0;
 	for (int i = 0; i < userConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 0, 1.0));
@@ -2086,6 +2110,7 @@ void VectorFields::setupLHSUserProblemMapped()
 
 	A_LHSbar.resize(B2Dbar.rows() + Cbar.rows(), B2Dbar.cols() + Cbar.rows());
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(B2Dbar.nonZeros() + 2 * Cbar.nonZeros());
 
 	for (int k = 0; k < B2Dbar.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(B2Dbar, k); it; ++it) {
@@ -2099,8 +2124,7 @@ void VectorFields::setupLHSUserProblemMapped()
 			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2Dbar.cols() + it.row(), it.value()));
 		}
 	}
-	A_LHSbar.setFromTriplets(ATriplet.begin(), ATriplet.end());	
-
+	A_LHSbar.setFromTriplets(ATriplet.begin(), ATriplet.end());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -2210,6 +2234,7 @@ void VectorFields::constructMatrixBLocal()
 {
 	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
 	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(10 * BLoc.rows());
 
 	for (int i = 0; i < LocalElements.size(); i++) {
 		int li = LocalElements[i];
@@ -2243,6 +2268,8 @@ void VectorFields::constructLocalConstraints()
 	// Setting up matrix C
 	CLoc.resize(2 * (1+LocalElements.size()), BLoc.cols());
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * (1 + LocalElements.size()));
+
 	int counter = 0; 
 	CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[sample] + 0, 1.0));
 	CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[sample] + 1, 1.0));
@@ -2277,6 +2304,7 @@ void VectorFields::setupLHSLocalProblem()
 {
 	ALoc.resize(BLoc.rows() + CLoc.rows(), BLoc.cols() + CLoc.rows());	
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(BLoc.nonZeros() + 2 * CLoc.nonZeros());
 
 	for (int k = 0; k < BLoc.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BLoc, k); it; ++it) {
@@ -2914,662 +2942,6 @@ void VectorFields::constructBoundary()
 	cout << "Such subdomain has " << Boundary.size() << " elements in its boundary." << endl;
 }
 
-/* ====================== ITEMS FOR TESTING ONLY ============================*/ 
-void VectorFields::constructArbitraryField()
-{
-	// Construct the Field
-	arbField.resize(V.rows());
-
-	// Random Arbitrary field
-	//for (int i = 0; i < V.rows(); i++) {
-	//	arbField(i) = 0.0;
-	//}
-	//
-	//srand(time(NULL));
-	//int pID = rand() % V.rows();
-	//int pID = 0;
-	//arbField(pID) = 1.0;
-
-	// Dijstra-based Arbitrary Field
-	int pID = *(NeighRing[0].begin());
-	//computeDijkstraDistanceVertex(pID, arbField);
-
-	// Position based arbitrary scalar field
-	for (int i = 0; i < V.rows(); i++) {
-		arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2); 
-	}
-
-}
-
-void VectorFields::computeGradArbField3D()
-{
-	// Compute the Gradient
-	gradArbField3D = GF3D * arbField;
-}
-
-void VectorFields::computeGradArbField2D()
-{
-	gradArbField2D = GF2D * arbField; 
-}
-
-void VectorFields::computeCoGradArbField2D()
-{
-	coGradArbField2D = J * gradArbField2D;
-}
-
-void VectorFields::computeCoGradArbField3D()
-{
-	if (coGradArbField2D.size() == 0) {
-		coGradArbField2D = J * gradArbField2D;
-	}
-	printf("A^T=%dx%d, coGradField=%dx%d\n", A.rows(), A.cols(), coGradArbField2D.rows(), coGradArbField2D.cols());
-	coGradArbField3D = A * coGradArbField2D; 
-}
-
-void VectorFields::computeCurlGradArbField3D()
-{
-	curlGradArbField3D = Curl3D * gradArbField3D;
-
-	//cout << curlGradArbField3D << endl; 
-}
-
-void VectorFields::computeCurlGradArbField2D()
-{
-	curlGradArbField2D = Curl2D * gradArbField2D;
-	cout << "Curl of Gradient field " << curlGradArbField2D << endl; 
-}
-
-void VectorFields::computeCurlCoGradArbField3D()
-{
-	curlCoGradArbField3D = Curl3D * coGradArbField3D;
-}
-
-void VectorFields::computeCurlCoGradArbField2D()
-{
-	curlCoGradArbField2D = Curl2D * coGradArbField2D;
-
-	//cout << "CURL: " << endl << curlCoGradArbField2D << endl; 
-}
-
-void VectorFields::computeDivGradArbField3D()
-{
-	printf("Div=%dx%d, gradField=%dx%d\n", Div3D.rows(), Div3D.cols(), gradArbField3D.rows(), gradArbField3D.cols());
-	divGradArbField3D = Div3D * gradArbField3D;
-
-	//cout << divGradArbField3D << endl;
-}
-
-void VectorFields::computeDivGradArbField2D()
-{
-	printf("Div=%dx%d, gradField=%dx%d\n", Div2D.rows(), Div2D.cols(), gradArbField2D.rows(), gradArbField2D.cols());
-	divGradArbField2D = Div2D * gradArbField2D;
-
-	//cout << divGradArbField2D << endl;
-}
-
-void VectorFields::computeDivCoGradArbField3D()
-{
-	divCoGradArbField3D = Div3D * gradArbField3D;
-}
-
-void VectorFields::computeDivCoGradArbField2D()
-{
-	divCoGradArbField2D = Div2D * coGradArbField2D;
-
-}
-
-void VectorFields::testMappingMatrix()
-{
-	// Should be identity
-	Eigen::SparseMatrix<double> ATA = A.transpose()*A;
-	//visualizeSparseMatrixInMatlab(ATA);
-	cout << "Block of ATA " << endl << ATA.block(5, 5, 5, 5) << endl; 
-
-	// Orthogonality of the matrix
-	Eigen::Vector3d e, f;
-	srand(time(NULL));
-	const int idx = rand()%F.rows();
-	e << A.coeffRef(3 * idx, 2 * idx), A.coeffRef(3 * idx + 1, 2 * idx), A.coeffRef(3 * idx + 2, 2 * idx);
-	f << A.coeffRef(3 * idx, 2 * idx + 1), A.coeffRef(3 * idx + 1, 2 * idx + 1), A.coeffRef(3 * idx + 2, 2 * idx + 1);
-	cout << idx << " => e*f = " << e.dot(f) << endl; 
-}
-
-void VectorFields::testAdjMV() 
-{
-	for (int i = 0; i < V.rows(); i++) {
-		cout << i << ":";
-		for (std::set<int, double>::iterator it = AdjMV[i].begin(); it != AdjMV[i].end(); ++it) {
-			cout << *it << ", ";
-		}
-		cout << endl; 
-	}
-}
-
-void VectorFields::testAdjacencyAndEdges()
-{
-	for (int i = 0; i < F.rows(); i++) {
-	//for (int i = 0; i < min(100, (int)F.rows()); i++) {
-		printf("F(%d) [%d, %d, %d] :=>"
-			"(0) F(%d)[%d, %d, %d] on edges(%d, %d),"
-			"(1) F(%d)[%d, %d, %d] on edges(%d, %d),"
-			"(2) F(%d)[%d, %d, %d] on edges(%d, %d)\n",
-			i, F(i, 0), F(i, 1), F(i, 2),
-			AdjMF3N(i, 0), F(AdjMF3N(i, 0), 0), F(AdjMF3N(i, 0), 1), F(AdjMF3N(i, 0), 2), EdgePairMatrix(i, 0), EdgePairMatrix(i, 1),
-			AdjMF3N(i, 1), F(AdjMF3N(i, 1), 0), F(AdjMF3N(i, 1), 1), F(AdjMF3N(i, 1), 2), EdgePairMatrix(i, 2), EdgePairMatrix(i, 3),
-			AdjMF3N(i, 2), F(AdjMF3N(i, 2), 0), F(AdjMF3N(i, 2), 1), F(AdjMF3N(i, 2), 2), EdgePairMatrix(i, 4), EdgePairMatrix(i, 5));
-	}
-}
-
-void VectorFields::testDijkstraFace()
-{
-	dijkstraFace.resize(F.rows());
-
-	// For single-sourced Dijkstra
-	//const int source = *(NeighRing[0].begin());
-	//computeDijkstraDistanceFace(source, dijkstraFace);
-
-	// For multiple-sourced Dijkstra
-	const int numSource = 5; 
-	Eigen::VectorXi source(numSource);
-	srand(time(NULL));
-	for (int i = 0; i < numSource; i++) {
-		source(i) = rand() % F.rows();
-	}
-	computeDijkstraDistanceFaceMultSource(source, dijkstraFace);
-}
-
-void VectorFields::testCurlEnergy()
-{
-	double gradEnergy = gradArbField3D.transpose() * LapCurl3D * gradArbField3D;
-	cout << "The energy is " << gradEnergy << endl; 
-}
-
-int VectorFields::selectRandomFace()
-{
-	srand(time(NULL));
-	int randID = rand() % F.rows();
-	cout << "Selected face: " << randID << endl; 
-	return randID; 
-}
-
-void VectorFields::checkB2DStructure()
-{
-	for (int i = 0; i < B2D.outerSize(); i++) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(B2D, i); it; ++it) {			
-			if (it.row() == 200 && it.col()%2==0) {
-				cout << "VALUES IN B2D :: N(0)=";
-				cout << it.col() / 2 << ", " << endl;
-			}			
-		}
-	}
-
-	cout << "NEIGHBORS :: N(0)=";
-	for (int i = 0; i < AdjMF3N.cols(); i++) {
-		cout << (AdjMF3N(100, i)) << ", ";
-	}
-	cout << endl; 
-
-	cout << "2RING:: N(0)=";	
-	for (int i : AdjMF2Ring[100]) {
-		cout << i  << ", ";
-	}
-	cout << endl;
-	
-}
-
-/* ====================== VISUALIZATION of TESTING ============================*/
-void VectorFields::visualizeGradient3DArbField(igl::opengl::glfw::Viewer &viewer) 
-{
-	visualize3Dfields(viewer, gradArbField3D, Eigen::RowVector3d(0.9, 0.1, 0.2));
-
-	/* TEST */
-	//Eigen::Vector3d e;
-	//Eigen::VectorXd gradLength(F.rows());
-	//Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	//double totalGrad = 0.0, averageGrad;
-
-	//for (int i = 0; i < F.rows(); i++){
-	//	Eigen::RowVector3d c, g, v1, v2, v3;
-	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-	//	//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]
-	//	g = gradArbField3D.block(3 * i, 0, 3, 1).transpose(); 
-	//	GradVector.row(i) = g;
-	//	gradLength(i) = g.norm();
-	//	totalGrad += gradLength(i);
-	//}
-
-	//averageGrad = totalGrad / (double)F.rows();
-	//double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	//for (int i = 0; i < F.rows(); i++)
-	//{
-	//	Eigen::RowVector3d c;
-	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-	//	viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.9, 0.1, 0.2));
-	//}
-
-	/* END OF TEST */
-
-	//igl::jet(arbField, true, vColor);
-	//igl::parula(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	// Central point
-	//Eigen::RowVectorXd centerV = (V.row(F(*(NeighRing[0].begin()), 0)) + V.row(F(*(NeighRing[0].begin()), 1)) + V.row(F(*(NeighRing[0].begin()), 2))) / 3.0;
-	//viewer.data().add_points(centerV, Eigen::RowVector3d(1.0, 0.1, 0.0));
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeGradient2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());	
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-		//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3*i,2*i,3,2) * gradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
-	}
-
-	//igl::jet(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++) {
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]
-		g = coGradArbField3D.block(3 * i, 0, 3, 1).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 1.0));
-	}
-}
-
-void VectorFields::visualizeCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * coGradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 1.0));
-	}
-
-	//igl::jet(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeCurlGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(curlGradArbField3D, true, vColor);
-	igl::parula(curlGradArbField3D, false, vColor);
-	viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeCurlGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(curlGradArbField3D, true, vColor);
-	igl::parula(curlGradArbField2D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeCurlCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::parula(curlCoGradArbField3D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeCurlCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(curlCoGradArbField2D, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeLaplaceGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * laplaceGradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeLaplaceGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		//g = (A.block(3 * i, 2 * i, 3, 2) * laplaceGradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		g = laplaceGradArbField3D.block(3 * i, 0, 3, 1).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
-
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeDivGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(divGradArbField3D, true, vColor);
-	igl::parula(divGradArbField3D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDivCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(divCoGradArbField2D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDivCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(divCoGradArbField3D, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDivGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(divGradArbField2D, true, vColor);
-	igl::parula(divGradArbField2D, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx){
-	Eigen::VectorXd z(F.rows());
-	Eigen::MatrixXd vColor;
-
-	for (int i = 0; i < F.rows(); i++) {
-		z(i) = 0.0;
-	}
-	z(idx) = 1.0;		
-
-	//for (int i = 0; i < AdjMF3N.cols(); i++) {
-	//	if(i==0)
-	//	z(AdjMF3N(idx, i)) = 0.5; 
-	//}
-
-	for (std::set<int, double>::iterator it = AdjMF2Ring[idx].begin(); it != AdjMF2Ring[idx].end(); ++it) {
-		z(*it) = 0.5f;
-	}
-
-	//for (Eigen::SparseMatrix<double>::InnerIterator it(AjdMF_igl, idx); it; ++it) {
-	//	z(it.row()) = 0.5;
-	//	printf("col=%d, row=%d\n", it.col(), it.row());
-	//}
-
-	// Visualizing the COLOR
-	igl::jet(z, true, vColor);
-	printf("Size of color: %dx%d\n", vColor.rows(), vColor.cols());
-	viewer.data().set_colors(vColor);
-
-	// Visualilzing the EDGE
-	for(int i=0; i<F.cols(); i++){
-		if (i == 0)
-		viewer.data().add_edges(V.row(EdgePairMatrix(idx, 2 * i)), V.row(EdgePairMatrix(idx, 2 * i + 1)), Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-}
-
-void VectorFields::visualizeVertexFacesNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx)
-{
-	Eigen::VectorXd z(F.rows());
-	Eigen::MatrixXd vColor;
-
-	for (int i = 0; i < F.rows(); i++) {
-		z(i) = 0.0;
-	}
-
-	for (std::set<VtoFPair>::iterator it = VFNeighFull[idx].begin(); it != VFNeighFull[idx].end(); ++it) {
-		z(it->fId) = 0.5; 
-	}
-
-	igl::jet(z, true, vColor);
-	viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(idx), Eigen::RowVector3d(0.3, 0.3, 0.9));
-}
-
-void VectorFields::visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer) {
-	// Data for coloring
-	Eigen::VectorXd z(F.rows());
-	Eigen::MatrixXd vColor;
-	for (int i = 0; i < F.rows(); i++) {
-		z(i) = 0.0;
-	}
-
-	Eigen::RowVectorXd centerV = (V.row(F(*(NeighRing[0].begin()), 0)) + V.row(F(*(NeighRing[0].begin()), 1)) + V.row(F(*(NeighRing[0].begin()), 2))) / 3.0;
-	viewer.data().add_points(centerV, Eigen::RowVector3d(1.0, 0.1, 0.0));
-
-	// Iterate through all elements
-	int k = NeighRing.size();
-	double delta = 1.0 / (double)k;
-
-	for (int i = 0; i < k; i++) {
-		//if (i % 2 == 1) continue; 
-		for (std::set<int, double>::iterator it = NeighRing[i].begin(); it != NeighRing[i].end(); ++it) {
-			z(*it) = 1.0 - (double)(i + 1)*delta;
-			if (i % 2 == 1) z(*it) = 2.0 - (double)(i + 1)*delta;
-		}
-	}
-
-	igl::jet(z, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd eigfieldLength(F.rows());
-	Eigen::MatrixXd vColor, EigfieldVector(F.rows(), F.cols());
-	double totalEigfield = 0.0, averageEigfield;
-	const int eigfieldID = 1;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face												// first vertex of each face [NOT GOOD]	
-		//g = (A.block(3 * i, 2 * i, 3, 2) * EigVects.block(2 * i, eigfieldID, 2, 1)).transpose();
-		g = EigVects.block(3 * i, eigfieldID, 3, 1).transpose();
-		EigfieldVector.row(i) = g;
-		eigfieldLength(i) = g.norm();
-		totalEigfield += eigfieldLength(i);
-	}
-
-	averageEigfield = totalEigfield / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageEigfield;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + EigfieldVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 0.2));
-		//viewer.data().add_edges(c, c + EigfieldVector.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-
-	//igl::jet(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeEigFieldsDiv(igl::opengl::glfw::Viewer &viewer, const int &eigID)
-{
-	Eigen::VectorXd eigField = GF3D * EigVectsDiv.col(eigID);
-	visualize3Dfields(viewer, eigField, Eigen::RowVector3d(0.2, 0.1, 0.2));
-}
-void VectorFields::visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID)
-{
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-
-	Eigen::RowVector3d c;
-	c = (V.row(F(faceID, 0)) + V.row(F(faceID, 1)) + V.row(F(faceID, 2))) / 3.0;
-	viewer.data().add_points(c, Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(dijkstraFace, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::VectorXd dom(F.rows());
-	for (int i = 0; i < F.rows(); i++) dom(i) = 0.0; 
-
-	for (std::set<int>::iterator it = SubDomain.begin(); it != SubDomain.end(); ++it) {
-		dom(*it) = 0.5;
-		if (*it == 542) dom(*it) = 1.0;
-	}
-
-	for (std::set<int>::iterator it = Boundary.begin(); it != Boundary.end(); ++it) {
-		dom(*it) = 0.25;
-	}
-	
-	
-	Eigen::MatrixXd vColor;
-	igl::jet(dom, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::RowVector3d color(0.1, 0.1, 0.8);
-	Eigen::RowVector3d c; 
-
-	for (int i : Sample) {
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_points(c, color);
-	}
-}
 
 /* ====================== MESH-RELATED FUNCTIONS ============================*/
 void VectorFields::readMesh(const string &meshFile)
@@ -3621,475 +2993,4 @@ void VectorFields::computeFaceCenter()
 	}
 
 }
-/* ====================== VISUALIZATION ============================*/
-void VectorFields::visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type)
-{
-	Eigen::VectorXd z;
-	Eigen::MatrixXd vColor;
 
-	switch (type)
-	{
-	case MASS_MV:
-		z.resize(V.rows());
-		for (int i = 0; i < V.rows(); i++) {
-			z(i) = MV.coeff(i, i);
-		}
-		break;
-
-	case MASS_MVinv:
-		z.resize(V.rows());
-		for (int i = 0; i < V.rows(); i++) {
-			z(i) = MVinv.coeff(i, i);
-		}
-		break;
-
-	case MASS_MF2D:
-		z.resize(F.rows());
-		for (int i = 0; i < F.rows(); i++) {
-			z(i) = MF2D.coeff(2 * i + 1, 2 * i + 1);
-		}
-		break; 
-
-	case MASS_MF2Dinv:
-		z.resize(F.rows());
-		for (int i = 0; i < F.rows(); i++) {
-			z(i) = MF2Dinv.coeff(2 * i + 1, 2 * i + 1);
-		}
-		break;
-
-	case MASS_MF3D:
-		z.resize(F.rows());
-		for (int i = 0; i < F.rows(); i++) {
-			z(i) = MF3D.coeff(3 * i + 2, 3 * i + 2);
-		}
-		break;
-
-	case MASS_MF3Dinv:
-		z.resize(F.rows());
-		for (int i = 0; i < F.rows(); i++) {
-			z(i) = MF3Dinv.coeff(3 * i + 2, 3 * i + 2);
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	igl::jet(z, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeGradient(igl::opengl::glfw::Viewer &viewer, const GradientToShow &type)
-{
-	switch (type)
-	{
-	case GRAD_2D:
-
-		break;
-
-	case GRAD_3D:
-
-		break;
-
-	default:
-		break;
-	}
-}
-
-void VectorFields::visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer)
-{
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, e, f;
-		e << A.coeffRef(3 * i, 2 * i),		A.coeffRef(3 * i + 1, 2 * i),		A.coeffRef(3 * i + 2, 2 * i);
-		f << A.coeffRef(3 * i, 2 * i + 1),	A.coeffRef(3 * i + 1, 2 * i + 1),	A.coeffRef(3 * i + 2, 2 * i + 1);
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-
-		// First basis
-		viewer.data().add_edges(c, c + avgEdgeLength*e, Eigen::RowVector3d(1.0, 0.1, 0.2));
-		// Second basis
-		viewer.data().add_edges(c, c + avgEdgeLength*f, Eigen::RowVector3d(0.0, 0.1, 0.9));
-	}
-}
-
-void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer)
-{
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-	Eigen::RowVector3d color1 = Eigen::RowVector3d(1.0, 0.1, 0.2);
-	Eigen::RowVector3d color2 = Eigen::RowVector3d(0.0, 0.1, 1.0);
-	visualize2DfieldsScaled(viewer, Xf.col(0), color1);
-	//visualize2Dfields(viewer, Xf.col(0), color1);
-	//visualize2Dfields(viewer, Xf.col(1), color2);	
-}
-
-void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd blockLength(F.rows());
-	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
-	double totalGrad = 0.0, avgField;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * field2D.block(2 * i, 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
-		blockLength(i) = g.norm();
-		totalGrad += blockLength(i);
-	}
-
-
-	avgField = totalGrad / (double)F.rows();
-	//double lengthScale = 1.0*avgEdgeLength / avgField;
-	double lengthScale = 1.0*avgEdgeLength;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;	
-
-		//if (i == *(NeighRing[0].begin())){
-		//	viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale*2.0, Eigen::RowVector3d(0.1, 0.1, 0.2));
-		//	//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale*2.0, Eigen::RowVector3d(1.1, 0.1, 0.2));
-		//}else 
-		{
-			viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
-			//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
-			//viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(1.0, 0.1, 0.2));
-		}
-		
-	}
-}
-
-void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd blockLength(F.rows());
-	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
-	double totalGrad = 0.0, avgField;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * field2D.block(2 * i, 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
-	}
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, color);
-	}
-}
-
-void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
-{
-	Eigen::Vector3d e;
-	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
-
-	for (int i = 0; i < F.rows(); i+=100)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-		c = FC.row(i);
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * field2D.block(2 * i, 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
-	}
-
-	double lengthScale = 1.0*avgEdgeLength;
-	for (int i = 0; i < F.rows(); i+=100)
-	{
-		Eigen::RowVector3d c;
-		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		c = FC.row(i);
-		viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
-	}
-}
-
-void VectorFields::visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
-{
-	Eigen::Vector3d e;
-	Eigen::VectorXd blockLength(F.rows());
-	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
-	double totalGrad = 0.0, avgField;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * field2D.block(2 * i, 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
-		blockLength(i) = g.norm();
-		totalGrad += blockLength(i);
-	}
-
-	avgField = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
-	}
-}
-
-
-
-void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color)
-{
-	// Reset
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-
-	Eigen::Vector3d e;
-	Eigen::VectorXd blockLength(F.rows());
-	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = field3D.block(3 * i, 0, 3, 1).transpose();
-		VectorBlock.row(i) = g;
-		blockLength(i) = g.norm();
-		totalGrad += blockLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
-		viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
-		//viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(1.0, 0.1, 0.2));
-	}
-}
-
-//void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::SparseVector<double> &field2D, const Eigen::RowVector3d &color)
-//{
-//	Eigen::Vector3d e;
-//	Eigen::VectorXd blockLength(F.rows());
-//	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
-//	double totalGrad = 0.0, avgField;
-//
-//	for (int i = 0; i < F.rows(); i++)
-//	{
-//		Eigen::RowVector3d c, g, v1, v2, v3;
-//		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-//																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-//		g = (A.block(3 * i, 2 * i, 3, 2) * field2D.block(2 * i, 0, 2, 1)).transpose();
-//		VectorBlock.row(i) = g;
-//		blockLength(i) = g.norm();
-//		totalGrad += blockLength(i);
-//	}
-//
-//	avgField = totalGrad / (double)F.rows();
-//	double lengthScale = 1.0*avgEdgeLength; // / avgField;
-//
-//	for (int i = 0; i < F.rows(); i++)
-//	{
-//		Eigen::RowVector3d c;
-//		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;	
-//
-//		//if (i == *(NeighRing[0].begin())){
-//		//	viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale*2.0, Eigen::RowVector3d(0.1, 0.1, 0.2));
-//		//	//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale*2.0, Eigen::RowVector3d(1.1, 0.1, 0.2));
-//		//}else 
-//		{
-//			viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
-//			//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
-//			//viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(1.0, 0.1, 0.2));
-//		}
-//		
-//	}
-//}
-
-void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
-{
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-
-	int bId = id; 
-	Eigen::RowVector3d color;
-	if (id % 2 == 0) {
-		color = Eigen::RowVector3d(1.0, 0.1, 0.2);
-	}else {
-		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
-	}
-
-	if (id >= 2 * Sample.size()) {
-		bId = 2 * Sample.size() - 1;
-	}
-
-	printf("Showing the %d BasisTemp field\n", bId);
-	visualize2DfieldsScaled(viewer, BasisTemp.col(bId), color);
-
-	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId/2], 0)) + V.row(F(Sample[bId/2], 1)) + V.row(F(Sample[bId/2], 2))) / 3.0;
-	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
-}
-
-void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, const int &id)
-{
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-
-	int bId = id;
-	Eigen::RowVector3d color;
-	if (id % 2 == 0) {
-		color = Eigen::RowVector3d(1.0, 0.1, 0.2);
-	}
-	else {
-		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
-	}
-
-	if (id >= 2 * Sample.size()) {
-		bId = 2 * Sample.size() - 1;
-	}
-
-	printf("Showing the %d BasisTemp field\n", bId);
-	visualize2DfieldsScaled(viewer, Basis.col(bId), color);
-
-	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
-	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
-}
-
-void VectorFields::visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const int &id)
-{
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-
-	Eigen::RowVector3d color;
-	if(id==0)
-		color = Eigen::RowVector3d(1.0, 0.4, 0.4);
-	else 
-		color = Eigen::RowVector3d(0.0, 0.4, 0.9);
-		
-	visualize2DfieldsScaled(viewer, BasisSum.col(id), color);
-	//visualize2DfieldsScaled(viewer, BasisSumN.col(id), color);
-	//for (int i = 0; i < Sample.size(); i++) {
-	//	Eigen::RowVector3d const c1 = (V.row(F(Sample[i], 0)) + V.row(F(Sample[i], 1)) + V.row(F(Sample[i], 2))) / 3.0;
-	//	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
-	//}
-}
-
-void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer, const int &id)
-{
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-
-	Eigen::RowVector3d color;
-	if (id == 0)
-		color = Eigen::RowVector3d(1.0, 0.4, 0.4);
-	else
-		color = Eigen::RowVector3d(0.0, 0.4, 0.9);
-
-	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl; 
-	//visualize2DfieldsNormalized(viewer, XFullDim.col(id), color);
-	visualize2DfieldsScaled(viewer, XFullDim.col(id), color);
-	//visualize2DfieldsRegular(viewer, XFullDim.col(id), color);
-}
-
-void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
-{
-	for (int i = 0; i < userConstraints.size(); i++) {
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		//c = (V.row(F(userConstraints[i], 0)) + V.row(F(userConstraints[i], 1)) + V.row(F(userConstraints[i], 2))) / 3.0;														// first vertex of each face [NOT GOOD]	
-		c = FC.row(userConstraints[i]);
-		g = (A.block(3 * userConstraints[i], 2 * userConstraints[i], 3, 2) * cBar.block(2 * i, 0, 2, 1)).transpose();		
-		viewer.data().add_edges(c, c + g/g.norm()*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
-		viewer.data().add_points(c, Eigen::RowVector3d(0.1, 0.1, 0.2));
-	}
-}
-
-void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer)
-{
-	for (int i = 0; i < globalConstraints.size(); i++) {
-		Eigen::RowVector3d cc, g, v1, v2, v3;
-		cc = FC.row(globalConstraints[i]);
-		g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
-		viewer.data().add_edges(cc, cc + g / g.norm()*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
-		viewer.data().add_points(cc, Eigen::RowVector3d(0.1, 0.1, 0.2));
-	}
-}
-
-void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::VectorXd z(F.rows());
-	Eigen::MatrixXd vColor;
-
-	for (int i = 0; i < F.rows(); i++) {
-		z(i) = 0.0;
-	}
-
-	for (int id = 0; id < SingNeighCC.size(); id++) {
-		const double diff = 0.6 / (double)SingNeighCC[id].size();
-		for (int i = 0; i < SingNeighCC[id].size(); i++) {
-			z(SingNeighCC[id][i]) = 0.3 + i*diff;
-		}
-	}
-	igl::jet(z, false, vColor);
-	//viewer.data().set_colors(vColor);
-
-	for (int i : singularities) {
-		viewer.data().add_points(V.row(i), Eigen::RowVector3d(0.1, 0.9, 0.3));
-	}
-}
-
-void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
-{
-	printf("Size of M=%dx%d\n", M.rows(), M.cols());
-
-	using namespace matlab::engine;
-	Engine *ep;
-	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
-
-	const int NNZ_M = M.nonZeros();
-	int nnzMCounter = 0;
-
-	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
-	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
-	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
-
-	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
-	srm = mxGetPr(MM);
-	irm = mxGetIr(MM);
-	jcm = mxGetJc(MM);
-
-	// Getting matrix M
-	jcm[0] = nnzMCounter;
-	for (int i = 0; i < M.outerSize(); i++) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
-			srm[nnzMCounter] = it.value();
-			irm[nnzMCounter] = it.row();
-			nnzMCounter++;
-		}
-		jcm[i + 1] = nnzMCounter;
-	}
-
-	// Start Matlab Engine
-	ep = engOpen(NULL);
-	if (!(ep = engOpen(""))) {
-		fprintf(stderr, "\nCan't start MATLAB engine\n");
-		cout << "CANNOT START MATLAB " << endl;
-	}
-	else {
-		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
-	}
-
-	engPutVariable(ep, "M", MM);
-	engEvalString(ep, "spy(M)");
-}

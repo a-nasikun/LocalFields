@@ -48,6 +48,8 @@ add_executable(${PROJECT_NAME}
 	TestSolver.cpp 
 	Utility.h 
 	Utility.cpp
+	Visualization.cpp
+	Testing.cpp
 )
 
 target_link_libraries(
