@@ -437,140 +437,23 @@ void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<doubl
 
 void VectorFields::visualizeGradient3DArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	visualize3Dfields(viewer, gradArbField3D, Eigen::RowVector3d(0.9, 0.1, 0.2));
-
-	/* TEST */
-	//Eigen::Vector3d e;
-	//Eigen::VectorXd gradLength(F.rows());
-	//Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	//double totalGrad = 0.0, averageGrad;
-
-	//for (int i = 0; i < F.rows(); i++){
-	//	Eigen::RowVector3d c, g, v1, v2, v3;
-	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-	//	//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]
-	//	g = gradArbField3D.block(3 * i, 0, 3, 1).transpose(); 
-	//	GradVector.row(i) = g;
-	//	gradLength(i) = g.norm();
-	//	totalGrad += gradLength(i);
-	//}
-
-	//averageGrad = totalGrad / (double)F.rows();
-	//double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	//for (int i = 0; i < F.rows(); i++)
-	//{
-	//	Eigen::RowVector3d c;
-	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-	//	viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.9, 0.1, 0.2));
-	//}
-
-	/* END OF TEST */
-
-	//igl::jet(arbField, true, vColor);
-	//igl::parula(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	// Central point
-	//Eigen::RowVectorXd centerV = (V.row(F(*(NeighRing[0].begin()), 0)) + V.row(F(*(NeighRing[0].begin()), 1)) + V.row(F(*(NeighRing[0].begin()), 2))) / 3.0;
-	//viewer.data().add_points(centerV, Eigen::RowVector3d(1.0, 0.1, 0.0));
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
+	visualize3Dfields(viewer, gradArbField3D, Eigen::RowVector3d(0.9, 0.1, 0.2));	
 }
 
 void VectorFields::visualizeGradient2DArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * gradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
-	}
-
-	//igl::jet(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
+	//visualize2Dfields(viewer, gradArbField2D, Eigen::RowVector3d(1.0, 0.1, 0.2));	
+	visualize2DfieldsScaled(viewer, gradArbField2D, Eigen::RowVector3d(1.0, 0.1, 0.2));
 }
 
 void VectorFields::visualizeCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++) {
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]
-		g = coGradArbField3D.block(3 * i, 0, 3, 1).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 1.0));
-	}
+	visualize3Dfields(viewer, coGradArbField3D, Eigen::RowVector3d(0.2, 0.1, 1.0));
 }
 
 void VectorFields::visualizeCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * coGradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 1.0));
-	}
-
-	//igl::jet(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
+	visualize2Dfields(viewer, coGradArbField2D, Eigen::RowVector3d(0.2, 0.1, 1.0));
 }
 
 void VectorFields::visualizeCurlGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
@@ -607,71 +490,12 @@ void VectorFields::visualizeCurlCoGrad2DArbField(igl::opengl::glfw::Viewer &view
 
 void VectorFields::visualizeLaplaceGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-		g = (A.block(3 * i, 2 * i, 3, 2) * laplaceGradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
+	visualize2DfieldsScaled(viewer, laplaceGradArbField2D, Eigen::RowVector3d(0.2, 0.1, 0.2));
 }
 
 void VectorFields::visualizeLaplaceGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::Vector3d e;
-	Eigen::VectorXd gradLength(F.rows());
-	Eigen::MatrixXd vColor, GradVector(F.rows(), F.cols());
-	double totalGrad = 0.0, averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
-																			//c = V.row(F(i, 0));													// first vertex of each face [NOT GOOD]	
-																			//g = (A.block(3 * i, 2 * i, 3, 2) * laplaceGradArbField2D.block(2 * i, 0, 2, 1)).transpose();
-		g = laplaceGradArbField3D.block(3 * i, 0, 3, 1).transpose();
-		GradVector.row(i) = g;
-		gradLength(i) = g.norm();
-		totalGrad += gradLength(i);
-	}
-
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + GradVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
-
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
+	visualize3Dfields(viewer, laplaceGradArbField3D, Eigen::RowVector3d(0.2, 0.1, 0.2));
 }
 
 void VectorFields::visualizeDivGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
@@ -794,38 +618,8 @@ void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::Vector3d e;
-	Eigen::VectorXd eigfieldLength(F.rows());
-	Eigen::MatrixXd vColor, EigfieldVector(F.rows(), F.cols());
-	double totalEigfield = 0.0, averageEigfield;
 	const int eigfieldID = 1;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c, g, v1, v2, v3;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face												// first vertex of each face [NOT GOOD]	
-																			//g = (A.block(3 * i, 2 * i, 3, 2) * EigVects.block(2 * i, eigfieldID, 2, 1)).transpose();
-		g = EigVects.block(3 * i, eigfieldID, 3, 1).transpose();
-		EigfieldVector.row(i) = g;
-		eigfieldLength(i) = g.norm();
-		totalEigfield += eigfieldLength(i);
-	}
-
-	averageEigfield = totalEigfield / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageEigfield;
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_edges(c, c + EigfieldVector.row(i)*lengthScale, Eigen::RowVector3d(0.2, 0.1, 0.2));
-		//viewer.data().add_edges(c, c + EigfieldVector.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(0.2, 0.1, 0.2));
-	}
-
-	//igl::jet(arbField, true, vColor);
-	//viewer.data().set_colors(vColor);
-
-	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
+	visualize3Dfields(viewer, EigVects.col(eigfieldID), Eigen::RowVector3d(0.2, 0.1, 0.2));	
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
