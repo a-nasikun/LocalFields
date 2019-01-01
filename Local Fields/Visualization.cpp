@@ -388,6 +388,8 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 	}
 }
 
+/* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
+
 void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
 {
 	printf("Size of M=%dx%d\n", M.rows(), M.cols());
@@ -433,7 +435,6 @@ void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<doubl
 	engEvalString(ep, "spy(M)");
 }
 
-/* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
 void VectorFields::visualizeGradient3DArbField(igl::opengl::glfw::Viewer &viewer)
 {
 	visualize3Dfields(viewer, gradArbField3D, Eigen::RowVector3d(0.9, 0.1, 0.2));
