@@ -1896,14 +1896,13 @@ void VectorFields::setupUserBasis()
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Construting Local Basis...\n";
+	cout << "> Constructing Local Basis...";
 
 	B2Dbar = Basis.transpose() * B2D * Basis; 
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
-
 	printf(".... Local Basis = %dx%d\n", B2Dbar.rows(), B2Dbar.cols());
 }
 void VectorFields::getUserConstraints()
