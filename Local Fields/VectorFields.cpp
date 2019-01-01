@@ -310,50 +310,6 @@ void VectorFields::constructStiffnessMatrixCurlPart3D()
 	}
 	LapCurl3D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
 
-	/*
-	Eigen::SparseMatrix<double> LapCurl3D_temp(3 * F.rows(), 3 * F.rows());
-	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
-	LapCurl3D.reserve(3 * F.rows() * 4);
-	vector<Eigen::Triplet<double>> LTriplet;
-
-	t1 = chrono::high_resolution_clock::now();
-	for (int i = 0; i < F.rows(); i++){
-		double area1 = doubleArea(i);
-		for (int j = 0; j < F.cols(); j++) {
-			int				neigh = AdjMF3N(i, j);
-
-			if (neigh > i) {
-				double				area2	= doubleArea(neigh);
-				double				area	= area1 + area2;
-				Eigen::VectorXd		edge	= V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
-				Eigen::MatrixXd		block	= (-3.0 / area) * edge * edge.transpose();
-
-				// ITS BLOCK
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * neigh + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * neigh + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * neigh + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
-
-				// THE BLOCK that's the Transpose of this BLOCK
-				block.transposeInPlace();
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
-			}
-		}
-	}		
-	LapCurl3D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());	*/
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	printf("To set-up non-diagonal elements =%.4f seconds\n", duration.count());
