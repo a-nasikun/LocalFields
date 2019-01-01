@@ -56,10 +56,6 @@ int main(int argc, char *argv[])
 	viewer.data().set_mesh(V, F);
 	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
 
-	// ID SELECTION
-	// plane, regular => 1130
-	// Armadillo, 1083 => 542, 347, (467), (569)
-
 	/* MATRIX CONSTRUCTIONS */
 	srand(time(NULL));
 	//int randVId = rand() % V.rows(); 
@@ -117,16 +113,15 @@ int main(int argc, char *argv[])
 	//vectorFields.computeEigenstructureGradient3D();
 	//vectorFields.constructLaplace3D();
 
-	//vectorFields.constructFaceAdjacencyMatrix();
 	//vectorFields.constructNeigborRings(randFId);
 	//vectorFields.constructRotationMatrix();
 	//vectorFields.testDijkstraFace();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer, 0);	

@@ -204,16 +204,11 @@ public:
 	void visualizeGradient(igl::opengl::glfw::Viewer &viewer, const GradientToShow &type);
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
 	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
-	//void visualizeApproximatedLocalFields(igl::opengl::glfw::Viewer &viewer);
-	//void visualizeApproxMultLocalFields(igl::opengl::glfw::Viewer &viewer);
-	//void visualizeApproxCombinedLocalFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
-	//void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::RowVector3d &color, const Eigen::SparseVector<double> &field2D);
-	//void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::SparseVector<double> &field2D, const Eigen::RowVector3d &color);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const int &id);
