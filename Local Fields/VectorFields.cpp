@@ -54,6 +54,7 @@ void VectorFields::constructMassMatrixMVinv()
 
 	MVinv.resize(MV.rows(), MV.cols());
 	vector<Eigen::Triplet<double>> MVTriplet;
+	MVTriplet.reserve(MV.rows());
 
 	/* Getting the sum of every non-zero elements in a row */
 	for (int k = 0; k < MV.outerSize(); ++k) {
@@ -79,6 +80,8 @@ void VectorFields::constructMassMatrixMF2D()
 
 	MF2D.resize(2 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(2 * F.rows());
+
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2;
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, area));
@@ -100,6 +103,7 @@ void VectorFields::constructMassMatrixMF2Dinv()
 
 	MF2Dinv.resize(MF2D.rows(), MF2D.cols());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(MF2D.rows());
 
 	/* Getting the sum of every non-zero elements in a row */
 	for (int k = 0; k < MF2D.outerSize(); ++k) {
@@ -125,6 +129,8 @@ void VectorFields::constructMassMatrixMF3D()
 
 	MF3D.resize(3 * F.rows(), 3 * F.rows());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(2 * F.rows());
+
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2;
 		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, area));
@@ -150,6 +156,7 @@ void VectorFields::constructMassMatrixMF3Dinv()
 
 	MF3Dinv.resize(MF3D.rows(), MF3D.cols());
 	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(3 * F.rows());
 
 	/* Getting the sum of every non-zero elements in a row */
 	for (int k = 0; k < MF3D.outerSize(); ++k) {
@@ -257,6 +264,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3D()
 	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
 	LapCurl3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
@@ -381,6 +389,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
 	LapCurl3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	// For Curl3DPacked
 	Curl3DPacked.resize(3 * F.rows(), 4 * F.cols());
@@ -559,6 +568,7 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit()
 	LapDiv3D.resize(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * 3 * F.rows());
 
 	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
@@ -642,6 +652,7 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 	LapDiv3D.resize(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
+	LTriplet.reserve(12 * 3 * F.rows());
 
 	// For Curl3DPacked
 	Div3DPacked.resize(3 * F.rows(), 4 * F.cols());
@@ -809,7 +820,6 @@ void VectorFields::constructStiffnessMatrixDivPart2D_Direct()
 	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
-
 void VectorFields::constructSF2DPacked() 
 {
 	SF2DPacked.resize(2 * F.rows(), 4 * 2); // 2*|F| by 3 neighbors (+1, the total)
@@ -870,6 +880,7 @@ void VectorFields::rearrangeGradient3D()
 {
 	//MFinv.resize(MF.rows(), MF.cols());
 	vector<Eigen::Triplet<double>> GTriplet;
+	GTriplet.reserve(GF3D.nonZeros());
 	int nRows = F.rows(), nCols = GF3D.cols();
 
 	/* Getting the sum of every non-zero elements in a row */
@@ -895,8 +906,8 @@ void VectorFields::constructRotationMatrix()
 {
 	J.resize(2 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> JTriplet;
+	JTriplet.reserve(2 * 2*F.rows());
 	const double cosT = 0.0, sinT = 1.0;
-	//printf("Cos=%.6f, Sin=%.6f\n", cosT, sinT);
 
 	for (int i = 0; i < F.rows(); i++) {
 		// Constructing the triplet
@@ -922,6 +933,7 @@ void VectorFields::constructMappingMatrix()
 
 	A.resize(3 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(3 * 2 * F.rows());
 	Eigen::Vector3d e, f, n;
 
 	for (int i = 0; i < F.rows(); i++) {
@@ -990,6 +1002,7 @@ void VectorFields::constructConstraints()
 void VectorFields::construct1CentralConstraint()
 {
 	vector<Eigen::Triplet<double>>	CTriplet;
+	CTriplet.reserve(2);
 	const int constNum = 1;
 	//srand(time(NULL));
 	//const int centralID = rand()%F.rows(); 
@@ -1014,6 +1027,7 @@ void VectorFields::constructRingConstraints()
 {
 	// Define necessary data/variables
 	vector<Eigen::Triplet<double>>	CTriplet;
+	
 	const int outerRingID = 9;
 	const int outerBoundaryID = min(outerRingID, (int) NeighRing.size()-3);
 	const int constNum = 1 + (int) NeighRing[outerBoundaryID+1].size() + (int) NeighRing[outerBoundaryID + 2].size();
@@ -1075,6 +1089,8 @@ void VectorFields::constructSpecifiedConstraints()
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * globalConstraints[i] + 0, 1.0));
@@ -1192,6 +1208,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	// HARD CONSTRAINTS
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size() + 2 * 3 * 7 * SingNeighCC.size());
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		// Matrix C
@@ -1298,6 +1315,7 @@ void VectorFields::setupLHSGlobalProblem()
 	A_LHS.resize(B2D.rows() + C.rows(), B2D.cols() + C.rows());
 
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(10 * B2D.rows());
 
 	for (int k = 0; k < B2D.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(B2D, k); it; ++it) {
@@ -1329,6 +1347,8 @@ void VectorFields::setupLHSGlobalProblemMapped()
 	A_LHS.resize(B2D.rows() + C.rows(), B2D.cols() + C.rows());
 
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(10 * B2D.rows());		// It should be #rows x 4 blocks @ 2 elements (8) + #constraints,
+											// but made it 10 for safety + simplicity
 
 	for (int k = 0; k < B2D.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(B2D, k); it; ++it) {
@@ -1686,7 +1706,7 @@ void VectorFields::normalizeBasis()
 			}
 		}
 	vector<Eigen::Triplet<double>> BNTriplet;
-
+	BNTriplet.reserve(BasisTemp.nonZeros());
 
 	// Getting the sum of each pair on each frame AND
 	// Counting the non-zeros per rows
@@ -1844,6 +1864,7 @@ void VectorFields::normalizeBasisAbs()
 	Eigen::MatrixXd normSum(F.rows(), 2);
 	BasisSumN.resize(BasisTemp.rows(), 2);
 	vector<Eigen::Triplet<double>> BNTriplet;
+	BNTriplet.reserve(BasisTemp.nonZeros());
 
 	Eigen::MatrixXd BasisNorm(F.rows(), 2);
 
@@ -1952,6 +1973,8 @@ void VectorFields::getUserConstraintsRandom()
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * userConstraints.size());
+
 	int counter = 0;
 	for (int i = 0; i < userConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 0, 1.0));
@@ -2015,6 +2038,7 @@ void VectorFields::getUserConstraintsSpecified()
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * userConstraints.size());
 	int counter = 0;
 	for (int i = 0; i < userConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 0, 1.0));
@@ -2086,6 +2110,7 @@ void VectorFields::setupLHSUserProblemMapped()
 
 	A_LHSbar.resize(B2Dbar.rows() + Cbar.rows(), B2Dbar.cols() + Cbar.rows());
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(B2Dbar.nonZeros() + 2 * Cbar.nonZeros());
 
 	for (int k = 0; k < B2Dbar.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(B2Dbar, k); it; ++it) {
@@ -2099,8 +2124,7 @@ void VectorFields::setupLHSUserProblemMapped()
 			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2Dbar.cols() + it.row(), it.value()));
 		}
 	}
-	A_LHSbar.setFromTriplets(ATriplet.begin(), ATriplet.end());	
-
+	A_LHSbar.setFromTriplets(ATriplet.begin(), ATriplet.end());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -2210,6 +2234,7 @@ void VectorFields::constructMatrixBLocal()
 {
 	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
 	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(10 * BLoc.rows());
 
 	for (int i = 0; i < LocalElements.size(); i++) {
 		int li = LocalElements[i];
@@ -2243,6 +2268,8 @@ void VectorFields::constructLocalConstraints()
 	// Setting up matrix C
 	CLoc.resize(2 * (1+LocalElements.size()), BLoc.cols());
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * (1 + LocalElements.size()));
+
 	int counter = 0; 
 	CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[sample] + 0, 1.0));
 	CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[sample] + 1, 1.0));
@@ -2277,6 +2304,7 @@ void VectorFields::setupLHSLocalProblem()
 {
 	ALoc.resize(BLoc.rows() + CLoc.rows(), BLoc.cols() + CLoc.rows());	
 	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(BLoc.nonZeros() + 2 * CLoc.nonZeros());
 
 	for (int k = 0; k < BLoc.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BLoc, k); it; ++it) {
