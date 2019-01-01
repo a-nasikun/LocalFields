@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
 	Eigen::MatrixXd					V;
 	Eigen::MatrixXi					F, E;
 
+	// Hell there this is main function.
+
 	/* READING DATA */
 	//string meshFile = "../LocalFields/Models/AIM177_Vase-Lion/177_vase-lion.off";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";

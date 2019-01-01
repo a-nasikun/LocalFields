@@ -16,9 +16,6 @@ set (GLFW_INCLUDE_DIR "" CACHE PATH "Include directory of GLFW")
 set (GLFW_LIBRARY_DIR "" CACHE PATH "Library directory of GLFW")
 set (GLAD_INCLUDE_DIR "" CACHE PATH "Include directory of GLAD")
 set (GLAD_LIBRARY_DIR "" CACHE PATH "Library directory of GLAD")
-#set (MATLAB_LIBS_DIR "" CACHE PATH "Matlab static library dirs (e.g. R2018a/extern/lib/win64/microsoft)")
-#set (MATLAB_INCLUDE_DIR "" CACHE PATH "Matlab include dir ((e.g. R2018a/extern/include)")
-
 
 #Defining the system varibles where the include files reside
 include_directories(${IGL_DIR}/include/
