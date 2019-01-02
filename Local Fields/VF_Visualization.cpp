@@ -582,44 +582,12 @@ void VectorFields::visualizeVertexFacesNeighbors(igl::opengl::glfw::Viewer &view
 	viewer.data().add_points(V.row(idx), Eigen::RowVector3d(0.3, 0.3, 0.9));
 }
 
-void VectorFields::visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer) {
-	// Data for coloring
-	Eigen::VectorXd z(F.rows());
-	Eigen::MatrixXd vColor;
-	for (int i = 0; i < F.rows(); i++) {
-		z(i) = 0.0;
-	}
-
-	Eigen::RowVectorXd centerV = (V.row(F(*(NeighRing[0].begin()), 0)) + V.row(F(*(NeighRing[0].begin()), 1)) + V.row(F(*(NeighRing[0].begin()), 2))) / 3.0;
-	viewer.data().add_points(centerV, Eigen::RowVector3d(1.0, 0.1, 0.0));
-
-	// Iterate through all elements
-	int k = NeighRing.size();
-	double delta = 1.0 / (double)k;
-
-	for (int i = 0; i < k; i++) {
-		//if (i % 2 == 1) continue; 
-		for (std::set<int, double>::iterator it = NeighRing[i].begin(); it != NeighRing[i].end(); ++it) {
-			z(*it) = 1.0 - (double)(i + 1)*delta;
-			if (i % 2 == 1) z(*it) = 2.0 - (double)(i + 1)*delta;
-		}
-	}
-
-	igl::jet(z, true, vColor);
-	viewer.data().set_colors(vColor);
-}
 
 void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
 {
 	Eigen::MatrixXd vColor;
 	igl::jet(arbField, true, vColor);
 	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer)
-{
-	const int eigfieldID = 1;
-	visualize3Dfields(viewer, EigVects.col(eigfieldID), Eigen::RowVector3d(0.2, 0.1, 0.2));	
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
@@ -629,11 +597,6 @@ void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
 	viewer.data().set_colors(vColor);
 }
 
-void VectorFields::visualizeEigFieldsDiv(igl::opengl::glfw::Viewer &viewer, const int &eigID)
-{
-	Eigen::VectorXd eigField = GF3D * EigVectsDiv.col(eigID);
-	visualize3Dfields(viewer, eigField, Eigen::RowVector3d(0.2, 0.1, 0.2));
-}
 void VectorFields::visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID)
 {
 	viewer.data().clear();

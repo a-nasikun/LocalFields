@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=200, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=500, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 	//int randVId = rand() % V.rows(); 
 	int randFId = rand() % F.rows();
-	vectorFields.constructNeigborRings(0);
+	//vectorFields.constructNeigborRings(0);
 	vectorFields.constructMassMatrices();
 
 	//vectorFields.constructRotationMatrix();
