@@ -136,12 +136,6 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 
 }
 
-void VectorFields::constructFaceAdjacencyMatrix_IGL()
-{
-	igl::adjacency_matrix(F, AjdMF_igl);
-	//visualizeSparseMatrixInMatlab(AjdMF_igl);
-}
-
 void VectorFields::constructVertexAdjacencyMatrix()
 {
 	// For Timing
@@ -170,51 +164,6 @@ void VectorFields::constructVertexAdjacencyMatrix()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
-}
-
-void VectorFields::constructNeigborRings(const int &idx)
-{
-	// Define unvisited triangles
-	set<int> VisitedTrianglesSet;
-
-	// Initialize the neighboring ring
-	NeighRing.clear();
-	set<int> oneRing;
-	oneRing.insert(idx);
-	VisitedTrianglesSet.insert(idx);
-	NeighRing.push_back(oneRing);
-
-	oneRing.clear();
-	for (std::set<int, double>::iterator it = AdjMF2Ring[idx].begin(); it != AdjMF2Ring[idx].end(); ++it) {
-		oneRing.insert(*it);
-		VisitedTrianglesSet.insert(*it);
-	}
-	NeighRing.push_back(oneRing);
-
-	// Constructing the rings via "set" data structure
-	while (VisitedTrianglesSet.size()<F.rows())
-	{
-		int k = NeighRing.size() - 1;
-		oneRing.clear();
-		for (std::set<int, double>::iterator jt = NeighRing[k].begin(); jt != NeighRing[k].end(); ++jt) {
-			for (std::set<int, double>::iterator kt = AdjMF2Ring[*jt].begin(); kt != AdjMF2Ring[*jt].end(); ++kt) {
-				if (VisitedTrianglesSet.find(*kt) == VisitedTrianglesSet.end()) {
-					oneRing.insert(*kt);
-					VisitedTrianglesSet.insert(*kt);
-				}
-			}
-		}
-		NeighRing.push_back(oneRing);
-	}
-
-	// Displaying the list of the rings
-	/*for (int i = 0; i < NeighRing.size(); i++) {
-	printf("Ring %d: ", i);
-	for (std::set<int, double>::iterator it = NeighRing[i].begin(); it != NeighRing[i].end(); ++it) {
-	printf("%d =>", *it);
-	}
-	printf("\n");
-	}*/
 }
 
 void VectorFields::computeDijkstraDistanceVertex(const int &source, Eigen::VectorXd &D)
@@ -386,19 +335,6 @@ void VectorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 			}
 		}
 	} while (!DistPQueue.empty());
-}
-
-void VectorFields::computeEigenLaplace2D()
-{
-	//computeEigenMatlab(SF2D, MF2D, EigVects, eigVals);
-	cout << "Eigenvalues: " << eigVals << endl << endl;
-	printf("Dimension of eigenvectors %dx%d\n.", EigVects.rows(), EigVects.cols());
-}
-
-void VectorFields::computeEigenLaplace3D()
-{
-	//computeEigenMatlab(SF3D, MF3D, EigVects, eigVals);
-	cout << "Eigenvalues: " << eigVals << endl;
 }
 
 void VectorFields::computeEigenstructureGradient3D()
@@ -663,7 +599,6 @@ void VectorFields::constructStiffnessMatrices()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing stiffness matrices...\n";
 
-	//constructStiffnessMatrixSV();
 	constructStiffnessMatrixSF3D();
 	constructStiffnessMatrixSF2D();
 
@@ -671,14 +606,6 @@ void VectorFields::constructStiffnessMatrices()
 	duration = t2 - t1;
 	cout << "..in total of" << duration.count() << " seconds" << endl;
 
-}
-
-void VectorFields::constructStiffnessMatrixSV()
-{
-	igl::cotmatrix(V, F, SV);
-	printf("Size of SV=%dx%d\n", SV.rows(), SV.cols());
-	//cout << SV.block(0, 0, 5, 5) << endl;
-	//cout << SV << endl;
 }
 
 void VectorFields::constructStiffnessMatrixSF2D()

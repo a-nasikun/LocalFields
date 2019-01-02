@@ -48,15 +48,11 @@ public:
 	void computeFaceNormal();
 	void constructFaceAdjacency2RingMatrix();
 	void constructFaceAdjacency3NMatrix();
-	void constructFaceAdjacencyMatrix_IGL();
 	void constructVertexAdjacencyMatrix();
-	void constructNeigborRings(const int &idx);
 	void computeDijkstraDistanceVertex(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceMultSource(const Eigen::VectorXi &source, Eigen::VectorXd &D);
-	void computeEigenLaplace2D();
-	void computeEigenLaplace3D();
 	void computeEigenstructureGradient3D();
 	//void computeEigenstructureGradient2D();
 	void constructLaplace2D();
@@ -75,7 +71,6 @@ public:
 	void constructMassMatrixMF3D();
 	void constructMassMatrixMF3Dinv();
 	void constructStiffnessMatrices();
-	void constructStiffnessMatrixSV();
 	void constructStiffnessMatrixSF2D();
 	void constructStiffnessMatrixSF3D();
 	void constructStiffnessMatrixCurlPart3D();
@@ -108,11 +103,8 @@ public:
 	void constructSingularities();
 	void constructSpecifiedConstraintsWithSingularities();
 	void setupGlobalProblem();
-	void setupRHSGlobalProblem();
 	void setupRHSGlobalProblemMapped();
-	void setupLHSGlobalProblem();
 	void setupLHSGlobalProblemMapped();
-	void solveGlobalSystem();
 	void solveGlobalSystemMappedLDLT();
 
 	// LOCAL SYSTEM
@@ -124,7 +116,7 @@ public:
 	void normalizeBasis();
 	void normalizeBasisAbs();
 
-	// GLOBAL SYSTEM BASED ON BASIS
+	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
 	void setAndSolveUserSystem();
 	void setupUserBasis();
 	void getUserConstraints();
@@ -139,15 +131,6 @@ public:
 
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
-
-	void constructSubdomainSingle(const int &source);
-	void constructBoundary();
-	void constructLocalElements();
-	void constructMatrixBLocal();
-	void constructLocalConstraints();
-	void setupRHSLocalProblem();
-	void setupLHSLocalProblem();
-	void solveLocalSystem();
 
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
@@ -193,7 +176,6 @@ public:
 	void visualizeDijkstra(igl::opengl::glfw::Viewer &viewer);
 	void visualizeEigenfields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeEigFieldsDiv(igl::opengl::glfw::Viewer &viewer, const int &eigID);
 	void visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID);
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
@@ -218,22 +200,21 @@ public:
 	void visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer);
 
 protected:
-	Eigen::MatrixXd					V, FC, NF, EigVects, EigVectsDiv, EigFieldsDiv3D, EigFieldsDiv2D, Xf, c, cBar, b, bBar, g, h;
-	Eigen::MatrixXd					XfLoc, XfLocSum, XfNorm, BasisSum, BasisSumN, cLoc, bLoc, XLowDim, XFullDim, Curl3DPacked, Div3DPacked, SF2DPacked;
+	Eigen::MatrixXd					V, FC, NF, Xf, c, cBar, b, bBar, g, h;
+	Eigen::MatrixXd					XfLoc, XfLocSum, XfNorm, BasisSum, BasisSumN, XLowDim, XFullDim, Curl3DPacked, Div3DPacked, SF2DPacked;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, BasisTemp, Basis, SV, SF2D, SF3D, L2D, L3D, B2D, B2Dbar, B3D, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
-	Eigen::SparseMatrix<double>		BLoc, ALoc, CLoc; 
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J, C, Cbar, A_LHSbar, A_LHS, AjdMF_igl;
-	Eigen::VectorXd					doubleArea, arbField, gradArbField3D, gradArbField2D, eigVals, eigValsDiv, lambda, vFields;
+	Eigen::VectorXd					doubleArea, arbField, gradArbField3D, gradArbField2D, lambda, vFields;
 	Eigen::VectorXd					curlGradArbField3D, curlGradArbField2D, curlCoGradArbField3D, curlCoGradArbField2D;
 	Eigen::VectorXd					divGradArbField3D, divGradArbField2D, coGradArbField3D, coGradArbField2D;
 	Eigen::VectorXd					divCoGradArbField3D, divCoGradArbField2D, vEstUser, vEst, gbar, hbar,pbar;
-	vector<set<int>>				AdjMV, AdjMF2Ring, NeighRing/*, AdjMF3N_temp*/;
+	vector<set<int>>				AdjMV, AdjMF2Ring, NeighRing;
 	vector<set<VtoFPair>>			VFNeighbors, VFNeighFull;
 	vector<set<Edge_VPair>>			EdgePairsList; 
 	vector<set<FacePair>>			AdjMF3N_temp;
-	vector<int>						LocalElements, LocToGlobMap, GlobToLocMap, Sample, userConstraints, globalConstraints;
-	vector<int>						neighCCW, singularities;
+	vector<int>						LocalElements, Sample, userConstraints, globalConstraints;
+	vector<int>						singularities;
 	vector<chrono::duration<double>>durations;
 	vector<vector<int>>				SingNeighCC;
 	set<int>						SubDomain, Boundary; 
