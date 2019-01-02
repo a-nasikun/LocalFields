@@ -3,7 +3,6 @@
 #define VECTOR_FIELDS_H
 
 #include "Utility.h"
-//#include "Basis.h"
 #include "EigenSolver.h"
 #include "LocalFields.h"
 
@@ -15,6 +14,7 @@
 #include <igl/adjacency_matrix.h>
 #include <igl/per_face_normals.h>
 #include <igl/per_vertex_normals.h>
+#include <igl/opengl/glfw/Viewer.h>
 
 #include <igl/jet.h>
 #include <igl/parula.h>

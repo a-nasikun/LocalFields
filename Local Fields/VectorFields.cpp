@@ -1,8 +1,6 @@
 #include "VectorFields.h"
 
 /* ====================== SETTING UP MATRICES ============================*/
-
-
 void VectorFields::constructConstraints()
 {
 	// For Timing
@@ -274,10 +272,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 
 	C.resize(2 * (globalConstraints.size()+numSingConstraints), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
-	//printf("Cp=%dx%d\n", C.rows(), C.cols());
-
-	// Setting up vector c (There are 2 vector c)	
-	
+	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
 }
 
 void VectorFields::setupGlobalProblem()
