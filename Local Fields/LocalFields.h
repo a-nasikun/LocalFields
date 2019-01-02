@@ -4,6 +4,7 @@
 
 #include <set>
 #include <vector>
+#include <queue>
 
 #include <Eigen/Sparse>
 #include <Eigen/PardisoSupport>
