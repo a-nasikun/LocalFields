@@ -11,10 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedConstraints();
+	constructSpecifiedConstraints();
 	
-	constructSingularities();
-	constructSpecifiedConstraintsWithSingularities();
+	//constructSingularities();
+	//constructSpecifiedConstraintsWithSingularities();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -84,7 +84,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 2;
+	const int numConstraints = 10;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -96,9 +96,11 @@ void VectorFields::constructSpecifiedConstraints()
 		D(i) = numeric_limits<double>::infinity();
 	}
 
-	constraints.insert(0);
-	int curPoint = 0;
+	srand(time(NULL));
+	int curPoint = rand() % F.rows();
+	constraints.insert(curPoint);
 
+	// Creating constraints using farthest point sampling
 	do {
 		Eigen::VectorXi::Index maxIndex;
 		computeDijkstraDistanceFaceForSampling(curPoint, D);
@@ -202,7 +204,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	constraints.insert(0);
 	int curPoint = 0;
 
-	// Creating random constraints
+	// Creating constraints using farthest point sampling
 	do {
 		Eigen::VectorXi::Index maxIndex;
 		computeDijkstraDistanceFaceForSampling(curPoint, D);

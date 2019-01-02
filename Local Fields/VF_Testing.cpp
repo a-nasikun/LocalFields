@@ -27,83 +27,6 @@ void VectorFields::constructArbitraryField()
 
 }
 
-void VectorFields::computeGradArbField3D()
-{
-	// Compute the Gradient
-	gradArbField3D = GF3D * arbField;
-}
-
-void VectorFields::computeGradArbField2D()
-{
-	gradArbField2D = GF2D * arbField;
-}
-
-void VectorFields::computeCoGradArbField2D()
-{
-	coGradArbField2D = J * gradArbField2D;
-}
-
-void VectorFields::computeCoGradArbField3D()
-{
-	if (coGradArbField2D.size() == 0) {
-		coGradArbField2D = J * gradArbField2D;
-	}
-	printf("A^T=%dx%d, coGradField=%dx%d\n", A.rows(), A.cols(), coGradArbField2D.rows(), coGradArbField2D.cols());
-	coGradArbField3D = A * coGradArbField2D;
-}
-
-void VectorFields::computeCurlGradArbField3D()
-{
-	curlGradArbField3D = Curl3D * gradArbField3D;
-
-	//cout << curlGradArbField3D << endl; 
-}
-
-void VectorFields::computeCurlGradArbField2D()
-{
-	curlGradArbField2D = Curl2D * gradArbField2D;
-	cout << "Curl of Gradient field " << curlGradArbField2D << endl;
-}
-
-void VectorFields::computeCurlCoGradArbField3D()
-{
-	curlCoGradArbField3D = Curl3D * coGradArbField3D;
-}
-
-void VectorFields::computeCurlCoGradArbField2D()
-{
-	curlCoGradArbField2D = Curl2D * coGradArbField2D;
-
-	//cout << "CURL: " << endl << curlCoGradArbField2D << endl; 
-}
-
-void VectorFields::computeDivGradArbField3D()
-{
-	printf("Div=%dx%d, gradField=%dx%d\n", Div3D.rows(), Div3D.cols(), gradArbField3D.rows(), gradArbField3D.cols());
-	divGradArbField3D = Div3D * gradArbField3D;
-
-	//cout << divGradArbField3D << endl;
-}
-
-void VectorFields::computeDivGradArbField2D()
-{
-	printf("Div=%dx%d, gradField=%dx%d\n", Div2D.rows(), Div2D.cols(), gradArbField2D.rows(), gradArbField2D.cols());
-	divGradArbField2D = Div2D * gradArbField2D;
-
-	//cout << divGradArbField2D << endl;
-}
-
-void VectorFields::computeDivCoGradArbField3D()
-{
-	divCoGradArbField3D = Div3D * gradArbField3D;
-}
-
-void VectorFields::computeDivCoGradArbField2D()
-{
-	divCoGradArbField2D = Div2D * coGradArbField2D;
-
-}
-
 void VectorFields::testMappingMatrix()
 {
 	// Should be identity
@@ -166,8 +89,8 @@ void VectorFields::testDijkstraFace()
 
 void VectorFields::testCurlEnergy()
 {
-	double gradEnergy = gradArbField3D.transpose() * LapCurl3D * gradArbField3D;
-	cout << "The energy is " << gradEnergy << endl;
+	//double gradEnergy = gradArbField3D.transpose() * LapCurl3D * gradArbField3D;
+	//cout << "The energy is " << gradEnergy << endl;
 }
 
 int VectorFields::selectRandomFace()
