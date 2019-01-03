@@ -53,10 +53,6 @@ public:
 	void computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceMultSource(const Eigen::VectorXi &source, Eigen::VectorXd &D);
-	void computeEigenstructureGradient3D();
-	//void computeEigenstructureGradient2D();
-	void constructLaplace2D();
-	void constructLaplace3D();
 	void computeEdges();
 	void constructVFNeighbors();
 	void constructVFNeighborsFull();
@@ -76,33 +72,31 @@ public:
 	void constructStiffnessMatrixCurlPart3D();
 	void constructStiffnessMatrixCurlPart3DandCurl4F();
 	void constructStiffnessMatrixCurlPart2D();
-	void constructStiffnessMatrixCurlPart2D_Direct();
 	void constructStiffnessMatrixDivPart3D();
 	void constructStiffnessMatrixDivPart3D_Implicit();
 	void constructStiffnessMatrixDivPart3D_Explicit();
 	void constructStiffnessMatrixDivPart3DandDiv4F_Explicit();
 	void constructStiffnessMatrixDivPart2D();
-	void constructStiffnessMatrixDivPart2D_Direct();
-	void constructSF2DPacked();
 	void constructGradient3D();
 	void rearrangeGradient3D();
 	void constructGradient2D();
 	void computeDivergent3D();
 	void computeDivergent2D();
-	void computeCurl2D();
 	void computeCurl3D();
+	void computeCurl2D();
 
 	// Deal with GLOBAL Problem
 	void constructRotationMatrix();
 	void constructMappingMatrix();
 	void constructMatrixB();
+
+	void setupGlobalProblem();
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
 	void constructSpecifiedConstraints();
 	void constructSingularities();
 	void constructSpecifiedConstraintsWithSingularities();
-	void setupGlobalProblem();
 	void setupRHSGlobalProblemMapped();
 	void setupLHSGlobalProblemMapped();
 	void solveGlobalSystemMappedLDLT();
@@ -110,7 +104,6 @@ public:
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
 	void farthestPointSampling();
-
 	void constructBasis();	
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
 	void normalizeBasis();
@@ -134,18 +127,6 @@ public:
 
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
-	void computeGradArbField3D();
-	void computeGradArbField2D();
-	void computeCoGradArbField2D();
-	void computeCoGradArbField3D();
-	void computeCurlGradArbField3D();
-	void computeCurlGradArbField2D();
-	void computeCurlCoGradArbField3D();
-	void computeCurlCoGradArbField2D();
-	void computeDivGradArbField3D();
-	void computeDivGradArbField2D();
-	void computeDivCoGradArbField3D();
-	void computeDivCoGradArbField2D();
 	void testMappingMatrix();
 	void testAdjMV();
 	void testAdjacencyAndEdges();
@@ -156,20 +137,6 @@ public:
 	
 	// VISUALIZATION of TESTING
 	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
-	void visualizeGradient3DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeGradient2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeDivGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeDivCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeDivCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeDivGrad2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeCurlGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeCurlGrad2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeCurlCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeCurlCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeLaplaceGrad2DArbField(igl::opengl::glfw::Viewer &viewer);
-	void visualizeLaplaceGrad3DArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	void visualizeVertexFacesNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
@@ -180,6 +147,7 @@ public:
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type);
@@ -201,14 +169,12 @@ public:
 
 protected:
 	Eigen::MatrixXd					V, FC, NF, Xf, c, cBar, b, bBar, g, h;
-	Eigen::MatrixXd					XfLoc, XfLocSum, XfNorm, BasisSum, BasisSumN, XLowDim, XFullDim, Curl3DPacked, Div3DPacked, SF2DPacked;
+	Eigen::MatrixXd					XfLoc, BasisSum, BasisSumN, XLowDim, XFullDim, Curl3DPacked, Div3DPacked;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
-	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, BasisTemp, Basis, SV, SF2D, SF3D, L2D, L3D, B2D, B2Dbar, B3D, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
-	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J, C, Cbar, A_LHSbar, A_LHS, AjdMF_igl;
-	Eigen::VectorXd					doubleArea, arbField, gradArbField3D, gradArbField2D, lambda, vFields;
-	Eigen::VectorXd					curlGradArbField3D, curlGradArbField2D, curlCoGradArbField3D, curlCoGradArbField2D;
-	Eigen::VectorXd					divGradArbField3D, divGradArbField2D, coGradArbField3D, coGradArbField2D;
-	Eigen::VectorXd					divCoGradArbField3D, divCoGradArbField2D, vEstUser, vEst, gbar, hbar,pbar;
+	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, BasisTemp, Basis, SF2D, SF3D, B2D, B2Dbar, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J, C, Cbar, A_LHSbar, A_LHS;
+	Eigen::VectorXd					doubleArea, arbField;
+	Eigen::VectorXd					vEstUser, vEst, gbar, hbar,pbar;
 	vector<set<int>>				AdjMV, AdjMF2Ring, NeighRing;
 	vector<set<VtoFPair>>			VFNeighbors, VFNeighFull;
 	vector<set<Edge_VPair>>			EdgePairsList; 
@@ -222,7 +188,8 @@ protected:
 	
 
 	// FOR TESTING ONLY
-	Eigen::VectorXd					laplaceGradArbField2D, laplaceGradArbField3D, dijkstraFace;
+	Eigen::VectorXd					dijkstraFace;
+	vector<vector<int>>				sharedEdgesVect; 
 
 private:
 	double avgEdgeLength; 

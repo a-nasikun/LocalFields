@@ -172,7 +172,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	Eigen::Vector3d e;
 	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
 
-	for (int i = 0; i < F.rows(); i += 100)
+	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c, g, v1, v2, v3;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
@@ -183,7 +183,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	}
 
 	double lengthScale = 1.0*avgEdgeLength;
-	for (int i = 0; i < F.rows(); i += 100)
+	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
@@ -389,7 +389,6 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
-
 void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
 {
 	printf("Size of M=%dx%d\n", M.rows(), M.cols());
@@ -435,99 +434,6 @@ void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<doubl
 	engEvalString(ep, "spy(M)");
 }
 
-void VectorFields::visualizeGradient3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	visualize3Dfields(viewer, gradArbField3D, Eigen::RowVector3d(0.9, 0.1, 0.2));	
-}
-
-void VectorFields::visualizeGradient2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	//visualize2Dfields(viewer, gradArbField2D, Eigen::RowVector3d(1.0, 0.1, 0.2));	
-	visualize2DfieldsScaled(viewer, gradArbField2D, Eigen::RowVector3d(1.0, 0.1, 0.2));
-}
-
-void VectorFields::visualizeCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	visualize3Dfields(viewer, coGradArbField3D, Eigen::RowVector3d(0.2, 0.1, 1.0));
-}
-
-void VectorFields::visualizeCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	visualize2Dfields(viewer, coGradArbField2D, Eigen::RowVector3d(0.2, 0.1, 1.0));
-}
-
-void VectorFields::visualizeCurlGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(curlGradArbField3D, true, vColor);
-	igl::parula(curlGradArbField3D, false, vColor);
-	viewer.data().set_colors(vColor);
-
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1.0, 0.1, 0.0));
-}
-
-void VectorFields::visualizeCurlGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(curlGradArbField3D, true, vColor);
-	igl::parula(curlGradArbField2D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeCurlCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::parula(curlCoGradArbField3D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeCurlCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(curlCoGradArbField2D, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeLaplaceGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	visualize2DfieldsScaled(viewer, laplaceGradArbField2D, Eigen::RowVector3d(0.2, 0.1, 0.2));
-}
-
-void VectorFields::visualizeLaplaceGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	visualize3Dfields(viewer, laplaceGradArbField3D, Eigen::RowVector3d(0.2, 0.1, 0.2));
-}
-
-void VectorFields::visualizeDivGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(divGradArbField3D, true, vColor);
-	igl::parula(divGradArbField3D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDivCoGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(divCoGradArbField2D, false, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDivCoGrad3DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	igl::jet(divCoGradArbField3D, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
-void VectorFields::visualizeDivGrad2DArbField(igl::opengl::glfw::Viewer &viewer)
-{
-	Eigen::MatrixXd vColor;
-	//igl::jet(divGradArbField2D, true, vColor);
-	igl::parula(divGradArbField2D, true, vColor);
-	viewer.data().set_colors(vColor);
-}
-
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());
 	Eigen::MatrixXd vColor;
@@ -545,12 +451,7 @@ void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, con
 	for (std::set<int, double>::iterator it = AdjMF2Ring[idx].begin(); it != AdjMF2Ring[idx].end(); ++it) {
 		z(*it) = 0.5f;
 	}
-
-	//for (Eigen::SparseMatrix<double>::InnerIterator it(AjdMF_igl, idx); it; ++it) {
-	//	z(it.row()) = 0.5;
-	//	printf("col=%d, row=%d\n", it.col(), it.row());
-	//}
-
+	
 	// Visualizing the COLOR
 	igl::jet(z, true, vColor);
 	printf("Size of color: %dx%d\n", vColor.rows(), vColor.cols());
@@ -643,4 +544,22 @@ void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
 		viewer.data().add_points(c, color);
 	}
+}
+
+void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::RowVector3d color(0.8, 0.1, 0.0);
+	Eigen::RowVector3d color2(0.8, 0.1, 0.1);
+
+	for (int i = 0; i < sharedEdgesVect.size(); i++) {
+		for (int j = 0; j < sharedEdgesVect[i].size(); j++) {
+			if (j % 2 == 1) continue;
+
+			double k = 1.0 / (double)sharedEdgesVect[i].size() * (double) j; 
+			Eigen::RowVector3d color3(0.1, 0.1, k);
+			viewer.data().add_edges(V.row(sharedEdgesVect[i][j]), V.row(sharedEdgesVect[i][j + 1]), color3);
+			viewer.data().add_points(V.row(sharedEdgesVect[i][j]), color3);
+		}
+	}
+
 }

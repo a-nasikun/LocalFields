@@ -337,27 +337,9 @@ void VectorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 	} while (!DistPQueue.empty());
 }
 
-void VectorFields::computeEigenstructureGradient3D()
-{
-	//computeEigenMatlab(SV, MV, EigVectsDiv, eigValsDiv);
-}
-
-void VectorFields::constructLaplace2D()
-{
-	L2D = MF2Dinv * SF2D;
-	laplaceGradArbField2D = L2D * gradArbField2D;
-}
-
-void VectorFields::constructLaplace3D()
-{
-	L3D = MF3Dinv * SF3D;
-	laplaceGradArbField3D = L3D * gradArbField3D;
-}
-
 void VectorFields::computeEdges()
 {
 	igl::edges(F, E);
-
 	printf("....E=%dx%d\n", E.rows(), E.cols());
 }
 
@@ -624,12 +606,17 @@ void VectorFields::constructStiffnessMatrixSF2D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (2D) Divergent part ";
-	constructStiffnessMatrixDivPart2D();
+		constructStiffnessMatrixDivPart2D();
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
-	SF2D = LapDiv2D - LapCurl2D;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "....Divergent Part (2D) - Curl Part (2D) ";
+		SF2D = LapDiv2D - LapCurl2D;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 
 	// Implicit Construction
 	//Eigen::SparseMatrix<double> GMG, JGMGJ;
@@ -647,8 +634,8 @@ void VectorFields::constructStiffnessMatrixSF3D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Curl part ";
-	//constructStiffnessMatrixCurlPart3D();
-	constructStiffnessMatrixCurlPart3DandCurl4F();
+		//constructStiffnessMatrixCurlPart3D();
+		constructStiffnessMatrixCurlPart3DandCurl4F();
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -656,12 +643,18 @@ void VectorFields::constructStiffnessMatrixSF3D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
-	constructStiffnessMatrixDivPart3D();
+		constructStiffnessMatrixDivPart3D();
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
-	SF3D = LapDiv3D - LapCurl3D;
+
+	t1 = chrono::high_resolution_clock::now();
+	cout << "....Divergent Part - Curl Part ";
+		SF3D = LapDiv3D - LapCurl3D;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::constructStiffnessMatrixCurlPart3D()
@@ -757,7 +750,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	// For Curl3DPacked
-	Curl3DPacked.resize(3 * F.rows(), 4 * F.cols());
+	//Curl3DPacked.resize(3 * F.rows(), 4 * F.cols());
 
 	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
@@ -786,15 +779,15 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 			LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
 
 			// Structure of the packed data
-			Curl3DPacked(3 * i + 0, 3 * j + 0) = block(0, 0);
-			Curl3DPacked(3 * i + 0, 3 * j + 1) = block(0, 1);
-			Curl3DPacked(3 * i + 0, 3 * j + 2) = block(0, 2);
-			Curl3DPacked(3 * i + 1, 3 * j + 0) = block(1, 0);
-			Curl3DPacked(3 * i + 1, 3 * j + 1) = block(1, 1);
-			Curl3DPacked(3 * i + 1, 3 * j + 2) = block(1, 2);
-			Curl3DPacked(3 * i + 2, 3 * j + 0) = block(2, 0);
-			Curl3DPacked(3 * i + 2, 3 * j + 1) = block(2, 1);
-			Curl3DPacked(3 * i + 2, 3 * j + 2) = block(2, 2);
+			//Curl3DPacked(3 * i + 0, 3 * j + 0) = block(0, 0);
+			//Curl3DPacked(3 * i + 0, 3 * j + 1) = block(0, 1);
+			//Curl3DPacked(3 * i + 0, 3 * j + 2) = block(0, 2);
+			//Curl3DPacked(3 * i + 1, 3 * j + 0) = block(1, 0);
+			//Curl3DPacked(3 * i + 1, 3 * j + 1) = block(1, 1);
+			//Curl3DPacked(3 * i + 1, 3 * j + 2) = block(1, 2);
+			//Curl3DPacked(3 * i + 2, 3 * j + 0) = block(2, 0);
+			//Curl3DPacked(3 * i + 2, 3 * j + 1) = block(2, 1);
+			//Curl3DPacked(3 * i + 2, 3 * j + 2) = block(2, 2);
 		}
 	}
 	LapCurl3D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
@@ -807,7 +800,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 	for (int i = 0; i < F.rows(); i++) {
 		for (int j = 0; j < F.cols(); j++) {
 			for (int k = 0; k < F.cols(); k++) {
-				Curl3DPacked(3 * i + j, 3 * F.cols() + k) = -(Curl3DPacked(3 * i + j, 0 * F.cols() + k) + Curl3DPacked(3 * i + j, 1 * F.cols() + k) + Curl3DPacked(3 * i + j, 2 * F.cols() + k));
+				//Curl3DPacked(3 * i + j, 3 * F.cols() + k) = -(Curl3DPacked(3 * i + j, 0 * F.cols() + k) + Curl3DPacked(3 * i + j, 1 * F.cols() + k) + Curl3DPacked(3 * i + j, 2 * F.cols() + k));
 			}
 		}
 	}
@@ -819,12 +812,12 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 			for (int k = 0; k < F.cols(); k++) {	// Inserting in column order => same column, increasing row => k=row
 													// Obtaining an element from the other 3 neighbor (same location of 3 different blocks)
 				double v0, v1, v2;
-				//v0 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 0) + j);
-				//v1 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 1) + j);
-				//v2 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 2) + j);
+				v0 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 0) + j);
+				v1 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 1) + j);
+				v2 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 2) + j);
 
-				//double value = -(v0 + v1 + v2);
-				double value = Curl3DPacked(3 * i + k, 3 * F.cols() + j);
+				double value = -(v0 + v1 + v2);
+				//double value = Curl3DPacked(3 * i + k, 3 * F.cols() + j);
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + k, 3 * i + j, value));	// row 1
 			}
 		}
@@ -838,75 +831,6 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 void VectorFields::constructStiffnessMatrixCurlPart2D()
 {
 	LapCurl2D = A.transpose() * LapCurl3D * A;
-}
-
-void VectorFields::constructStiffnessMatrixCurlPart2D_Direct()
-{
-	chrono::high_resolution_clock::time_point	t1, t2;
-	chrono::duration<double>					duration;
-
-	Eigen::SparseMatrix<double> LapCurl2D_temp(2 * F.rows(), 2 * F.rows());
-	LapCurl2D.resize(2 * F.rows(), 2 * F.rows());
-	LapCurl2D.reserve(2 * F.rows() * 4);
-	vector<Eigen::Triplet<double>> LTriplet;
-
-	t1 = chrono::high_resolution_clock::now();
-	for (int i = 0; i < F.rows(); i++) {
-		double				area1 = doubleArea(i);
-		for (int j = 0; j < F.cols(); j++) {
-			int				neigh = AdjMF3N(i, j);
-
-			if (neigh > i) {
-				double				area2 = doubleArea(neigh);
-				double				area = area1 + area2;
-				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
-				//edge = n.cross(edge);
-				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
-				Eigen::MatrixXd		Aa(3, 2);
-				Aa = A.block(3 * i, 2 * i, 3, 2);
-				Eigen::Matrix2d     block2D = Aa.transpose() * block * Aa;
-
-				// ITS BLOCK
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neigh + 0, block2D(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neigh + 1, block2D(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neigh + 0, block2D(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neigh + 1, block2D(1, 1)));
-				// THE BLOCK that's the Transpose of this BLOCK
-				block2D.transposeInPlace();
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 0, 2 * i + 0, block2D(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 0, 2 * i + 1, block2D(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 1, 2 * i + 0, block2D(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 1, 2 * i + 1, block2D(1, 1)));
-			}
-		}
-	}
-	LapCurl2D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	//printf("To set-up non-diagonal elements =%.4f seconds\n", duration.count());
-
-	t1 = chrono::high_resolution_clock::now();
-	// INSERTING the DIAGONAL Elements
-	for (int i = 0; i < F.rows(); i++) {
-		for (int j = 0; j < 2; j++) {		// Working in 1 block (2x2 size of local frame) 
-			for (int k = 0; k < 2; k++) {	// Inserting in column order
-											// Obtaining an element from the other 3 neighbor (same location of 3 different blocks)
-				double v0, v1, v2;
-				v0 = LapCurl2D_temp.coeff(2 * i + k, 2 * AdjMF3N(i, 0) + j);
-				v1 = LapCurl2D_temp.coeff(2 * i + k, 2 * AdjMF3N(i, 1) + j);
-				v2 = LapCurl2D_temp.coeff(2 * i + k, 2 * AdjMF3N(i, 2) + j);
-
-				double value = -(v0 + v1 + v2);
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + k, 2 * i + j, value));	// row 1
-			}
-		}
-	}
-	LapCurl2D.setFromTriplets(LTriplet.begin(), LTriplet.end());
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	//printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3D()
@@ -1020,7 +944,7 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 	LTriplet.reserve(12 * 3 * F.rows());
 
 	// For Curl3DPacked
-	Div3DPacked.resize(3 * F.rows(), 4 * F.cols());
+	//Div3DPacked.resize(3 * F.rows(), 4 * F.cols());
 
 	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
@@ -1051,15 +975,15 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 			LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
 
 			// Structure of the packed data
-			Div3DPacked(3 * i + 0, 3 * j + 0) = block(0, 0);
-			Div3DPacked(3 * i + 0, 3 * j + 1) = block(0, 1);
-			Div3DPacked(3 * i + 0, 3 * j + 2) = block(0, 2);
-			Div3DPacked(3 * i + 1, 3 * j + 0) = block(1, 0);
-			Div3DPacked(3 * i + 1, 3 * j + 1) = block(1, 1);
-			Div3DPacked(3 * i + 1, 3 * j + 2) = block(1, 2);
-			Div3DPacked(3 * i + 2, 3 * j + 0) = block(2, 0);
-			Div3DPacked(3 * i + 2, 3 * j + 1) = block(2, 1);
-			Div3DPacked(3 * i + 2, 3 * j + 2) = block(2, 2);
+			//Div3DPacked(3 * i + 0, 3 * j + 0) = block(0, 0);
+			//Div3DPacked(3 * i + 0, 3 * j + 1) = block(0, 1);
+			//Div3DPacked(3 * i + 0, 3 * j + 2) = block(0, 2);
+			//Div3DPacked(3 * i + 1, 3 * j + 0) = block(1, 0);
+			//Div3DPacked(3 * i + 1, 3 * j + 1) = block(1, 1);
+			//Div3DPacked(3 * i + 1, 3 * j + 2) = block(1, 2);
+			//Div3DPacked(3 * i + 2, 3 * j + 0) = block(2, 0);
+			//Div3DPacked(3 * i + 2, 3 * j + 1) = block(2, 1);
+			//Div3DPacked(3 * i + 2, 3 * j + 2) = block(2, 2);
 		}
 	}
 	LapDiv3D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
@@ -1071,7 +995,7 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 	for (int i = 0; i < F.rows(); i++) {
 		for (int j = 0; j < F.cols(); j++) {
 			for (int k = 0; k < F.cols(); k++) {
-				Div3DPacked(3 * i + j, 3 * F.cols() + k) = -(Div3DPacked(3 * i + j, 0 * F.cols() + k) + Div3DPacked(3 * i + j, 1 * F.cols() + k) + Div3DPacked(3 * i + j, 2 * F.cols() + k));
+				//Div3DPacked(3 * i + j, 3 * F.cols() + k) = -(Div3DPacked(3 * i + j, 0 * F.cols() + k) + Div3DPacked(3 * i + j, 1 * F.cols() + k) + Div3DPacked(3 * i + j, 2 * F.cols() + k));
 			}
 		}
 	}
@@ -1084,12 +1008,12 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 			for (int k = 0; k < F.cols(); k++) {	// Inserting in column order
 													// Obtaining an element from the other 3 neighbor (same location of 3 different blocks)
 				double v0, v1, v2;
-				//v0 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 0) + j);
-				//v1 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 1) + j);
-				//v2 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 2) + j);
+				v0 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 0) + j);
+				v1 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 1) + j);
+				v2 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 2) + j);
 
-				//double value = -(v0 + v1 + v2);
-				double value = Div3DPacked(3 * i + k, 3 * F.cols() + j);
+				double value = -(v0 + v1 + v2);
+				//double value = Div3DPacked(3 * i + k, 3 * F.cols() + j);
 				//LapDiv3D.insert(3 * i + k, 3 * i + j) = value;
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + k, 3 * i + j, value));
 			}
@@ -1111,92 +1035,6 @@ void VectorFields::constructStiffnessMatrixDivPart2D()
 	LapDiv2D = A.transpose() * LapDiv3D * A;
 }
 
-void VectorFields::constructStiffnessMatrixDivPart2D_Direct()
-{
-	chrono::high_resolution_clock::time_point	t1, t2;
-	chrono::duration<double>					duration;
-
-	Eigen::SparseMatrix<double> LapDiv2D_temp(2 * F.rows(), 2 * F.rows());
-	LapDiv2D.resize(2 * F.rows(), 2 * F.rows());
-	LapDiv2D.reserve(2 * F.rows() * 4);
-	vector<Eigen::Triplet<double>> LTriplet;
-
-	t1 = chrono::high_resolution_clock::now();
-	for (int i = 0; i < F.rows(); i++) {
-		double				area1 = doubleArea(i);
-		Eigen::RowVector3d	n1 = NF.row(i);
-		for (int j = 0; j < F.cols(); j++) {
-			int				neigh = AdjMF3N(i, j);
-
-			if (neigh > i) {
-				double				area2 = doubleArea(neigh);
-				double				area = area1 + area2;
-				Eigen::RowVector3d	n2 = NF.row(neigh);
-				Eigen::RowVector3d	n = (n1 + n2) / 2.0;
-				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
-
-				edge = n.cross(edge);
-				Eigen::Matrix3d		block = (3.0 / area) * edge * edge.transpose();
-				Eigen::MatrixXd		Aa = A.block(3 * i, 2 * i, 3, 2);
-				Eigen::Matrix2d     block2D = Aa.transpose() * block * Aa;
-
-				// ITS BLOCK
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neigh + 0, block2D(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neigh + 1, block2D(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neigh + 0, block2D(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neigh + 1, block2D(1, 1)));
-
-				// THE BLOCK that's the Transpose of this BLOCK
-				block2D.transposeInPlace();
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 0, 2 * i + 0, block2D(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 0, 2 * i + 1, block2D(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 1, 2 * i + 0, block2D(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(2 * neigh + 1, 2 * i + 1, block2D(1, 1)));
-			}
-		}
-	}
-	LapDiv2D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	printf("To set-up non-diagonal elements =%.4f seconds\n", duration.count());
-
-	t1 = chrono::high_resolution_clock::now();
-	// INSERTING the DIAGONAL Elements
-	for (int i = 0; i < F.rows(); i++) {
-		//LapDiv3D.reserve(F.cols()*F.cols());
-		for (int j = 0; j < 2; j++) {		// Working in 1 block (2x2 size of local frame) 
-			for (int k = 0; k < 2; k++) {	// Inserting in column order
-											// Obtaining an element from the other 3 neighbor (same location of 3 different blocks)
-				double v0, v1, v2;
-				v0 = LapDiv2D_temp.coeff(2 * i + k, 2 * AdjMF3N(i, 0) + j);
-				v1 = LapDiv2D_temp.coeff(2 * i + k, 2 * AdjMF3N(i, 1) + j);
-				v2 = LapDiv2D_temp.coeff(2 * i + k, 2 * AdjMF3N(i, 2) + j);
-
-				double value = -(v0 + v1 + v2);
-				//LapDiv3D.insert(3 * i + k, 3 * i + j) = value;
-				LTriplet.push_back(Eigen::Triplet<double>(2 * i + k, 2 * i + j, value));
-			}
-		}
-	}
-
-	LapDiv2D.setFromTriplets(LTriplet.begin(), LTriplet.end());
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
-}
-
-void VectorFields::constructSF2DPacked()
-{
-	SF2DPacked.resize(2 * F.rows(), 4 * 2); // 2*|F| by 3 neighbors (+1, the total)
-
-	for (int i = 0; i < F.rows(); i++) {
-		for (int j = 0; j < 4; j++) {
-			Eigen::Matrix3d S3 = Div3DPacked.block(3 * i, j*F.cols(), 3, 3) - Curl3DPacked.block(3 * i, j*F.cols(), 3, 3);
-			Eigen::Matrix3d Aa = A.block(3 * i, 2 * i, 3, 2);
-			SF2DPacked.block(2 * i, j * 2, 2, 2) = Aa.transpose() * S3 * Aa;
-		}
-	}
-}
 void VectorFields::constructGradient3D()
 {
 	// Construct Gradient of World-/Global-Coordidate

@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
@@ -42,52 +42,18 @@ int main(int argc, char *argv[])
 	vectorFields.computeAverageEdgeLength();
 	vectorFields.computeFaceCenter();
 	vectorFields.computeFaceNormal();
-	vectorFields.constructVertexAdjacencyMatrix();
 	vectorFields.constructVFNeighbors();
 	vectorFields.constructVFNeighborsFull();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	//vectorFields.constructFaceAdjacencyMatrix_IGL();
-	//vectorFields.testAdjacencyAndEdges();
-
-	//vectorFields.testAdjMV();
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
-	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
 
 	/* MATRIX CONSTRUCTIONS */
-	srand(time(NULL));
-	//int randVId = rand() % V.rows(); 
-	int randFId = rand() % F.rows();
-	//vectorFields.constructNeigborRings(0);
 	vectorFields.constructMassMatrices();
-
 	//vectorFields.constructRotationMatrix();
 	vectorFields.constructMappingMatrix();
-	//vectorFields.constructGradient3D();
-	//vectorFields.constructGradient2D();
-	//vectorFields.constructArbitraryField();
-
-	/*========== Test for GRADIENT and CURL-related functions ==========*/
-	//vectorFields.computeGradArbField3D();
-	//vectorFields.computeGradArbField2D();
-	//vectorFields.computeCoGradArbField2D();
-	//vectorFields.computeCoGradArbField3D();
-	//vectorFields.computeCurl2D();
-	//vectorFields.computeCurl3D();
-	//vectorFields.computeDivergent3D();
-	//vectorFields.computeDivergent2D();
-	//vectorFields.computeCurlGradArbField3D();
-	//vectorFields.computeCurlGradArbField2D();
-	//vectorFields.computeCurlCoGradArbField3D();
-	//vectorFields.computeCurlCoGradArbField2D();
-	//vectorFields.computeDivGradArbField3D();
-	//vectorFields.computeDivGradArbField2D();
-	//vectorFields.computeDivCoGradArbField3D();
-	//vectorFields.computeDivCoGradArbField2D();
-
-	//vectorFields.constructSingularities();
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructStiffnessMatrices();
@@ -97,31 +63,19 @@ int main(int argc, char *argv[])
 	/* ====================== GLOBAL PROBLEM ====================*/
 	cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	vectorFields.setupGlobalProblem();
-
-
+	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 
-	/* =========== Test on EIGENFIELDS-related funcionalities ============= */
-	//vectorFields.testCurlEnergy();
-	//vectorFields.constructLaplace2D();
-	//vectorFields.computeEigenLaplace2D();
-	//vectorFields.computeEigenLaplace3D();
-	//vectorFields.computeEigenstructureGradient3D();
-	//vectorFields.constructLaplace3D();
-
-	//vectorFields.constructNeigborRings(randFId);
-	//vectorFields.constructRotationMatrix();
-	//vectorFields.testDijkstraFace();
-
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
 	vectorFields.visualizeApproximatedFields(viewer);
 	vectorFields.visualizeGlobalConstraints(viewer);
 	vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer, 0);	
@@ -134,7 +88,6 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeNeighboringRings(viewer);
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
-	//vectorFields.visualizeEigenfields(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 
 	/* MEASURE ACCURACY */
