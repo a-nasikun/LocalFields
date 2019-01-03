@@ -172,7 +172,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	Eigen::Vector3d e;
 	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
 
-	for (int i = 0; i < F.rows(); i += 100)
+	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c, g, v1, v2, v3;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
@@ -183,7 +183,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	}
 
 	double lengthScale = 1.0*avgEdgeLength;
-	for (int i = 0; i < F.rows(); i += 100)
+	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
@@ -499,4 +499,22 @@ void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
 		viewer.data().add_points(c, color);
 	}
+}
+
+void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::RowVector3d color(0.8, 0.1, 0.0);
+	Eigen::RowVector3d color2(0.8, 0.1, 0.1);
+
+	for (int i = 0; i < sharedEdgesVect.size(); i++) {
+		for (int j = 0; j < sharedEdgesVect[i].size(); j++) {
+			if (j % 2 == 1) continue;
+
+			double k = 1.0 / (double)sharedEdgesVect[i].size() * (double) j; 
+			Eigen::RowVector3d color3(0.1, 0.1, k);
+			viewer.data().add_edges(V.row(sharedEdgesVect[i][j]), V.row(sharedEdgesVect[i][j + 1]), color3);
+			viewer.data().add_points(V.row(sharedEdgesVect[i][j]), color3);
+		}
+	}
+
 }

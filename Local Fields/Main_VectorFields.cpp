@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 	vectorFields.visualizeApproximatedFields(viewer);
 	vectorFields.visualizeGlobalConstraints(viewer);
 	vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer, 0);	

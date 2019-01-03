@@ -89,13 +89,14 @@ public:
 	void constructRotationMatrix();
 	void constructMappingMatrix();
 	void constructMatrixB();
+
+	void setupGlobalProblem();
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
 	void constructSpecifiedConstraints();
 	void constructSingularities();
 	void constructSpecifiedConstraintsWithSingularities();
-	void setupGlobalProblem();
 	void setupRHSGlobalProblemMapped();
 	void setupLHSGlobalProblemMapped();
 	void solveGlobalSystemMappedLDLT();
@@ -146,6 +147,7 @@ public:
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type);
@@ -187,6 +189,7 @@ protected:
 
 	// FOR TESTING ONLY
 	Eigen::VectorXd					dijkstraFace;
+	vector<vector<int>>				sharedEdgesVect; 
 
 private:
 	double avgEdgeLength; 
