@@ -361,6 +361,8 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 
 	XfLoc.col(1) = -x.block(0, 0, BLoc.rows(), 1) + vEstimateLoc;
 
+
+
 	for (int i = 0; i < LocalElements.size(); i++) {
 		// FIRST Option => Construct the BASIS first, then NORMALIZE it.
 		// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
@@ -375,4 +377,42 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 	}
 
 	//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
+}
+
+void LocalFields::measureXF(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& J)
+{
+	// Construct local mass matrix
+	Eigen::SparseMatrix<double> MLocal;
+	MLocal.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+	vector<Eigen::Triplet<double>> MTriplet;
+	MTriplet.reserve(2 * LocalElements.size());
+
+	for (int i = 0; i < LocalElements.size(); i++) {
+		MTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, doubleArea(LocalElements[i])));
+		MTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, doubleArea(LocalElements[i])));
+	}
+	MLocal.setFromTriplets(MTriplet.begin(), MTriplet.end());
+
+	// Construct local Rotation matrix
+	Eigen::SparseMatrix<double> JLocal;
+	JLocal.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+	vector<Eigen::Triplet<double>> JTriplet;
+	JTriplet.reserve(2 * LocalElements.size());
+
+	for (int i = 0; i < LocalElements.size(); i++) {
+		JTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, 0.0));
+		JTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, 1.0));
+		JTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, -1.0));
+		JTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, 0.0));
+	}
+	JLocal.setFromTriplets(JTriplet.begin(), JTriplet.end());
+
+	// Measure elements
+	Eigen::VectorXd JXf0 = JLocal * XfLoc.col(0);
+	Eigen::VectorXd diff = XfLoc.col(1) - JXf0; 
+
+	double norm1 = diff.transpose() * MLocal * diff;
+	double norm2 = XfLoc.col(0).transpose() * MLocal * XfLoc.col(0);
+	double normXf = sqrt(norm1 / norm2);
+	printf("_______Error of %d is %.16f \n", id, normXf);
 }

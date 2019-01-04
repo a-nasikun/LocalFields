@@ -100,6 +100,7 @@ public:
 	void setupRHSGlobalProblemMapped();
 	void setupLHSGlobalProblemMapped();
 	void solveGlobalSystemMappedLDLT();
+	void solveGlobalSystemMappedLU_GPU();
 
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
@@ -124,6 +125,7 @@ public:
 
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
+	void measureU1andJU0();
 
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
@@ -153,7 +155,7 @@ public:
 	void visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type);
 	void visualizeGradient(igl::opengl::glfw::Viewer &viewer, const GradientToShow &type);
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
-	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer, const int& i);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);

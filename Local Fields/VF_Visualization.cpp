@@ -91,13 +91,16 @@ void VectorFields::visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer)
 	}
 }
 
-void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer)
+void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer, const int& i)
 {
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color1 = Eigen::RowVector3d(1.0, 0.1, 0.2);
 	Eigen::RowVector3d color2 = Eigen::RowVector3d(0.0, 0.1, 1.0);
-	visualize2DfieldsScaled(viewer, Xf.col(0), color1);
+	if(i==0)
+		visualize2DfieldsScaled(viewer, Xf.col(i), color1);
+	else 
+		visualize2DfieldsScaled(viewer, Xf.col(i), color2);
 	//visualize2Dfields(viewer, Xf.col(0), color1);
 	//visualize2Dfields(viewer, Xf.col(1), color2);	
 }
