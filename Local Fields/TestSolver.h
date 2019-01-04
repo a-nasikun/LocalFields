@@ -2,6 +2,8 @@
 #ifndef TEST_SOLVER_H
 #define TEST_SOLVER_H
 
+#include <iostream>
+#include <chrono>
 
 // For MKL
 #include "mkl_lapacke.h"
@@ -16,6 +18,8 @@
 #include <cusolverDn.h>
 
 #include <Eigen/Sparse>
+
+using namespace std;
 
 /* ================================== MKL ==============================================*/
 /* Auxiliary routine: printing a matrix */
@@ -35,6 +39,7 @@ void testCUDA_LULinearSolver();
 void printMatrix(int m, int n, const double*A, int lda, const char* name);
 void testLDLTLinearSolver();
 void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &A, const Eigen::MatrixXd& B, Eigen::MatrixXd& Xf);
+void solveLUinCUDA(const Eigen::SparseMatrix<double> &A, const Eigen::MatrixXd& B, Eigen::MatrixXd& Xf);
 
 #endif // !TEST_SOLVER_H
 

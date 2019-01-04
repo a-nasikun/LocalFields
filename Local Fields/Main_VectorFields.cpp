@@ -10,7 +10,6 @@ int main(int argc, char *argv[])
 	bool selectFace = false;
 	Eigen::MatrixXd C;
 
-
 	VectorFields vectorFields;
 	igl::opengl::glfw::Viewer		viewer;
 	Eigen::MatrixXd					V;
@@ -23,12 +22,12 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -52,7 +51,7 @@ int main(int argc, char *argv[])
 
 	/* MATRIX CONSTRUCTIONS */
 	vectorFields.constructMassMatrices();
-	//vectorFields.constructRotationMatrix();
+	vectorFields.constructRotationMatrix();
 	vectorFields.constructMappingMatrix();
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
@@ -66,22 +65,23 @@ int main(int argc, char *argv[])
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
-	//vectorFields.setAndSolveUserSystem();
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
+	vectorFields.setAndSolveUserSystem();
+	//vectorFields.measureU1andJU0();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualizeGlobalConstraints(viewer);
-	vectorFields.visualizeSingularitiesConstraints(viewer);
-	vectorFields.visualizeSharedEdges(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer,0);
+	//vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer, 0);	
-	//vectorFields.visualizeUserConstraints(viewer);
-	//vectorFields.visualizeSamples(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeApproxResult(viewer, 0);	
+	vectorFields.visualizeUserConstraints(viewer);
+	vectorFields.visualizeSamples(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
 	/* FOR TESTING PURPOSE */
@@ -140,14 +140,13 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeBasisSum(viewer, 1);
 			break;
 		case '9':
-			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeApproximatedFields(viewer, 0);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			vectorFields.visualizeSingularitiesConstraints(viewer);
 			break;
 		case '0':
-			vectorFields.visualizeApproxResult(viewer, 0);
-			vectorFields.visualizeUserConstraints(viewer);
-			//vectorFields.visualizeSamples(viewer);
+			vectorFields.visualizeApproximatedFields(viewer, 1);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			vectorFields.visualizeSingularitiesConstraints(viewer);
 			break;
 		case 'x':

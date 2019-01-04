@@ -782,8 +782,6 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	double *A = (double*)std::malloc(m*lda * sizeof(double));
 	Eigen::MatrixXd MA2(MA);
 	A = MA2.data();
-	//double A[lda*m] = { 1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 10.0 };
-	//double B[m] = { 1.0, 2.0, 3.0 };
 	double *B1 = (double*)std::malloc(m * sizeof(double));
 	Eigen::MatrixXd BB(MB);
 	B1 = BB.col(0).data();
@@ -806,7 +804,7 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 
 	const int pivot_on = 1;
 
-	printf("example of getrf \n");	
+	
 
 	printf("A = (matlab base-1)\n");
 	//printMatrix(m, m, A, lda, "A");
@@ -829,6 +827,7 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	assert(CUSOLVER_STATUS_SUCCESS == status);
 
 	/* step 2: copy A to device */
+	cout << "Copying to GPU " << std::endl; 
 	cudaStat1 = cudaMalloc((void**)&d_A, sizeof(double) * lda * m);
 	cudaStat2 = cudaMalloc((void**)&d_B, sizeof(double) * m);
 	cudaStat2 = cudaMalloc((void**)&d_Ipiv, sizeof(int) * m);
@@ -843,6 +842,7 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	assert(cudaSuccess == cudaStat1);
 	assert(cudaSuccess == cudaStat2);
 
+	cout << "Getting the buffer size." << std::endl;
 	/* step 3: query working space of getrf */
 	status = cusolverDnDsytrf_bufferSize(cusolverH,
 		m,
@@ -854,7 +854,10 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	cudaStat1 = cudaMalloc((void**)&d_work, sizeof(double)*lwork);
 	assert(cudaSuccess == cudaStat1);
 
+
+	
 	/* Step 4: Factorization */
+	cout << "Factorization" << std::endl;
 	status = cusolverDnDsytrf(cusolverH,
 		CUBLAS_FILL_MODE_UPPER,
 		m,
@@ -886,6 +889,7 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	printf("=====\n");
 
 	/* Step 5: Solve Linear System */
+	cout << "Solving 1 system." << endl; 
 	status = cusolverDnDgetrs(
 		cusolverH,
 		CUBLAS_OP_N,
@@ -915,6 +919,7 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	Xf.col(0) = Eigen::Map<Eigen::VectorXd>(X, m);;
 
 	// Solving second linear system
+	cout << "Soving 2nd system" << endl; 
 	cudaStat2 = cudaMemcpy(d_B, B2, sizeof(double)*m, cudaMemcpyHostToDevice);
 	status = cusolverDnDgetrs(
 		cusolverH,
@@ -939,7 +944,8 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	//printMatrix(m, 1, X, ldb, "X");
 	//print_matrix("X", m, 1, X, ldb);
 	printf("=====\n");	
-	Xf.col(1) = Eigen::Map<Eigen::VectorXd>(X, m);;
+	cout << "Mpa to eigenformat" << endl; 
+	Xf.col(1) = Eigen::Map<Eigen::VectorXd>(X, m);
 
 	/* free resources */
 	if (d_A) cudaFree(d_A);
@@ -954,4 +960,256 @@ void solveLDLTinCUDA(const Eigen::SparseMatrix<double> &MA, const Eigen::MatrixX
 	cudaDeviceReset();
 }
 
+void solveLUinCUDA(const Eigen::SparseMatrix<double> &AA, const Eigen::MatrixXd& BB, Eigen::MatrixXd& Xf)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+
+	// Defining necessary variables
+	cusolverDnHandle_t cusolverH = NULL;
+	cudaStream_t stream = NULL;
+
+	cusolverStatus_t status = CUSOLVER_STATUS_SUCCESS;
+	cudaError_t cudaStat1 = cudaSuccess;
+	cudaError_t cudaStat2 = cudaSuccess;
+	cudaError_t cudaStat3 = cudaSuccess;
+	cudaError_t cudaStat4 = cudaSuccess;
+	const int m = AA.rows();
+	const int lda = m;
+	const int ldb = m;
+
+	// Setting up the data
+	//double A[lda*m] = { 1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 10.0 };
+	double *A = (double*)std::malloc(m*lda * sizeof(double));
+	Eigen::MatrixXd MA(AA);
+	A = MA.data();
+	//double B[m] = { 1.0, 2.0, 3.0 };
+	double *B1 = (double*)std::malloc(m * sizeof(double));
+	Eigen::MatrixXd BB1(BB);
+	B1 = BB1.col(0).data();
+	double *B2 = (double*)std::malloc(m * sizeof(double));
+	B2 = BB1.col(1).data();
+	//double X[m]; /* X = A\B */
+	double *X = (double*)std::malloc(m * sizeof(double));		
+	//double LU[lda*m]; /* L and U */
+	double *LU = (double*)std::malloc(m*lda * sizeof(double));
+	//int Ipiv[m];      /* host copy of pivoting sequence */
+	int *Ipiv = (int*)std::malloc(m * sizeof(int));
+	int info = 0;     /* host copy of error info */
+	Xf.resize(m, 2);
+
+	double *d_A = NULL; /* device copy of A */
+	double *d_B = NULL; /* device copy of B */
+	int *d_Ipiv = NULL; /* pivoting sequence */
+	int *d_info = NULL; /* error info */
+	int  lwork = 0;     /* size of workspace */
+	double *d_work = NULL; /* device workspace for getrf */
+
+	const int pivot_on = 1;
+
+	printf("example of getrf \n");
+
+	if (pivot_on) {
+		printf("pivot is on : compute P*A = L*U \n");
+	}
+	else {
+		printf("pivot is off: compute A = L*U (not numerically stable)\n");
+	}
+
+	printf("A = (matlab base-1)\n");
+	//printMatrix(m, m, A, lda, "A");
+	printf("=====\n");
+
+	printf("B = (matlab base-1)\n");
+	//printMatrix(m, 1, B, ldb, "B");
+	printf("=====\n");
+
+	/* step 1: create cusolver handle, bind a stream */
+	status = cusolverDnCreate(&cusolverH);
+	assert(CUSOLVER_STATUS_SUCCESS == status);
+
+	cudaStat1 = cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+	assert(cudaSuccess == cudaStat1);
+
+	status = cusolverDnSetStream(cusolverH, stream);
+	assert(CUSOLVER_STATUS_SUCCESS == status);
+
+	/* step 2: copy A to device */
+	cudaStat1 = cudaMalloc((void**)&d_A, sizeof(double) * lda * m);
+	cudaStat2 = cudaMalloc((void**)&d_B, sizeof(double) * m);
+	cudaStat2 = cudaMalloc((void**)&d_Ipiv, sizeof(int) * m);
+	cudaStat4 = cudaMalloc((void**)&d_info, sizeof(int));
+	bool b1 = (cudaSuccess == cudaStat1);
+	bool b2 = (cudaSuccess == cudaStat2);
+	bool b3 = (cudaSuccess == cudaStat3);
+	bool b4 = (cudaSuccess == cudaStat4);
+	if (!b1 || !b2 || !b3 || !b4) {
+		cout << "____Error! Cannot allocate memory at GPU" << endl; 
+	}
+	else {
+		cout << "____Memory Allocation successful" << endl;
+	}
+
+	cudaStat1 = cudaMemcpy(d_A, A, sizeof(double)*lda*m, cudaMemcpyHostToDevice);
+	cudaStat2 = cudaMemcpy(d_B, B1, sizeof(double)*m, cudaMemcpyHostToDevice);
+	b1 = (cudaSuccess == cudaStat1);
+	b2 = (cudaSuccess == cudaStat2);
+	if (!b1 || !b2 ) {
+		cout << "____Error! Cannot copy data to GPU" << endl;
+	}
+	else {
+		cout << "____Data copying successful" << endl;
+	}
+
+	/* step 3: query working space of getrf */
+	status = cusolverDnDgetrf_bufferSize(
+		cusolverH,
+		m,
+		m,
+		d_A,
+		lda,
+		&lwork);
+	b1 = (CUSOLVER_STATUS_SUCCESS == status);
+	if (!b1) {
+		cout << "____Error! Buffering faileds" << endl;
+	}
+	else {
+		cout << "____Buffering successful" << endl;
+	}
+
+	cudaStat1 = cudaMalloc((void**)&d_work, sizeof(double)*lwork);
+	assert(cudaSuccess == cudaStat1);
+
+	/* step 4: LU factorization */
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Factoring (LU in GPU)... \n";
+		status = cusolverDnDgetrf(
+			cusolverH,
+			m,
+			m,
+			d_A,
+			lda,
+			d_work,
+			d_Ipiv,
+			d_info);
+	
+	cudaStat1 = cudaDeviceSynchronize();
+	b1  = (CUSOLVER_STATUS_SUCCESS == status);
+	b2  = (cudaSuccess == cudaStat1);
+	if (!b1 || !b2 ) {
+		cout << "____Error! LU Factorization fails" << endl;
+	}
+	else {
+		cout << "____LU Factorization successful" << endl;
+	}		
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+	cudaStat1 = cudaMemcpy(Ipiv, d_Ipiv, sizeof(int)*m, cudaMemcpyDeviceToHost);
+
+	cudaStat2 = cudaMemcpy(LU, d_A, sizeof(double)*lda*m, cudaMemcpyDeviceToHost);
+	cudaStat3 = cudaMemcpy(&info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
+	b1 = (cudaSuccess == cudaStat1);
+	b2 = (cudaSuccess == cudaStat2);
+	b3 = (cudaSuccess == cudaStat3);
+	if (!b1 || !b2 || !b3) {
+		cout << "____Error! Copying factorization to GPU fails" << endl;
+	}
+	else {
+		cout << "____Copying LU to GPU successful" << endl;
+	}
+
+	if (0 > info) {
+		printf("%d-th parameter is wrong \n", -info);
+		exit(1);
+	}
+	
+		printf("pivoting sequence, matlab base-1\n");
+		for (int j = 0; j < m; j++) {
+			//printf("Ipiv(%d) = %d\n", j + 1, Ipiv[j]);
+		}
+	
+	printf("L and U = (matlab base-1)\n");
+	//printMatrix(m, m, LU, lda, "LU");
+	printf("=====\n");
+	
+	
+	status = cusolverDnDgetrs(
+		cusolverH,
+		CUBLAS_OP_N,
+		m,
+		1, /* nrhs */
+		d_A,
+		lda,
+		d_Ipiv,
+		d_B,
+		ldb,
+		d_info);
+	
+	cudaStat1 = cudaDeviceSynchronize();
+	b1 = (CUSOLVER_STATUS_SUCCESS == status);
+	b1 = (cudaSuccess == cudaStat1);
+	if (!b1 || !b2) {
+		cout << "____Error! Cannot Solve linear system" << endl;
+	}
+	else {
+		cout << "____Solving linear system successful" << endl;
+	}
+
+
+	cudaStat1 = cudaMemcpy(X, d_B, sizeof(double)*m, cudaMemcpyDeviceToHost);
+	b1 = (cudaSuccess == cudaStat1);
+	if (!b1) {
+		cout << "____Error! copy data back to CPU" << endl;
+	}
+	else {
+		cout << "____Copying to CPU successful" << endl;
+	}
+
+	Xf.col(0) = Eigen::Map<Eigen::VectorXd>(X, m);
+
+
+	// Second Basis
+	cudaStat2 = cudaMemcpy(d_B, B1, sizeof(double)*m, cudaMemcpyHostToDevice);
+	assert(cudaSuccess == cudaStat2);
+
+	status = cusolverDnDgetrs(
+		cusolverH,
+		CUBLAS_OP_N,
+		m,
+		1, /* nrhs */
+		d_A,
+		lda,
+		d_Ipiv,
+		d_B,
+		ldb,
+		d_info);
+
+	cudaStat1 = cudaDeviceSynchronize();
+	assert(CUSOLVER_STATUS_SUCCESS == status);
+	assert(cudaSuccess == cudaStat1);
+
+	cudaStat1 = cudaMemcpy(X, d_B, sizeof(double)*m, cudaMemcpyDeviceToHost);
+	assert(cudaSuccess == cudaStat1);
+
+	Xf.col(1) = Eigen::Map<Eigen::VectorXd>(X, m);
+
+	printf("X = (matlab base-1)\n");
+	//printMatrix(m, 1, X, ldb, "X");
+	printf("=====\n");
+
+	/* free resources */
+	if (d_A) cudaFree(d_A);
+	if (d_B) cudaFree(d_B);
+	if (d_Ipiv) cudaFree(d_Ipiv);
+	if (d_info) cudaFree(d_info);
+	if (d_work) cudaFree(d_work);
+
+	if (cusolverH) cusolverDnDestroy(cusolverH);
+	if (stream) cudaStreamDestroy(stream);
+
+	cudaDeviceReset();
+}
 

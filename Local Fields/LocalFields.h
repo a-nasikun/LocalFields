@@ -27,6 +27,7 @@ public:
 	void setupRHSLocalProblemMapped();
 	void setupLHSLocalProblemMapped();
 	void solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTriplet);
+	void measureXF(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& J);
 
 private:
 	int id, sampleID;
