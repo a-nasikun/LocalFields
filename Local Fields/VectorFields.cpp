@@ -726,6 +726,8 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "..in " << duration.count() << " seconds" << endl;
+
+	
 }
 
 void VectorFields::solveGlobalSystemMappedLU_GPU()

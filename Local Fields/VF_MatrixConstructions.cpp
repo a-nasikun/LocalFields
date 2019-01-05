@@ -110,16 +110,10 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 		}
 	}
 
-	// Checking the result of EdgeList, print it
-	//for (int i = 0; i < F.rows(); i++) {
-	//	printf("F=%d has %d neighbors, which are", i, AdjMF3N_temp[i].size());
-	//	int eCounter = 0; 
-	//	for (std::set<Edge_VPair>::iterator it = EdgePairsList[i].begin(); it != EdgePairsList[i].end(); ++it) {
-	//		cout << AdjMF3N(i,eCounter++) << " in edge (" << it->v1 << ", " << it->v2 << ") ";
-	//	}
-	//	cout << endl;
-	//}
-
+	// Clearing redundant data structure, used as temporary DS only
+	AdjMF3N_temp.clear();
+	AdjMF3N_temp.shrink_to_fit();
+	
 	// MOVING EDGE Adjacency to MATRIX format
 	EdgePairMatrix.resize(F.rows(), 3 * F.cols());
 	for (int i = 0; i < F.rows(); i++) {
@@ -129,6 +123,9 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 			EdgePairMatrix(i, eCounter++) = it->v2;
 		}
 	}
+	// Save memory by free-ing space occupied by EdgePairList (temp data structure)
+	EdgePairsList.clear();
+	EdgePairsList.shrink_to_fit();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -415,14 +412,14 @@ void VectorFields::constructMassMatrices()
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Mass matrices... \n";
-	constructMassMatrixMV();
-	constructMassMatrixMVinv();
+	//constructMassMatrixMV();
+	//constructMassMatrixMVinv();
 
 	// Face-based Mass Matrices
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
-	constructMassMatrixMF3D();
-	constructMassMatrixMF3Dinv();
+	//constructMassMatrixMF3D();
+	//constructMassMatrixMF3Dinv();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -617,6 +614,17 @@ void VectorFields::constructStiffnessMatrixSF2D()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	// Free-ing memory, by clearing:
+	// __ LapDiv3D
+	// __ LapCurl3D
+	// __ LapDiv2D
+	// __ LapCurl2D
+	LapDiv3D.resize(0, 0);
+	LapCurl3D.resize(0, 0);
+	LapDiv2D.resize(0, 0);
+	LapCurl2D.resize(0, 0);
+	printf("Size of LD3=%d, LC3=%d, LD2=%d, LC2=%d:\n", LapDiv3D.size(), LapCurl3D.size(), LapDiv2D.size(), LapCurl2D.size());
 
 	// Implicit Construction
 	//Eigen::SparseMatrix<double> GMG, JGMGJ;

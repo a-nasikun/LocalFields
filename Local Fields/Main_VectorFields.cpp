@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
 	vectorFields.setAndSolveUserSystem();
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	/* LOCAL  */
 	vectorFields.visualizeApproxResult(viewer, 0);	
 	vectorFields.visualizeUserConstraints(viewer);
-	vectorFields.visualizeSamples(viewer);
+	//vectorFields.visualizeSamples(viewer);
 	vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
