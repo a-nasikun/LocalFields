@@ -11,10 +11,12 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedConstraints();
+	//constructSpecifiedConstraints();
 	
-	//constructSingularities();
-	//constructSpecifiedConstraintsWithSingularities();
+	constructSingularities();
+	constructSpecifiedConstraintsWithSingularities();
+
+	
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -145,6 +147,10 @@ void VectorFields::constructSpecifiedConstraints()
 void VectorFields::constructSingularities()
 {
 	const int NUM_SINGS = 4;
+
+	if (NUM_SINGS > 0)
+		constructVFNeighborsFull();
+
 	singularities.resize(NUM_SINGS);
 	SingNeighCC.resize(NUM_SINGS);
 
@@ -187,6 +193,10 @@ void VectorFields::constructSingularities()
 			}
 		}
 	}
+
+	// Free Memory for VFNeighborsFull
+	VFNeighFull.clear();
+	VFNeighbors.shrink_to_fit();
 }
 
 void VectorFields::constructSpecifiedConstraintsWithSingularities()
@@ -215,7 +225,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 		D.maxCoeff(&maxIndex);
 		constraints.insert(maxIndex);
 		curPoint = maxIndex;
-	} while (constraints.size() <= numConstraints);
+	} while (constraints.size() < numConstraints);
 
 	int counter1 = 0;
 	for (int i : constraints) {
@@ -920,6 +930,11 @@ void VectorFields::constructBasis()
 	duration = t2 - t1;
 	//normalizeBasis();
 	normalizeBasisAbs();
+
+	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+	BasisTemp.resize(0, 0);
+	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;

@@ -99,6 +99,9 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 		}
 		//cout << endl; 
 	}
+	// FREE MEMORY for VFNeighbors
+	VFNeighbors.clear();
+	VFNeighbors.shrink_to_fit();
 
 	// MOVING THE ADJACENCY it to matrix format
 	AdjMF3N.resize(F.rows(), F.cols());
@@ -398,6 +401,43 @@ void VectorFields::constructVFNeighborsFull()
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+//void VectorFields::constructVFNeighborsFull()
+//{
+//	// For Timing
+//	chrono::high_resolution_clock::time_point	t1, t2;
+//	chrono::duration<double>					duration;
+//	t1 = chrono::high_resolution_clock::now();
+//	cout << "> Building \"Vertex-to-Face\" Adjacency (2)... ";
+//
+//	VFNeighFull.resize(singularities.size());
+//	int counter = 0;
+//
+//	// Form singularities in "set" for easier member "finding/comparison"
+//	set<int> singSet;
+//	map<int, int> singGlobToLocMap;
+//	for (int i = 0; i < singularities.size(); i++) {
+//		singSet.insert(singularities[i]);
+//	}
+//
+//	for (int i = 0; i < F.rows(); i++) {
+//		for (int j = 0; j < F.cols(); j++) {
+//			//VtoFPair vp1{ counter++, F(i, j), i };
+//			if (singSet.find(F(i, j)) == singSet.end()) continue;
+//			VtoFPair vp1{ i, F(i, j), i };
+//			for (int k = j + 1; k < F.cols(); k++) {
+//				//VtoFPair vp2{ counter++, F(i, k), i };
+//				VtoFPair vp2{ i, F(i, k), i };
+//				VFNeighFull[vp1.vId].insert(vp2);
+//				VFNeighFull[vp2.vId].insert(vp1);
+//			}
+//		}
+//	}
+//
+//	t2 = chrono::high_resolution_clock::now();
+//	duration = t2 - t1;
+//	cout << "in " << duration.count() << " seconds" << endl;
+//}
+
 void VectorFields::constructGlobalMatrices()
 {
 	// Mass Matrices
@@ -659,7 +699,7 @@ void VectorFields::constructStiffnessMatrixSF3D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Divergent Part - Curl Part ";
-		SF3D = LapDiv3D - LapCurl3D;
+		//SF3D = LapDiv3D - LapCurl3D;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;

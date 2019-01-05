@@ -37,12 +37,12 @@ int main(int argc, char *argv[])
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
 	vectorFields.readMesh(meshFile);
-	vectorFields.computeEdges();
+	//vectorFields.computeEdges();
 	vectorFields.computeAverageEdgeLength();
 	vectorFields.computeFaceCenter();
 	vectorFields.computeFaceNormal();
 	vectorFields.constructVFNeighbors();
-	vectorFields.constructVFNeighborsFull();
+	//vectorFields.constructVFNeighborsFull();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
 	
@@ -64,24 +64,23 @@ int main(int argc, char *argv[])
 	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
-	//vectorFields.measureU1andJU0();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer,0);
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer,0);
+	vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	vectorFields.visualizeApproxResult(viewer, 0);	
-	vectorFields.visualizeUserConstraints(viewer);
+	//vectorFields.visualizeApproxResult(viewer, 0);	
+	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
-	vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
 	/* FOR TESTING PURPOSE */

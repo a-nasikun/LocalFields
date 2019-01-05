@@ -2,6 +2,8 @@
 #ifndef VECTOR_FIELDS_H
 #define VECTOR_FIELDS_H
 
+#define EIGEN_USE_MKL_ALL
+
 #include "Utility.h"
 #include "EigenSolver.h"
 #include "LocalFields.h"
