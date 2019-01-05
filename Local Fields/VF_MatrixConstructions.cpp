@@ -401,6 +401,42 @@ void VectorFields::constructVFNeighborsFull()
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void VectorFields::constructVFAdjacency()
+{
+	VFAdjacency.resize(F.rows(), V.rows());
+	vector<Eigen::Triplet<bool>> VFTriplet;
+	VFTriplet.reserve(7 * V.rows());
+
+	for (int i = 0; i < F.rows(); i++) {
+		for (int j = 0; j < F.cols(); j++) {
+			VFTriplet.push_back(Eigen::Triplet<bool>(i, F(i, j), true));
+		}
+	}
+
+	VFAdjacency.setFromTriplets(VFTriplet.begin(), VFTriplet.end());
+}
+
+void VectorFields::testAdjacency()
+{
+	for (int i = 0; i < V.rows(); i += 100) {
+		// VF_FULL
+		//cout << "VF_Neigbor Full\n";
+		printf("FULL_[%d] => ");
+		for (std::set<VtoFPair>::iterator it1 = VFNeighFull[i].begin(); it1 != VFNeighFull[i].end(); ++it1) {
+			printf("%d, ", it1->fId);
+		} 
+		cout << "\n";
+
+		// VFAdjacency (boolean)
+		//cout << "VF_Neigbor Full\n";
+		printf("ADJ_[%d] => ");		
+		for (Eigen::SparseMatrix<bool>::InnerIterator it(VFAdjacency, i); it; ++it) {
+			printf("%d, ", it.row());
+		}		
+		cout << "\n";
+	}
+}
+
 //void VectorFields::constructVFNeighborsFull()
 //{
 //	// For Timing

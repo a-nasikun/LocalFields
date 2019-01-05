@@ -42,7 +42,9 @@ int main(int argc, char *argv[])
 	vectorFields.computeFaceCenter();
 	vectorFields.computeFaceNormal();
 	vectorFields.constructVFNeighbors();
-	//vectorFields.constructVFNeighborsFull();
+	vectorFields.constructVFNeighborsFull();
+	vectorFields.constructVFAdjacency();
+	vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
 	
@@ -74,7 +76,7 @@ int main(int argc, char *argv[])
 	vectorFields.visualizeApproximatedFields(viewer,0);
 	vectorFields.visualizeGlobalConstraints(viewer);
 	vectorFields.visualizeSingularitiesConstraints(viewer);
-	//vectorFields.visualizeSharedEdges(viewer);
+	vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer, 0);	
