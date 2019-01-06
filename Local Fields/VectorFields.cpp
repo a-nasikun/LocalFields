@@ -11,10 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedConstraints();
+	constructSpecifiedConstraints();
 	
-	constructSingularities();
-	constructSpecifiedConstraintsWithSingularities();
+	//constructSingularities();
+	//constructSpecifiedConstraintsWithSingularities();
 
 	
 
@@ -626,7 +626,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 //
 void VectorFields::setupGlobalProblem()
 {	
-	constructConstraints();	
+	//constructConstraints();	
 	setupRHSGlobalProblemMapped();
 	setupLHSGlobalProblemMapped();
 	//setupRHSGlobalProblem();
@@ -724,6 +724,8 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 		cout << "Cannot solve the linear system. " << endl;
 		if (sparseSolver.info() == Eigen::NumericalIssue)
 			cout << "NUMERICAL ISSUE. " << endl;
+		if(sparseSolver.info()==Eigen::InvalidInput)
+			cout << "Input is Invalid. " << endl;
 		cout << sparseSolver.info() << endl;
 		return;
 	}
