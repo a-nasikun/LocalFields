@@ -42,9 +42,9 @@ int main(int argc, char *argv[])
 	vectorFields.computeFaceCenter();
 	vectorFields.computeFaceNormal();
 	vectorFields.constructVFNeighbors();
-	vectorFields.constructVFNeighborsFull();
-	vectorFields.constructVFAdjacency();
-	vectorFields.testAdjacency();
+	//vectorFields.constructVFNeighborsFull();
+	//vectorFields.constructVFAdjacency();
+	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
 	

@@ -149,7 +149,8 @@ void VectorFields::constructSingularities()
 	const int NUM_SINGS = 4;
 
 	if (NUM_SINGS > 0)
-		constructVFNeighborsFull();
+		constructVFAdjacency();
+		//constructVFNeighborsFull();
 
 	singularities.resize(NUM_SINGS);
 	SingNeighCC.resize(NUM_SINGS);
@@ -164,8 +165,11 @@ void VectorFields::constructSingularities()
 		const int SingLocation = rand() % V.rows();
 		//const int SingLocation = id * (int)(V.rows() / NUM_SINGS) + 5;
 		singularities[id] = SingLocation;
-		const int SingNeighNum = VFNeighFull[SingLocation].size();
-		const int firstNeigh = VFNeighFull[SingLocation].begin()->fId;
+		const int SingNeighNum = VFAdjacency.col(SingLocation).nonZeros(); 
+		Eigen::SparseMatrix<bool>::InnerIterator it0(VFAdjacency, SingLocation);
+		const int firstNeigh = it0.row(); 
+
+		//printf("%d=%d => first Neigh=%d\n", id, SingLocation, firstNeigh);
 
 		SingNeighCC[id].resize(SingNeighNum);
 		SingNeighCC[id][0] = firstNeigh;
@@ -182,12 +186,14 @@ void VectorFields::constructSingularities()
 					vertex2 = F(curNeigh, (i + F.cols() - 1) % F.cols());
 				}
 			}
-			for (std::set<VtoFPair>::iterator it1 = next(VFNeighFull[SingLocation].begin(), 1); it1 != VFNeighFull[SingLocation].end(); ++it1) {
+			//for (std::set<VtoFPair>::iterator it1 = next(VFNeighFull[SingLocation].begin(), 1); it1 != VFNeighFull[SingLocation].end(); ++it1) {
+			for (Eigen::SparseMatrix<bool>::InnerIterator it1(VFAdjacency, SingLocation); it1; ++it1) {
+				//printf("face=%d \n", it1.row());
 				for (int i = 0; i < F.cols(); i++) {
-					if (F(it1->fId, i) == vertex1 && F(it1->fId, (i + 1) % F.cols()) == vertex2) {
-						SingNeighCC[id][i2] = it1->fId;
-						//printf("     Inserting %d as neighbor\n", it1->fId);
-						curNeigh = it1->fId;
+					if (F(it1.row(), i) == vertex1 && F(it1.row(), (i + 1) % F.cols()) == vertex2) {
+						SingNeighCC[id][i2] = it1.row();
+						//printf("     Inserting %d as neighbor\n", it1.row());
+						curNeigh = it1.row();
 					}
 				}
 			}
@@ -195,8 +201,9 @@ void VectorFields::constructSingularities()
 	}
 
 	// Free Memory for VFNeighborsFull
-	VFNeighFull.clear();
-	VFNeighbors.shrink_to_fit();
+	VFAdjacency.resize(0, 0);
+	//VFNeighFull.clear();
+	//VFNeighbors.shrink_to_fit();
 }
 
 void VectorFields::constructSpecifiedConstraintsWithSingularities()
