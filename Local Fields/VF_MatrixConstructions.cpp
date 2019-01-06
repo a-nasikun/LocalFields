@@ -99,6 +99,9 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 		}
 		//cout << endl; 
 	}
+	// FREE MEMORY for VFNeighbors
+	VFNeighbors.clear();
+	VFNeighbors.shrink_to_fit();
 
 	// MOVING THE ADJACENCY it to matrix format
 	AdjMF3N.resize(F.rows(), F.cols());
@@ -110,16 +113,10 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 		}
 	}
 
-	// Checking the result of EdgeList, print it
-	//for (int i = 0; i < F.rows(); i++) {
-	//	printf("F=%d has %d neighbors, which are", i, AdjMF3N_temp[i].size());
-	//	int eCounter = 0; 
-	//	for (std::set<Edge_VPair>::iterator it = EdgePairsList[i].begin(); it != EdgePairsList[i].end(); ++it) {
-	//		cout << AdjMF3N(i,eCounter++) << " in edge (" << it->v1 << ", " << it->v2 << ") ";
-	//	}
-	//	cout << endl;
-	//}
-
+	// Clearing redundant data structure, used as temporary DS only
+	AdjMF3N_temp.clear();
+	AdjMF3N_temp.shrink_to_fit();
+	
 	// MOVING EDGE Adjacency to MATRIX format
 	EdgePairMatrix.resize(F.rows(), 3 * F.cols());
 	for (int i = 0; i < F.rows(); i++) {
@@ -129,6 +126,9 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 			EdgePairMatrix(i, eCounter++) = it->v2;
 		}
 	}
+	// Save memory by free-ing space occupied by EdgePairList (temp data structure)
+	EdgePairsList.clear();
+	EdgePairsList.shrink_to_fit();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -401,6 +401,79 @@ void VectorFields::constructVFNeighborsFull()
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void VectorFields::constructVFAdjacency()
+{
+	VFAdjacency.resize(F.rows(), V.rows());
+	vector<Eigen::Triplet<bool>> VFTriplet;
+	VFTriplet.reserve(7 * V.rows());
+
+	for (int i = 0; i < F.rows(); i++) {
+		for (int j = 0; j < F.cols(); j++) {
+			VFTriplet.push_back(Eigen::Triplet<bool>(i, F(i, j), true));
+		}
+	}
+
+	VFAdjacency.setFromTriplets(VFTriplet.begin(), VFTriplet.end());
+}
+
+void VectorFields::testAdjacency()
+{
+	for (int i = 0; i < V.rows(); i += 100) {
+		// VF_FULL
+		//cout << "VF_Neigbor Full\n";
+		printf("FULL_[%d] => ");
+		for (std::set<VtoFPair>::iterator it1 = VFNeighFull[i].begin(); it1 != VFNeighFull[i].end(); ++it1) {
+			printf("%d, ", it1->fId);
+		} 
+		cout << "\n";
+
+		// VFAdjacency (boolean)
+		//cout << "VF_Neigbor Full\n";
+		printf("ADJ_[%d] => ");		
+		for (Eigen::SparseMatrix<bool>::InnerIterator it(VFAdjacency, i); it; ++it) {
+			printf("%d, ", it.row());
+		}		
+		cout << "\n";
+	}
+}
+
+//void VectorFields::constructVFNeighborsFull()
+//{
+//	// For Timing
+//	chrono::high_resolution_clock::time_point	t1, t2;
+//	chrono::duration<double>					duration;
+//	t1 = chrono::high_resolution_clock::now();
+//	cout << "> Building \"Vertex-to-Face\" Adjacency (2)... ";
+//
+//	VFNeighFull.resize(singularities.size());
+//	int counter = 0;
+//
+//	// Form singularities in "set" for easier member "finding/comparison"
+//	set<int> singSet;
+//	map<int, int> singGlobToLocMap;
+//	for (int i = 0; i < singularities.size(); i++) {
+//		singSet.insert(singularities[i]);
+//	}
+//
+//	for (int i = 0; i < F.rows(); i++) {
+//		for (int j = 0; j < F.cols(); j++) {
+//			//VtoFPair vp1{ counter++, F(i, j), i };
+//			if (singSet.find(F(i, j)) == singSet.end()) continue;
+//			VtoFPair vp1{ i, F(i, j), i };
+//			for (int k = j + 1; k < F.cols(); k++) {
+//				//VtoFPair vp2{ counter++, F(i, k), i };
+//				VtoFPair vp2{ i, F(i, k), i };
+//				VFNeighFull[vp1.vId].insert(vp2);
+//				VFNeighFull[vp2.vId].insert(vp1);
+//			}
+//		}
+//	}
+//
+//	t2 = chrono::high_resolution_clock::now();
+//	duration = t2 - t1;
+//	cout << "in " << duration.count() << " seconds" << endl;
+//}
+
 void VectorFields::constructGlobalMatrices()
 {
 	// Mass Matrices
@@ -415,14 +488,14 @@ void VectorFields::constructMassMatrices()
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Mass matrices... \n";
-	constructMassMatrixMV();
-	constructMassMatrixMVinv();
+	//constructMassMatrixMV();
+	//constructMassMatrixMVinv();
 
 	// Face-based Mass Matrices
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
-	constructMassMatrixMF3D();
-	constructMassMatrixMF3Dinv();
+	//constructMassMatrixMF3D();
+	//constructMassMatrixMF3Dinv();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -618,6 +691,17 @@ void VectorFields::constructStiffnessMatrixSF2D()
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
+	// Free-ing memory, by clearing:
+	// __ LapDiv3D
+	// __ LapCurl3D
+	// __ LapDiv2D
+	// __ LapCurl2D
+	LapDiv3D.resize(0, 0);
+	LapCurl3D.resize(0, 0);
+	LapDiv2D.resize(0, 0);
+	LapCurl2D.resize(0, 0);
+	printf("Size of LD3=%d, LC3=%d, LD2=%d, LC2=%d:\n", LapDiv3D.size(), LapCurl3D.size(), LapDiv2D.size(), LapCurl2D.size());
+
 	// Implicit Construction
 	//Eigen::SparseMatrix<double> GMG, JGMGJ;
 	//printf("Dim check: G=%dx%d, M=%dx%d\n", GF2D.rows(), GF2D.cols(), MVinv.rows(), MVinv.cols());
@@ -651,7 +735,7 @@ void VectorFields::constructStiffnessMatrixSF3D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Divergent Part - Curl Part ";
-		SF3D = LapDiv3D - LapCurl3D;
+		//SF3D = LapDiv3D - LapCurl3D;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;

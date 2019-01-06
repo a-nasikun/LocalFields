@@ -2,6 +2,8 @@
 #ifndef VECTOR_FIELDS_H
 #define VECTOR_FIELDS_H
 
+#define EIGEN_USE_MKL_ALL
+
 #include "Utility.h"
 #include "EigenSolver.h"
 #include "LocalFields.h"
@@ -56,6 +58,8 @@ public:
 	void computeEdges();
 	void constructVFNeighbors();
 	void constructVFNeighborsFull();
+	void constructVFAdjacency();
+	void testAdjacency();
 
 	// SETTING UP MATRICES
 	void constructGlobalMatrices();
@@ -170,31 +174,48 @@ public:
 	void visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer);
 
 protected:
-	Eigen::MatrixXd					V, FC, NF, Xf, c, cBar, b, bBar, g, h;
-	Eigen::MatrixXd					XfLoc, BasisSum, BasisSumN, XLowDim, XFullDim, Curl3DPacked, Div3DPacked;
+	// Variable (Matrix, Vector or regular variables) for Matrix construction
+	Eigen::MatrixXd					V, FC, NF;
+	Eigen::MatrixXd					Curl3DPacked, Div3DPacked;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
-	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, BasisTemp, Basis, SF2D, SF3D, B2D, B2Dbar, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
-	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J, C, Cbar, A_LHSbar, A_LHS;
-	Eigen::VectorXd					doubleArea, arbField;
-	Eigen::VectorXd					vEstUser, vEst, gbar, hbar,pbar;
+	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D, B2Dbar, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
+	Eigen::SparseMatrix<bool>		VFAdjacency;
+	Eigen::VectorXd					doubleArea;
 	vector<set<int>>				AdjMV, AdjMF2Ring, NeighRing;
 	vector<set<VtoFPair>>			VFNeighbors, VFNeighFull;
-	vector<set<Edge_VPair>>			EdgePairsList; 
+	vector<set<Edge_VPair>>			EdgePairsList;
 	vector<set<FacePair>>			AdjMF3N_temp;
-	vector<int>						LocalElements, Sample, userConstraints, globalConstraints;
+	double							avgEdgeLength;
+
+	// Variable related to global problem
+	Eigen::MatrixXd					Xf, c, b, g, h;
+	Eigen::SparseMatrix<double>		C, A_LHS;
+	Eigen::VectorXd					vEst;
+	vector<int>						LocalElements, userConstraints, globalConstraints;
 	vector<int>						singularities;
-	vector<chrono::duration<double>>durations;
 	vector<vector<int>>				SingNeighCC;
-	set<int>						SubDomain, Boundary; 
-	int								sample, numSample; 
-	
+	set<int>						SubDomain, Boundary;
+
+	// Variable related to subspace construction
+	Eigen::SparseMatrix<double>		BasisTemp, Basis;
+	Eigen::MatrixXd					BasisSum, BasisSumN;
+	vector<int>						Sample;
+	vector<chrono::duration<double>>durations;
+	int								numSample;
+
+	// Variable related to manipulation within the subspace
+	Eigen::MatrixXd					cBar, bBar;
+	Eigen::MatrixXd					XLowDim, XFullDim;
+	Eigen::SparseMatrix<double>		Cbar, A_LHSbar;
+	Eigen::VectorXd					vEstUser, gbar, hbar, pbar;	
 
 	// FOR TESTING ONLY
-	Eigen::VectorXd					dijkstraFace;
+	Eigen::VectorXd					dijkstraFace, arbField;
 	vector<vector<int>>				sharedEdgesVect; 
 
 private:
-	double avgEdgeLength; 
+	
 };
 
 

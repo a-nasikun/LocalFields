@@ -414,5 +414,5 @@ void LocalFields::measureXF(const Eigen::VectorXd& doubleArea, const Eigen::Spar
 	double norm1 = diff.transpose() * MLocal * diff;
 	double norm2 = XfLoc.col(0).transpose() * MLocal * XfLoc.col(0);
 	double normXf = sqrt(norm1 / norm2);
-	printf("_______Error of %d is %.16f \n", id, normXf);
+	//printf("_______Error of %d is %.16f \n", id, normXf);
 }

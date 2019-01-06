@@ -16,6 +16,8 @@ void VectorFields::constructConstraints()
 	//constructSingularities();
 	//constructSpecifiedConstraintsWithSingularities();
 
+	
+
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -145,6 +147,11 @@ void VectorFields::constructSpecifiedConstraints()
 void VectorFields::constructSingularities()
 {
 	const int NUM_SINGS = 4;
+
+	if (NUM_SINGS > 0)
+		constructVFAdjacency();
+		//constructVFNeighborsFull();
+
 	singularities.resize(NUM_SINGS);
 	SingNeighCC.resize(NUM_SINGS);
 
@@ -158,8 +165,11 @@ void VectorFields::constructSingularities()
 		const int SingLocation = rand() % V.rows();
 		//const int SingLocation = id * (int)(V.rows() / NUM_SINGS) + 5;
 		singularities[id] = SingLocation;
-		const int SingNeighNum = VFNeighFull[SingLocation].size();
-		const int firstNeigh = VFNeighFull[SingLocation].begin()->fId;
+		const int SingNeighNum = VFAdjacency.col(SingLocation).nonZeros(); 
+		Eigen::SparseMatrix<bool>::InnerIterator it0(VFAdjacency, SingLocation);
+		const int firstNeigh = it0.row(); 
+
+		//printf("%d=%d => first Neigh=%d\n", id, SingLocation, firstNeigh);
 
 		SingNeighCC[id].resize(SingNeighNum);
 		SingNeighCC[id][0] = firstNeigh;
@@ -176,17 +186,24 @@ void VectorFields::constructSingularities()
 					vertex2 = F(curNeigh, (i + F.cols() - 1) % F.cols());
 				}
 			}
-			for (std::set<VtoFPair>::iterator it1 = next(VFNeighFull[SingLocation].begin(), 1); it1 != VFNeighFull[SingLocation].end(); ++it1) {
+			//for (std::set<VtoFPair>::iterator it1 = next(VFNeighFull[SingLocation].begin(), 1); it1 != VFNeighFull[SingLocation].end(); ++it1) {
+			for (Eigen::SparseMatrix<bool>::InnerIterator it1(VFAdjacency, SingLocation); it1; ++it1) {
+				//printf("face=%d \n", it1.row());
 				for (int i = 0; i < F.cols(); i++) {
-					if (F(it1->fId, i) == vertex1 && F(it1->fId, (i + 1) % F.cols()) == vertex2) {
-						SingNeighCC[id][i2] = it1->fId;
-						//printf("     Inserting %d as neighbor\n", it1->fId);
-						curNeigh = it1->fId;
+					if (F(it1.row(), i) == vertex1 && F(it1.row(), (i + 1) % F.cols()) == vertex2) {
+						SingNeighCC[id][i2] = it1.row();
+						//printf("     Inserting %d as neighbor\n", it1.row());
+						curNeigh = it1.row();
 					}
 				}
 			}
 		}
 	}
+
+	// Free Memory for VFNeighborsFull
+	VFAdjacency.resize(0, 0);
+	//VFNeighFull.clear();
+	//VFNeighbors.shrink_to_fit();
 }
 
 void VectorFields::constructSpecifiedConstraintsWithSingularities()
@@ -215,7 +232,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 		D.maxCoeff(&maxIndex);
 		constraints.insert(maxIndex);
 		curPoint = maxIndex;
-	} while (constraints.size() <= numConstraints);
+	} while (constraints.size() < numConstraints);
 
 	int counter1 = 0;
 	for (int i : constraints) {
@@ -609,7 +626,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 //
 void VectorFields::setupGlobalProblem()
 {	
-	constructConstraints();	
+	//constructConstraints();	
 	setupRHSGlobalProblemMapped();
 	setupLHSGlobalProblemMapped();
 	//setupRHSGlobalProblem();
@@ -707,6 +724,8 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 		cout << "Cannot solve the linear system. " << endl;
 		if (sparseSolver.info() == Eigen::NumericalIssue)
 			cout << "NUMERICAL ISSUE. " << endl;
+		if(sparseSolver.info()==Eigen::InvalidInput)
+			cout << "Input is Invalid. " << endl;
 		cout << sparseSolver.info() << endl;
 		return;
 	}
@@ -726,6 +745,8 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "..in " << duration.count() << " seconds" << endl;
+
+	
 }
 
 void VectorFields::solveGlobalSystemMappedLU_GPU()
@@ -918,6 +939,11 @@ void VectorFields::constructBasis()
 	duration = t2 - t1;
 	//normalizeBasis();
 	normalizeBasisAbs();
+
+	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+	BasisTemp.resize(0, 0);
+	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
