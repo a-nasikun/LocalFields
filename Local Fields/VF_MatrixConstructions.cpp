@@ -701,6 +701,7 @@ void VectorFields::constructStiffnessMatrixSF2D()
 	LapDiv2D.resize(0, 0);
 	LapCurl2D.resize(0, 0);
 	printf("Size of LD3=%d, LC3=%d, LD2=%d, LC2=%d:\n", LapDiv3D.size(), LapCurl3D.size(), LapDiv2D.size(), LapCurl2D.size());
+	printf("____SF2D=%dx%d [%.5f per-row (%d) filled]\n", SF2D.rows(), SF2D.cols(), (double)SF2D.nonZeros()/((double) SF2D.rows()), SF2D.nonZeros());
 
 	// Implicit Construction
 	//Eigen::SparseMatrix<double> GMG, JGMGJ;
@@ -1259,4 +1260,9 @@ void VectorFields::constructMatrixB()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	printf("____B2D=%dx%d [%.5f per-row (%d) filled]\n", B2D.rows(), B2D.cols(), (double)B2D.nonZeros() / (double)B2D.rows(), B2D.nonZeros());
+	
+	// FREE-ing Memory, not the best practice but used to save space for large mesh
+	//SF2D.resize(0, 0);
 }
