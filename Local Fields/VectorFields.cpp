@@ -11,10 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedConstraints();
+	//constructSpecifiedConstraints();
 	
-	//constructSingularities();
-	//constructSpecifiedConstraintsWithSingularities();
+	constructSingularities();
+	constructSpecifiedConstraintsWithSingularities();
 
 	
 
@@ -132,14 +132,12 @@ void VectorFields::constructSpecifiedConstraints()
 	printf("Cp=%dx%d\n", C.rows(), C.cols());
 
 
-	// Setting up vector c (There are 2 vector c)
+	// Setting up vector c (There are 1 vector c)
 	srand(time(NULL));
-	c.resize(2 * globalConstraints.size(), 2);
+	c.resize(2 * globalConstraints.size());
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		c(2 * i + 0, 0) = sqrt(2.0);
 		c(2 * i + 1, 0) = sqrt(2.0);
-		c(2 * i + 0, 1) = sqrt(2.0);
-		c(2 * i + 1, 1) = sqrt(2.0);
 	}
 	printf("cBar=%dx%d\n", c.rows(), c.cols());
 }
@@ -246,22 +244,22 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	}
 
 	// Setting up matrix C and vector c
-	c.resize(2 * (globalConstraints.size()+2*numSingConstraints), 2);
+	c.resize(2 * (globalConstraints.size()+numSingConstraints));
 
 
 	// HARD CONSTRAINTS
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * globalConstraints.size() + 2 * 2 * 4 * 7 * SingNeighCC.size());
+	CTriplet.reserve(2 * globalConstraints.size() +  2 * 4 * 7 * SingNeighCC.size());
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		// Matrix C
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
-		c(counter, 0) = sqrt(2.0);
-		c(counter++, 1) = sqrt(2.0);
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
-		c(counter, 0) = sqrt(2.0);
-		c(counter++, 1) = sqrt(2.0);
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
 	}
 
 	
@@ -355,18 +353,31 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 			const double sinR21_2 = sin(angleR21_2);
 			printf("______[%.2f] Rotation matrix R22_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_2*180.0/M_PI, cosR21_2, -sinR21_2, sinR21_2, cosR21_2);
 
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, cosR21_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -sinR21_1));
-			c(counter, 0) = 0.0;
-			c(counter, 1) = 0.0;
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR21_1*cosR12_1+sinR21_1*sinR12_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosR21_1*sinR12_1+sinR21_1*cosR12_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, 0.0));
+			c(counter) = 0.0;
 			counter++;
 			
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosR12_1 ));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_1 ));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, -sinR21_1*cosR12_1+cosR21_1*sinR12_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, sinR21_1*sinR12_1+cosR21_1*cosR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, 0.0));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
+			c(counter) = 0.0;
+			counter++;
 		}
 	}
 
-	C.resize(2 * (globalConstraints.size()+2*numSingConstraints), B2D.rows());
+	C.resize(2 * (globalConstraints.size()+numSingConstraints), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
 }
@@ -817,15 +828,11 @@ void VectorFields::setupRHSGlobalProblemMapped()
 	}
 
 	g = B2D * vEst;
-	b.resize(B2D.rows() + c.rows(), 2);
+	b.resize(B2D.rows() + c.rows(), c.cols());
 
 	// First column of b
-	h = C * vEst - c.col(0);
+	h = C * vEst - c;
 	b.col(0) << g, h;
-
-	// Second Column of b
-	h = C * vEst - c.col(1);
-	b.col(1) << g, h;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -875,7 +882,7 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 	cout << "> Solving the global system (Pardiso LDLT)... \n";
 
 	//cout << "Starting to solve problem." << endl;
-	Xf.resize(B2D.rows(), 2);
+	Xf.resize(B2D.rows(), c.cols());
 	
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
@@ -896,23 +903,9 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 		return;
 	}
 	
-	Xf.col(0) = -x.block(0, 0, B2D.rows(), 1) + vEst;
-	
-	// SECOND BASIS
-	cout << "....Solving second problem (second frame)." << endl;
-	x = sparseSolver.solve(b.col(1));
-	if (sparseSolver.info() != Eigen::Success) {
-		cout << "Cannot solve the linear system." << endl;
-		return;
-	}
-	
-	Xf.col(1) = -x.block(0, 0, B2D.rows(), 1) + vEst;
-	
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "..in " << duration.count() << " seconds" << endl;
+	Xf = -x.block(0, 0, B2D.rows(), 1) + vEst;
 
-	
+	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());	
 }
 
 void VectorFields::solveGlobalSystemMappedLU_GPU()
@@ -1107,7 +1100,11 @@ void VectorFields::constructBasis()
 	normalizeBasisAbs();
 
 	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+	cout << "Test 1" << endl;
 	BasisTemp.resize(0, 0);
+	cout << "Test 2" << endl;
+	manuallyDestroySparseMatrix(BasisTemp);
+	cout << "Test 3" << endl;
 	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
 
 	t2 = chrono::high_resolution_clock::now();

@@ -69,23 +69,23 @@ int main(int argc, char *argv[])
 	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
-	//vectorFields.setAndSolveUserSystem();
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
+	vectorFields.setAndSolveUserSystem();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer,0);
-	vectorFields.visualizeGlobalConstraints(viewer);
-	vectorFields.visualizeSingularitiesConstraints(viewer);
-	vectorFields.visualizeSharedEdges(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer, 0);	
-	//vectorFields.visualizeUserConstraints(viewer);
-	//vectorFields.visualizeSamples(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeApproxResult(viewer, 0);	
+	vectorFields.visualizeUserConstraints(viewer);
+	vectorFields.visualizeSamples(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
 	/* FOR TESTING PURPOSE */
@@ -144,14 +144,11 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeBasisSum(viewer, 1);
 			break;
 		case '9':
-			vectorFields.visualizeApproximatedFields(viewer, 0);
+			vectorFields.visualizeApproximatedFields(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			vectorFields.visualizeSingularitiesConstraints(viewer);
 			break;
 		case '0':
-			vectorFields.visualizeApproximatedFields(viewer, 1);
-			vectorFields.visualizeGlobalConstraints(viewer);
-			vectorFields.visualizeSingularitiesConstraints(viewer);
 			break;
 		case 'x':
 		case 'X':

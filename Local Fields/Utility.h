@@ -67,5 +67,9 @@ struct FacePair
 
 double SparseMatrixMaxValue(const Eigen::SparseMatrix<double> &M);
 
+//template<typename Scalar>
+void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
+
+
 #endif // !UTILITY_H
 

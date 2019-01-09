@@ -159,7 +159,7 @@ public:
 	void visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type);
 	void visualizeGradient(igl::opengl::glfw::Viewer &viewer, const GradientToShow &type);
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
-	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer, const int& i);
+	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
@@ -189,9 +189,9 @@ protected:
 	double							avgEdgeLength;
 
 	// Variable related to global problem
-	Eigen::MatrixXd					Xf, c, b, g, h;
+	Eigen::MatrixXd					b, g, h;
 	Eigen::SparseMatrix<double>		C, A_LHS;
-	Eigen::VectorXd					vEst;
+	Eigen::VectorXd					vEst, Xf, c;
 	vector<int>						LocalElements, userConstraints, globalConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
