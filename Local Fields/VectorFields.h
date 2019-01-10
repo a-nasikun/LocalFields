@@ -165,7 +165,7 @@ public:
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const int &id);
-	void visualizeApproxResult(igl::opengl::glfw::Viewer &viewer, const int &id);
+	void visualizeApproxResult(igl::opengl::glfw::Viewer &viewer);
 	void visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer);
