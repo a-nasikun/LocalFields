@@ -91,18 +91,12 @@ void VectorFields::visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer)
 	}
 }
 
-void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer, const int& i)
+void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer)
 {
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
-	Eigen::RowVector3d color1 = Eigen::RowVector3d(1.0, 0.1, 0.2);
-	Eigen::RowVector3d color2 = Eigen::RowVector3d(0.0, 0.1, 1.0);
-	if(i==0)
-		visualize2DfieldsScaled(viewer, Xf.col(i), color1);
-	else 
-		visualize2DfieldsScaled(viewer, Xf.col(i), color2);
-	//visualize2Dfields(viewer, Xf.col(0), color1);
-	//visualize2Dfields(viewer, Xf.col(1), color2);	
+	Eigen::RowVector3d color1 = Eigen::RowVector3d(1.0, 0.1, 0.2);	
+	visualize2DfieldsScaled(viewer, Xf, color1);
 }
 
 void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
@@ -175,7 +169,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	Eigen::Vector3d e;
 	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
 
-	for (int i = 0; i < F.rows(); i += 100)
+	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c, g, v1, v2, v3;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
@@ -186,7 +180,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	}
 
 	double lengthScale = 1.0*avgEdgeLength;
-	for (int i = 0; i < F.rows(); i += 100)
+	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;

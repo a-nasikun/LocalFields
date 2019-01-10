@@ -654,8 +654,11 @@ void VectorFields::constructStiffnessMatrices()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing stiffness matrices...\n";
 
-	constructStiffnessMatrixSF3D();
-	constructStiffnessMatrixSF2D();
+	// Declare variables, only required as temporary structure for creating SF2D (Stiffness matrix in local frame)
+	Eigen::SparseMatrix<double> LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+
+	constructStiffnessMatrixSF3D(LapCurl3D, LapDiv3D);
+	constructStiffnessMatrixSF2D(LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -663,7 +666,7 @@ void VectorFields::constructStiffnessMatrices()
 
 }
 
-void VectorFields::constructStiffnessMatrixSF2D()
+void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
 {
 	// Explicit construction
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -671,7 +674,7 @@ void VectorFields::constructStiffnessMatrixSF2D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (2D) Curl part ";
-	constructStiffnessMatrixCurlPart2D();
+	constructStiffnessMatrixCurlPart2D(LapCurl3D, LapCurl2D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -679,7 +682,7 @@ void VectorFields::constructStiffnessMatrixSF2D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (2D) Divergent part ";
-		constructStiffnessMatrixDivPart2D();
+		constructStiffnessMatrixDivPart2D(LapDiv3D, LapDiv2D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -696,11 +699,12 @@ void VectorFields::constructStiffnessMatrixSF2D()
 	// __ LapCurl3D
 	// __ LapDiv2D
 	// __ LapCurl2D
-	LapDiv3D.resize(0, 0);
-	LapCurl3D.resize(0, 0);
-	LapDiv2D.resize(0, 0);
-	LapCurl2D.resize(0, 0);
-	printf("Size of LD3=%d, LC3=%d, LD2=%d, LC2=%d:\n", LapDiv3D.size(), LapCurl3D.size(), LapDiv2D.size(), LapCurl2D.size());
+	//LapDiv3D.resize(0, 0);
+	//LapCurl3D.resize(0, 0);
+	//LapDiv2D.resize(0, 0);
+	//LapCurl2D.resize(0, 0);
+	//printf("Size of LD3=%d, LC3=%d, LD2=%d, LC2=%d:\n", LapDiv3D.size(), LapCurl3D.size(), LapDiv2D.size(), LapCurl2D.size());
+	//printf("____SF2D=%dx%d [%.5f per-row (%d) filled]\n", SF2D.rows(), SF2D.cols(), (double)SF2D.nonZeros()/((double) SF2D.rows()), SF2D.nonZeros());
 
 	// Implicit Construction
 	//Eigen::SparseMatrix<double> GMG, JGMGJ;
@@ -711,7 +715,7 @@ void VectorFields::constructStiffnessMatrixSF2D()
 
 }
 
-void VectorFields::constructStiffnessMatrixSF3D()
+void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
@@ -719,7 +723,7 @@ void VectorFields::constructStiffnessMatrixSF3D()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Curl part ";
 		//constructStiffnessMatrixCurlPart3D();
-		constructStiffnessMatrixCurlPart3DandCurl4F();
+		constructStiffnessMatrixCurlPart3DandCurl4F(LapCurl3D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -727,7 +731,7 @@ void VectorFields::constructStiffnessMatrixSF3D()
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
-		constructStiffnessMatrixDivPart3D();
+		constructStiffnessMatrixDivPart3D(LapDiv3D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -741,7 +745,7 @@ void VectorFields::constructStiffnessMatrixSF3D()
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::constructStiffnessMatrixCurlPart3D()
+void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D)
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
@@ -822,7 +826,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3D()
 	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
-void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
+void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F(Eigen::SparseMatrix<double>& LapCurl3D)
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
@@ -912,27 +916,27 @@ void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F()
 	//printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
-void VectorFields::constructStiffnessMatrixCurlPart2D()
+void VectorFields::constructStiffnessMatrixCurlPart2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D)
 {
 	LapCurl2D = A.transpose() * LapCurl3D * A;
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3D()
+void VectorFields::constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	// IMPLICIT Construction for Divergent Part
-	//constructStiffnessMatrixDivPart3D_Implicit();
+	//constructStiffnessMatrixDivPart3D_Implicit(LapDiv3D);
 
 	// EXPLICIT Construction
-	//constructStiffnessMatrixDivPart3D_Explicit();
-	constructStiffnessMatrixDivPart3DandDiv4F_Explicit();
+	//constructStiffnessMatrixDivPart3D_Explicit(LapDiv3D);
+	constructStiffnessMatrixDivPart3DandDiv4F_Explicit(LapDiv3D);
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3D_Implicit()
+void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	LapDiv3D = MF3D*GF3D*MVinv*GF3D.transpose()*MF3D;
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3D_Explicit()
+void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
@@ -1016,7 +1020,7 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit()
 	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
+void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
@@ -1110,7 +1114,7 @@ void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit()
 	//printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
-void VectorFields::constructStiffnessMatrixDivPart2D()
+void VectorFields::constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
 {
 	// IMPLICT
 	//LapDiv2D = MF2D*GF2D*MVinv*GF2D.transpose()*MF2D;
@@ -1259,4 +1263,9 @@ void VectorFields::constructMatrixB()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	printf("____B2D=%dx%d [%.5f per-row (%d) filled]\n", B2D.rows(), B2D.cols(), (double)B2D.nonZeros() / (double)B2D.rows(), B2D.nonZeros());
+	
+	// FREE-ing Memory, not the best practice but used to save space for large mesh
+	//SF2D.resize(0, 0);
 }

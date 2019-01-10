@@ -11,3 +11,11 @@ double SparseMatrixMaxValue(const Eigen::SparseMatrix<double> &M)
 
 	return maxVal;
 }
+
+//template<typename Scalar>
+void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M)
+{
+	M.~SparseMatrix();
+	Eigen::SparseMatrix<double> K;
+}
+

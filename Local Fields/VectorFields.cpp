@@ -132,21 +132,19 @@ void VectorFields::constructSpecifiedConstraints()
 	printf("Cp=%dx%d\n", C.rows(), C.cols());
 
 
-	// Setting up vector c (There are 2 vector c)
+	// Setting up vector c (There are 1 vector c)
 	srand(time(NULL));
-	c.resize(2 * globalConstraints.size(), 2);
+	c.resize(2 * globalConstraints.size());
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		c(2 * i + 0, 0) = sqrt(2.0);
 		c(2 * i + 1, 0) = sqrt(2.0);
-		c(2 * i + 0, 1) = sqrt(2.0);
-		c(2 * i + 1, 1) = sqrt(2.0);
 	}
 	printf("cBar=%dx%d\n", c.rows(), c.cols());
 }
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 4;
+	const int NUM_SINGS = 2;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -162,37 +160,35 @@ void VectorFields::constructSingularities()
 	//srand((unsigned)time(&t));
 	srand(time(NULL));
 	for (int id = 0; id < NUM_SINGS; id++) {
-		const int SingLocation = rand() % V.rows();
-		//const int SingLocation = id * (int)(V.rows() / NUM_SINGS) + 5;
-		singularities[id] = SingLocation;
-		const int SingNeighNum = VFAdjacency.col(SingLocation).nonZeros(); 
+		// Defining varaibles for singularities
+		const int SingLocation	= rand() % V.rows();
+		singularities[id]		= SingLocation;
+		const int SingNeighNum	= VFAdjacency.col(SingLocation).nonZeros(); 
 		Eigen::SparseMatrix<bool>::InnerIterator it0(VFAdjacency, SingLocation);
-		const int firstNeigh = it0.row(); 
+		const int firstNeigh	= it0.row(); 
 
-		//printf("%d=%d => first Neigh=%d\n", id, SingLocation, firstNeigh);
 
+		// Inserting the first neighbor (the one with lowest index/row number)
 		SingNeighCC[id].resize(SingNeighNum);
-		SingNeighCC[id][0] = firstNeigh;
-		int curNeigh = firstNeigh;
-		int vertex1 = SingLocation;
+		SingNeighCC[id][0]		= firstNeigh;
+		int curNeigh			= firstNeigh;
+		int vertex1				= SingLocation;
 
-		//printf("Vertex %d has %d neighbors.\n", SingLocation, SingNeighNum);
-		
+		// Getting the neighboring valence triangles in order
 		for (int i2 = 1; i2<SingNeighNum; i2++) {
-			//printf("number of neighbors of vertex %d = %d (%d)\n", SingLocation, i2 /*SingNeighCC[id].size()*/, VFNeighFull[SingLocation].size());
 			int vertex2;
+			// Setting the vertex on the edge pointing to vertex1 as vertex2 (edge = v2->v1)
 			for (int i = 0; i < F.cols(); i++) {
 				if (F(curNeigh, i%F.cols()) == vertex1) {
 					vertex2 = F(curNeigh, (i + F.cols() - 1) % F.cols());
 				}
 			}
 			//for (std::set<VtoFPair>::iterator it1 = next(VFNeighFull[SingLocation].begin(), 1); it1 != VFNeighFull[SingLocation].end(); ++it1) {
+			// Getting the neighboring triangles in order (CCW) 
 			for (Eigen::SparseMatrix<bool>::InnerIterator it1(VFAdjacency, SingLocation); it1; ++it1) {
-				//printf("face=%d \n", it1.row());
 				for (int i = 0; i < F.cols(); i++) {
 					if (F(it1.row(), i) == vertex1 && F(it1.row(), (i + 1) % F.cols()) == vertex2) {
 						SingNeighCC[id][i2] = it1.row();
-						//printf("     Inserting %d as neighbor\n", it1.row());
 						curNeigh = it1.row();
 					}
 				}
@@ -209,7 +205,7 @@ void VectorFields::constructSingularities()
 void VectorFields::constructSpecifiedConstraintsWithSingularities()
 {
 	// Define the constraints
-	const int numConstraints = 5;
+	const int numConstraints = 4;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -238,10 +234,7 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	for (int i : constraints) {
 		globalConstraints[counter1++] = i;
 	}
-	//printf("Constraints = %d\n", globalConstraints.size());
-
-	//constructSingularities();
-
+	
 	int numSingConstraints = 0;
 	for (int i = 0; i < SingNeighCC.size(); i++) {
 		// Use only n-1 neighboring faces as constraints
@@ -251,23 +244,22 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	}
 
 	// Setting up matrix C and vector c
-	c.resize(2 * (globalConstraints.size()+2*numSingConstraints), 2);
-	//printf("cBar=%dx%d\n", c.rows(), c.cols());
+	c.resize(2 * (globalConstraints.size()+numSingConstraints));
 
 
 	// HARD CONSTRAINTS
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * globalConstraints.size() + 2 * 2 * 4 * 7 * SingNeighCC.size());
+	CTriplet.reserve(2 * globalConstraints.size() +  2 * 4 * 7 * SingNeighCC.size());
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		// Matrix C
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
-		c(counter, 0) = sqrt(2.0);
-		c(counter++, 1) = sqrt(2.0);
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
-		c(counter, 0) = sqrt(2.0);
-		c(counter++, 1) = sqrt(2.0);
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
 	}
 
 	
@@ -280,7 +272,8 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 		const double rotAngle = 2 * M_PI / (double)SingNeighCC[id].size();
 		const double cosA = cos(rotAngle);
 		const double sinA = sin(rotAngle);
-		// Which case?
+
+		// Which case? => determining which edge is the common edge
 		enum class SharedEdgeCase {Case1, Case2, Case3};
 		SharedEdgeCase edgeCase1, edgeCase2; 
 		for (int i = 0; i < (SingNeighCC[id].size() - 1); i++) {
@@ -296,13 +289,13 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 						es = V.row(F(SingNeighCC[id][i], (f1 + 1) % F.cols())) - V.row(F(SingNeighCC[id][i], f1));
 						printf("Shared edge=%d->%d\n", F(SingNeighCC[id][i], f1), F(SingNeighCC[id][i], (f1 + 1) % F.cols()));
 						
-						if (f1 == 0) edgeCase1 = SharedEdgeCase::Case1;
-						else if(f1==1) edgeCase1 = SharedEdgeCase::Case3;
-						else if(f1==2) edgeCase1 = SharedEdgeCase::Case2;
+						if (f1 == 0)		edgeCase1 = SharedEdgeCase::Case1;	// => edge V0->V1 is the shared edge => it takes 0 step to reach v0
+						else if(f1==1)		edgeCase1 = SharedEdgeCase::Case3;	// => edge V1->V2 is the shared edge => it takes 2 step to reach v0
+						else if(f1==2)		edgeCase1 = SharedEdgeCase::Case2;	// => edge V2->V0 is the shared edge => it takes 1 step to reach v0
 
-						if (f2 == 0) edgeCase2 = SharedEdgeCase::Case1;
-						else if (f2 == 1) edgeCase2 = SharedEdgeCase::Case3;
-						else if (f2 == 2) edgeCase2 = SharedEdgeCase::Case2;
+						if (f2 == 0)		edgeCase2 = SharedEdgeCase::Case1;
+						else if (f2 == 1)	edgeCase2 = SharedEdgeCase::Case3;
+						else if (f2 == 2)	edgeCase2 = SharedEdgeCase::Case2;
 					}
 				}
 			}
@@ -360,62 +353,246 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 			const double sinR21_2 = sin(angleR21_2);
 			printf("______[%.2f] Rotation matrix R22_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_2*180.0/M_PI, cosR21_2, -sinR21_2, sinR21_2, cosR21_2);
 
-
-			// 5. Assigning singularities constraints
-			// Basis 1 => Frame 1
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosA*cosR12_1 - sinA*sinR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosA*sinR12_1 - sinA*cosR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_1));
-			c(counter, 0) = 0.0;
-			c(counter, 1) = 0.0;
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR21_1*cosR12_1+sinR21_1*sinR12_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosR21_1*sinR12_1+sinR21_1*cosR12_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, 0.0));
+			c(counter) = 0.0;
 			counter++;
-			// Basis 1 => Frame 2
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosA*cosR12_2 - sinA*sinR12_2));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosA*sinR12_2 - sinA*cosR12_2));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_2));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_2));
-			c(counter, 0) = 0.0;
-			c(counter, 1) = 0.0;
+			
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosR12_1 ));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_1 ));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, -sinR21_1*cosR12_1+cosR21_1*sinR12_1));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, sinR21_1*sinR12_1+cosR21_1*cosR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, 0.0));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
+			c(counter) = 0.0;
 			counter++;
-
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinA*cosR12_1+cosA*sinR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinA*sinR12_1+cosA*cosR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_1));
-			c(counter, 0) = 0.0;
-			c(counter, 1) = 0.0;
-			counter++;
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinA*cosR12_2 + cosA*sinR12_2));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinA*sinR12_2 + cosA*cosR12_2));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_2));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_2));
-			c(counter, 0) = 0.0;
-			c(counter, 1) = 0.0;
-			counter++;
-
-			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosA));
-			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinA));
-			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
-			//c(counter, 0) = 0.0;
-			//c(counter, 1) = 0.0;
-			//counter++;
-			//
-			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinA));
-			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosA));
-			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
-			//c(counter, 0) = 0.0;
-			//c(counter, 1) = 0.0;
-			//counter++;
 		}
 	}
 
-	C.resize(2 * (globalConstraints.size()+2*numSingConstraints), B2D.rows());
+	C.resize(2 * (globalConstraints.size()+numSingConstraints), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
 }
+
+//void VectorFields::constructSpecifiedConstraintsWithSingularities() ==> VERSION 1.1
+//{
+//	// Define the constraints
+//	const int numConstraints = 4;
+//	set<int> constraints;
 //
-//void VectorFields::constructSpecifiedConstraintsWithSingularities()
+//	globalConstraints.resize(numConstraints);
+//	Eigen::VectorXd D;
+//	D.resize(F.rows());
+//
+//	// Initialize the value of D
+//	for (int i = 0; i < F.rows(); i++) {
+//		D(i) = numeric_limits<double>::infinity();
+//	}
+//
+//	srand(time(NULL));
+//	int curPoint = rand() % F.rows();
+//	constraints.insert(curPoint);
+//
+//	// Creating constraints using farthest point sampling
+//	do {
+//		Eigen::VectorXi::Index maxIndex;
+//		computeDijkstraDistanceFaceForSampling(curPoint, D);
+//		D.maxCoeff(&maxIndex);
+//		constraints.insert(maxIndex);
+//		curPoint = maxIndex;
+//	} while (constraints.size() < numConstraints);
+//
+//	int counter1 = 0;
+//	for (int i : constraints) {
+//		globalConstraints[counter1++] = i;
+//	}
+//	//printf("Constraints = %d\n", globalConstraints.size());
+//
+//	//constructSingularities();
+//
+//	int numSingConstraints = 0;
+//	for (int i = 0; i < SingNeighCC.size(); i++) {
+//		// Use only n-1 neighboring faces as constraints
+//		for (int j = 0; j < (SingNeighCC[i].size() - 1); j++) {
+//			numSingConstraints++;
+//		}
+//	}
+//
+//	// Setting up matrix C and vector c
+//	c.resize(2 * (globalConstraints.size() + 2 * numSingConstraints), 2);
+//	//printf("cBar=%dx%d\n", c.rows(), c.cols());
+//
+//
+//	// HARD CONSTRAINTS
+//	Eigen::SparseMatrix<double> CTemp;
+//	vector<Eigen::Triplet<double>> CTriplet;
+//	CTriplet.reserve(2 * globalConstraints.size() + 2 * 2 * 4 * 7 * SingNeighCC.size());
+//	int counter = 0;
+//	for (int i = 0; i < globalConstraints.size(); i++) {
+//		// Matrix C
+//		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+//		c(counter, 0) = sqrt(2.0);
+//		c(counter++, 1) = sqrt(2.0);
+//		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+//		c(counter, 0) = sqrt(2.0);
+//		c(counter++, 1) = sqrt(2.0);
+//	}
+//
+//
+//	// SINGULARITIES CONSTRAINTS
+//	for (int id = 0; id < SingNeighCC.size(); id++) {
+//		// For testing
+//		sharedEdgesVect[id].resize(2 * SingNeighCC[id].size() - 2);
+//
+//		// 4. Compute rotation of among its valence
+//		const double rotAngle = 2 * M_PI / (double)SingNeighCC[id].size();
+//		const double cosA = cos(rotAngle);
+//		const double sinA = sin(rotAngle);
+//		// Which case?
+//		enum class SharedEdgeCase { Case1, Case2, Case3 };
+//		SharedEdgeCase edgeCase1, edgeCase2;
+//		for (int i = 0; i < (SingNeighCC[id].size() - 1); i++) {
+//			// 1. Find shared edge (naively)
+//			Eigen::RowVector3d es;
+//			for (int f1 = 0; f1 < F.cols(); f1++) {
+//				for (int f2 = 0; f2 < F.cols(); f2++) {
+//					bool b1 = F(SingNeighCC[id][i], (f1 + 1) % F.cols()) == F(SingNeighCC[id][i + 1], f2);
+//					bool b2 = F(SingNeighCC[id][i], f1) == F(SingNeighCC[id][i + 1], (f2 + 1) % F.cols());
+//					if (b1 && b2) {
+//						sharedEdgesVect[id][2 * i + 0] = F(SingNeighCC[id][i], f1);
+//						sharedEdgesVect[id][2 * i + 1] = F(SingNeighCC[id][i], (f1 + 1) % F.cols());
+//						es = V.row(F(SingNeighCC[id][i], (f1 + 1) % F.cols())) - V.row(F(SingNeighCC[id][i], f1));
+//						printf("Shared edge=%d->%d\n", F(SingNeighCC[id][i], f1), F(SingNeighCC[id][i], (f1 + 1) % F.cols()));
+//
+//						if (f1 == 0) edgeCase1 = SharedEdgeCase::Case1;
+//						else if (f1 == 1) edgeCase1 = SharedEdgeCase::Case3;
+//						else if (f1 == 2) edgeCase1 = SharedEdgeCase::Case2;
+//
+//						if (f2 == 0) edgeCase2 = SharedEdgeCase::Case1;
+//						else if (f2 == 1) edgeCase2 = SharedEdgeCase::Case3;
+//						else if (f2 == 2) edgeCase2 = SharedEdgeCase::Case2;
+//					}
+//				}
+//			}
+//			// 2. Find angles between basis1 and es
+//			Eigen::VectorXd eVect;
+//			Eigen::RowVector3d b11, b12;
+//			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 0, 3, 1);
+//			b11 << eVect(0), eVect(1), eVect(2);
+//			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 1, 3, 1);
+//			b12 << eVect(0), eVect(1), eVect(2);
+//			cout << "______B11: " << b11 << ", B12: " << b12 << endl;
+//
+//			// Basis 1, Frame 1
+//			double cosR12 = (b11.dot(es)) / (b11.norm()*es.norm());
+//			if (cosR12 > 1.0) cosR12 = 1.0;
+//			if (cosR12 <-1.0) cosR12 = -1.0;
+//			const double angleR12_1 = (edgeCase1 == SharedEdgeCase::Case2 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
+//			const double cosR12_1 = cos(angleR12_1);
+//			const double sinR12_1 = sin(angleR12_1);
+//			printf("______[%.2f] Rotation matrix R12_1 = [%.3f,%.3f; %.3f, %.3f]\n", angleR12_1*180.0 / M_PI, cosR12_1, -sinR12_1, sinR12_1, cosR12_1);
+//
+//			// Basis 1, Frame 2
+//			cosR12 = (b12.dot(es)) / (b12.norm()*es.norm());
+//			if (cosR12 > 1.0) cosR12 = 1.0;
+//			if (cosR12 <-1.0) cosR12 = -1.0;
+//			const double angleR12_2 = (edgeCase1 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
+//			const double cosR12_2 = cos(angleR12_2);
+//			const double sinR12_2 = sin(angleR12_2);
+//			printf("______[%.2f] Rotation matrix R12_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR12_2*180.0 / M_PI, cosR12_2, -sinR12_2, sinR12_2, cosR12_2);
+//
+//			// 3. Find angles between basis2 and es
+//			es = -es;
+//			Eigen::RowVector3d b21, b22;
+//			eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 0, 3, 1);
+//			b21 << eVect(0), eVect(1), eVect(2);
+//			eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 1, 3, 1);
+//			b22 << eVect(0), eVect(1), eVect(2);
+//			cout << "______B21: " << b21 << ", B22: " << b22 << endl;
+//
+//			// Basis 2, Frame 1
+//			double cosR21 = (b21.dot(es)) / (b21.norm()*es.norm());
+//			if (cosR21 > 1.0) cosR21 = 1.0;
+//			if (cosR21 < -1.0) cosR21 = -1.0;
+//			const double angleR21_1 = (edgeCase2 == SharedEdgeCase::Case2 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+//			const double cosR21_1 = cos(angleR21_1);
+//			const double sinR21_1 = sin(angleR21_1);
+//			printf("______[%.2f] Rotation matrix R22_1 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_1*180.0 / M_PI, cosR21_1, -sinR21_1, sinR21_1, cosR21_1);
+//
+//			// Basis 2, Frame 2
+//			cosR21 = (b22.dot(es)) / (b22.norm()*es.norm());
+//			if (cosR21 > 1.0) cosR21 = 1.0;
+//			if (cosR21 < -1.0) cosR21 = -1.0;
+//			const double angleR21_2 = (edgeCase2 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+//			const double cosR21_2 = cos(angleR21_2);
+//			const double sinR21_2 = sin(angleR21_2);
+//			printf("______[%.2f] Rotation matrix R22_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_2*180.0 / M_PI, cosR21_2, -sinR21_2, sinR21_2, cosR21_2);
+//
+//
+//			// 5. Assigning singularities constraints
+//			// Basis 1 => Frame 1
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosA*cosR12_1 - sinA*sinR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosA*sinR12_1 - sinA*cosR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_1));
+//			c(counter, 0) = 0.0;
+//			c(counter, 1) = 0.0;
+//			counter++;
+//			// Basis 1 => Frame 2
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosA*cosR12_2 - sinA*sinR12_2));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosA*sinR12_2 - sinA*cosR12_2));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_2));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_2));
+//			c(counter, 0) = 0.0;
+//			c(counter, 1) = 0.0;
+//			counter++;
+//
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinA*cosR12_1 + cosA*sinR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinA*sinR12_1 + cosA*cosR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_1));
+//			c(counter, 0) = 0.0;
+//			c(counter, 1) = 0.0;
+//			counter++;
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinA*cosR12_2 + cosA*sinR12_2));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinA*sinR12_2 + cosA*cosR12_2));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_2));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_2));
+//			c(counter, 0) = 0.0;
+//			c(counter, 1) = 0.0;
+//			counter++;
+//
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosA));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinA));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
+//			//c(counter, 0) = 0.0;
+//			//c(counter, 1) = 0.0;
+//			//counter++;
+//			//
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinA));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosA));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
+//			//c(counter, 0) = 0.0;
+//			//c(counter, 1) = 0.0;
+//			//counter++;
+//		}
+//	}
+//
+//	C.resize(2 * (globalConstraints.size() + 2 * numSingConstraints), B2D.rows());
+//	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+//	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
+//}
+
+//
+//void VectorFields::constructSpecifiedConstraintsWithSingularities() ==> VERSION 1.0
 //{
 //	// Define the constraints
 //	const int numConstraints = 5;
@@ -626,18 +803,22 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 //
 void VectorFields::setupGlobalProblem()
 {	
+	Eigen::VectorXd					b, g, h, vEst;
+	Eigen::SparseMatrix<double>		A_LHS;
+	//Eigen::VectorXd					vEst;
+
 	//constructConstraints();	
-	setupRHSGlobalProblemMapped();
-	setupLHSGlobalProblemMapped();
+	setupRHSGlobalProblemMapped(g, h, vEst, b);
+	setupLHSGlobalProblemMapped(A_LHS);
 	//setupRHSGlobalProblem();
 	//setupLHSGlobalProblem();	
 
 	//solveGlobalSystem();
-	solveGlobalSystemMappedLDLT();
+	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
 }
 
-void VectorFields::setupRHSGlobalProblemMapped()
+void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -651,22 +832,18 @@ void VectorFields::setupRHSGlobalProblemMapped()
 	}
 
 	g = B2D * vEst;
-	b.resize(B2D.rows() + c.rows(), 2);
+	b.resize(B2D.rows() + c.rows(), c.cols());
 
 	// First column of b
-	h = C * vEst - c.col(0);
-	b.col(0) << g, h;
-
-	// Second Column of b
-	h = C * vEst - c.col(1);
-	b.col(1) << g, h;
+	h = C * vEst - c;
+	b << g, h;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::setupLHSGlobalProblemMapped()
+void VectorFields::setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -700,7 +877,7 @@ void VectorFields::setupLHSGlobalProblemMapped()
 }
 
 
-void VectorFields::solveGlobalSystemMappedLDLT()
+void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -708,8 +885,10 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Solving the global system (Pardiso LDLT)... \n";
 
+
+
 	//cout << "Starting to solve problem." << endl;
-	Xf.resize(B2D.rows(), 2);
+	Xf.resize(B2D.rows());
 	
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
@@ -718,7 +897,7 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 
 	// FIRST BASIS
 	cout << "....Solving first problem (first frame)..." << endl;
-	Eigen::VectorXd x = sparseSolver.solve(b.col(0));
+	Eigen::VectorXd x = sparseSolver.solve(b);
 	
 	if (sparseSolver.info() != Eigen::Success) {
 		cout << "Cannot solve the linear system. " << endl;
@@ -730,26 +909,12 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 		return;
 	}
 	
-	Xf.col(0) = -x.block(0, 0, B2D.rows(), 1) + vEst;
-	
-	// SECOND BASIS
-	cout << "....Solving second problem (second frame)." << endl;
-	x = sparseSolver.solve(b.col(1));
-	if (sparseSolver.info() != Eigen::Success) {
-		cout << "Cannot solve the linear system." << endl;
-		return;
-	}
-	
-	Xf.col(1) = -x.block(0, 0, B2D.rows(), 1) + vEst;
-	
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "..in " << duration.count() << " seconds" << endl;
+	Xf = -x.block(0, 0, B2D.rows(), 1) + vEst;
 
-	
+	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());	
 }
 
-void VectorFields::solveGlobalSystemMappedLU_GPU()
+void VectorFields::solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -758,7 +923,7 @@ void VectorFields::solveGlobalSystemMappedLU_GPU()
 	cout << "> Solving the global system (LU in GPU)... \n";
 
 	//cout << "Starting to solve problem." << endl;
-	Xf.resize(B2D.rows(), 2);
+	Xf.resize(B2D.rows());
 
 	Eigen::MatrixXd X;
 	solveLUinCUDA(A_LHS, b, X);
@@ -941,7 +1106,11 @@ void VectorFields::constructBasis()
 	normalizeBasisAbs();
 
 	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+	cout << "Test 1" << endl;
 	BasisTemp.resize(0, 0);
+	cout << "Test 2" << endl;
+	manuallyDestroySparseMatrix(BasisTemp);
+	cout << "Test 3" << endl;
 	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
 
 	t2 = chrono::high_resolution_clock::now();
