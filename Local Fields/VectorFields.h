@@ -178,7 +178,7 @@ protected:
 	Eigen::MatrixXd					V, FC, NF;
 	Eigen::MatrixXd					Curl3DPacked, Div3DPacked;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
-	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D, B2Dbar, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
 	Eigen::VectorXd					doubleArea;
@@ -207,7 +207,7 @@ protected:
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar, bBar;
 	Eigen::MatrixXd					XLowDim, XFullDim;
-	Eigen::SparseMatrix<double>		Cbar, A_LHSbar;
+	Eigen::SparseMatrix<double>		Cbar, B2Dbar, A_LHSbar;
 	Eigen::VectorXd					vEstUser, gbar, hbar, pbar;	
 
 	// FOR TESTING ONLY

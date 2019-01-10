@@ -65,8 +65,8 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	vectorFields.setupGlobalProblem();
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";

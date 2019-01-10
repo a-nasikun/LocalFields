@@ -11,10 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedConstraints();
+	constructSpecifiedConstraints();
 	
-	constructSingularities();
-	constructSpecifiedConstraintsWithSingularities();
+	//constructSingularities();
+	//constructSpecifiedConstraintsWithSingularities();
 
 	
 
