@@ -118,12 +118,9 @@ public:
 	void setAndSolveUserSystem();
 	void setupUserBasis();
 	void getUserConstraints();
-	void getUserConstraintsRandom();
-	void getUserConstraintsGUI(const vector<vector<int>> &selectedFaces);
-	void getUserConstraintsSpecified();
-	void setupRHSUserProblemMapped();
-	void setupLHSUserProblemMapped();
-	void solveUserSystemMappedLDLT();
+	void setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
+	void setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar);
+	void solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
 
@@ -189,9 +186,8 @@ protected:
 	double							avgEdgeLength;
 
 	// Variable related to global problem
-	//Eigen::MatrixXd					b, g, h;
-	Eigen::SparseMatrix<double>		C; // , A_LHS;
-	Eigen::VectorXd					c/*, vEst*/, Xf;
+	Eigen::SparseMatrix<double>		C; 
+	Eigen::VectorXd					c, Xf;
 	vector<int>						LocalElements, userConstraints, globalConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
@@ -205,10 +201,9 @@ protected:
 	int								numSample;
 
 	// Variable related to manipulation within the subspace
-	Eigen::MatrixXd					cBar, bBar;
-	Eigen::MatrixXd					XLowDim, XFullDim;
-	Eigen::SparseMatrix<double>		Cbar, B2Dbar, A_LHSbar;
-	Eigen::VectorXd					vEstUser, gbar, hbar, pbar;	
+	Eigen::MatrixXd					cBar;
+	Eigen::VectorXd					XLowDim, XFullDim;
+	Eigen::SparseMatrix<double>		CBar, B2DBar;
 
 	// FOR TESTING ONLY
 	Eigen::VectorXd					dijkstraFace, arbField;

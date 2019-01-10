@@ -1388,13 +1388,16 @@ void VectorFields::normalizeBasisAbs()
 }
 void VectorFields::setAndSolveUserSystem()
 {
+	// Declare function-scoped variables
+	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
+	Eigen::SparseMatrix<double>		A_LHSBar;
+
 	setupUserBasis();
 	getUserConstraints();
-	setupRHSUserProblemMapped();
-	setupLHSUserProblemMapped();
-	solveUserSystemMappedLDLT();
+	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	setupLHSUserProblemMapped(A_LHSBar);
+	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
 	mapSolutionToFullRes();
-	//obtainUserVectorFields();
 }
 
 void VectorFields::setupUserBasis()
@@ -1405,12 +1408,12 @@ void VectorFields::setupUserBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Local Basis...";
 
-	B2Dbar = Basis.transpose() * B2D * Basis; 
+	B2DBar = Basis.transpose() * B2D * Basis; 
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
-	printf(".... Local Basis = %dx%d\n", B2Dbar.rows(), B2Dbar.cols());
+	printf(".... Local Basis = %dx%d\n", B2DBar.rows(), B2DBar.cols());
 }
 void VectorFields::getUserConstraints()
 {	
@@ -1420,136 +1423,19 @@ void VectorFields::getUserConstraints()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Obtaining user constraints ";
 
-	//getUserConstraintsRandom();
-
-	//const vector<vector<int>> selectedFaces;
-	//getUserConstraintsGUI(selectedFaces);
-	//getUserConstraintsSpecified();
 	userConstraints = globalConstraints; 
-	Cbar = C * Basis;
-	cBar = c;
+	CBar			= C * Basis;
+	cBar			= c;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 
-	printf(".... C_Lobal = %dx%d\n", Cbar.rows(), Cbar.cols());
+	printf(".... C_Lobal = %dx%d\n", CBar.rows(), CBar.cols());
 	printf(".... c_Lobal = %dx%d\n", cBar.rows(), cBar.cols());
 }
 
-void VectorFields::getUserConstraintsRandom()
-{
-	// Define the constraints
-	const int numConstraints = 20;
-
-	srand(time(NULL));
-	set<int> constraints;
-	userConstraints.resize(numConstraints);
-	do {
-		int c = rand() % F.rows();
-		constraints.insert(c);
-	} while (constraints.size() <= numConstraints);
-
-	int counter1 = 0;
-	for (int i : constraints) {
-		userConstraints[counter1++] = i;
-	}
-	printf("Constraints = %d\n", userConstraints.size());
-
-	// Setting up matrix C
-	Eigen::SparseMatrix<double> CTemp;
-	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * userConstraints.size());
-
-	int counter = 0;
-	for (int i = 0; i < userConstraints.size(); i++) {
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 0, 1.0));
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 1, 1.0));
-	}
-	CTemp.resize(2 * userConstraints.size(), Basis.rows());
-	CTemp.setFromTriplets(CTriplet.begin(), CTriplet.end());
-	printf("CTemp=%dx%d\n", CTemp.rows(), CTemp.cols());
-
-	Cbar = CTemp * Basis;
-	printf("Cbar=%dx%d\n", Cbar.rows(), Cbar.cols());
-	// Setting up vector c (There are 2 vector c)
-	srand(time(NULL));
-	cBar.resize(2 * userConstraints.size(), 2);
-	for (int i = 0; i < userConstraints.size(); i++) {
-		cBar(2 * i + 0, 0) = ((double)(rand() % 1000) - 500) / 1000.0;
-		cBar(2 * i + 1, 0) = ((double)(rand() % 1000) - 500) / 1000.0;
-
-		cBar(2 * i + 0, 1) = ((double)(rand() % 1000) - 500) / 1000.0;
-		cBar(2 * i + 1, 1) = ((double)(rand() % 1000) - 500) / 1000.0;
-	}
-	printf("cBar=%dx%d\n", cBar.rows(), cBar.cols());
-}
-
-void VectorFields::getUserConstraintsGUI(const vector<vector<int>> &selectedFaces)
-{
-
-}
-
-void VectorFields::getUserConstraintsSpecified()
-{
-	// Define the constraints
-	const int numConstraints = 20;
-	set<int> constraints;
-	userConstraints.resize(numConstraints);
-	Eigen::VectorXd D;
-	D.resize(F.rows());
-
-	// Initialize the value of D
-	for (int i = 0; i < F.rows(); i++) {
-		D(i) = numeric_limits<double>::infinity();
-	}
-
-	constraints.insert(0);	
-	int curPoint = 0;
-		
-	do {
-		Eigen::VectorXi::Index maxIndex;
-		computeDijkstraDistanceFaceForSampling(curPoint, D);
-		D.maxCoeff(&maxIndex);
-		constraints.insert(maxIndex);
-		curPoint = maxIndex;
-	} while (constraints.size() <= numConstraints);
-
-	int counter1 = 0;
-	for (int i : constraints) {
-		userConstraints[counter1++] = i;
-	}
-	printf("Constraints = %d\n", userConstraints.size());
-
-	// Setting up matrix C
-	Eigen::SparseMatrix<double> CTemp;
-	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * userConstraints.size());
-	int counter = 0;
-	for (int i = 0; i < userConstraints.size(); i++) {
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 0, 1.0));
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * userConstraints[i] + 1, 1.0));
-	}
-	CTemp.resize(2 * userConstraints.size(), Basis.rows());
-	CTemp.setFromTriplets(CTriplet.begin(), CTriplet.end());
-	printf("CTemp=%dx%d\n", CTemp.rows(), CTemp.cols());
-
-	Cbar = CTemp * Basis;
-	printf("Cbar=%dx%d\n", Cbar.rows(), Cbar.cols());
-
-	// Setting up vector c (There are 2 vector c)
-	srand(time(NULL));
-	cBar.resize(2 * userConstraints.size(), 2);
-	for (int i = 0; i < userConstraints.size(); i++) {
-		cBar(2 * i + 0, 0) = sqrt(2.0);
-		cBar(2 * i + 1, 0) = sqrt(2.0);
-		cBar(2 * i + 0, 1) = sqrt(2.0);
-		cBar(2 * i + 1, 1) = sqrt(2.0);
-	}
-	printf("cBar=%dx%d\n", cBar.rows(), cBar.cols());
-}
-
-void VectorFields::setupRHSUserProblemMapped()
+void VectorFields::setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -1557,35 +1443,24 @@ void VectorFields::setupRHSUserProblemMapped()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing RHS (mapped)...";
 	
-	vEstUser.resize(B2Dbar.rows());
-	for (int i = 0; i < vEstUser.rows(); i++) {
-		vEstUser(i) = 0.5;
+	vEstBar.resize(B2DBar.rows());
+	for (int i = 0; i < vEstBar.rows(); i++) {
+		vEstBar(i) = 0.5;
 	}
 
-	gbar = B2Dbar * vEstUser;
-	//printf("gbar=%dx%d\n", gbar.rows(), gbar.cols());
-	bBar.resize(B2Dbar.rows() + cBar.rows(), 2);
-	//printf("bbar=%dx%d\n",bBar.rows(), bBar.cols());
+	gBar = B2DBar * vEstBar;
+	bBar.resize(B2DBar.rows() + cBar.rows());
 
-	// First column of b
-	hbar = Cbar * vEstUser - cBar.col(0);
-	//printf("hbar=%dx%d\n", hbar.rows(), hbar.cols());
-
-	bBar.col(0) << gbar, hbar;
-	//printf("bbar=%dx%d\n", bBar.rows(), bBar.cols());
-	// Second Column of b
-	hbar = Cbar * vEstUser - cBar.col(1);
-	//printf("hbar=%dx%d\n", hbar.rows(), hbar.cols());
-
-	bBar.col(1) << gbar, hbar;
-
+	// Constructing b
+	hBar = CBar * vEstBar - cBar;
+	bBar<< gBar, hBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::setupLHSUserProblemMapped()
+void VectorFields::setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -1594,31 +1469,31 @@ void VectorFields::setupLHSUserProblemMapped()
 	cout << "> Constructing LHS (mapped)...";
 
 
-	A_LHSbar.resize(B2Dbar.rows() + Cbar.rows(), B2Dbar.cols() + Cbar.rows());
+	A_LHSBar.resize(B2DBar.rows() + CBar.rows(), B2DBar.cols() + CBar.rows());
 	vector<Eigen::Triplet<double>>	ATriplet;
-	ATriplet.reserve(B2Dbar.nonZeros() + 2 * Cbar.nonZeros());
+	ATriplet.reserve(B2DBar.nonZeros() + 2 * CBar.nonZeros());
 
-	for (int k = 0; k < B2Dbar.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(B2Dbar, k); it; ++it) {
+	for (int k = 0; k < B2DBar.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(B2DBar, k); it; ++it) {
 			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
 		}
 	}
 
-	for (int k = 0; k < Cbar.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(Cbar, k); it; ++it) {
-			ATriplet.push_back(Eigen::Triplet<double>(B2Dbar.rows() + it.row(), it.col(), it.value()));
-			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2Dbar.cols() + it.row(), it.value()));
+	for (int k = 0; k < CBar.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(CBar, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(B2DBar.rows() + it.row(), it.col(), it.value()));
+			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2DBar.cols() + it.row(), it.value()));
 		}
 	}
-	A_LHSbar.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	A_LHSBar.setFromTriplets(ATriplet.begin(), ATriplet.end());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
-	printf("....Local LHS = %dx%d\n", A_LHSbar.rows(), A_LHSbar.cols());
+	printf("....Local LHS = %dx%d\n", A_LHSBar.rows(), A_LHSBar.cols());
 }
 
-void VectorFields::solveUserSystemMappedLDLT()
+void VectorFields::solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -1626,12 +1501,12 @@ void VectorFields::solveUserSystemMappedLDLT()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Solving reduced system...\n";
 
-	XLowDim.resize(B2Dbar.rows(), 2);
-	XFullDim.resize(Basis.rows(), 2);
-	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSbar);
+	XLowDim.resize(B2DBar.rows());
+	XFullDim.resize(Basis.rows());
+	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
 
 	cout << "....Solving for the first frame.\n";
-	Eigen::VectorXd x = sparseSolver.solve(bBar.col(0));
+	Eigen::VectorXd x = sparseSolver.solve(bBar);
 
 	if (sparseSolver.info() != Eigen::Success) {
 		cout << "Cannot solve the linear system. " << endl;
@@ -1641,16 +1516,7 @@ void VectorFields::solveUserSystemMappedLDLT()
 		return;
 	}
 
-	XLowDim.col(0) = -x.block(0, 0, B2Dbar.rows(), 1) + vEstUser;
-
-	// SECOND BASIS
-	cout << "....Solving for the second frame.\n";
-	x = sparseSolver.solve(bBar.col(1));
-	if (sparseSolver.info() != Eigen::Success) {
-		cout << "Cannot solve the linear system." << endl;
-		return;
-	}
-	XLowDim.col(1) = -x.block(0, 0, B2Dbar.rows(), 1) + vEstUser;
+	XLowDim.col(0) = -x.block(0, 0, B2DBar.rows(), 1) + vEstBar;	
 	
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
