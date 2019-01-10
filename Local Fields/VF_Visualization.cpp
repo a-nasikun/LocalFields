@@ -169,7 +169,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	Eigen::Vector3d e;
 	Eigen::MatrixXd vColor, VectorBlock(F.rows(), F.cols());
 
-	for (int i = 0; i < F.rows(); i += 1)
+	for (int i = 0; i < F.rows(); i += 50)
 	{
 		Eigen::RowVector3d c, g, v1, v2, v3;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;		// center of each face
@@ -179,8 +179,8 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 		VectorBlock.row(i) = g;
 	}
 
-	double lengthScale = 1.0*avgEdgeLength;
-	for (int i = 0; i < F.rows(); i += 1)
+	double lengthScale = 10.0*avgEdgeLength;
+	for (int i = 0; i < F.rows(); i += 50)
 	{
 		Eigen::RowVector3d c;
 		//c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
