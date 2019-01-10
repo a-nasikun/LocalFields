@@ -803,18 +803,22 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 //
 void VectorFields::setupGlobalProblem()
 {	
+	Eigen::VectorXd					b, g, h, vEst;
+	Eigen::SparseMatrix<double>		A_LHS;
+	//Eigen::VectorXd					vEst;
+
 	//constructConstraints();	
-	setupRHSGlobalProblemMapped();
-	setupLHSGlobalProblemMapped();
+	setupRHSGlobalProblemMapped(g, h, vEst, b);
+	setupLHSGlobalProblemMapped(A_LHS);
 	//setupRHSGlobalProblem();
 	//setupLHSGlobalProblem();	
 
 	//solveGlobalSystem();
-	solveGlobalSystemMappedLDLT();
+	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
 }
 
-void VectorFields::setupRHSGlobalProblemMapped()
+void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -832,14 +836,14 @@ void VectorFields::setupRHSGlobalProblemMapped()
 
 	// First column of b
 	h = C * vEst - c;
-	b.col(0) << g, h;
+	b << g, h;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::setupLHSGlobalProblemMapped()
+void VectorFields::setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -873,7 +877,7 @@ void VectorFields::setupLHSGlobalProblemMapped()
 }
 
 
-void VectorFields::solveGlobalSystemMappedLDLT()
+void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -881,8 +885,10 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Solving the global system (Pardiso LDLT)... \n";
 
+
+
 	//cout << "Starting to solve problem." << endl;
-	Xf.resize(B2D.rows(), c.cols());
+	Xf.resize(B2D.rows());
 	
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
@@ -891,7 +897,7 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 
 	// FIRST BASIS
 	cout << "....Solving first problem (first frame)..." << endl;
-	Eigen::VectorXd x = sparseSolver.solve(b.col(0));
+	Eigen::VectorXd x = sparseSolver.solve(b);
 	
 	if (sparseSolver.info() != Eigen::Success) {
 		cout << "Cannot solve the linear system. " << endl;
@@ -908,7 +914,7 @@ void VectorFields::solveGlobalSystemMappedLDLT()
 	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());	
 }
 
-void VectorFields::solveGlobalSystemMappedLU_GPU()
+void VectorFields::solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -917,7 +923,7 @@ void VectorFields::solveGlobalSystemMappedLU_GPU()
 	cout << "> Solving the global system (LU in GPU)... \n";
 
 	//cout << "Starting to solve problem." << endl;
-	Xf.resize(B2D.rows(), 2);
+	Xf.resize(B2D.rows());
 
 	Eigen::MatrixXd X;
 	solveLUinCUDA(A_LHS, b, X);

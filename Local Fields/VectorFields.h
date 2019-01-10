@@ -71,16 +71,16 @@ public:
 	void constructMassMatrixMF3D();
 	void constructMassMatrixMF3Dinv();
 	void constructStiffnessMatrices();
-	void constructStiffnessMatrixSF2D();
-	void constructStiffnessMatrixSF3D();
-	void constructStiffnessMatrixCurlPart3D();
-	void constructStiffnessMatrixCurlPart3DandCurl4F();
-	void constructStiffnessMatrixCurlPart2D();
-	void constructStiffnessMatrixDivPart3D();
-	void constructStiffnessMatrixDivPart3D_Implicit();
-	void constructStiffnessMatrixDivPart3D_Explicit();
-	void constructStiffnessMatrixDivPart3DandDiv4F_Explicit();
-	void constructStiffnessMatrixDivPart2D();
+	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
+	void constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D);
+	void constructStiffnessMatrixCurlPart3DandCurl4F(Eigen::SparseMatrix<double>& LapCurl3D);
+	void constructStiffnessMatrixCurlPart2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D);
+	void constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixDivPart3DandDiv4F_Explicit(Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	void constructGradient3D();
 	void rearrangeGradient3D();
 	void constructGradient2D();
@@ -101,10 +101,10 @@ public:
 	void constructSpecifiedConstraints();
 	void constructSingularities();
 	void constructSpecifiedConstraintsWithSingularities();
-	void setupRHSGlobalProblemMapped();
-	void setupLHSGlobalProblemMapped();
-	void solveGlobalSystemMappedLDLT();
-	void solveGlobalSystemMappedLU_GPU();
+	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
+	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);
+	void solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
+	void solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
@@ -178,7 +178,7 @@ protected:
 	Eigen::MatrixXd					V, FC, NF;
 	Eigen::MatrixXd					Curl3DPacked, Div3DPacked;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
-	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D, LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
 	Eigen::VectorXd					doubleArea;
@@ -189,9 +189,9 @@ protected:
 	double							avgEdgeLength;
 
 	// Variable related to global problem
-	Eigen::MatrixXd					b, g, h;
-	Eigen::SparseMatrix<double>		C, A_LHS;
-	Eigen::VectorXd					vEst, Xf, c;
+	//Eigen::MatrixXd					b, g, h;
+	Eigen::SparseMatrix<double>		C; // , A_LHS;
+	Eigen::VectorXd					c/*, vEst*/, Xf;
 	vector<int>						LocalElements, userConstraints, globalConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;

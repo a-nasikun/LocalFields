@@ -23,13 +23,13 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -66,26 +66,26 @@ int main(int argc, char *argv[])
 
 	/* ====================== GLOBAL PROBLEM ====================*/
 	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
+	//vectorFields.setAndSolveUserSystem();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
-	//vectorFields.visualizeSharedEdges(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	vectorFields.visualizeApproxResult(viewer, 0);	
-	vectorFields.visualizeUserConstraints(viewer);
-	vectorFields.visualizeSamples(viewer);
-	vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeApproxResult(viewer, 0);	
+	//vectorFields.visualizeUserConstraints(viewer);
+	//vectorFields.visualizeSamples(viewer);
+	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
 	/* FOR TESTING PURPOSE */
