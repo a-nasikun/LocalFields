@@ -1106,12 +1106,12 @@ void VectorFields::constructBasis()
 	normalizeBasisAbs();
 
 	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
-	cout << "Test 1" << endl;
-	BasisTemp.resize(0, 0);
-	cout << "Test 2" << endl;
-	manuallyDestroySparseMatrix(BasisTemp);
-	cout << "Test 3" << endl;
-	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+	//cout << "Test 1" << endl;
+	//BasisTemp.resize(0, 0);
+	//cout << "Test 2" << endl;
+	//manuallyDestroySparseMatrix(BasisTemp);
+	//cout << "Test 3" << endl;
+	//printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;

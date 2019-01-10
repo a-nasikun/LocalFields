@@ -1193,6 +1193,32 @@ void VectorFields::rearrangeGradient3D()
 	GF3D.setFromTriplets(GTriplet.begin(), GTriplet.end());
 }
 
+void VectorFields::rearrangeGradient3D(Eigen::SparseMatrix<double> &Grad3D)
+{
+	//MFinv.resize(MF.rows(), MF.cols());
+	vector<Eigen::Triplet<double>> GTriplet;
+	GTriplet.reserve(Grad3D.nonZeros());
+	int nRows = F.rows(), nCols = Grad3D.cols();
+
+	/* Getting the sum of every non-zero elements in a row */
+	for (int k = 0; k < Grad3D.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(Grad3D, k); it; ++it) {
+			if (it.row() < nRows) {					// values for x-coordinates
+				GTriplet.push_back(Eigen::Triplet<double>(3 * it.row(), it.col(), it.value()));
+			}
+			else if (it.row() < 2 * nRows) {		// values for y-coordinates
+				GTriplet.push_back(Eigen::Triplet<double>(3 * (it.row() - nRows) + 1, it.col(), it.value()));
+			}
+			else {									// values for z-coordinates
+				GTriplet.push_back(Eigen::Triplet<double>(3 * (it.row() - 2 * nRows) + 2, it.col(), it.value()));
+			}
+		}
+	}
+	Grad3D.resize(0, 0);
+	Grad3D.resize(3 * nRows, nCols);
+	Grad3D.setFromTriplets(GTriplet.begin(), GTriplet.end());
+}
+
 void VectorFields::constructRotationMatrix()
 {
 	J.resize(2 * F.rows(), 2 * F.rows());

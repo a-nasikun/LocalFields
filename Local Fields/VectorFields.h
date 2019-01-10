@@ -83,6 +83,7 @@ public:
 	void constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	void constructGradient3D();
 	void rearrangeGradient3D();
+	void rearrangeGradient3D(Eigen::SparseMatrix<double>& Grad3D);
 	void constructGradient2D();
 	void computeDivergent3D();
 	void computeDivergent2D();
@@ -114,6 +115,8 @@ public:
 	void normalizeBasis();
 	void normalizeBasisAbs();
 
+	void testBasis();
+
 	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
 	void setAndSolveUserSystem();
 	void setupUserBasis();
@@ -130,6 +133,7 @@ public:
 
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
+	void constructArbitraryField2D();
 	void testMappingMatrix();
 	void testAdjMV();
 	void testAdjacencyAndEdges();
@@ -206,9 +210,9 @@ protected:
 	Eigen::SparseMatrix<double>		CBar, B2DBar;
 
 	// FOR TESTING ONLY
-	Eigen::VectorXd					dijkstraFace, arbField;
+public: 
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
 	vector<vector<int>>				sharedEdgesVect; 
-
 private:
 	
 };

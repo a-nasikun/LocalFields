@@ -179,7 +179,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 		VectorBlock.row(i) = g;
 	}
 
-	double lengthScale = 1.0*avgEdgeLength;
+	double lengthScale = 5.0*avgEdgeLength;
 	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c;
