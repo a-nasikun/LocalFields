@@ -18,7 +18,8 @@ void VectorFields::constructArbitraryField()
 
 	// Position based arbitrary scalar field
 	for (int i = 0; i < V.rows(); i++) {
-		arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
+		//arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
+		arbField(i) = V(i, 1);// *V(i, 1) *  V(i, 2);
 	}
 
 	t2 = chrono::high_resolution_clock::now();
@@ -57,7 +58,7 @@ void VectorFields::testBasis()
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
 	Eigen::SparseMatrix<double> BB = Basis;// BasisTemp;
-	Eigen::VectorXd				v = arbField2D;
+	Eigen::VectorXd				v = Xf; // arbField2D;
 	Eigen::VectorXd				a = (v.transpose()*MF2D*BB).transpose();
 	Eigen::SparseMatrix<double> B = BB.transpose() * MF2D * BB;
 
