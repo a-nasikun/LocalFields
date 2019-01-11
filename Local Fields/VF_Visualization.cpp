@@ -93,10 +93,10 @@ void VectorFields::visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer)
 {
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
-	Eigen::RowVector3d color1 = Eigen::RowVector3d(1.0, 0.1, 0.2);	
-	visualize2DfieldsScaled(viewer, Xf, color1);
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
+	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
+	visualize2DfieldsScaled(viewer, Xf, color, 5000);
 }
 
 void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
@@ -179,7 +179,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 		VectorBlock.row(i) = g;
 	}
 
-	double lengthScale = 1.0*avgEdgeLength;
+	double lengthScale = 5.0*avgEdgeLength;
 	for (int i = 0; i < F.rows(); i += 1)
 	{
 		Eigen::RowVector3d c;
@@ -187,6 +187,89 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 		c = FC.row(i);
 		viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
 	}
+}
+
+void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
+{
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 2.0; 
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2; 
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
+	vector<int> FaceToDraw;
+	if (numFaces < F.rows())
+	{
+		FaceToDraw.resize(numFaces);
+		Eigen::VectorXd D(F.rows());
+
+		/* Initialize the value of D */
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//srand(time(NULL));
+		//FaceToDraw[0] = rand() % F.rows();
+		FaceToDraw[0] = 0;
+
+		for (int i = 1; i < numFaces; i++) {
+			Eigen::VectorXi::Index maxIndex;
+			computeDijkstraDistanceFaceForSampling(FaceToDraw[i - 1], D);
+			D.maxCoeff(&maxIndex);
+			FaceToDraw[i] = maxIndex;
+		} 
+	}
+	else 
+	{
+		FaceToDraw.resize(F.rows());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			FaceToDraw[i] = i; 
+		}
+	}
+	/* Drawing faces */
+	Eigen::RowVector3d c, g;
+	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
+	for (int i = 0; i < FaceToDraw.size(); i += 1)
+	{
+		c = FC.row(FaceToDraw[i]);												
+		g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
+		VectorBlock.row(i) = g;
+	}
+	//cout << "picking face to draw: done \n" << endl;
+
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3,2);
+	for (int i = 0; i<FaceToDraw.size(); i += 1)
+	{		
+		c = FC.row(FaceToDraw[i]);
+		//f = VectorBlock.row(i);
+		v = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+		ALoc = A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2);
+		f = (ALoc * v).transpose();
+		h1 = (ALoc* (rotMat1*v)).transpose();
+		h2 = (ALoc* (rotMat2*v)).transpose(); 
+		e = c + f*lengthScale;
+		viewer.data().add_edges(c, e, color);
+		viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+	}
+	//cout << "Drawing: done \n" << endl;
+}
+
+void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &percent)
+{
+
 }
 
 void VectorFields::visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
@@ -322,21 +405,18 @@ void VectorFields::visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const in
 	//}
 }
 
-void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer, const int &id)
+void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 {
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 
-	Eigen::RowVector3d color;
-	if (id == 0)
-		color = Eigen::RowVector3d(1.0, 0.4, 0.4);
-	else
-		color = Eigen::RowVector3d(0.0, 0.4, 0.9);
+	Eigen::RowVector3d color;	
+	color = Eigen::RowVector3d(0.9, 0.1, 0.1);
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl; 
-	//visualize2DfieldsNormalized(viewer, XFullDim.col(id), color);
-	visualize2DfieldsScaled(viewer, XFullDim.col(id), color);
-	//visualize2DfieldsRegular(viewer, XFullDim.col(id), color);
+	//visualize2DfieldsNormalized(viewer, XFullDim, color);
+	visualize2DfieldsScaled(viewer, XFullDim, color, 5000);
+	//visualize2DfieldsRegular(viewer, XFullDim, color);
 }
 
 void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
