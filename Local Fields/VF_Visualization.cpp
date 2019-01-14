@@ -1,6 +1,42 @@
 #include "VectorFields.h"
 
 /* ====================== VISUALIZATION of IMPORTANT ELEMENTS ============================*/
+
+void VectorFields::selectFaceToDraw(const int& numFaces)
+{
+	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
+
+	if (numFaces < F.rows())
+	{
+		FaceToDraw.resize(numFaces);
+		Eigen::VectorXd D(F.rows());
+
+		/* Initialize the value of D */
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//srand(time(NULL));
+		//FaceToDraw[0] = rand() % F.rows();
+		FaceToDraw[0] = 0;
+
+		for (int i = 1; i < numFaces; i++) {
+			Eigen::VectorXi::Index maxIndex;
+			computeDijkstraDistanceFaceForSampling(FaceToDraw[i - 1], D);
+			D.maxCoeff(&maxIndex);
+			FaceToDraw[i] = maxIndex;
+		}
+	}
+	else
+	{
+		FaceToDraw.resize(F.rows());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			FaceToDraw[i] = i;
+		}
+	}
+}
+
 void VectorFields::visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type)
 {
 	Eigen::VectorXd z;
@@ -202,39 +238,8 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	double rotAngle = M_PI - atan(1.0 / 3.0);
 	Eigen::Matrix2d rotMat1, rotMat2; 
 	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
-	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);	
 
-	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
-	vector<int> FaceToDraw;
-	if (numFaces < F.rows())
-	{
-		FaceToDraw.resize(numFaces);
-		Eigen::VectorXd D(F.rows());
-
-		/* Initialize the value of D */
-		for (int i = 0; i < F.rows(); i++) {
-			D(i) = numeric_limits<double>::infinity();
-		}
-
-		//srand(time(NULL));
-		//FaceToDraw[0] = rand() % F.rows();
-		FaceToDraw[0] = 0;
-
-		for (int i = 1; i < numFaces; i++) {
-			Eigen::VectorXi::Index maxIndex;
-			computeDijkstraDistanceFaceForSampling(FaceToDraw[i - 1], D);
-			D.maxCoeff(&maxIndex);
-			FaceToDraw[i] = maxIndex;
-		} 
-	}
-	else 
-	{
-		FaceToDraw.resize(F.rows());
-		for (int i = 0; i < F.rows(); i++)
-		{
-			FaceToDraw[i] = i; 
-		}
-	}
 	/* Drawing faces */
 	Eigen::RowVector3d c, g;
 	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
@@ -301,6 +306,41 @@ void VectorFields::visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, c
 	}
 }
 
+/* Efficient visualization for sparse matrix */
+void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::SparseMatrix<double> &Field2D, const int &idx, const Eigen::RowVector3d &color)
+{	
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 2.0;
+
+	/*Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	Eigen::RowVector3d c, g; 
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);
+
+	for (Eigen::SparseMatrix<double>::InnerIterator it(Field2D, idx); it; ++it) {
+		if (it.row() % 2 == 1) continue;
+		v << it.value(), Field2D.coeff(it.row() + 1, idx);
+		ALoc = A.block(3 * it.row()/2, 2 * it.row()/2, 3, 2);
+
+		c = FC.row(it.row()/2);
+		f = (ALoc * v).transpose();
+		h1 = (ALoc* (rotMat1*v)).transpose();
+		h2 = (ALoc* (rotMat2*v)).transpose();
+		e = c + f*lengthScale;
+		viewer.data().add_edges(c, e, color);
+		viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+	}	
+}
+
 void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color)
 {
 	// Reset
@@ -355,7 +395,8 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	}
 
 	printf("Showing the %d BasisTemp field\n", bId);
-	visualize2DfieldsScaled(viewer, BasisTemp.col(bId), color);
+	//visualize2DfieldsScaled(viewer, BasisTemp.col(bId), color);
+	visualize2DfieldsScaled(viewer, BasisTemp, bId, color);
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
@@ -379,8 +420,9 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 		bId = 2 * Sample.size() - 1;
 	}
 
-	printf("Showing the %d BasisTemp field\n", bId);
-	visualize2DfieldsScaled(viewer, Basis.col(bId), color);
+	printf("Showing the %d Basis field\n", bId);
+	//visualize2DfieldsScaled(viewer, Basis.col(bId), color);
+	visualize2DfieldsScaled(viewer, Basis, bId, color);
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));

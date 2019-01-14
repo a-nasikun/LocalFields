@@ -74,12 +74,10 @@ public:
 	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	void constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D);
-	void constructStiffnessMatrixCurlPart3DandCurl4F(Eigen::SparseMatrix<double>& LapCurl3D);
 	void constructStiffnessMatrixCurlPart2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D);
 	void constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D);
-	void constructStiffnessMatrixDivPart3DandDiv4F_Explicit(Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	void constructGradient3D();
 	void rearrangeGradient3D();
@@ -157,6 +155,7 @@ public:
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
+	void selectFaceToDraw(const int& numFaces);
 	void visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type);
 	void visualizeGradient(igl::opengl::glfw::Viewer &viewer, const GradientToShow &type);
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
@@ -168,6 +167,7 @@ public:
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces);
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &percent);
 	void visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
+	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::SparseMatrix<double> &Field2D, const int &idx, const Eigen::RowVector3d &color);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const int &id);
@@ -179,7 +179,6 @@ public:
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
 	Eigen::MatrixXd					V, FC, NF;
-	Eigen::MatrixXd					Curl3DPacked, Div3DPacked;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
@@ -190,6 +189,7 @@ protected:
 	vector<set<Edge_VPair>>			EdgePairsList;
 	vector<set<FacePair>>			AdjMF3N_temp;
 	double							avgEdgeLength;
+	vector<int>						FaceToDraw;
 
 	// Variable related to global problem
 	Eigen::SparseMatrix<double>		C; 
