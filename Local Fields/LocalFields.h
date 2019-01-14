@@ -30,12 +30,16 @@ public:
 	void measureXF(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& J);
 
 private:
-	int id, sampleID;
+	int id;// , sampleID;
 	Eigen::MatrixXd					XfLoc, cLoc, bLoc, gLoc, hLoc;
 	Eigen::SparseMatrix<double>		BLoc, ALoc, CLoc, SF2DLoc, SF_Curl, SF_Div;
-	set<int>						SubDomain, Boundary, BeyondBoundary;
+	set<int>						BeyondBoundary;
 	vector<int>						LocalElements, GlobToLocMap;
 	Eigen::VectorXd					vEstimateLoc;
+
+public:
+	int								sampleID;
+	set<int>						SubDomain, Boundary;
 };
 
 

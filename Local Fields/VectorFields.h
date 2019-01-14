@@ -153,6 +153,7 @@ public:
 	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
+	void visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -213,8 +214,9 @@ protected:
 
 	// FOR TESTING ONLY
 public: 
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, localSystem;
 	vector<vector<int>>				sharedEdgesVect; 
+	//vector<int>						localSystem;
 private:
 	
 };

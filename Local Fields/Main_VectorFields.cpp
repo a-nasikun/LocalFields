@@ -162,6 +162,10 @@ int main(int argc, char *argv[])
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
 			break;
+		case 'b':
+		case 'B':
+			vectorFields.visualizeLocalSubdomain(viewer);
+			break;
 		case 'x':
 		case 'X':
 			selectFace = !selectFace;

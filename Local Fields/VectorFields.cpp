@@ -1086,6 +1086,23 @@ void VectorFields::constructBasis()
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
 				localField.measureXF(doubleArea, J);
+
+				// To get local elements for visualizing subdomain
+				if (id == 0) {
+					localSystem.resize(F.rows());
+					for (int fid = 0; fid < F.rows(); fid++) {
+						localSystem(fid) = 0.0;
+					}
+					for (int fid : localField.SubDomain) {
+						localSystem(fid) = 0.3;
+					}
+
+					for (int fid : localField.Boundary) {
+						localSystem(fid) = 0.7;
+					}
+
+					localSystem(localField.sampleID) = 1.0;
+				}
 		}
 
 	}

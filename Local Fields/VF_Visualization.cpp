@@ -682,3 +682,10 @@ void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
 	}
 
 }
+
+void VectorFields::visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::MatrixXd fColor; 
+	igl::jet(localSystem, false, fColor);
+	viewer.data().set_colors(fColor);
+}
