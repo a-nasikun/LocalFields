@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=500, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -28,9 +28,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -73,14 +74,13 @@ int main(int argc, char *argv[])
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
 	vectorFields.setAndSolveUserSystem();
-	vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
-	//vectorFields.constructArbitraryField();
-	//vectorFields.constructArbitraryField2D();
+	vectorFields.constructArbitraryField();
+	vectorFields.constructArbitraryField2D();
 	vectorFields.testBasis();
-	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
-	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
+	vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8));
+	vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1));
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -91,9 +91,9 @@ int main(int argc, char *argv[])
 
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer);	
-	//vectorFields.visualizeUserConstraints(viewer);
+	vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 
 	/* FOR TESTING PURPOSE */
@@ -120,19 +120,18 @@ int main(int argc, char *argv[])
 		switch (key)
 		{
 		case '1':
-			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);			
-			vectorFields.visualizeApproximatedFields(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeApproxResult(viewer, 0);
+			//eigToShow = max(eigToShow - 1, 0);
+			//vectorFields.visualizeEigFieldsDiv(viewer, eigToShow);
 			break;
 		case '2':
-			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
-			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeUserConstraints(viewer);
+			//vectorFields.visualizeApproxResult(viewer, 1);
+			//eigToShow = min(eigToShow + 1, 100);
+			//vectorFields.visualizeEigFieldsDiv(viewer, eigToShow);
 			break;
 		case '3':
-			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
-			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			basisId = max(basisId - 1, 0);
+			vectorFields.visualizeBasis(viewer, basisId);
 			break;
 		case '4':
 			basisId = min(basisId + 1, 2*numSample-1);
@@ -158,8 +157,6 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeSingularitiesConstraints(viewer);
 			break;
 		case '0':
-			viewer.data().clear();
-			viewer.data().set_mesh(V, F);
 			break;
 		case 'x':
 		case 'X':
