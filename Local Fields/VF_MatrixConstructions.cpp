@@ -722,7 +722,8 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Curl part ";
-		constructStiffnessMatrixCurlPart3D(LapCurl3D);
+		//constructStiffnessMatrixCurlPart3D();
+		constructStiffnessMatrixCurlPart3DandCurl4F(LapCurl3D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -746,12 +747,16 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 
 void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D)
 {
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
 
+	Eigen::SparseMatrix<double> LapCurl3D_temp(3 * F.rows(), 3 * F.rows());
 	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
 	LapCurl3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
 	LTriplet.reserve(12 * LapCurl3D.rows());
 
+	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
 		double				area1 = doubleArea(i);
 		Eigen::RowVector3d	n1 = NF.row(i);
@@ -779,17 +784,6 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 1, block(2, 1)));
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
 
-				// ITS BLOCK => DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, block(2, 2)));
-
 				// THE BLOCK that's the Transpose of this BLOCK
 				block.transposeInPlace();
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 0, block(0, 0)));	// row 1
@@ -801,21 +795,35 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 0, block(2, 0)));	// row 3
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 1, block(2, 1)));
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
+			}
+		}
+	}
+	LapCurl3D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
 
-				// TRANSPOSE => DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, block(2, 2)));
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	printf("To set-up non-diagonal elements =%.4f seconds\n", duration.count());
+
+	t1 = chrono::high_resolution_clock::now();
+	// INSERTING the DIAGONAL Elements
+	for (int i = 0; i < F.rows(); i++) {
+		for (int j = 0; j < F.cols(); j++) {		// Working in 1 block (3x3 size) 
+			for (int k = 0; k < F.cols(); k++) {	// Inserting in column order
+													// Obtaining an element from the other 3 neighbor (same location of 3 different blocks)
+				double v0, v1, v2;
+				v0 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 0) + j);
+				v1 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 1) + j);
+				v2 = LapCurl3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 2) + j);
+
+				double value = -(v0 + v1 + v2);
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + k, 3 * i + j, value));	// row 1
 			}
 		}
 	}
 	LapCurl3D.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
 void VectorFields::constructStiffnessMatrixCurlPart3DandCurl4F(Eigen::SparseMatrix<double>& LapCurl3D)
@@ -919,7 +927,8 @@ void VectorFields::constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>
 	//constructStiffnessMatrixDivPart3D_Implicit(LapDiv3D);
 
 	// EXPLICIT Construction
-	constructStiffnessMatrixDivPart3D_Explicit(LapDiv3D);
+	//constructStiffnessMatrixDivPart3D_Explicit(LapDiv3D);
+	constructStiffnessMatrixDivPart3DandDiv4F_Explicit(LapDiv3D);
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D)
@@ -929,11 +938,16 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatri
 
 void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
 {
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+
+	Eigen::SparseMatrix<double> LapDiv3D_temp(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.resize(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
 	LTriplet.reserve(12 * 3 * F.rows());
 
+	t1 = chrono::high_resolution_clock::now();
 	for (int i = 0; i < F.rows(); i++) {
 		double				area1 = doubleArea(i);
 		Eigen::RowVector3d	n1 = NF.row(i);
@@ -951,7 +965,7 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				Eigen::Matrix3d		block = (3.0 / area) * edge * edge.transpose();
 
 
-				// ITS BLOCK ==> OFF_DIAGONAL
+				// ITS BLOCK
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 0, block(0, 0)));	// row 1
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 1, block(0, 1)));
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 2, block(0, 2)));
@@ -961,17 +975,6 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 0, block(2, 0)));	// row 3
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 1, block(2, 1)));
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
-
-				// ITS BLOCK ==> DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, block(2, 2)));
 
 				// THE BLOCK that's the Transpose of this BLOCK
 				block.transposeInPlace();
@@ -984,21 +987,37 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 0, block(2, 0)));	// row 3
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 1, block(2, 1)));
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
-
-				// THE TRANSPOSE BLOCK ==> DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, block(2, 2)));
 			}
 		}
 	}
+	LapDiv3D_temp.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	printf("To set-up non-diagonal elements =%.4f seconds\n", duration.count());
+
+	t1 = chrono::high_resolution_clock::now();
+	// INSERTING the DIAGONAL Elements
+	for (int i = 0; i < F.rows(); i++) {
+		//LapDiv3D.reserve(F.cols()*F.cols());
+		for (int j = 0; j < F.cols(); j++) {		// Working in 1 block (3x3 size) 
+			for (int k = 0; k < F.cols(); k++) {	// Inserting in column order
+													// Obtaining an element from the other 3 neighbor (same location of 3 different blocks)
+				double v0, v1, v2;
+				v0 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 0) + j);
+				v1 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 1) + j);
+				v2 = LapDiv3D_temp.coeff(3 * i + k, 3 * AdjMF3N(i, 2) + j);
+
+				double value = -(v0 + v1 + v2);
+				//LapDiv3D.insert(3 * i + k, 3 * i + j) = value;
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + k, 3 * i + j, value));
+			}
+		}
+	}
+
 	LapDiv3D.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	printf("To set-up diagonal block elements =%.4f seconds\n", duration.count());
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3DandDiv4F_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
