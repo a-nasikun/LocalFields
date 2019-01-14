@@ -86,7 +86,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 10;
+	const int numConstraints = 50;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -99,7 +99,8 @@ void VectorFields::constructSpecifiedConstraints()
 	}
 
 	srand(time(NULL));
-	int curPoint = rand() % F.rows();
+	//int curPoint = rand() % F.rows();
+	int curPoint = 0; 
 	constraints.insert(curPoint);
 
 	// Creating constraints using farthest point sampling
@@ -1102,8 +1103,8 @@ void VectorFields::constructBasis()
 	cout << "....Partition of unity of the basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	//normalizeBasis();
-	normalizeBasisAbs();
+	normalizeBasis();
+	//normalizeBasisAbs();
 
 	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
 	//cout << "Test 1" << endl;
@@ -1550,15 +1551,10 @@ void VectorFields::obtainUserVectorFields()
 
 void VectorFields::measureApproxAccuracyL2Norm()
 {
-	Eigen::VectorXd diff = Xf.col(0) - XFullDim.col(0);
-	double xf = Xf.col(0).transpose() * MF2D * Xf.col(0);
+	Eigen::VectorXd diff = Xf - XFullDim;
+	double xf = Xf.transpose() * MF2D * Xf;
 	double L2norm = diff.transpose() * MF2D * diff; 
-	printf("Diff 0 = %.10f\n", sqrt(L2norm / xf)); 
-
-	diff = Xf.col(1) - XFullDim.col(1);
-	xf = Xf.col(1).transpose() * MF2D * Xf.col(1);
-	L2norm = diff.transpose() * MF2D * diff;
-	printf("Diff 1 = %.10f\n", sqrt(L2norm / xf));
+	printf("Diff 0 = %.10f\n", sqrt(L2norm / xf)); 	
 }
 
 void VectorFields::measureU1andJU0()
