@@ -780,15 +780,15 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
 
 				// ITS BLOCK => DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, block(2, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, -block(0, 0)));	// row 1
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, -block(0, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, -block(0, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, -block(1, 0)));	// row 2
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, -block(1, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, -block(1, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, -block(2, 0)));	// row 3
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, -block(2, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, -block(2, 2)));
 
 				// THE BLOCK that's the Transpose of this BLOCK
 				block.transposeInPlace();
@@ -803,15 +803,15 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
 
 				// TRANSPOSE => DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, block(2, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, -block(0, 0)));	// row 1
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, -block(0, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, -block(0, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, -block(1, 0)));	// row 2
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, -block(1, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, -block(1, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, -block(2, 0)));	// row 3
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, -block(2, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, -block(2, 2)));
 			}
 		}
 	}
@@ -963,15 +963,15 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * neigh + 2, block(2, 2)));
 
 				// ITS BLOCK ==> DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, block(2, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, -block(0, 0)));	// row 1
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, -block(0, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, -block(0, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, -block(1, 0)));	// row 2
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, -block(1, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, -block(1, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, -block(2, 0)));	// row 3
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, -block(2, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, -block(2, 2)));
 
 				// THE BLOCK that's the Transpose of this BLOCK
 				block.transposeInPlace();
@@ -986,15 +986,15 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
 
 				// THE TRANSPOSE BLOCK ==> DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, block(2, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, -block(0, 0)));	// row 1
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, -block(0, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, -block(0, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, -block(1, 0)));	// row 2
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, -block(1, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, -block(1, 2)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, -block(2, 0)));	// row 3
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, -block(2, 1)));
+				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, -block(2, 2)));
 			}
 		}
 	}
