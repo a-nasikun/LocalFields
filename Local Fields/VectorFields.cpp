@@ -116,7 +116,7 @@ void VectorFields::constructSpecifiedConstraints()
 	for (int i : constraints) {
 		globalConstraints[counter1++] = i;
 	}
-	printf("Constraints = %d\n", globalConstraints.size());
+	//printf("Constraints = %d\n", globalConstraints.size());
 
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
@@ -130,7 +130,7 @@ void VectorFields::constructSpecifiedConstraints()
 	}
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
-	printf("Cp=%dx%d\n", C.rows(), C.cols());
+	//printf("Cp=%dx%d\n", C.rows(), C.cols());
 
 
 	// Setting up vector c (There are 1 vector c)
@@ -140,7 +140,7 @@ void VectorFields::constructSpecifiedConstraints()
 		c(2 * i + 0, 0) = sqrt(2.0);
 		c(2 * i + 1, 0) = sqrt(2.0);
 	}
-	printf("cBar=%dx%d\n", c.rows(), c.cols());
+	//printf("cBar=%dx%d\n", c.rows(), c.cols());
 }
 
 void VectorFields::constructSingularities()
@@ -1103,16 +1103,8 @@ void VectorFields::constructBasis()
 	cout << "....Partition of unity of the basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	normalizeBasis();
-	//normalizeBasisAbs();
-
-	printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
-	//cout << "Test 1" << endl;
-	//BasisTemp.resize(0, 0);
-	//cout << "Test 2" << endl;
-	//manuallyDestroySparseMatrix(BasisTemp);
-	//cout << "Test 3" << endl;
-	//printf("====>Basis(%d,%d) non-zeros=%d\n", BasisTemp.rows(), BasisTemp.cols(), BasisTemp.nonZeros());
+	//normalizeBasis();
+	normalizeBasisAbs();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -1259,7 +1251,7 @@ void VectorFields::normalizeBasis()
 
 	int numNonZeroes = Basis.nonZeros();
 	int numElements = Basis.rows();
-	cout << "Average non-zeros is " << (double)numNonZeroes / (double)numElements << endl; 
+	//cout << "Average non-zeros is " << (double)numNonZeroes / (double)numElements << endl; 
 }
 
 //void VectorFields::normalizeBasisAbs()

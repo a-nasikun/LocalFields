@@ -1,6 +1,42 @@
 #include "VectorFields.h"
 
 /* ====================== VISUALIZATION of IMPORTANT ELEMENTS ============================*/
+
+void VectorFields::selectFaceToDraw(const int& numFaces)
+{
+	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
+
+	if (numFaces < F.rows())
+	{
+		FaceToDraw.resize(numFaces);
+		Eigen::VectorXd D(F.rows());
+
+		/* Initialize the value of D */
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//srand(time(NULL));
+		//FaceToDraw[0] = rand() % F.rows();
+		FaceToDraw[0] = 0;
+
+		for (int i = 1; i < numFaces; i++) {
+			Eigen::VectorXi::Index maxIndex;
+			computeDijkstraDistanceFaceForSampling(FaceToDraw[i - 1], D);
+			D.maxCoeff(&maxIndex);
+			FaceToDraw[i] = maxIndex;
+		}
+	}
+	else
+	{
+		FaceToDraw.resize(F.rows());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			FaceToDraw[i] = i;
+		}
+	}
+}
+
 void VectorFields::visualizeMassMatrix(igl::opengl::glfw::Viewer &viewer, const MassMatrixToShow &type)
 {
 	Eigen::VectorXd z;
@@ -203,38 +239,8 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	Eigen::Matrix2d rotMat1, rotMat2; 
 	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
 	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+	
 
-	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
-	vector<int> FaceToDraw;
-	if (numFaces < F.rows())
-	{
-		FaceToDraw.resize(numFaces);
-		Eigen::VectorXd D(F.rows());
-
-		/* Initialize the value of D */
-		for (int i = 0; i < F.rows(); i++) {
-			D(i) = numeric_limits<double>::infinity();
-		}
-
-		//srand(time(NULL));
-		//FaceToDraw[0] = rand() % F.rows();
-		FaceToDraw[0] = 0;
-
-		for (int i = 1; i < numFaces; i++) {
-			Eigen::VectorXi::Index maxIndex;
-			computeDijkstraDistanceFaceForSampling(FaceToDraw[i - 1], D);
-			D.maxCoeff(&maxIndex);
-			FaceToDraw[i] = maxIndex;
-		} 
-	}
-	else 
-	{
-		FaceToDraw.resize(F.rows());
-		for (int i = 0; i < F.rows(); i++)
-		{
-			FaceToDraw[i] = i; 
-		}
-	}
 	/* Drawing faces */
 	Eigen::RowVector3d c, g;
 	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
