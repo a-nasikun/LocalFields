@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(1000);
+	vectorFields.selectFaceToDraw(12000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -86,9 +86,9 @@ int main(int argc, char *argv[])
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
 	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeGlobalConstraints(viewer);
 	vectorFields.visualizeSingularitiesConstraints(viewer);
-	vectorFields.visualizeSharedEdges(viewer);
+	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer);	

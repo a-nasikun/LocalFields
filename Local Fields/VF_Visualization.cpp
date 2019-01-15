@@ -497,6 +497,11 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 		const double diff = 0.6 / (double)SingNeighCC[id].size();
 		for (int i = 0; i < SingNeighCC[id].size(); i++) {
 			z(SingNeighCC[id][i]) = 0.3 + i*diff;
+
+			Eigen::Vector3d basis = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
+			basis *= avgEdgeLength; 
+			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
+			//viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
 		}
 	}
 	igl::jet(z, false, vColor);

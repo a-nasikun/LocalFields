@@ -11,10 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedConstraints();
+	//constructSpecifiedConstraints();
 	
-	//constructSingularities();
-	//constructSpecifiedConstraintsWithSingularities();
+	constructSingularities();
+	constructSpecifiedConstraintsWithSingularities();
 
 	
 
@@ -145,7 +145,7 @@ void VectorFields::constructSpecifiedConstraints()
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 2;
+	const int NUM_SINGS = 4;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -203,10 +203,10 @@ void VectorFields::constructSingularities()
 	//VFNeighbors.shrink_to_fit();
 }
 
-void VectorFields::constructSpecifiedConstraintsWithSingularities()
+void VectorFields::constructSpecifiedConstraintsWithSingularities() 
 {
 	// Define the constraints
-	const int numConstraints = 4;
+	const int numConstraints = 16;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -235,23 +235,23 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 	for (int i : constraints) {
 		globalConstraints[counter1++] = i;
 	}
-	
+
 	int numSingConstraints = 0;
 	for (int i = 0; i < SingNeighCC.size(); i++) {
 		// Use only n-1 neighboring faces as constraints
-		for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {
+		for (int j = 0; j < (SingNeighCC[i].size() - 1); j++) {
 			numSingConstraints++;
 		}
 	}
 
 	// Setting up matrix C and vector c
-	c.resize(2 * (globalConstraints.size()+numSingConstraints));
+	c.resize(2 * (globalConstraints.size() + numSingConstraints));
 
 
 	// HARD CONSTRAINTS
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * globalConstraints.size() +  2 * 4 * 7 * SingNeighCC.size());
+	CTriplet.reserve(2 * globalConstraints.size() + 2 * 4 * 7 * SingNeighCC.size());
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		// Matrix C
@@ -263,36 +263,36 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 		//c(counter++, 1) = sqrt(2.0);
 	}
 
-	
+
 	// SINGULARITIES CONSTRAINTS
 	for (int id = 0; id < SingNeighCC.size(); id++) {
 		// For testing
-		sharedEdgesVect[id].resize(2*SingNeighCC[id].size()-2);
+		sharedEdgesVect[id].resize(2 * SingNeighCC[id].size() - 2);
 
 		// 4. Compute rotation of among its valence
 		const double rotAngle = 2 * M_PI / (double)SingNeighCC[id].size();
-		const double cosA = cos(rotAngle);
-		const double sinA = sin(rotAngle);
+		const double cosConst = cos(rotAngle);
+		const double sinConst = sin(rotAngle);
 
 		// Which case? => determining which edge is the common edge
-		enum class SharedEdgeCase {Case1, Case2, Case3};
-		SharedEdgeCase edgeCase1, edgeCase2; 
+		enum class SharedEdgeCase { Case1, Case2, Case3 };
+		SharedEdgeCase edgeCase1, edgeCase2;
 		for (int i = 0; i < (SingNeighCC[id].size() - 1); i++) {
 			// 1. Find shared edge (naively)
 			Eigen::RowVector3d es;
 			for (int f1 = 0; f1 < F.cols(); f1++) {
 				for (int f2 = 0; f2 < F.cols(); f2++) {
-					bool b1 = F(SingNeighCC[id][i], (f1+1)%F.cols()) == F(SingNeighCC[id][i + 1], f2);
+					bool b1 = F(SingNeighCC[id][i], (f1 + 1) % F.cols()) == F(SingNeighCC[id][i + 1], f2);
 					bool b2 = F(SingNeighCC[id][i], f1) == F(SingNeighCC[id][i + 1], (f2 + 1) % F.cols());
 					if (b1 && b2) {
 						sharedEdgesVect[id][2 * i + 0] = F(SingNeighCC[id][i], f1);
 						sharedEdgesVect[id][2 * i + 1] = F(SingNeighCC[id][i], (f1 + 1) % F.cols());
 						es = V.row(F(SingNeighCC[id][i], (f1 + 1) % F.cols())) - V.row(F(SingNeighCC[id][i], f1));
 						printf("Shared edge=%d->%d\n", F(SingNeighCC[id][i], f1), F(SingNeighCC[id][i], (f1 + 1) % F.cols()));
-						
+
 						if (f1 == 0)		edgeCase1 = SharedEdgeCase::Case1;	// => edge V0->V1 is the shared edge => it takes 0 step to reach v0
-						else if(f1==1)		edgeCase1 = SharedEdgeCase::Case3;	// => edge V1->V2 is the shared edge => it takes 2 step to reach v0
-						else if(f1==2)		edgeCase1 = SharedEdgeCase::Case2;	// => edge V2->V0 is the shared edge => it takes 1 step to reach v0
+						else if (f1 == 1)	edgeCase1 = SharedEdgeCase::Case3;	// => edge V1->V2 is the shared edge => it takes 2 step to reach v0
+						else if (f1 == 2)	edgeCase1 = SharedEdgeCase::Case2;	// => edge V2->V0 is the shared edge => it takes 1 step to reach v0
 
 						if (f2 == 0)		edgeCase2 = SharedEdgeCase::Case1;
 						else if (f2 == 1)	edgeCase2 = SharedEdgeCase::Case3;
@@ -303,85 +303,279 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 			// 2. Find angles between basis1 and es
 			Eigen::VectorXd eVect;
 			Eigen::RowVector3d b11, b12;
-			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i]+0, 3, 1);
+			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 0, 3, 1);
 			b11 << eVect(0), eVect(1), eVect(2);
-			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i]+1, 3, 1);
+			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 1, 3, 1);
 			b12 << eVect(0), eVect(1), eVect(2);
-			cout << "______B11: " << b11 << ", B12: " << b12 << endl;
+			//cout << "______B11: " << b11 << ", B12: " << b12 << endl;
 
 			// Basis 1, Frame 1
 			double cosR12 = (b11.dot(es)) / (b11.norm()*es.norm());
-			if (cosR12 > 1.0) cosR12 = 1.0; 
-			if (cosR12 <-1.0) cosR12 = -1.0;
-			const double angleR12_1 = (edgeCase1==SharedEdgeCase::Case2 ? 2*M_PI - acos(cosR12) : acos(cosR12));
-			const double cosR12_1 = cos(angleR12_1);
-			const double sinR12_1 = sin(angleR12_1);
-			printf("______[%.2f] Rotation matrix R12_1 = [%.3f,%.3f; %.3f, %.3f]\n", angleR12_1*180.0/M_PI, cosR12_1, -sinR12_1, sinR12_1, cosR12_1);
-
-			// Basis 1, Frame 2
-			cosR12 = (b12.dot(es)) / (b12.norm()*es.norm());
 			if (cosR12 > 1.0) cosR12 = 1.0;
 			if (cosR12 <-1.0) cosR12 = -1.0;
-			const double angleR12_2 = (edgeCase1 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
-			const double cosR12_2 = cos(angleR12_2);
-			const double sinR12_2 = sin(angleR12_2);
-			printf("______[%.2f] Rotation matrix R12_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR12_2*180.0 / M_PI, cosR12_2, -sinR12_2, sinR12_2, cosR12_2);
+			const double angleR12_1 = (edgeCase1 == SharedEdgeCase::Case2 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
+			const double cosR12_1 = cos(angleR12_1);
+			const double sinR12_1 = sin(angleR12_1);
+			printf("______[%.2f] Rotation matrix R12_1 = [%.3f,%.3f; %.3f, %.3f]\n", angleR12_1*180.0 / M_PI, cosR12_1, -sinR12_1, sinR12_1, cosR12_1);
+
+			// Basis 1, Frame 2
+			//cosR12 = (b12.dot(es)) / (b12.norm()*es.norm());
+			//if (cosR12 > 1.0) cosR12 = 1.0;
+			//if (cosR12 <-1.0) cosR12 = -1.0;
+			//const double angleR12_2 = (edgeCase1 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
+			//const double cosR12_2 = cos(angleR12_2);
+			//const double sinR12_2 = sin(angleR12_2);
+			//printf("______[%.2f] Rotation matrix R12_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR12_2*180.0 / M_PI, cosR12_2, -sinR12_2, sinR12_2, cosR12_2);
 
 			// 3. Find angles between basis2 and es
-			es = -es; 
+			//es = -es;
 			Eigen::RowVector3d b21, b22;
-			eVect = A.block(3 * SingNeighCC[id][i+1], 2 * SingNeighCC[id][i+1] + 0, 3, 1);
+			eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 0, 3, 1);
 			b21 << eVect(0), eVect(1), eVect(2);
-			eVect = A.block(3 * SingNeighCC[id][i+1], 2 * SingNeighCC[id][i+1] + 1, 3, 1);
+			eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 1, 3, 1);
 			b22 << eVect(0), eVect(1), eVect(2);
-			cout << "______B21: " << b21 << ", B22: " << b22 << endl;
-			
+			//cout << "______B21: " << b21 << ", B22: " << b22 << endl;
+
 			// Basis 2, Frame 1
 			double cosR21 = (b21.dot(es)) / (b21.norm()*es.norm());
 			if (cosR21 > 1.0) cosR21 = 1.0;
 			if (cosR21 < -1.0) cosR21 = -1.0;
-			const double angleR21_1 = (edgeCase2 == SharedEdgeCase::Case2 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+			double angleR21_1 = (edgeCase2 == SharedEdgeCase::Case3 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+			angleR21_1 = 2 * M_PI - angleR21_1; 
 			const double cosR21_1 = cos(angleR21_1);
 			const double sinR21_1 = sin(angleR21_1);
-			printf("______[%.2f] Rotation matrix R22_1 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_1*180.0/M_PI, cosR21_1, -sinR21_1, sinR21_1, cosR21_1);
-
+			printf("______[%.2f] Rotation matrix R22_1 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_1*180.0 / M_PI, cosR21_1, -sinR21_1, sinR21_1, cosR21_1);
+			//printf("____ To map basis1 -> basis2: rotate by %.2f degree\n", (angleR12_1 + angleR21_1)*180.0 / M_PI);
+			const double RotAngle = (angleR12_1 + angleR21_1 > 2 * M_PI ? (angleR12_1 + angleR21_1) - 2 * M_PI : angleR12_1 + angleR21_1);
+			printf("____ To map basis1 -> basis2: rotate by %.2f degree\n", (RotAngle)*180.0 / M_PI);
+			const double cosBasis = cos(RotAngle);
+			const double sinBasis = sin(RotAngle);
 			// Basis 2, Frame 2
-			cosR21 = (b22.dot(es)) / (b22.norm()*es.norm());
-			if (cosR21 > 1.0) cosR21 = 1.0;
-			if (cosR21 < -1.0) cosR21 = -1.0;
-			const double angleR21_2 = (edgeCase2 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
-			const double cosR21_2 = cos(angleR21_2);
-			const double sinR21_2 = sin(angleR21_2);
-			printf("______[%.2f] Rotation matrix R22_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_2*180.0/M_PI, cosR21_2, -sinR21_2, sinR21_2, cosR21_2);
+			//cosR21 = (b22.dot(es)) / (b22.norm()*es.norm());
+			//if (cosR21 > 1.0) cosR21 = 1.0;
+			//if (cosR21 < -1.0) cosR21 = -1.0;
+			//const double angleR21_2 = (edgeCase2 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+			//const double cosR21_2 = cos(angleR21_2);
+			//const double sinR21_2 = sin(angleR21_2);
+			//printf("______[%.2f] Rotation matrix R22_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_2*180.0 / M_PI, cosR21_2, -sinR21_2, sinR21_2, cosR21_2);
 
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR12_1));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinR12_1));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_1));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR21_1*cosR12_1+sinR21_1*sinR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosR21_1*sinR12_1+sinR21_1*cosR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR21_1*cosR12_1 + sinR21_1*sinR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosR21_1*sinR12_1 + sinR21_1*cosR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, 0.0));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosBasis));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinBasis));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, 0));
 			c(counter) = 0.0;
 			counter++;
-			
+
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinR12_1));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosR12_1 ));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_1));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_1 ));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, -sinR21_1*cosR12_1+cosR21_1*sinR12_1));
-			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, sinR21_1*sinR12_1+cosR21_1*cosR21_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, -sinR21_1*cosR12_1 + cosR21_1*sinR12_1));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, sinR21_1*sinR12_1 + cosR21_1*cosR21_1));
 			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, 0.0));
+			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
+
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinBasis));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosBasis ));
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, 0.0));
 			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
 			c(counter) = 0.0;
 			counter++;
 		}
 	}
 
-	C.resize(2 * (globalConstraints.size()+numSingConstraints), B2D.rows());
+	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
 }
+
+//void VectorFields::constructSpecifiedConstraintsWithSingularities()  ==> Version 2.0
+//{
+//	// Define the constraints
+//	const int numConstraints = 4;
+//	set<int> constraints;
+//
+//	globalConstraints.resize(numConstraints);
+//	Eigen::VectorXd D;
+//	D.resize(F.rows());
+//
+//	// Initialize the value of D
+//	for (int i = 0; i < F.rows(); i++) {
+//		D(i) = numeric_limits<double>::infinity();
+//	}
+//
+//	srand(time(NULL));
+//	int curPoint = rand() % F.rows();
+//	constraints.insert(curPoint);
+//
+//	// Creating constraints using farthest point sampling
+//	do {
+//		Eigen::VectorXi::Index maxIndex;
+//		computeDijkstraDistanceFaceForSampling(curPoint, D);
+//		D.maxCoeff(&maxIndex);
+//		constraints.insert(maxIndex);
+//		curPoint = maxIndex;
+//	} while (constraints.size() < numConstraints);
+//
+//	int counter1 = 0;
+//	for (int i : constraints) {
+//		globalConstraints[counter1++] = i;
+//	}
+//	
+//	int numSingConstraints = 0;
+//	for (int i = 0; i < SingNeighCC.size(); i++) {
+//		// Use only n-1 neighboring faces as constraints
+//		for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {
+//			numSingConstraints++;
+//		}
+//	}
+//
+//	// Setting up matrix C and vector c
+//	c.resize(2 * (globalConstraints.size()+numSingConstraints));
+//
+//
+//	// HARD CONSTRAINTS
+//	Eigen::SparseMatrix<double> CTemp;
+//	vector<Eigen::Triplet<double>> CTriplet;
+//	CTriplet.reserve(2 * globalConstraints.size() +  2 * 4 * 7 * SingNeighCC.size());
+//	int counter = 0;
+//	for (int i = 0; i < globalConstraints.size(); i++) {
+//		// Matrix C
+//		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+//		c(counter++, 0) = sqrt(2.0);
+//		//c(counter++, 1) = sqrt(2.0);
+//		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+//		c(counter++, 0) = sqrt(2.0);
+//		//c(counter++, 1) = sqrt(2.0);
+//	}
+//
+//	
+//	// SINGULARITIES CONSTRAINTS
+//	for (int id = 0; id < SingNeighCC.size(); id++) {
+//		// For testing
+//		sharedEdgesVect[id].resize(2*SingNeighCC[id].size()-2);
+//
+//		// 4. Compute rotation of among its valence
+//		const double rotAngle = 2 * M_PI / (double)SingNeighCC[id].size();
+//		const double cosA = cos(rotAngle);
+//		const double sinA = sin(rotAngle);
+//
+//		// Which case? => determining which edge is the common edge
+//		enum class SharedEdgeCase {Case1, Case2, Case3};
+//		SharedEdgeCase edgeCase1, edgeCase2; 
+//		for (int i = 0; i < (SingNeighCC[id].size() - 1); i++) {
+//			// 1. Find shared edge (naively)
+//			Eigen::RowVector3d es;
+//			for (int f1 = 0; f1 < F.cols(); f1++) {
+//				for (int f2 = 0; f2 < F.cols(); f2++) {
+//					bool b1 = F(SingNeighCC[id][i], (f1+1)%F.cols()) == F(SingNeighCC[id][i + 1], f2);
+//					bool b2 = F(SingNeighCC[id][i], f1) == F(SingNeighCC[id][i + 1], (f2 + 1) % F.cols());
+//					if (b1 && b2) {
+//						sharedEdgesVect[id][2 * i + 0] = F(SingNeighCC[id][i], f1);
+//						sharedEdgesVect[id][2 * i + 1] = F(SingNeighCC[id][i], (f1 + 1) % F.cols());
+//						es = V.row(F(SingNeighCC[id][i], (f1 + 1) % F.cols())) - V.row(F(SingNeighCC[id][i], f1));
+//						printf("Shared edge=%d->%d\n", F(SingNeighCC[id][i], f1), F(SingNeighCC[id][i], (f1 + 1) % F.cols()));
+//						
+//						if (f1 == 0)		edgeCase1 = SharedEdgeCase::Case1;	// => edge V0->V1 is the shared edge => it takes 0 step to reach v0
+//						else if(f1==1)		edgeCase1 = SharedEdgeCase::Case3;	// => edge V1->V2 is the shared edge => it takes 2 step to reach v0
+//						else if(f1==2)		edgeCase1 = SharedEdgeCase::Case2;	// => edge V2->V0 is the shared edge => it takes 1 step to reach v0
+//
+//						if (f2 == 0)		edgeCase2 = SharedEdgeCase::Case1;
+//						else if (f2 == 1)	edgeCase2 = SharedEdgeCase::Case3;
+//						else if (f2 == 2)	edgeCase2 = SharedEdgeCase::Case2;
+//					}
+//				}
+//			}
+//			// 2. Find angles between basis1 and es
+//			Eigen::VectorXd eVect;
+//			Eigen::RowVector3d b11, b12;
+//			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i]+0, 3, 1);
+//			b11 << eVect(0), eVect(1), eVect(2);
+//			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i]+1, 3, 1);
+//			b12 << eVect(0), eVect(1), eVect(2);
+//			cout << "______B11: " << b11 << ", B12: " << b12 << endl;
+//
+//			// Basis 1, Frame 1
+//			double cosR12 = (b11.dot(es)) / (b11.norm()*es.norm());
+//			if (cosR12 > 1.0) cosR12 = 1.0; 
+//			if (cosR12 <-1.0) cosR12 = -1.0;
+//			const double angleR12_1 = (edgeCase1==SharedEdgeCase::Case2 ? 2*M_PI - acos(cosR12) : acos(cosR12));
+//			const double cosR12_1 = cos(angleR12_1);
+//			const double sinR12_1 = sin(angleR12_1);
+//			printf("______[%.2f] Rotation matrix R12_1 = [%.3f,%.3f; %.3f, %.3f]\n", angleR12_1*180.0/M_PI, cosR12_1, -sinR12_1, sinR12_1, cosR12_1);
+//
+//			// Basis 1, Frame 2
+//			cosR12 = (b12.dot(es)) / (b12.norm()*es.norm());
+//			if (cosR12 > 1.0) cosR12 = 1.0;
+//			if (cosR12 <-1.0) cosR12 = -1.0;
+//			const double angleR12_2 = (edgeCase1 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
+//			const double cosR12_2 = cos(angleR12_2);
+//			const double sinR12_2 = sin(angleR12_2);
+//			printf("______[%.2f] Rotation matrix R12_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR12_2*180.0 / M_PI, cosR12_2, -sinR12_2, sinR12_2, cosR12_2);
+//
+//			// 3. Find angles between basis2 and es
+//			es = -es; 
+//			Eigen::RowVector3d b21, b22;
+//			eVect = A.block(3 * SingNeighCC[id][i+1], 2 * SingNeighCC[id][i+1] + 0, 3, 1);
+//			b21 << eVect(0), eVect(1), eVect(2);
+//			eVect = A.block(3 * SingNeighCC[id][i+1], 2 * SingNeighCC[id][i+1] + 1, 3, 1);
+//			b22 << eVect(0), eVect(1), eVect(2);
+//			cout << "______B21: " << b21 << ", B22: " << b22 << endl;
+//			
+//			// Basis 2, Frame 1
+//			double cosR21 = (b21.dot(es)) / (b21.norm()*es.norm());
+//			if (cosR21 > 1.0) cosR21 = 1.0;
+//			if (cosR21 < -1.0) cosR21 = -1.0;
+//			const double angleR21_1 = (edgeCase2 == SharedEdgeCase::Case2 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+//			const double cosR21_1 = cos(angleR21_1);
+//			const double sinR21_1 = sin(angleR21_1);
+//			printf("______[%.2f] Rotation matrix R22_1 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_1*180.0/M_PI, cosR21_1, -sinR21_1, sinR21_1, cosR21_1);
+//
+//			// Basis 2, Frame 2
+//			cosR21 = (b22.dot(es)) / (b22.norm()*es.norm());
+//			if (cosR21 > 1.0) cosR21 = 1.0;
+//			if (cosR21 < -1.0) cosR21 = -1.0;
+//			const double angleR21_2 = (edgeCase2 == SharedEdgeCase::Case1 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+//			const double cosR21_2 = cos(angleR21_2);
+//			const double sinR21_2 = sin(angleR21_2);
+//			printf("______[%.2f] Rotation matrix R22_2 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_2*180.0/M_PI, cosR21_2, -sinR21_2, sinR21_2, cosR21_2);
+//
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR12_1));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -sinR12_1));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -cosR21_1));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, sinR21_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, cosR21_1*cosR12_1+sinR21_1*sinR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, -cosR21_1*sinR12_1+sinR21_1*cosR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -1.0));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, 0.0));
+//			c(counter) = 0.0;
+//			counter++;
+//			
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, sinR12_1));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, cosR12_1 ));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, -sinR21_1));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -cosR21_1 ));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, -sinR21_1*cosR12_1+cosR21_1*sinR12_1));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, sinR21_1*sinR12_1+cosR21_1*cosR21_1));
+//			//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 0, 0.0));
+//			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i + 1] + 1, -1.0));
+//			c(counter) = 0.0;
+//			counter++;
+//		}
+//	}
+//
+//	C.resize(2 * (globalConstraints.size()+numSingConstraints), B2D.rows());
+//	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+//	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
+//}
 
 //void VectorFields::constructSpecifiedConstraintsWithSingularities() ==> VERSION 1.1
 //{
