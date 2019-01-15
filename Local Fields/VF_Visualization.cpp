@@ -232,7 +232,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 2.0; 
+	const double EDGE_RATIO = 1.0; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -497,6 +497,11 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 		const double diff = 0.6 / (double)SingNeighCC[id].size();
 		for (int i = 0; i < SingNeighCC[id].size(); i++) {
 			z(SingNeighCC[id][i]) = 0.3 + i*diff;
+
+			Eigen::Vector3d basis = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
+			basis *= avgEdgeLength; 
+			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
+			//viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
 		}
 	}
 	igl::jet(z, false, vColor);
