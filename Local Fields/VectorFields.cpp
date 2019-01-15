@@ -11,10 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedConstraints();
+	constructSpecifiedConstraints();
 	
-	constructSingularities();
-	constructSpecifiedConstraintsWithSingularities();
+	//constructSingularities();
+	//constructSpecifiedConstraintsWithSingularities();
 
 	
 
@@ -86,7 +86,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 2;
+	const int numConstraints =5;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -122,11 +122,22 @@ void VectorFields::constructSpecifiedConstraints()
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
 	CTriplet.reserve(2 * globalConstraints.size());
+	c.resize(2 * globalConstraints.size());
 
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * globalConstraints[i] + 0, 1.0));
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * globalConstraints[i] + 1, 1.0));
+		//const double alpha = M_PI / 2.0; 
+		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, cos(alpha)));
+		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, -sin(alpha)));
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		c(2 * counter + 0, 0) = 1.0;
+		counter++;
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, sin(alpha)));
+		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, cos(alpha)));
+		c(2 * counter + 1, 0) = 1.0;
+		counter++;
 	}
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
@@ -135,10 +146,9 @@ void VectorFields::constructSpecifiedConstraints()
 
 	// Setting up vector c (There are 1 vector c)
 	srand(time(NULL));
-	c.resize(2 * globalConstraints.size());
+	
 	for (int i = 0; i < globalConstraints.size(); i++) {
-		c(2 * i + 0, 0) = sqrt(2.0);
-		c(2 * i + 1, 0) = sqrt(2.0);
+		
 	}
 	//printf("cBar=%dx%d\n", c.rows(), c.cols());
 }
