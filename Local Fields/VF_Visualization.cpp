@@ -501,9 +501,27 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 			Eigen::Vector3d basis = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
 			basis *= avgEdgeLength; 
 			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
-			//viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
+			viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
 		}
 	}
+
+	for (int id = 0; id < mappedBasis.size(); id++) {
+		for (int i = 0; i < mappedBasis[id].size(); i++) {
+			Eigen::MatrixXd Map2D(3, 2);
+			Map2D = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 2);
+			Eigen::Vector3d oldBasis = Map2D.col(0);
+			Eigen::Vector3d newBasis = Map2D * mappedBasis[id][i];
+
+			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
+			viewer.data().add_edges(c, c + avgEdgeLength * oldBasis.transpose(), Eigen::RowVector3d(0.0, 0.1, 0.3));
+			viewer.data().add_edges(c, c + avgEdgeLength * Map2D.col(1).transpose(), Eigen::RowVector3d(0.0, 0.3, 0.1));
+
+			viewer.data().add_edges(c, c + avgEdgeLength * newBasis.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			newBasis = Map2D * mappedBasis2[id][i];
+			viewer.data().add_edges(c, c + avgEdgeLength * newBasis.transpose(), Eigen::RowVector3d(0.0, 0.9, 0.0));
+		}
+	}
+
 	igl::jet(z, false, vColor);
 	//viewer.data().set_colors(vColor);
 

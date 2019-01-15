@@ -153,6 +153,8 @@ void VectorFields::constructSingularities()
 
 	singularities.resize(NUM_SINGS);
 	SingNeighCC.resize(NUM_SINGS);
+	mappedBasis.resize(NUM_SINGS);
+	mappedBasis2.resize(NUM_SINGS);
 
 	// For testing
 	sharedEdgesVect.resize(NUM_SINGS);
@@ -174,6 +176,8 @@ void VectorFields::constructSingularities()
 		SingNeighCC[id][0]		= firstNeigh;
 		int curNeigh			= firstNeigh;
 		int vertex1				= SingLocation;
+		mappedBasis[id].resize(SingNeighNum);
+		mappedBasis2[id].resize(SingNeighNum);
 
 		// Getting the neighboring valence triangles in order
 		for (int i2 = 1; i2<SingNeighNum; i2++) {
@@ -350,6 +354,20 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 			printf("____ To map basis1 -> basis2: rotate by %.2f degree\n", (RotAngle)*180.0 / M_PI);
 			const double cosBasis = cos(RotAngle);
 			const double sinBasis = sin(RotAngle);
+
+			// Obtain the mapped basis
+			Eigen::Matrix2d RotMat2D;
+			RotMat2D << cosBasis, -sinBasis, sinBasis, cosBasis; 
+			Eigen::Vector2d initBasis;
+			initBasis << 1.0, 0.0;
+			Eigen::Vector2d newBasis = RotMat2D * initBasis; 
+			mappedBasis[id][i] = newBasis; 
+			
+			initBasis(0) = 0.0; initBasis(1) = 1.0;
+			newBasis = RotMat2D * initBasis;
+			mappedBasis2[id][i] = newBasis;
+
+
 			// Basis 2, Frame 2
 			//cosR21 = (b22.dot(es)) / (b22.norm()*es.norm());
 			//if (cosR21 > 1.0) cosR21 = 1.0;

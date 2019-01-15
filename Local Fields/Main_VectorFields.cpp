@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
 	/* ====================== GLOBAL PROBLEM ====================*/
 	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	vectorFields.setupGlobalProblem();
+	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
