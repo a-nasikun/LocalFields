@@ -86,7 +86,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 50;
+	const int numConstraints = 2;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -1371,8 +1371,9 @@ void VectorFields::normalizeBasisAbs()
 	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
 			double newValue = it.value() / normSum(it.row() / 2, it.col() % 2);
+			newValue *= sqrt(2.0);
 			// To have the basis with norm 2.0
-			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue/2.0));
+			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue));
 			BasisSumN(it.row(), it.col() % 2) += newValue;
 		}
 	}
