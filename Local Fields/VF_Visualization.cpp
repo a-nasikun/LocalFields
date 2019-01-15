@@ -475,11 +475,12 @@ void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer)
 {
+	const double ARRAW_RATIO = 3.0; 
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		Eigen::RowVector3d cc, g, v1, v2, v3;
 		cc = FC.row(globalConstraints[i]);
 		g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
-		viewer.data().add_edges(cc, cc + g / g.norm()*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
+		viewer.data().add_edges(cc, cc + ARRAW_RATIO*g*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
 		viewer.data().add_points(cc, Eigen::RowVector3d(0.1, 0.1, 0.2));
 	}
 }
