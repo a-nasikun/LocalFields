@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */

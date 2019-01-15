@@ -11,10 +11,13 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedConstraints();
+	//constructSpecifiedConstraints();
 	
-	//constructSingularities();
-	//constructSpecifiedConstraintsWithSingularities();
+	constructSingularities();
+	constructSpecifiedConstraintsWithSingularities();
+	
+	visualizeSparseMatrixInMatlab(C);
+	printf("C=%dx%d\n", C.rows(), C.cols());
 
 	
 
