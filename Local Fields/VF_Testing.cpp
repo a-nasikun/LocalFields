@@ -200,3 +200,89 @@ void VectorFields::checkB2DStructure()
 	cout << endl;
 
 }
+
+void VectorFields::constructParallelTransport()
+{
+	Eigen::Vector2d PTvalue;
+	PTvalue << sqrt(2.0)/2.0, sqrt(2.0)/2.0; 
+	//PTvalue << 1.0, 0.0;
+
+	parallelTransport.resize(PTpath.size());
+	parallelTransport[0] = PTvalue;
+	PTsharedEdges.resize(2 * PTpath.size());
+
+	for (int i = 0; i < PTpath.size() - 1; i++) {
+		int face1 = PTpath[i];
+		int face2 = PTpath[i + 1];
+		
+		// 1. Find shared edge (naively)
+		enum class SharedEdgeCase { Case1, Case2, Case3 };
+		SharedEdgeCase edgeCase1, edgeCase2;
+		Eigen::RowVector3d es;
+		for (int f1 = 0; f1 < F.cols(); f1++) {
+			for (int f2 = 0; f2 < F.cols(); f2++) {
+				bool b1 = F(face1, (f1 + 1) % F.cols()) == F(face2, f2);
+				bool b2 = F(face1, f1) == F(face2, (f2 + 1) % F.cols());
+				if (b1 && b2) {						
+					es = V.row(F(face1, (f1 + 1) % F.cols())) - V.row(F(face1, f1));
+					PTsharedEdges[2 * i + 0] = F(face1, f1);
+					PTsharedEdges[2 * i + 1] = F(face1, (f1 + 1) % F.cols());
+					
+					if (f1 == 0)		edgeCase1 = SharedEdgeCase::Case1;	// => edge V0->V1 is the shared edge => it takes 0 step to reach v0
+					else if (f1 == 1)	edgeCase1 = SharedEdgeCase::Case3;	// => edge V1->V2 is the shared edge => it takes 2 step to reach v0
+					else if (f1 == 2)	edgeCase1 = SharedEdgeCase::Case2;	// => edge V2->V0 is the shared edge => it takes 1 step to reach v0
+
+					if (f2 == 0)		edgeCase2 = SharedEdgeCase::Case1;
+					else if (f2 == 1)	edgeCase2 = SharedEdgeCase::Case3;
+					else if (f2 == 2)	edgeCase2 = SharedEdgeCase::Case2;
+				}
+			}
+		}
+
+		// 2. Find angles between basis1 and es
+		Eigen::VectorXd eVect;
+		Eigen::RowVector3d b11, b12;
+		eVect = A.block(3 * face1, 2 * face1 + 0, 3, 1);
+		b11 << eVect(0), eVect(1), eVect(2);
+
+		double cosR12 = (b11.dot(es)) / (b11.norm()*es.norm());
+		if (cosR12 > 1.0) cosR12 = 1.0;
+		if (cosR12 <-1.0) cosR12 = -1.0;
+		const double angleR12_1 = (edgeCase1 == SharedEdgeCase::Case2 ? 2 * M_PI - acos(cosR12) : acos(cosR12));
+		const double cosR12_1 = cos(angleR12_1);
+		const double sinR12_1 = sin(angleR12_1);
+		//printf("______[%.2f] Rotation matrix R12_1 = [%.3f,%.3f; %.3f, %.3f]\n", angleR12_1*180.0 / M_PI, cosR12_1, -sinR12_1, sinR12_1, cosR12_1);
+
+		Eigen::RowVector3d b21, b22;
+		eVect = A.block(3 * face2, 2 * face2, 3, 1);
+		b21 << eVect(0), eVect(1), eVect(2);
+
+		double cosR21 = (b21.dot(es)) / (b21.norm()*es.norm());
+		if (cosR21 > 1.0) cosR21 = 1.0;
+		if (cosR21 < -1.0) cosR21 = -1.0;
+		double angleR21_1 = (edgeCase2 == SharedEdgeCase::Case3 ? 2 * M_PI - acos(cosR21) : acos(cosR21));
+		const double cosR21_1 = cos(angleR21_1);
+		const double sinR21_1 = sin(angleR21_1);
+		//printf("______[%.2f] Rotation matrix R22_1 = [%.2f,%.2f; %.2f, %.2f]\n", angleR21_1*180.0 / M_PI, cosR21_1, -sinR21_1, sinR21_1, cosR21_1);
+		
+		double anglePhi1;
+		Eigen::Vector2d bas(1.0, 0.0);
+		if (parallelTransport[i](1) < 0)
+			anglePhi1 = 2*M_PI - acos(bas.dot(parallelTransport[i])/parallelTransport[i].norm());
+		else
+			anglePhi1 = acos(bas.dot(parallelTransport[i]) / parallelTransport[i].norm());
+
+		//printf("______basis to field : [%.2f]\n", anglePhi1*180.0/M_PI);
+		const double anglePhi2 = anglePhi1 - angleR12_1 + angleR21_1;
+		//printf("______NEW angle : [%.2f]\n", anglePhi2*180.0 / M_PI);
+		const double cosBasis = cos(anglePhi2);
+		const double sinBasis = sin(anglePhi2);
+
+		// Rotate basis
+		// Obtain the mapped basis
+		Eigen::Matrix2d RotMat2D;
+		RotMat2D << cosBasis, -sinBasis, sinBasis, cosBasis;
+		Eigen::Vector2d transported = RotMat2D * bas;// parallelTransport[i];
+		parallelTransport[i + 1] = transported;		
+	}
+}

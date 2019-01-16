@@ -713,3 +713,76 @@ void VectorFields::visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer)
 	igl::jet(localSystem, false, fColor);
 	viewer.data().set_colors(fColor);
 }
+
+void VectorFields::visualizeParallelTransportPath(igl::opengl::glfw::Viewer &viewer)
+{
+	const double colorScale = 0.5 / (double) PTpath.size();
+	Eigen::MatrixXd fColor;
+	Eigen::VectorXd z(F.rows());
+
+	for (int i = 0; i < F.rows(); i++) z(i) = 0.0;
+
+	for (int i = 0; i < PTpath.size(); i++)
+	{
+		z(PTpath[i]) = 0.3 + i*colorScale;
+		//viewer.data().add_edges()
+	}
+
+	igl::jet(z, false, fColor);
+	viewer.data().set_colors(fColor);
+}
+
+void VectorFields::visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer)
+{
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = 1.0;
+
+	/*Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	Eigen::RowVector3d c, g;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);	
+	Eigen::RowVector3d color(0.8, 0.0, 0.3);
+	for (int i = 0; i < parallelTransport.size(); i++) {
+		v = parallelTransport[i];
+		//v << it.value(), Field2D.coeff(it.row() + 1, idx);
+		ALoc = A.block(3 * PTpath[i], 2 * PTpath[i], 3, 2);
+
+		c = FC.row(PTpath[i]);
+		f = (ALoc * v).transpose();
+		h1 = (ALoc* (rotMat1*v)).transpose();
+		h2 = (ALoc* (rotMat2*v)).transpose();
+		e = c + f*lengthScale;
+		viewer.data().add_edges(c, e, color);
+		viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+
+
+		
+		//f = (A.block(3 * PTpath[i], 2 * PTpath[i], 3, 2)*parallelTransport[i]).transpose();
+		//viewer.data().add_edges(c, c + avgEdgeLength*f, color);
+
+		//viewer.data().add_edges(V.row(PTsharedEdges[2*i+0]), V.row(PTsharedEdges[2 * i + 1]), color);
+	}
+
+	// Showing basis
+	/*
+	Eigen::Vector3d basis1, basis2;
+	Eigen::RowVector3d color2(0.1, 0.2, 0.7);
+	for (int i = 0; i < parallelTransport.size(); i++) {
+		basis1 = A.block(3 * PTpath[i], 2 * PTpath[i], 3, 1);
+		c = FC.row(PTpath[i]);
+		viewer.data().add_edges(c, c+avgEdgeLength*basis1.transpose(), color2);
+	}
+	*/
+
+	// Add points -> init of the path (target of Dijkstra)
+	viewer.data().add_points(FC.row(PTpath[0]), Eigen::RowVector3d(0.0, 0.9, 0.1));
+}

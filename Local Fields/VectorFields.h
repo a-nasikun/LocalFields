@@ -55,6 +55,7 @@ public:
 	void computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceMultSource(const Eigen::VectorXi &source, Eigen::VectorXd &D);
+	void computeDijkstraForParallelTransport(const int &source, const int& target);
 	void computeEdges();
 	void constructVFNeighbors();
 	void constructVFNeighborsFull();
@@ -139,6 +140,7 @@ public:
 	void testCurlEnergy();
 	int selectRandomFace();
 	void checkB2DStructure();
+	void constructParallelTransport();
 	
 	// VISUALIZATION of TESTING
 	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
@@ -154,6 +156,8 @@ public:
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 	void visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer);
+	void visualizeParallelTransportPath(igl::opengl::glfw::Viewer &viewer);
+	void visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -218,6 +222,8 @@ public:
 	vector<vector<int>>				sharedEdgesVect; 
 	vector<vector<Eigen::Vector2d>> mappedBasis; 
 	vector<vector<Eigen::Vector2d>> mappedBasis2;
+	vector<int>						PTpath, PTsharedEdges;
+	vector<Eigen::Vector2d>			parallelTransport; 
 private:
 	
 };
