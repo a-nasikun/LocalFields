@@ -23,14 +23,14 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(1000);
+	vectorFields.selectFaceToDraw(5000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
-
 	/* FOR TESTING PURPOSE */
 	//vectorFields.visualizeNeighboringRings(viewer);
 	//vectorFields.visualizeDijkstraFace(viewer);

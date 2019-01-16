@@ -86,7 +86,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 4;
+	const int numConstraints = 100;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -1132,6 +1132,11 @@ void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::Spa
 	Xf = -x.block(0, 0, B2D.rows(), 1) + vEst;
 
 	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());	
+
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
