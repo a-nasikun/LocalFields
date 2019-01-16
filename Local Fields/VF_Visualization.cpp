@@ -475,7 +475,7 @@ void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer)
 {
-	const double ARRAW_RATIO = 3.0; 
+	const double ARRAW_RATIO = 1.0; 
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		Eigen::RowVector3d cc, g, v1, v2, v3;
 		cc = FC.row(globalConstraints[i]);

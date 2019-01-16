@@ -86,7 +86,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedConstraints()
 {
 	// Define the constraints
-	const int numConstraints =5;
+	const int numConstraints = 4;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -112,10 +112,21 @@ void VectorFields::constructSpecifiedConstraints()
 		curPoint = maxIndex;
 	} while (constraints.size() < numConstraints);
 
+	
+
 	int counter1 = 0;
 	for (int i : constraints) {
 		globalConstraints[counter1++] = i;
 	}
+	
+	// For testing only
+	//computeDijkstraDistanceFaceForSampling(curPoint, D);
+	//Eigen::VectorXi::Index counterPart;
+	//D.maxCoeff(&counterPart);
+	//const int counterPart = AdjMF3N(curPoint, 0);
+	//globalConstraints[1] = AdjMF3N(0, 0);
+	//globalConstraints[2] = AdjMF3N(0, 1);
+	//globalConstraints[3] = AdjMF3N(0, 2);
 	//printf("Constraints = %d\n", globalConstraints.size());
 
 	// Setting up matrix C
@@ -130,13 +141,17 @@ void VectorFields::constructSpecifiedConstraints()
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, cos(alpha)));
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, -sin(alpha)));
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
-		c(2 * counter + 0, 0) = 1.0;
+		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * counterPart + 0, 1.0));
+		//c(2 * counter + 0, 0) = 1.0;
+		c(counter, 0) = 1.0;
 		counter++;
 
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, sin(alpha)));
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, cos(alpha)));
-		c(2 * counter + 1, 0) = 1.0;
+		//c(2 * counter + 1, 0) = 1.0;
+		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * counterPart + 1, 1.0));
+		c(counter, 0) = 1.0;
 		counter++;
 	}
 	C.resize(2 * globalConstraints.size(), B2D.rows());
