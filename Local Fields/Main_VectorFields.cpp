@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -60,14 +60,14 @@ int main(int argc, char *argv[])
 	vectorFields.constructMappingMatrix();
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	vectorFields.constructStiffnessMatrices();
-	vectorFields.constructMatrixB();
-	vectorFields.constructConstraints();
+	//vectorFields.constructStiffnessMatrices();
+	//vectorFields.constructMatrixB();
+	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
 	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	vectorFields.setupGlobalProblem();
+	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
@@ -82,6 +82,12 @@ int main(int argc, char *argv[])
 	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
+
+	/* ====================== PARALLEL TRANSPORT ====================*/
+	vectorFields.computeDijkstraForParallelTransport(200, 5000);
+	vectorFields.constructParallelTransport();
+	//vectorFields.visualizeParallelTransportPath(viewer);
+	vectorFields.visualizeParallelTransport(viewer);
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -160,6 +166,10 @@ int main(int argc, char *argv[])
 		case '0':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			break;
+		case 'b':
+		case 'B':
+			vectorFields.visualizeLocalSubdomain(viewer);
 			break;
 		case 'x':
 		case 'X':

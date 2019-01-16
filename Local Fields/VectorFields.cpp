@@ -11,10 +11,13 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedConstraints();
+	//constructSpecifiedConstraints();
 	
-	//constructSingularities();
-	//constructSpecifiedConstraintsWithSingularities();
+	constructSingularities();
+	constructSpecifiedConstraintsWithSingularities();
+	
+	visualizeSparseMatrixInMatlab(C);
+	printf("C=%dx%d\n", C.rows(), C.cols());
 
 	
 
@@ -178,6 +181,8 @@ void VectorFields::constructSingularities()
 
 	singularities.resize(NUM_SINGS);
 	SingNeighCC.resize(NUM_SINGS);
+	mappedBasis.resize(NUM_SINGS);
+	mappedBasis2.resize(NUM_SINGS);
 
 	// For testing
 	sharedEdgesVect.resize(NUM_SINGS);
@@ -199,6 +204,8 @@ void VectorFields::constructSingularities()
 		SingNeighCC[id][0]		= firstNeigh;
 		int curNeigh			= firstNeigh;
 		int vertex1				= SingLocation;
+		mappedBasis[id].resize(SingNeighNum);
+		mappedBasis2[id].resize(SingNeighNum);
 
 		// Getting the neighboring valence triangles in order
 		for (int i2 = 1; i2<SingNeighNum; i2++) {
@@ -375,6 +382,20 @@ void VectorFields::constructSpecifiedConstraintsWithSingularities()
 			printf("____ To map basis1 -> basis2: rotate by %.2f degree\n", (RotAngle)*180.0 / M_PI);
 			const double cosBasis = cos(RotAngle);
 			const double sinBasis = sin(RotAngle);
+
+			// Obtain the mapped basis
+			Eigen::Matrix2d RotMat2D;
+			RotMat2D << cosBasis, -sinBasis, sinBasis, cosBasis; 
+			Eigen::Vector2d initBasis;
+			initBasis << 1.0, 0.0;
+			Eigen::Vector2d newBasis = RotMat2D * initBasis; 
+			mappedBasis[id][i] = newBasis; 
+			
+			initBasis(0) = 0.0; initBasis(1) = 1.0;
+			newBasis = RotMat2D * initBasis;
+			mappedBasis2[id][i] = newBasis;
+
+
 			// Basis 2, Frame 2
 			//cosR21 = (b22.dot(es)) / (b22.norm()*es.norm());
 			//if (cosR21 > 1.0) cosR21 = 1.0;
@@ -1310,6 +1331,23 @@ void VectorFields::constructBasis()
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
 				localField.measureXF(doubleArea, J);
+
+				// To get local elements for visualizing subdomain
+				if (id == 0) {
+					localSystem.resize(F.rows());
+					for (int fid = 0; fid < F.rows(); fid++) {
+						localSystem(fid) = 0.0;
+					}
+					for (int fid : localField.SubDomain) {
+						localSystem(fid) = 0.3;
+					}
+
+					for (int fid : localField.Boundary) {
+						localSystem(fid) = 0.7;
+					}
+
+					localSystem(localField.sampleID) = 1.0;
+				}
 		}
 
 	}
@@ -1763,6 +1801,7 @@ void VectorFields::mapSolutionToFullRes()
 
 void VectorFields::obtainUserVectorFields()
 {
+
 	cout << "Hello there \n" << endl; 
 }
 
@@ -1770,6 +1809,7 @@ void VectorFields::measureApproxAccuracyL2Norm()
 {
 	Eigen::VectorXd diff = Xf - XFullDim;
 	double xf = Xf.transpose() * MF2D * Xf;
+
 	double L2norm = diff.transpose() * MF2D * diff; 
 	printf("Diff 0 = %.10f\n", sqrt(L2norm / xf)); 	
 }
@@ -1836,48 +1876,3 @@ void VectorFields::computeFaceCenter()
 
 }
 
-
-//void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
-//{
-//	printf("Size of M=%dx%d\n", M.rows(), M.cols());
-//
-//	using namespace matlab::engine;
-//	Engine *ep;
-//	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
-//
-//	const int NNZ_M = M.nonZeros();
-//	int nnzMCounter = 0;
-//
-//	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
-//	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
-//	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
-//
-//	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
-//	srm = mxGetPr(MM);
-//	irm = mxGetIr(MM);
-//	jcm = mxGetJc(MM);
-//
-//	// Getting matrix M
-//	jcm[0] = nnzMCounter;
-//	for (int i = 0; i < M.outerSize(); i++) {
-//		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
-//			srm[nnzMCounter] = it.value();
-//			irm[nnzMCounter] = it.row();
-//			nnzMCounter++;
-//		}
-//		jcm[i + 1] = nnzMCounter;
-//	}
-//
-//	// Start Matlab Engine
-//	ep = engOpen(NULL);
-//	if (!(ep = engOpen(""))) {
-//		fprintf(stderr, "\nCan't start MATLAB engine\n");
-//		cout << "CANNOT START MATLAB " << endl;
-//	}
-//	else {
-//		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
-//	}
-//
-//	engPutVariable(ep, "M", MM);
-//	engEvalString(ep, "spy(M)");
-//}

@@ -27,8 +27,8 @@
 //#include <Eigen/PaStiXSupport>
 
 // For Matlab
-//#include "engine.h"
-//#include "mex.h"
+#include "engine.h"
+#include "mex.h"
 
 #include "TestSolver.h"
 
@@ -55,6 +55,7 @@ public:
 	void computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceMultSource(const Eigen::VectorXi &source, Eigen::VectorXd &D);
+	void computeDijkstraForParallelTransport(const int &source, const int& target);
 	void computeEdges();
 	void constructVFNeighbors();
 	void constructVFNeighborsFull();
@@ -139,9 +140,10 @@ public:
 	void testCurlEnergy();
 	int selectRandomFace();
 	void checkB2DStructure();
+	void constructParallelTransport();
 	
 	// VISUALIZATION of TESTING
-	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);	
+	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 	void visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	void visualizeVertexFacesNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
@@ -153,6 +155,9 @@ public:
 	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
+	void visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer);
+	void visualizeParallelTransportPath(igl::opengl::glfw::Viewer &viewer);
+	void visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -213,8 +218,12 @@ protected:
 
 	// FOR TESTING ONLY
 public: 
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, localSystem;
 	vector<vector<int>>				sharedEdgesVect; 
+	vector<vector<Eigen::Vector2d>> mappedBasis; 
+	vector<vector<Eigen::Vector2d>> mappedBasis2;
+	vector<int>						PTpath, PTsharedEdges;
+	vector<Eigen::Vector2d>			parallelTransport; 
 private:
 	
 };

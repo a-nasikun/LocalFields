@@ -16,6 +16,9 @@ set (GLFW_INCLUDE_DIR "" CACHE PATH "Include directory of GLFW")
 set (GLFW_LIBRARY_DIR "" CACHE PATH "Library directory of GLFW")
 set (GLAD_INCLUDE_DIR "" CACHE PATH "Include directory of GLAD")
 set (GLAD_LIBRARY_DIR "" CACHE PATH "Library directory of GLAD")
+set (MATLAB_LIBRARY_DIR "" CACHE PATH "Matlab static library dirs (e.g. R2018a/extern/lib/win64/microsoft)")
+set (MATLAB_INCLUDE_DIR "" CACHE PATH "Matlab include dir ((e.g. R2018a/extern/include)")
+
 
 #Defining the system varibles where the include files reside
 include_directories(${IGL_DIR}/include/
@@ -23,11 +26,13 @@ include_directories(${IGL_DIR}/include/
 					${GLFW_INCLUDE_DIR}/include/
 					${GLAD_INCLUDE_DIR}/include/
 					${IMGUI_DIR}
+					${MATLAB_INCLUDE_DIR}
 )
 
 #Defining the system varibles where the link libraries reside					
 link_directories(${GLFW_LIBRARY_DIR}
 				 ${GLAD_LIBRARY_DIR}
+				 ${MATLAB_LIBRARY_DIR}
 )	
 
 #Stating what files to include in the project				 
@@ -55,6 +60,12 @@ target_link_libraries(
 	glfw3.lib;
 	cublas.lib; 			cudart.lib; 
 	cusolver.lib; 			cusparse.lib;
+	libMatlabEngine.lib
+	libMatlabDataArray.lib
+	libeng.lib
+	libut.lib
+	libmex.lib
+	libmx.lib
 )	
 
 if(MSVC)	

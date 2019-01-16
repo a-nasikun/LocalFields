@@ -502,9 +502,27 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 			Eigen::Vector3d basis = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
 			basis *= avgEdgeLength; 
 			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
-			//viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
+			viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
 		}
 	}
+
+	for (int id = 0; id < mappedBasis.size(); id++) {
+		for (int i = 0; i < mappedBasis[id].size(); i++) {
+			Eigen::MatrixXd Map2D(3, 2);
+			Map2D = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 2);
+			Eigen::Vector3d oldBasis = Map2D.col(0);
+			Eigen::Vector3d newBasis = Map2D * mappedBasis[id][i];
+
+			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
+			viewer.data().add_edges(c, c + avgEdgeLength * oldBasis.transpose(), Eigen::RowVector3d(0.0, 0.1, 0.3));
+			viewer.data().add_edges(c, c + avgEdgeLength * Map2D.col(1).transpose(), Eigen::RowVector3d(0.0, 0.3, 0.1));
+
+			viewer.data().add_edges(c, c + avgEdgeLength * newBasis.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			newBasis = Map2D * mappedBasis2[id][i];
+			viewer.data().add_edges(c, c + avgEdgeLength * newBasis.transpose(), Eigen::RowVector3d(0.0, 0.9, 0.0));
+		}
+	}
+
 	igl::jet(z, false, vColor);
 	//viewer.data().set_colors(vColor);
 
@@ -514,6 +532,51 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
+void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
+{
+	printf("Size of M=%dx%d\n", M.rows(), M.cols());
+
+	using namespace matlab::engine;
+	Engine *ep;
+	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
+
+	const int NNZ_M = M.nonZeros();
+	int nnzMCounter = 0;
+
+	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
+	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
+	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
+
+	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
+	srm = mxGetPr(MM);
+	irm = mxGetIr(MM);
+	jcm = mxGetJc(MM);
+
+	// Getting matrix M
+	jcm[0] = nnzMCounter;
+	for (int i = 0; i < M.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
+			srm[nnzMCounter] = it.value();
+			irm[nnzMCounter] = it.row();
+			nnzMCounter++;
+		}
+		jcm[i + 1] = nnzMCounter;
+	}
+
+	// Start Matlab Engine
+	ep = engOpen(NULL);
+	if (!(ep = engOpen(""))) {
+		fprintf(stderr, "\nCan't start MATLAB engine\n");
+		cout << "CANNOT START MATLAB " << endl;
+	}
+	else {
+		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
+	}
+
+	engPutVariable(ep, "M", MM);
+	engEvalString(ep, "spy(M)");
+}
+
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());
 	Eigen::MatrixXd vColor;
@@ -642,4 +705,84 @@ void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 
+}
+
+void VectorFields::visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::MatrixXd fColor; 
+	igl::jet(localSystem, false, fColor);
+	viewer.data().set_colors(fColor);
+}
+
+void VectorFields::visualizeParallelTransportPath(igl::opengl::glfw::Viewer &viewer)
+{
+	const double colorScale = 0.5 / (double) PTpath.size();
+	Eigen::MatrixXd fColor;
+	Eigen::VectorXd z(F.rows());
+
+	for (int i = 0; i < F.rows(); i++) z(i) = 0.0;
+
+	for (int i = 0; i < PTpath.size(); i++)
+	{
+		z(PTpath[i]) = 0.3 + i*colorScale;
+		//viewer.data().add_edges()
+	}
+
+	igl::jet(z, false, fColor);
+	viewer.data().set_colors(fColor);
+}
+
+void VectorFields::visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer)
+{
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = 1.0;
+
+	/*Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	Eigen::RowVector3d c, g;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);	
+	Eigen::RowVector3d color(0.8, 0.0, 0.3);
+	for (int i = 0; i < parallelTransport.size(); i++) {
+		v = parallelTransport[i];
+		//v << it.value(), Field2D.coeff(it.row() + 1, idx);
+		ALoc = A.block(3 * PTpath[i], 2 * PTpath[i], 3, 2);
+
+		c = FC.row(PTpath[i]);
+		f = (ALoc * v).transpose();
+		h1 = (ALoc* (rotMat1*v)).transpose();
+		h2 = (ALoc* (rotMat2*v)).transpose();
+		e = c + f*lengthScale;
+		viewer.data().add_edges(c, e, color);
+		viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+
+
+		
+		//f = (A.block(3 * PTpath[i], 2 * PTpath[i], 3, 2)*parallelTransport[i]).transpose();
+		//viewer.data().add_edges(c, c + avgEdgeLength*f, color);
+
+		//viewer.data().add_edges(V.row(PTsharedEdges[2*i+0]), V.row(PTsharedEdges[2 * i + 1]), color);
+	}
+
+	// Showing basis
+	/*
+	Eigen::Vector3d basis1, basis2;
+	Eigen::RowVector3d color2(0.1, 0.2, 0.7);
+	for (int i = 0; i < parallelTransport.size(); i++) {
+		basis1 = A.block(3 * PTpath[i], 2 * PTpath[i], 3, 1);
+		c = FC.row(PTpath[i]);
+		viewer.data().add_edges(c, c+avgEdgeLength*basis1.transpose(), color2);
+	}
+	*/
+
+	// Add points -> init of the path (target of Dijkstra)
+	viewer.data().add_points(FC.row(PTpath[0]), Eigen::RowVector3d(0.0, 0.9, 0.1));
 }

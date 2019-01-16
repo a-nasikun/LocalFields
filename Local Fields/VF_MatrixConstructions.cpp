@@ -299,6 +299,65 @@ void VectorFields::computeDijkstraDistanceFaceMultSource(const Eigen::VectorXi &
 	} while (!DistPQueue.empty());
 }
 
+void VectorFields::computeDijkstraForParallelTransport(const int &source, const int& target)
+{
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
+	Eigen::VectorXd D(F.rows());
+	Eigen::VectorXi prev(F.rows());
+
+	// Computing distance for initial sample points S
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+		prev(i) = -1; 
+	}
+		
+	D(source) = 0.0f;
+	VertexPair vp{ source, D(source) };
+	DistPQueue.push(vp);
+
+	PTpath.resize(0);
+	PTpath.shrink_to_fit();
+	PTpath.reserve(F.rows() / 2);
+	//PTpath.push_back(source);
+
+
+	// For other vertices in mesh
+	int neigh;
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		//distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		//auto const& elem = AdjMF3N_temp[vp1.vId];
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		for (auto it = 0; it != F.cols(); ++it) {
+			/* Regular Dikjstra */
+			neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = FC.row(neigh);// (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
+			double dist = (c2 - c1).norm();
+			double tempDist = D(elem) + dist;
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+				//PTpath.push_back(neigh);
+				prev(neigh) = vp1.vId;
+			}
+		}
+	} while (!DistPQueue.empty());
+
+	// Obtaining the path <reverse>
+	int u = target;
+	while (prev[u] != -1 && u != source) {
+		PTpath.push_back(u);
+		u = prev(u);
+	}
+}
 void VectorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D)
 {
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
