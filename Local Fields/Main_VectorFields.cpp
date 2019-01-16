@@ -30,11 +30,11 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
-	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
+	string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -71,9 +71,9 @@ int main(int argc, char *argv[])
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
-	//vectorFields.setAndSolveUserSystem();
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
+	vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
@@ -85,14 +85,14 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer);	
-	//vectorFields.visualizeUserConstraints(viewer);
+	vectorFields.visualizeApproxResult(viewer);	
+	vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
