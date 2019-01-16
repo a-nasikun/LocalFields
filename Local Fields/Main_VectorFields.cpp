@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
-	string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
+	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
 	vectorFields.constructMappingMatrix();
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	//vectorFields.constructStiffnessMatrices();
-	//vectorFields.constructMatrixB();
-	//vectorFields.constructConstraints();
+	vectorFields.constructStiffnessMatrices();
+	vectorFields.constructMatrixB();
+	vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
