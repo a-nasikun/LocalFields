@@ -58,7 +58,8 @@ void VectorFields::testBasis()
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
 	Eigen::SparseMatrix<double> BB = Basis;// BasisTemp;
-	Eigen::VectorXd				v = Xf; // arbField2D;
+	//Eigen::VectorXd				v = Xf; 
+	Eigen::VectorXd				v =  arbField2D;
 	Eigen::VectorXd				a = (v.transpose()*MF2D*BB).transpose();
 	Eigen::SparseMatrix<double> B = BB.transpose() * MF2D * BB;
 
