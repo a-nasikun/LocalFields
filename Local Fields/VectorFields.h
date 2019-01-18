@@ -227,7 +227,6 @@ protected:
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, localSystem;
-	vector<vector<int>>				sharedEdgesVect; 
 	vector<vector<Eigen::Vector2d>> mappedBasis; 
 	vector<vector<Eigen::Vector2d>> mappedBasis2;
 	vector<int>						PTpath, PTsharedEdges;

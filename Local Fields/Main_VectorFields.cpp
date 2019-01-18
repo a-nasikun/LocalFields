@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(7500);
+	vectorFields.selectFaceToDraw(5000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -83,10 +83,10 @@ int main(int argc, char *argv[])
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 
 	/* ====================== PARALLEL TRANSPORT ====================*/
-	vectorFields.computeDijkstraForParallelTransport(200, 5000);
-	vectorFields.constructParallelTransport();
+	//vectorFields.computeDijkstraForParallelTransport(200, 5000);
+	//vectorFields.constructParallelTransport();
 	//vectorFields.visualizeParallelTransportPath(viewer);
-	vectorFields.visualizeParallelTransport(viewer);
+	//vectorFields.visualizeParallelTransport(viewer);
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
