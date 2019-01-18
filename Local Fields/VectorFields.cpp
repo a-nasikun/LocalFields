@@ -599,8 +599,8 @@ void VectorFields::projectCurvesToFrame()
 			ALoc = A.block(3 * face1, 2 * face1, 3, 2);
 			if (j < curvesConstraints[i].size() - 2)
 			{
-				face3 = curvesConstraints[i][j + 2];
-				//face3 = curvesConstraints[i][curveSize-1];
+				//face3 = curvesConstraints[i][j + 2];
+				face3 = curvesConstraints[i][curveSize-1];
 				vec3D = (FC.row(face3) - FC.row(face1)).transpose();
 			}
 			else
@@ -1222,7 +1222,7 @@ void VectorFields::setupGlobalProblem()
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
 	//Eigen::VectorXd					vEst;
-	double lambda = 0.6; 
+	double lambda = 0.4; 
 		
 	//setupRHSGlobalProblemMapped(g, h, vEst, b);
 	//setupLHSGlobalProblemMapped(A_LHS);
@@ -1891,12 +1891,17 @@ void VectorFields::setAndSolveUserSystem()
 	// Declare function-scoped variables
 	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
 	Eigen::SparseMatrix<double>		A_LHSBar;
+	const double lambda = 0.4; 
 
 	setupUserBasis();
 	getUserConstraints();
-	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	setupLHSUserProblemMapped(A_LHSBar);
-	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	//setupLHSUserProblemMapped(A_LHSBar);
+	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+
 	mapSolutionToFullRes();
 }
 
@@ -1993,6 +1998,37 @@ void VectorFields::setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSB
 	printf("....Local LHS = %dx%d\n", A_LHSBar.rows(), A_LHSBar.cols());
 }
 
+void VectorFields::setupRHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::VectorXd& bBar)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Constructing RHS (mapped)...";
+
+	bBar = lambda*CBar.transpose() * cBar; 
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::setupLHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHSBar)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Constructing LHS (mapped)...";
+
+	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
+	A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
 void VectorFields::solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar)
 {
 	// For Timing
@@ -2025,6 +2061,36 @@ void VectorFields::solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::Sp
 	//cout << "Solution (LowDim) \n" << XLowDim << endl; 	
 }
 
+void VectorFields::solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Solving reduced system...\n";
+
+	//XLowDim.resize(B2DBar.rows());
+	//XFullDim.resize(Basis.rows());
+	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
+
+	cout << "....Solving for the first frame.\n";
+	Eigen::VectorXd x = sparseSolver.solve(bBar);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	XLowDim = x; 
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "..in Total of " << duration.count() << " seconds." << endl;
+}
+
 void VectorFields::mapSolutionToFullRes()
 {
 	// For Timing
@@ -2055,7 +2121,7 @@ void VectorFields::measureApproxAccuracyL2Norm()
 	double xf = Xf.transpose() * MF2D * Xf;
 
 	double L2norm = diff.transpose() * MF2D * diff; 
-	printf("Diff 0 = %.10f\n", sqrt(L2norm / xf)); 	
+	printf("Diff 0 = %.10f (%.4f / %.4f) \n", sqrt(L2norm / xf), L2norm, xf); 	
 }
 
 void VectorFields::measureU1andJU0()

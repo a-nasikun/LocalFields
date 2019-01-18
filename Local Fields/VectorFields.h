@@ -128,7 +128,10 @@ public:
 	void getUserConstraints();
 	void setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar);
+	void setupRHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::VectorXd& bBar);
+	void setupLHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
+	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
 

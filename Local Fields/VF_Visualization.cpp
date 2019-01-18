@@ -449,8 +449,8 @@ void VectorFields::visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const in
 
 void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 {
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
 
 	Eigen::RowVector3d color;	
 	color = Eigen::RowVector3d(0.9, 0.1, 0.1);
@@ -811,7 +811,7 @@ void VectorFields::visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer)
 void VectorFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
 {
 	/* Color */
-	Eigen::RowVector3d color(1.0, 0.1, 0.1);
+	Eigen::RowVector3d color(0.1, 0.1, 0.1);
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
