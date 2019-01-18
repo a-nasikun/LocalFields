@@ -66,20 +66,21 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
+	
 	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
-	vectorFields.constructArbitraryField();
-	vectorFields.constructArbitraryField2D();
-	vectorFields.testBasis();
+	//vectorFields.constructArbitraryField2D();
+	//vectorFields.constructArbitraryField();
+	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 
@@ -101,6 +102,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
+	vectorFields.visualizeCurveConstraint(viewer);
 
 	/* MEASURE ACCURACY */
 	//vectorFields.measureApproxAccuracyL2Norm();

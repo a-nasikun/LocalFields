@@ -11,7 +11,8 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedHardConstraints();
+	//constructSpecifiedHardConstraints();
+	constructSoftConstraints();
 	
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -420,6 +421,85 @@ void VectorFields::constructHardConstraintsWithSingularities()
 	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
+}
+
+void VectorFields::constructSoftConstraints()
+{
+	const int NUM_CURVES = 4;
+	curvesConstraints.resize(NUM_CURVES);
+
+	srand(time(NULL));
+	int init_, end_; 
+	vector<int> aCurve; 
+	for (int i = 0; i < NUM_CURVES; i++) {
+		init_ = rand() % F.rows();
+		//end_ = rand() % F.rows();
+		end_ = init_ + 40;
+		constructCurvesAsConstraints(init_, end_, aCurve);
+		curvesConstraints[i] = aCurve; 
+	}
+}
+
+/* The path will be reversed, from init to end */
+void VectorFields::constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve)
+{
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
+	Eigen::VectorXd D(F.rows());
+	Eigen::VectorXi prev(F.rows());
+
+	// Computing distance for initial sample points S
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+		prev(i) = -1;
+	}
+
+	D(end) = 0.0f;
+	VertexPair vp{ end, D(end) };
+	DistPQueue.push(vp);
+
+	curve.resize(0);
+	curve.shrink_to_fit();
+	curve.reserve(F.rows() / 2);
+
+	// For other vertices in mesh
+	int neigh;
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		//distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		for (auto it = 0; it != F.cols(); ++it) {
+			/* Regular Dikjstra */
+			neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = FC.row(neigh);
+			double dist = (c2 - c1).norm();
+			double tempDist = D(elem) + dist;
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+				prev(neigh) = vp1.vId;
+			}
+		}
+	} while (!DistPQueue.empty());
+
+	// Obtaining the path <reverse>
+	int u = init;
+	while (prev[u] != -1 && u != end) {
+		curve.push_back(u);
+		u = prev(u);
+	}
+
+	printf("Path from %d to %d has %d elements.\n", init, end, curve.size());
+
+
+	curve.shrink_to_fit();
 }
 
 //void VectorFields::constructSpecifiedConstraintsWithSingularities()  ==> Version 2.0

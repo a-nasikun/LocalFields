@@ -643,3 +643,25 @@ void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
 	}
 
 }
+
+void VectorFields::visualizeCurveConstraint(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::VectorXd func(F.rows());
+	Eigen::MatrixXd FColor(F.rows(), 3);
+	const double colorDiff = 0.5 / (double) (curvesConstraints.size());
+
+	for (int i = 0; i < F.rows(); i++) func(i) = 0.0;
+
+	/*Draw the color*/
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		for (int j = 0; j < curvesConstraints[i].size(); j++)
+		{
+			func(curvesConstraints[i][j]) = (i+4)*colorDiff;
+		}
+	}
+
+
+	igl::jet(func, false, FColor);
+	viewer.data().set_colors(FColor);
+}

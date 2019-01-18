@@ -100,6 +100,8 @@ public:
 	void constructSpecifiedHardConstraints();
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
+	void constructSoftConstraints();
+	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
 	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);
 	void solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
@@ -153,6 +155,7 @@ public:
 	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
+	void visualizeCurveConstraint(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -214,7 +217,7 @@ protected:
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
-	vector<vector<int>>				sharedEdgesVect; 
+	vector<vector<int>>				sharedEdgesVect, curvesConstraints; 
 private:
 	
 };
