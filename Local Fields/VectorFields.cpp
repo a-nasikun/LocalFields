@@ -425,19 +425,45 @@ void VectorFields::constructHardConstraintsWithSingularities()
 
 void VectorFields::constructSoftConstraints()
 {
-	const int NUM_CURVES = 4;
+	const int NUM_CURVES = 8;
 	curvesConstraints.resize(NUM_CURVES);
 
 	srand(time(NULL));
 	int init_, end_; 
 	vector<int> aCurve; 
-	for (int i = 0; i < NUM_CURVES; i++) {
-		init_ = rand() % F.rows();
-		//end_ = rand() % F.rows();
-		end_ = init_ + 40;
-		constructCurvesAsConstraints(init_, end_, aCurve);
-		curvesConstraints[i] = aCurve; 
-	}
+	/* Automatic random set up */
+	//for (int i = 0; i < NUM_CURVES; i++) {
+	//	init_ = rand() % F.rows();
+	//	//end_ = rand() % F.rows();
+	//	end_ = init_ + 40;
+	//	constructCurvesAsConstraints(init_, end_, aCurve);
+	//	curvesConstraints[i] = aCurve; 
+	//}
+
+	/* Manual set-up for Armadillo */
+	int constCounter = 0;
+	// Head
+	constructCurvesAsConstraints(68818,6278, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Stomach
+	constructCurvesAsConstraints(56965, 41616, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Leg/Foot (R then L)
+	constructCurvesAsConstraints(28590, 16119, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	constructCurvesAsConstraints(25037, 571, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Arm/Hand
+	constructCurvesAsConstraints(55454, 6877, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	constructCurvesAsConstraints(49059, 36423, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Back
+	constructCurvesAsConstraints(68331, 72522, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Tail
+	constructCurvesAsConstraints(24056, 1075, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
 
 	// Project elements to local frame
 	projectCurvesToFrame();
@@ -466,6 +492,7 @@ void VectorFields::constructCurvesAsConstraints(const int& init, const int& end,
 	curve.reserve(F.rows() / 2);
 
 	// For other vertices in mesh
+	//double distFromCenter;
 	int neigh;
 	do {
 		if (DistPQueue.size() == 0) break;
@@ -481,7 +508,8 @@ void VectorFields::constructCurvesAsConstraints(const int& init, const int& end,
 			neigh = AdjMF3N(elem, it);
 			Eigen::Vector3d const c2 = FC.row(neigh);
 			double dist = (c2 - c1).norm();
-			double tempDist = D(elem) + dist;
+			//double tempDist = D(elem) + dist;
+			double tempDist = (FC.row(end) - FC.row(neigh)).norm();
 
 			/* updating the distance */
 			if (tempDist < D(neigh)) {

@@ -584,7 +584,7 @@ void VectorFields::visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const 
 	viewer.data().set_mesh(V, F);
 
 	Eigen::RowVector3d c;
-	c = (V.row(F(faceID, 0)) + V.row(F(faceID, 1)) + V.row(F(faceID, 2))) / 3.0;
+	c = FC.row(faceID);
 	viewer.data().add_points(c, Eigen::RowVector3d(1.0, 0.1, 0.0));
 }
 

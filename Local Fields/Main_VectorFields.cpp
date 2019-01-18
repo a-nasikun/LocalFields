@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
-		//int selectedFace;
+		int selectedFace;
 		srand(time(NULL));
 		selectedVertex = rand() % V.rows();
 
@@ -166,13 +166,17 @@ int main(int argc, char *argv[])
 			break;
 		case 'x':
 		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
 			selectFace = !selectFace;
-			cout << "Select face: " << selectFace << endl; 
+			//cout << "Select face: " << selectFace << endl; 
 			//if (selectFace) cout << "Face is selected" << endl; 
+			//selectedFace = rand() % F.rows();
+			//cout << "Face: " << selectedFace << endl;
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
 		case 'c':
 		case 'C':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			
 			break; 
 		default:
 			break;
@@ -197,7 +201,7 @@ int main(int argc, char *argv[])
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
 			{
-
+				cout << "Face " << fid << " is selected." << endl; 
 				// paint hit red
 				C.row(fid) << 1, 0, 0;
 				viewer.data().set_colors(C);

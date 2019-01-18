@@ -172,7 +172,9 @@ void VectorFields::testCurlEnergy()
 int VectorFields::selectRandomFace()
 {
 	srand(time(NULL));
-	int randID = rand() % F.rows();
+	//std::rand() / ((RAND_MAX) / 6);
+	//int randID = rand() % F.rows();
+	int randID = rand() / (RAND_MAX/F.rows());
 	cout << "Selected face: " << randID << endl;
 	return randID;
 }
