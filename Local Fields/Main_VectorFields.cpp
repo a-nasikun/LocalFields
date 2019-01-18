@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=5000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=2000, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(7500);
+	vectorFields.selectFaceToDraw(5000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
-	//vectorFields.setAndSolveUserSystem();
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
+	vectorFields.setAndSolveUserSystem();
 	
-	//vectorFields.measureApproxAccuracyL2Norm();
+	vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
 	//vectorFields.constructArbitraryField2D();
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer);	
+	vectorFields.visualizeApproxResult(viewer);	
 	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
