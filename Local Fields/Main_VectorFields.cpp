@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(2500);
+	vectorFields.selectFaceToDraw(7500);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -64,20 +64,21 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
+	
 	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
-	vectorFields.constructArbitraryField();
-	vectorFields.constructArbitraryField2D();
-	vectorFields.testBasis();
+	//vectorFields.constructArbitraryField2D();
+	//vectorFields.constructArbitraryField();
+	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
@@ -105,6 +106,8 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
+	//vectorFields.visualizeCurveConstraints(viewer);
+	vectorFields.visualizeSoftConstraints(viewer);
 
 	/* MEASURE ACCURACY */
 	//vectorFields.measureApproxAccuracyL2Norm();
@@ -117,23 +120,23 @@ int main(int argc, char *argv[])
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
-		//int selectedFace;
+		int selectedFace;
 		srand(time(NULL));
 		selectedVertex = rand() % V.rows();
 
 		switch (key)
 		{
 		case '1':
-			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);			
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeUserConstraints(viewer);
 			break;
 		case '3':
-			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
+			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//basisId = max(basisId - 1, 0);
 			//vectorFields.visualizeBasis(viewer, basisId);
@@ -171,13 +174,17 @@ int main(int argc, char *argv[])
 			break;
 		case 'x':
 		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
 			selectFace = !selectFace;
-			cout << "Select face: " << selectFace << endl; 
+			//cout << "Select face: " << selectFace << endl; 
 			//if (selectFace) cout << "Face is selected" << endl; 
+			//selectedFace = rand() % F.rows();
+			//cout << "Face: " << selectedFace << endl;
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
 		case 'c':
 		case 'C':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			
 			break; 
 		default:
 			break;
@@ -202,7 +209,7 @@ int main(int argc, char *argv[])
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
 			{
-
+				cout << "Face " << fid << " is selected." << endl; 
 				// paint hit red
 				C.row(fid) << 1, 0, 0;
 				viewer.data().set_colors(C);

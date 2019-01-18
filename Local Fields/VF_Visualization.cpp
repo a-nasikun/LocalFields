@@ -647,7 +647,7 @@ void VectorFields::visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const 
 	viewer.data().set_mesh(V, F);
 
 	Eigen::RowVector3d c;
-	c = (V.row(F(faceID, 0)) + V.row(F(faceID, 1)) + V.row(F(faceID, 2))) / 3.0;
+	c = FC.row(faceID);
 	viewer.data().add_points(c, Eigen::RowVector3d(1.0, 0.1, 0.0));
 }
 
@@ -748,7 +748,7 @@ void VectorFields::visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer)
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d f, h1, h2, e;
 	Eigen::Vector2d v;
-	Eigen::MatrixXd ALoc(3, 2);	
+	Eigen::MatrixXd ALoc(3, 2);
 	Eigen::RowVector3d color(0.8, 0.0, 0.3);
 	for (int i = 0; i < parallelTransport.size(); i++) {
 		v = parallelTransport[i];
@@ -765,7 +765,7 @@ void VectorFields::visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer)
 		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
 
 
-		
+
 		//f = (A.block(3 * PTpath[i], 2 * PTpath[i], 3, 2)*parallelTransport[i]).transpose();
 		//viewer.data().add_edges(c, c + avgEdgeLength*f, color);
 
@@ -777,12 +777,74 @@ void VectorFields::visualizeParallelTransport(igl::opengl::glfw::Viewer &viewer)
 	Eigen::Vector3d basis1, basis2;
 	Eigen::RowVector3d color2(0.1, 0.2, 0.7);
 	for (int i = 0; i < parallelTransport.size(); i++) {
-		basis1 = A.block(3 * PTpath[i], 2 * PTpath[i], 3, 1);
-		c = FC.row(PTpath[i]);
-		viewer.data().add_edges(c, c+avgEdgeLength*basis1.transpose(), color2);
+	basis1 = A.block(3 * PTpath[i], 2 * PTpath[i], 3, 1);
+	c = FC.row(PTpath[i]);
+	viewer.data().add_edges(c, c+avgEdgeLength*basis1.transpose(), color2);
 	}
 	*/
 
 	// Add points -> init of the path (target of Dijkstra)
 	viewer.data().add_points(FC.row(PTpath[0]), Eigen::RowVector3d(0.0, 0.9, 0.1));
+}
+void VectorFields::visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::VectorXd func(F.rows());
+	Eigen::MatrixXd FColor(F.rows(), 3);
+	const double colorDiff = 0.5 / (double) (curvesConstraints.size());
+
+	for (int i = 0; i < F.rows(); i++) func(i) = 0.0;
+
+	/*Draw the color*/
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		for (int j = 0; j < curvesConstraints[i].size(); j++)
+		{
+			func(curvesConstraints[i][j]) = (i+4)*colorDiff;
+		}
+	}
+
+
+	igl::jet(func, false, FColor);
+	viewer.data().set_colors(FColor);
+}
+
+void VectorFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
+{
+	/* Color */
+	Eigen::RowVector3d color(1.0, 0.1, 0.1);
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 1.0;
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e, c;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);
+	int face;
+	for (int i = 0; i < constraintVect2D.size(); i++)
+	{
+		for (int j = 0; j < constraintVect2D[i].size(); j++)
+		{
+			face = curvesConstraints[i][j];
+			c = FC.row(face);
+			//f = VectorBlock.row(i);
+			v = constraintVect2D[i][j];
+			ALoc = A.block(3 * face, 2 * face, 3, 2);
+			f = (ALoc * v).transpose();
+			h1 = (ALoc* (rotMat1*v)).transpose();
+			h2 = (ALoc* (rotMat2*v)).transpose();
+			e = c + f*lengthScale;
+			//cout << "c: " << c << "e: " << e << endl; 
+			viewer.data().add_edges(c, e, color);
+			viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+			viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+		}
+	}
 }
