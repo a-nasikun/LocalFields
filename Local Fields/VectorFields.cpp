@@ -11,15 +11,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedConstraints();
+	constructSpecifiedHardConstraints();
 	
 	//constructSingularities();
-	//constructSpecifiedConstraintsWithSingularities();
-	
-	visualizeSparseMatrixInMatlab(C);
-	printf("C=%dx%d\n", C.rows(), C.cols());
-
-	
+	//constructHardConstraintsWithSingularities();	
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -86,7 +81,7 @@ void VectorFields::constructRingConstraints()
 	c.col(1) << 0.0, 1.0, zeroElements;
 }
 
-void VectorFields::constructSpecifiedConstraints()
+void VectorFields::constructSpecifiedHardConstraints()
 {
 	// Define the constraints
 	const int numConstraints = 100;
@@ -235,7 +230,7 @@ void VectorFields::constructSingularities()
 	//VFNeighbors.shrink_to_fit();
 }
 
-void VectorFields::constructSpecifiedConstraintsWithSingularities() 
+void VectorFields::constructHardConstraintsWithSingularities() 
 {
 	// Define the constraints
 	const int numConstraints = 16;

@@ -98,9 +98,9 @@ public:
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
-	void constructSpecifiedConstraints();
+	void constructSpecifiedHardConstraints();
 	void constructSingularities();
-	void constructSpecifiedConstraintsWithSingularities();
+	void constructHardConstraintsWithSingularities();
 	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);
 	void solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
