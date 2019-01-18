@@ -105,8 +105,11 @@ public:
 	void projectCurvesToFrame();
 	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);
+	void setupRHSGlobalProblemSoftConstraints(const double& lambda, Eigen::VectorXd& b);
+	void setupLHSGlobalProblemSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHS);
 	void solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 	void solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
+	void solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);

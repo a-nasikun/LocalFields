@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(2500);
+	vectorFields.selectFaceToDraw(7500);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
 	/* ====================== GLOBAL PROBLEM ====================*/
 	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
@@ -123,16 +123,16 @@ int main(int argc, char *argv[])
 		switch (key)
 		{
 		case '1':
-			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);			
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeUserConstraints(viewer);
 			break;
 		case '3':
-			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
+			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//basisId = max(basisId - 1, 0);
 			//vectorFields.visualizeBasis(viewer, basisId);

@@ -24,7 +24,7 @@ void VectorFields::constructConstraints()
 	cout << "in " << duration.count() << " seconds" << endl;
 
 	// Information about constraints
-	printf("....Num of Constraints = %d\n", globalConstraints.size());
+	//printf("....Num of Constraints = %d\n", globalConstraints.size());
 	printf("....Matrix C size = %dx%d \n", C.rows(), C.cols());
 	printf("....Matrix c size = %dx%d \n", c.rows(), c.cols());
 }
@@ -465,9 +465,39 @@ void VectorFields::constructSoftConstraints()
 	constructCurvesAsConstraints(24056, 1075, aCurve);
 	curvesConstraints[constCounter++] = aCurve;
 
-	// Project elements to local frame
+	/* Project elements to local frame */
 	projectCurvesToFrame();
 
+	/* Get the number of constraints */
+	int numConstraints = 0;
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		for (int j = 0; j < curvesConstraints[i].size() - 1; j++)
+		{
+			numConstraints++;
+		}
+	}
+
+	/* Setup to constraint matrix */
+	c.resize(2 * numConstraints);
+	C.resize(2 * numConstraints, B2D.cols());
+
+	int counter = 0;
+	int elem;
+	vector<Eigen::Triplet<double>> CTriplet; 
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		for (int j = 0; j < curvesConstraints[i].size() - 1; j++)
+		{
+			elem = curvesConstraints[i][j];
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * elem + 0, 1.0));
+			c(counter++) = constraintVect2D[i][j](0);
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * elem + 1, 1.0));
+			c(counter++) = constraintVect2D[i][j](1);
+		}
+	}
+
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
 
 /* The path will be reversed, from init to end */
@@ -539,24 +569,37 @@ void VectorFields::projectCurvesToFrame()
 	Eigen::MatrixXd ALoc(3, 2);
 	Eigen::Vector2d vec2D;
 	Eigen::Vector3d vec3D; 
-	int face1, face2;
+	int face1, face2, face3;
 
 	constraintVect2D.resize(curvesConstraints.size());
 	for (int i = 0; i < curvesConstraints.size(); i++)
 	{
-		constraintVect2D[i].resize(curvesConstraints[i].size() - 1);
+		const int curveSize = curvesConstraints[i].size() - 1;
+		constraintVect2D[i].resize(curveSize);
 		for (int j = 0; j < curvesConstraints[i].size()-1; j++)
 		{
 			face1 = curvesConstraints[i][j];
 			face2 = curvesConstraints[i][j + 1];
 			ALoc = A.block(3 * face1, 2 * face1, 3, 2);
-			vec3D = (FC.row(face2) - FC.row(face1)).transpose();
+			if (j < curvesConstraints[i].size() - 2)
+			{
+				face3 = curvesConstraints[i][j + 2];
+				//face3 = curvesConstraints[i][curveSize-1];
+				vec3D = (FC.row(face3) - FC.row(face1)).transpose();
+			}
+			else
+			{
+				vec3D = (FC.row(face2) - FC.row(face1)).transpose();
+			}
+			
 			vec2D = ALoc.transpose() * vec3D;
 			vec2D.normalize();
 			constraintVect2D[i][j] = vec2D;
 			//cout << "vec2D= " << vec2D << endl; 
 		}
 	}
+
+	cout << "Fields are projected to 2d frame " << endl; 
 }
 
 //void VectorFields::constructSpecifiedConstraintsWithSingularities()  ==> Version 2.0
@@ -1163,16 +1206,16 @@ void VectorFields::setupGlobalProblem()
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
 	//Eigen::VectorXd					vEst;
+	double lambda = 0.6; 
+		
+	//setupRHSGlobalProblemMapped(g, h, vEst, b);
+	//setupLHSGlobalProblemMapped(A_LHS);
+	setupRHSGlobalProblemSoftConstraints(lambda, b);
+	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);
 
-	//constructConstraints();	
-	setupRHSGlobalProblemMapped(g, h, vEst, b);
-	setupLHSGlobalProblemMapped(A_LHS);
-	//setupRHSGlobalProblem();
-	//setupLHSGlobalProblem();	
-
-	//solveGlobalSystem();
-	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
+	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 }
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
@@ -1233,6 +1276,36 @@ void VectorFields::setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LH
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void VectorFields::setupRHSGlobalProblemSoftConstraints(const double& lambda, Eigen::VectorXd& b)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Setting up the RHS of the system... ";
+
+	b = lambda * C.transpose() * c;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::setupLHSGlobalProblemSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHS)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Setting up the LHS of the system... ";
+
+	A_LHS = SF2D + lambda*(C.transpose()*C);
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
 
 void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
 {
@@ -1241,7 +1314,6 @@ void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::Spa
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Solving the global system (Pardiso LDLT)... \n";
-
 
 
 	//cout << "Starting to solve problem." << endl;
@@ -1298,6 +1370,46 @@ void VectorFields::solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::S
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "..in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Solving the global system (Pardiso LDLT)... \n";
+
+	//cout << "Starting to solve problem." << endl;
+	Xf.resize(B2D.rows());
+
+	// Setting up the solver
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
+
+	// FIRST BASIS
+	cout << "....Solving first problem (first frame)..." << endl;
+	Eigen::VectorXd x = sparseSolver.solve(b);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		if (sparseSolver.info() == Eigen::InvalidInput)
+			cout << "Input is Invalid. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	Xf = x;
+
+	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());
+
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::constructSamples(const int &n)
