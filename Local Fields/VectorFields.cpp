@@ -438,6 +438,10 @@ void VectorFields::constructSoftConstraints()
 		constructCurvesAsConstraints(init_, end_, aCurve);
 		curvesConstraints[i] = aCurve; 
 	}
+
+	// Project elements to local frame
+	projectCurvesToFrame();
+
 }
 
 /* The path will be reversed, from init to end */
@@ -500,6 +504,31 @@ void VectorFields::constructCurvesAsConstraints(const int& init, const int& end,
 
 
 	curve.shrink_to_fit();
+}
+
+void VectorFields::projectCurvesToFrame()
+{
+	Eigen::MatrixXd ALoc(3, 2);
+	Eigen::Vector2d vec2D;
+	Eigen::Vector3d vec3D; 
+	int face1, face2;
+
+	constraintVect2D.resize(curvesConstraints.size());
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		constraintVect2D[i].resize(curvesConstraints[i].size() - 1);
+		for (int j = 0; j < curvesConstraints[i].size()-1; j++)
+		{
+			face1 = curvesConstraints[i][j];
+			face2 = curvesConstraints[i][j + 1];
+			ALoc = A.block(3 * face1, 2 * face1, 3, 2);
+			vec3D = (FC.row(face2) - FC.row(face1)).transpose();
+			vec2D = ALoc.transpose() * vec3D;
+			vec2D.normalize();
+			constraintVect2D[i][j] = vec2D;
+			//cout << "vec2D= " << vec2D << endl; 
+		}
+	}
 }
 
 //void VectorFields::constructSpecifiedConstraintsWithSingularities()  ==> Version 2.0

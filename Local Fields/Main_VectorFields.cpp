@@ -102,7 +102,8 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
-	vectorFields.visualizeCurveConstraint(viewer);
+	//vectorFields.visualizeCurveConstraints(viewer);
+	vectorFields.visualizeSoftConstraints(viewer);
 
 	/* MEASURE ACCURACY */
 	//vectorFields.measureApproxAccuracyL2Norm();

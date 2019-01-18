@@ -644,7 +644,7 @@ void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
 
 }
 
-void VectorFields::visualizeCurveConstraint(igl::opengl::glfw::Viewer &viewer)
+void VectorFields::visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer)
 {
 	Eigen::VectorXd func(F.rows());
 	Eigen::MatrixXd FColor(F.rows(), 3);
@@ -664,4 +664,45 @@ void VectorFields::visualizeCurveConstraint(igl::opengl::glfw::Viewer &viewer)
 
 	igl::jet(func, false, FColor);
 	viewer.data().set_colors(FColor);
+}
+
+void VectorFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
+{
+	/* Color */
+	Eigen::RowVector3d color(1.0, 0.1, 0.1);
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 1.0;
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e, c;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);
+	int face; 
+	for (int i = 0; i < constraintVect2D.size(); i++)
+	{
+		for (int j = 0; j < constraintVect2D[i].size(); j++) 
+		{
+			face = curvesConstraints[i][j];
+			c = FC.row(face);
+			//f = VectorBlock.row(i);
+			v = constraintVect2D[i][j];
+			ALoc = A.block(3 * face, 2 * face, 3, 2);
+			f = (ALoc * v).transpose();
+			h1 = (ALoc* (rotMat1*v)).transpose();
+			h2 = (ALoc* (rotMat2*v)).transpose();
+			e = c + f*lengthScale;
+			//cout << "c: " << c << "e: " << e << endl; 
+			viewer.data().add_edges(c, e, color);
+			viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+			viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+		}
+	}
 }
