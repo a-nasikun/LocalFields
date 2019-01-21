@@ -64,16 +64,15 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
-	//vectorFields.setAndSolveUserSystem();
-	//
-	//vectorFields.measureApproxAccuracyL2Norm();
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
+	vectorFields.setAndSolveUserSystem();
+	vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
 	//vectorFields.constructArbitraryField2D();
@@ -90,9 +89,9 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
