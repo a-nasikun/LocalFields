@@ -15,7 +15,9 @@ void VectorFields::constructConstraints()
 	//constructSoftConstraints();
 	
 	constructSingularities();
-	constructHardConstraintsWithSingularities();
+	//constructHardConstraintsWithSingularities();
+	//constructHardConstraintsWithSingularities_Cheat();
+	constructHardConstraintsWithSingularitiesWithGauss();
 
 	
 
@@ -171,7 +173,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 1;
+	const int NUM_SINGS = 2;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -329,12 +331,12 @@ void VectorFields::constructHardConstraintsWithSingularities()
 			// 2. Find angles between basis1 and shared_edges es
 			Eigen::VectorXd eVect;
 			Eigen::RowVector3d b11, b12;
-			b11 = (A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 0, 3, 1)).transpose();
-			b12 = (A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 1, 3, 1)).transpose();
-			//eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 0, 3, 1);
-			//b11 << eVect(0), eVect(1), eVect(2);
-			//eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 1, 3, 1);
-			//b12 << eVect(0), eVect(1), eVect(2);
+			//b11 = (A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 0, 3, 1)).transpose();
+			//b12 = (A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 1, 3, 1)).transpose();
+			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 0, 3, 1);
+			b11 << eVect(0), eVect(1), eVect(2);
+			eVect = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i] + 1, 3, 1);
+			b12 << eVect(0), eVect(1), eVect(2);
 			//cout << "______B11: " << b11 << ", B12: " << b12 << endl;
 
 			// Basis 1, Frame 1
@@ -352,12 +354,12 @@ void VectorFields::constructHardConstraintsWithSingularities()
 			// 3. Find angles between basis2 and es
 			//es = -es;
 			Eigen::RowVector3d b21, b22;
-			b21 = (A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 0, 3, 1)).transpose();
-			b22 = (A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 1, 3, 1)).transpose();
-			//eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 0, 3, 1);
-			//b21 << eVect(0), eVect(1), eVect(2);
-			//eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 1, 3, 1);
-			//b22 << eVect(0), eVect(1), eVect(2);
+			//b21 = (A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 0, 3, 1)).transpose();
+			//b22 = (A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 1, 3, 1)).transpose();
+			eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 0, 3, 1);
+			b21 << eVect(0), eVect(1), eVect(2);
+			eVect = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1] + 1, 3, 1);
+			b22 << eVect(0), eVect(1), eVect(2);
 			//cout << "______B21: " << b21 << ", B22: " << b22 << endl;
 
 			// Basis 2, Frame 1
@@ -413,6 +415,239 @@ void VectorFields::constructHardConstraintsWithSingularities()
 	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
+}
+
+void VectorFields::constructHardConstraintsWithSingularities_Cheat()
+{
+	// Define the constraints
+	const int numConstraints = 10;
+	set<int> constraints;
+
+	globalConstraints.resize(numConstraints);
+	Eigen::VectorXd D;
+	D.resize(F.rows());
+
+	// Initialize the value of D
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+	}
+
+	srand(time(NULL));
+	int curPoint = rand() % F.rows();
+	constraints.insert(curPoint);
+
+	// Creating constraints using farthest point sampling
+	do {
+		Eigen::VectorXi::Index maxIndex;
+		computeDijkstraDistanceFaceForSampling(curPoint, D);
+		D.maxCoeff(&maxIndex);
+		constraints.insert(maxIndex);
+		curPoint = maxIndex;
+	} while (constraints.size() < numConstraints);
+
+	int counter1 = 0;
+	for (int i : constraints) {
+		globalConstraints[counter1++] = i;
+	}
+
+	int numSingConstraints = 0;
+	for (int i = 0; i < SingNeighCC.size(); i++) {
+		// Use only n-1 neighboring faces as constraints
+		//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {
+		for (int j = 0; j < (SingNeighCC[i].size()); j++) {
+			numSingConstraints++;
+		}
+	}
+
+	// Setting up matrix C and vector c
+	c.resize(2 * (globalConstraints.size() + numSingConstraints));
+
+
+	// HARD CONSTRAINTS
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size() + 2 * 4 * 7 * SingNeighCC.size());
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		// Matrix C
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
+	}
+
+	// Setting up hard constraints for neighboring faces
+	Eigen::MatrixXd ALoc(3, 2);
+	Eigen::RowVector3d c1, c2, field3D;
+	Eigen::Vector2d field2D; 
+	for (int id = 0; id < SingNeighCC.size(); id++) {	
+		//printf("This sing has %d neighbors....", SingNeighCC[id].size());
+		for (int i = 0; i < (SingNeighCC[id].size()); i++) {
+			int i2 = (i < (SingNeighCC[id].size() - 1) ? i+1 : 0);
+
+			// Computing the field from one barycenter pointing to another's barycenter
+			ALoc = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 2);
+			c1 = FC.row(SingNeighCC[id][i]);
+			c2 = FC.row(SingNeighCC[id][i2]); 
+			field3D = c2 - c1;
+			//printf("<%.15f, %.15f, %.15f>\n", field3D(0), field3D(1), field3D(2));
+			field2D = ALoc.transpose() * field3D.transpose();
+			field2D.normalize();
+			field2D /= 4.0; 
+
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, 1.0));
+			c(counter) = field2D(0);
+			counter++;
+
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, 1.0));
+			c(counter) = field2D(1);
+			counter++;
+			//printf("Writing to %d(%.3f) and %d(%.3f) \n", SingNeighCC[id][i], field2D(0), SingNeighCC[id][i2], field2D(1));
+		}
+	}
+
+	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+}
+
+void VectorFields::constructHardConstraintsWithSingularitiesWithGauss()
+{
+	// Define the constraints
+	const int numConstraints = 10;
+	set<int> constraints;
+
+	globalConstraints.resize(numConstraints);
+	Eigen::VectorXd D;
+	D.resize(F.rows());
+
+	// Initialize the value of D
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+	}
+
+	srand(time(NULL));
+	int curPoint = rand() % F.rows();
+	constraints.insert(curPoint);
+
+	// Creating constraints using farthest point sampling
+	do {
+		Eigen::VectorXi::Index maxIndex;
+		computeDijkstraDistanceFaceForSampling(curPoint, D);
+		D.maxCoeff(&maxIndex);
+		constraints.insert(maxIndex);
+		curPoint = maxIndex;
+	} while (constraints.size() < numConstraints);
+
+	int counter1 = 0;
+	for (int i : constraints) {
+		globalConstraints[counter1++] = i;
+	}
+
+	int numSingConstraints = 0;
+	for (int i = 0; i < SingNeighCC.size(); i++) {
+		// Use only n-1 neighboring faces as constraints
+		//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {
+		for (int j = 0; j < (SingNeighCC[i].size()); j++) {
+			numSingConstraints++;
+		}
+	}
+
+	// Setting up matrix C and vector c
+	c.resize(2 * (globalConstraints.size() + numSingConstraints));
+
+
+	// HARD CONSTRAINTS
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size() + 2 * 4 * 7 * SingNeighCC.size());
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		// Matrix C
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 1) = sqrt(2.0);
+	}
+
+	// Setting up hard constraints for neighboring faces
+	Eigen::MatrixXd		ALoc(3, 2);
+	Eigen::RowVector3d	c1, c2, field3D;
+	Eigen::Vector2d		field2D;
+	vector<vector<double>>		internalAngle(SingNeighCC.size()); 
+	vector<double>				gaussAngle(SingNeighCC.size());
+
+	// Local variables to compute angle on each triangle
+	Eigen::Vector3d		edge1, edge2;
+	double				angle; 
+	int					singLoc;
+	for (int id = 0; id < SingNeighCC.size(); id++)
+	{
+		internalAngle[id].resize(SingNeighCC[id].size());
+		gaussAngle[id] = 0.0;
+
+		for (int i = 0; i < (SingNeighCC[id].size()); i++) 
+		{
+			int i2 = (i < (SingNeighCC[id].size() - 1) ? i + 1 : 0);
+
+			// [a] obtain shared edges
+			for (int f = 0; f < F.cols(); f++) {
+				if (F(SingNeighCC[id][i],f) == singularities[id])
+				{
+					// [b] get the two edges
+					edge1 = V.row(F(SingNeighCC[id][i], (f == 0 ? 2 : f - 1))) - V.row(F(SingNeighCC[id][i], f));
+					edge2 = V.row(F(SingNeighCC[id][i], (f == 2 ? 0 : f + 1))) - V.row(F(SingNeighCC[id][i], f)) ;
+					angle = edge2.dot(edge1) / (edge1.norm()*edge2.norm());
+					angle = acos(angle);
+
+					// [c] get the angle
+					internalAngle[id][i] = angle;
+					gaussAngle[id]		+= angle; 
+				}
+			}
+		}
+	}
+
+	// Show the angles
+	for (int id = 0; id < SingNeighCC.size(); id++)
+	{
+		printf("__Gauss angle = %.4f\n", gaussAngle[id]*180.0/M_PI);
+		for (int i = 0; i < (SingNeighCC[id].size()); i++) {
+			printf("______ angle %d = %.3f \n", i, internalAngle[id][i] * 180.0 / M_PI);
+		}
+	}
+
+	for (int id = 0; id < SingNeighCC.size(); id++) {
+		//printf("This sing has %d neighbors....", SingNeighCC[id].size());
+		for (int i = 0; i < (SingNeighCC[id].size()); i++) {
+			int i2 = (i < (SingNeighCC[id].size() - 1) ? i + 1 : 0);
+
+			// Computing the field from one barycenter pointing to another's barycenter
+			ALoc = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 2);
+			c1 = FC.row(SingNeighCC[id][i]);
+			c2 = FC.row(SingNeighCC[id][i2]);
+			field3D = c2 - c1;
+			//printf("<%.15f, %.15f, %.15f>\n", field3D(0), field3D(1), field3D(2));
+			field2D = ALoc.transpose() * field3D.transpose();
+			field2D.normalize();
+			field2D /= 4.0;
+
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 0, 1.0));
+			c(counter) = field2D(0);
+			counter++;
+
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * SingNeighCC[id][i] + 1, 1.0));
+			c(counter) = field2D(1);
+			counter++;
+			//printf("Writing to %d(%.3f) and %d(%.3f) \n", SingNeighCC[id][i], field2D(0), SingNeighCC[id][i2], field2D(1));
+		}
+	}
+
+	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
 
 void VectorFields::constructSoftConstraints()
