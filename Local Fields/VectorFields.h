@@ -101,6 +101,8 @@ public:
 	void constructSpecifiedHardConstraints();
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
+	void constructHardConstraintsWithSingularities_Cheat();
+	void constructHardConstraintsWithSingularitiesWithGauss();
 	void constructSoftConstraints();
 	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
 	void projectCurvesToFrame();
@@ -155,9 +157,9 @@ public:
 	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 	void visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	void visualizeVertexFacesNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
-	void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
+	//void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
 	void visualizeDijkstra(igl::opengl::glfw::Viewer &viewer);
-	void visualizeEigenfields(igl::opengl::glfw::Viewer &viewer);
+	//void visualizeEigenfields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID);
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);
