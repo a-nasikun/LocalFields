@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=2000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=5000, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	//vectorFields.visualizeCurveConstraints(viewer);
-	vectorFields.visualizeSoftConstraints(viewer);
+	//vectorFields.visualizeSoftConstraints(viewer);
 
 	/* MEASURE ACCURACY */
 	//vectorFields.measureApproxAccuracyL2Norm();
