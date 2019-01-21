@@ -642,6 +642,17 @@ void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 
+	// Visualizing the basis
+	Eigen::MatrixXd ALoc(3, 2);
+	for (int i = 0; i < SingNeighCC.size(); i++)
+	{
+		for (int j = 0; j < SingNeighCC[i].size(); j++)
+		{
+			ALoc = A.block(3 * SingNeighCC[i][j], 2 * SingNeighCC[i][j], 3, 2);
+			viewer.data().add_edges(FC.row(SingNeighCC[i][j]), FC.row(SingNeighCC[i][j]) + avgEdgeLength*ALoc.col(0).transpose(), Eigen::RowVector3d(0.0, 0.9, 0.3));
+		}
+	}
+
 }
 
 void VectorFields::visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer)
