@@ -152,6 +152,8 @@ public:
 	int selectRandomFace();
 	void checkB2DStructure();
 	void constructParallelTransport();
+	void writeBasisToFile();
+	void writeField3DToFile();
 	
 	// VISUALIZATION of TESTING
 	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);

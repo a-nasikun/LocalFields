@@ -289,3 +289,14 @@ void VectorFields::constructParallelTransport()
 		parallelTransport[i + 1] = transported;		
 	}
 }
+
+void VectorFields::writeBasisToFile()
+{
+	WriteSparseMatrixToMatlab(Basis, "hello");
+}
+
+void VectorFields::writeField3DToFile()
+{
+	Eigen::VectorXd Field3D = A*XFullDim;
+	WriteDenseMatrixToMatlab(Field3D, "hello");
+}

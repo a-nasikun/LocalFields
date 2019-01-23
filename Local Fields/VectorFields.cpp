@@ -11,12 +11,12 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedHardConstraints();
+	constructSpecifiedHardConstraints();
 	//constructSoftConstraints();
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
-	constructHardConstraintsWithSingularities_Cheat();
+	//constructHardConstraintsWithSingularities_Cheat();
 	//constructHardConstraintsWithSingularitiesWithGauss();
 
 	t2 = chrono::high_resolution_clock::now();
