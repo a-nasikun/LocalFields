@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
-	vectorFields.writeBasisToFile();
+	//vectorFields.writeBasisToFile();
 	//vectorFields.writeField3DToFile();
 
 	/* ====================== TESTING BASIS ====================*/
