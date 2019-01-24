@@ -292,7 +292,11 @@ void VectorFields::constructParallelTransport()
 
 void VectorFields::writeBasisToFile()
 {
-	WriteSparseMatrixToMatlab(Basis, "hello");
+	printf("Basis=%dx%d || #F=%d\n", Basis.rows(), Basis.cols(), F.rows());
+	Eigen::SparseMatrix<double> Basis3D = A*Basis;
+	printf("Basis=%dx%d || Basis3D=%dx%d || #F=%d\n", Basis.rows(), Basis.cols(), Basis3D.rows(), Basis3D.cols(), F.rows());
+
+	WriteSparseMatrixToMatlab(Basis3D, "hello");
 }
 
 void VectorFields::writeField3DToFile()
