@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
+int eigToShow = 0, basisId=50, numSample=500, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -85,13 +85,13 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualizeGlobalConstraints(viewer);
-	vectorFields.visualizeSingularitiesConstraints(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer);	
+	vectorFields.visualizeApproxResult(viewer);	
 	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
@@ -101,8 +101,9 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
+	
 	//vectorFields.visualizeCurveConstraints(viewer);
-	//vectorFields.visualizeSoftConstraints(viewer);
+	vectorFields.visualizeSoftConstraints(viewer);
 
 	/* MEASURE ACCURACY */
 	//vectorFields.measureApproxAccuracyL2Norm();

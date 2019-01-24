@@ -12,11 +12,11 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	//constructSoftConstraints();
+	constructSoftConstraints();
 	
-	constructSingularities();
+	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
-	constructHardConstraintsWithSingularities_Cheat();
+	//constructHardConstraintsWithSingularities_Cheat();
 	//constructHardConstraintsWithSingularitiesWithGauss();
 
 	
@@ -420,7 +420,7 @@ void VectorFields::constructHardConstraintsWithSingularities()
 void VectorFields::constructHardConstraintsWithSingularities_Cheat()
 {
 	// Define the constraints
-	const int numConstraints = 15;
+	const int numConstraints = 100;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -896,8 +896,8 @@ void VectorFields::projectCurvesToFrame()
 			ALoc = A.block(3 * face1, 2 * face1, 3, 2);
 			if (j < curvesConstraints[i].size() - 2)
 			{
-				//face3 = curvesConstraints[i][j + 2];
-				face3 = curvesConstraints[i][curveSize-1];
+				face3 = curvesConstraints[i][j + 2];
+				//face3 = curvesConstraints[i][curveSize-1];
 				vec3D = (FC.row(face3) - FC.row(face1)).transpose();
 			}
 			else
@@ -1521,14 +1521,14 @@ void VectorFields::setupGlobalProblem()
 	//Eigen::VectorXd					vEst;
 	double lambda = 0.4; 
 		
-	setupRHSGlobalProblemMapped(g, h, vEst, b);
-	setupLHSGlobalProblemMapped(A_LHS);
-	//setupRHSGlobalProblemSoftConstraints(lambda, b);
-	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);
-
-	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	//setupRHSGlobalProblemMapped(g, h, vEst, b);
+	//setupLHSGlobalProblemMapped(A_LHS);
+	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
-	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+
+	setupRHSGlobalProblemSoftConstraints(lambda, b);
+	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 }
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
@@ -1612,7 +1612,8 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const double& lambda, Ei
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Setting up the LHS of the system... ";
 
-	A_LHS = SF2D + lambda*(C.transpose()*C);
+	//A_LHS = SF2D + lambda*(C.transpose()*C);
+	A_LHS = (1.0-lambda)*SF2D + lambda*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -2209,12 +2210,12 @@ void VectorFields::setAndSolveUserSystem()
 
 	setupUserBasis();
 	getUserConstraints();
-	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	setupLHSUserProblemMapped(A_LHSBar);
-	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
-	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	//setupLHSUserProblemMapped(A_LHSBar);
+	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -2336,7 +2337,8 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const double& lambda
 	cout << "> Constructing LHS (mapped)...";
 
 	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
-	A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+	A_LHSBar = (1.0-lambda)*SF2DBar + lambda*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
