@@ -173,7 +173,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 1;
+	const int NUM_SINGS = 2;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -420,7 +420,7 @@ void VectorFields::constructHardConstraintsWithSingularities()
 void VectorFields::constructHardConstraintsWithSingularities_Cheat()
 {
 	// Define the constraints
-	const int numConstraints = 10;
+	const int numConstraints = 15;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -2126,7 +2126,7 @@ void VectorFields::normalizeBasis()
 
 void VectorFields::normalizeBasisAbs()
 {
-	Eigen::MatrixXd normSum(F.rows(), 2);
+	Eigen::MatrixXd normSum(F.rows(), 2), normSumN(F.rows(), 2);
 	BasisSumN.resize(BasisTemp.rows(), 2);
 	vector<Eigen::Triplet<double>> BNTriplet;
 	BNTriplet.reserve(BasisTemp.nonZeros());
@@ -2136,6 +2136,7 @@ void VectorFields::normalizeBasisAbs()
 	for (int i = 0; i < normSum.rows(); i++) {
 		for (int j = 0; j < normSum.cols(); j++) {
 			normSum(i, j) = 0.0;
+			normSumN(i, j) = 0.0;
 			BasisSumN(2 * i + 0, j) = 0.0;
 			BasisSumN(2 * i + 1, j) = 0.0;
 		}
@@ -2153,18 +2154,51 @@ void VectorFields::normalizeBasisAbs()
 		}
 	}
 
+	
 	// Normalize the system
 	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
-			double newValue = it.value() / normSum(it.row() / 2, it.col() % 2);
-			newValue *= sqrt(2.0);
+			double newValue = it.value() / normSum(it.row()/2, it.col()%2);
+			newValue *= (2.0);
 			// To have the basis with norm 2.0
 			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue));
 			BasisSumN(it.row(), it.col() % 2) += newValue;
 		}
 	}
 
+	/* Getting the norm at some locations */
+	//for (int k = 0; k < 100; k++) {
+	//	if (k % 2 == 1) continue;
+	//	double a = BasisSumN(k, 0);
+	//	double b = BasisSumN(k + 1, 0);
+	//	double n = a*a + b*b;
+	//	n = sqrt(n);
+	//	printf("--><%d> : [%.12f]", k, n);
+	//
+	//	a = BasisSumN(k, 1);
+	//	b = BasisSumN(k + 1, 1);
+	//	n = a*a + b*b;
+	//	n = sqrt(n);
+	//	printf(" | [%.12f] \n", n);
+	//}
+
 	Basis.setFromTriplets(BNTriplet.begin(), BNTriplet.end());	
+
+	for (int k = 0; k < Basis.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
+			if (it.row() % 2 == 1) continue;
+
+			double a = it.value();
+			double b = Basis.coeff(it.row() + 1, it.col());
+			double norm = sqrt(a*a + b*b);
+			normSumN(it.row() / 2, it.col() % 2) += norm;
+		}
+	}
+
+	for (int k = 0; k < 100; k++) {
+		printf("--> [%d]=<%.4f,%.4f>\n", k, normSumN(k, 0), normSumN(k, 1));
+		if (k % 2 == 1) continue; 
+	}
 }
 void VectorFields::setAndSolveUserSystem()
 {
