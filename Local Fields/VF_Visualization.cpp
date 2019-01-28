@@ -232,7 +232,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 1.0; 
+	const double EDGE_RATIO = 2.0; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -475,7 +475,7 @@ void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer)
 {
-	const double ARRAW_RATIO = 1.0; 
+	const double ARRAW_RATIO = 4.0; 
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		Eigen::RowVector3d cc, g, v1, v2, v3;
 		cc = FC.row(globalConstraints[i]);

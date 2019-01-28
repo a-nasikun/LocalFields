@@ -30,11 +30,12 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
+	string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -70,11 +71,11 @@ int main(int argc, char *argv[])
 	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
-	vectorFields.measureApproxAccuracyL2Norm();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
+	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
 	//vectorFields.constructArbitraryField2D();
@@ -85,13 +86,13 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	vectorFields.visualizeApproxResult(viewer);	
+	//vectorFields.visualizeApproxResult(viewer);	
 	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
-	vectorFields.visualizeSoftConstraints(viewer);
+	//vectorFields.visualizeSoftConstraints(viewer);
 
 	/* MEASURE ACCURACY */
 	//vectorFields.measureApproxAccuracyL2Norm();
@@ -132,6 +133,7 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeUserConstraints(viewer);
 			break;
 		case '3':
+			vectorFields.visualizeGlobalConstraints(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//basisId = max(basisId - 1, 0);

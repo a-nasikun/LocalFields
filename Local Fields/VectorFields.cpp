@@ -11,8 +11,8 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedHardConstraints();
-	constructSoftConstraints();
+	constructSpecifiedHardConstraints();
+	//constructSoftConstraints();
 	
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -1521,14 +1521,14 @@ void VectorFields::setupGlobalProblem()
 	//Eigen::VectorXd					vEst;
 	double lambda = 0.4; 
 		
-	//setupRHSGlobalProblemMapped(g, h, vEst, b);
-	//setupLHSGlobalProblemMapped(A_LHS);
-	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	setupRHSGlobalProblemMapped(g, h, vEst, b);
+	setupLHSGlobalProblemMapped(A_LHS);
+	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
 
-	setupRHSGlobalProblemSoftConstraints(lambda, b);
-	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	//setupRHSGlobalProblemSoftConstraints(lambda, b);
+	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 }
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
