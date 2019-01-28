@@ -33,13 +33,16 @@ void VectorFields::constructArbitraryField2D()
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Construting gradient 2D of arbitrary field...";
+	cout << "> Constructing gradient 2D of arbitrary field...";
 
 
 	Eigen::SparseMatrix<double> Grad3D, Grad2D;
 	igl::grad(V, F, Grad3D);
+	printf("Size of grad3d: %dx%d\n", Grad3D.rows(), Grad3D.cols());
 	rearrangeGradient3D(Grad3D);
+	printf("Size of grad3d [2]: %dx%d\n", Grad3D.rows(), Grad3D.cols());
 	Grad2D = A.transpose()*Grad3D; 
+	printf("Grad3d [2]: %dx%d || arbFields: %d. \n", Grad2D.rows(), Grad2D.cols(), arbField.rows());
 	arbField2D = Grad2D * arbField;
 
 	t2 = chrono::high_resolution_clock::now();
