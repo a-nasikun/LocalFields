@@ -122,8 +122,6 @@ public:
 	void normalizeBasis();
 	void normalizeBasisAbs();
 
-	void testBasis();
-
 	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
 	void setAndSolveUserSystem();
 	void setupUserBasis();
@@ -139,6 +137,8 @@ public:
 
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
+	void measureDirichletEnergy();
+	void testBasis();
 	void measureU1andJU0();
 
 	// ITEMS FOR TESTING ONLY

@@ -73,16 +73,17 @@ int main(int argc, char *argv[])
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
 	vectorFields.setAndSolveUserSystem();
-	//vectorFields.measureApproxAccuracyL2Norm();
+	vectorFields.measureApproxAccuracyL2Norm();
+	vectorFields.measureDirichletEnergy();
 
 	//vectorFields.writeBasisToFile();
 	//vectorFields.writeField3DToFile();
 
 
 	/* ====================== TESTING BASIS ====================*/
-	//vectorFields.constructArbitraryField2D();
-	//vectorFields.constructArbitraryField();
-	//vectorFields.testBasis();
+	vectorFields.constructArbitraryField();
+	vectorFields.constructArbitraryField2D();
+	vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 
@@ -91,6 +92,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructParallelTransport();
 	//vectorFields.visualizeParallelTransportPath(viewer);
 	//vectorFields.visualizeParallelTransport(viewer);
+
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -105,7 +107,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
-	/* FOR TESTING PURPOSE */
+	/* VISUALIZATION FOR TESTING PURPOSE */
 	//vectorFields.visualizeNeighboringRings(viewer);
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);

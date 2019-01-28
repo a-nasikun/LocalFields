@@ -2207,23 +2207,7 @@ void VectorFields::normalizeBasisAbs()
 			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue));
 			BasisSumN(it.row(), it.col() % 2) += newValue;
 		}
-	}
-
-	/* Getting the norm at some locations */
-	//for (int k = 0; k < 100; k++) {
-	//	if (k % 2 == 1) continue;
-	//	double a = BasisSumN(k, 0);
-	//	double b = BasisSumN(k + 1, 0);
-	//	double n = a*a + b*b;
-	//	n = sqrt(n);
-	//	printf("--><%d> : [%.12f]", k, n);
-	//
-	//	a = BasisSumN(k, 1);
-	//	b = BasisSumN(k + 1, 1);
-	//	n = a*a + b*b;
-	//	n = sqrt(n);
-	//	printf(" | [%.12f] \n", n);
-	//}
+	}	
 
 	Basis.setFromTriplets(BNTriplet.begin(), BNTriplet.end());	
 
@@ -2238,10 +2222,10 @@ void VectorFields::normalizeBasisAbs()
 		}
 	}
 
-	for (int k = 0; k < 100; k++) {
-		printf("--> [%d]=<%.4f,%.4f>\n", k, normSumN(k, 0), normSumN(k, 1));
-		if (k % 2 == 1) continue; 
-	}
+	//for (int k = 0; k < 100; k++) {
+	//	printf("--> [%d]=<%.4f,%.4f>\n", k, normSumN(k, 0), normSumN(k, 1));
+	//	if (k % 2 == 1) continue; 
+	//}
 }
 void VectorFields::setAndSolveUserSystem()
 {
@@ -2252,12 +2236,12 @@ void VectorFields::setAndSolveUserSystem()
 
 	setupUserBasis();
 	getUserConstraints();
-	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	//setupLHSUserProblemMapped(A_LHSBar);
-	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
-	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	setupLHSUserProblemMapped(A_LHSBar);
+	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -2483,6 +2467,15 @@ void VectorFields::measureApproxAccuracyL2Norm()
 	printf("Diff 0 = %.10f (%.4f / %.4f) \n", L2norm, diff, xf); 	
 	printf("Max Error = %.3f \n", diffV.maxCoeff() / xf);
 	printf("MSE = %.3f \n", (diffV.sum()/diffV.size()) / xf);
+}
+
+void VectorFields::measureDirichletEnergy()
+{
+	double dirichlet = Xf.transpose() * ((B2D * MF2D) * Xf);
+	cout << "__Dirichlet Energy\n \t__FullRes: " << dirichlet; 
+	dirichlet = XFullDim.transpose() * ((B2D * MF2D) * XFullDim); 
+	cout << ": Reduced: " << dirichlet << endl; 
+
 }
 
 void VectorFields::measureU1andJU0()
