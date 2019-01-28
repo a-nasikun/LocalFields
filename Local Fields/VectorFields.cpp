@@ -171,7 +171,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 1;
+	const int NUM_SINGS = 2;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -445,7 +445,7 @@ void VectorFields::constructHardConstraintsWithSingularities()
 void VectorFields::constructHardConstraintsWithSingularities_Cheat()
 {
 	// Define the constraints
-	const int numConstraints = 10;
+	const int numConstraints = 100;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -921,8 +921,8 @@ void VectorFields::projectCurvesToFrame()
 			ALoc = A.block(3 * face1, 2 * face1, 3, 2);
 			if (j < curvesConstraints[i].size() - 2)
 			{
-				//face3 = curvesConstraints[i][j + 2];
-				face3 = curvesConstraints[i][curveSize-1];
+				face3 = curvesConstraints[i][j + 2];
+				//face3 = curvesConstraints[i][curveSize-1];
 				vec3D = (FC.row(face3) - FC.row(face1)).transpose();
 			}
 			else
@@ -1548,11 +1548,11 @@ void VectorFields::setupGlobalProblem()
 		
 	setupRHSGlobalProblemMapped(g, h, vEst, b);
 	setupLHSGlobalProblemMapped(A_LHS);
-	//setupRHSGlobalProblemSoftConstraints(lambda, b);
-	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);
-
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
+
+	//setupRHSGlobalProblemSoftConstraints(lambda, b);
+	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
 	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 }
 
@@ -1637,7 +1637,8 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const double& lambda, Ei
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Setting up the LHS of the system... ";
 
-	A_LHS = SF2D + lambda*(C.transpose()*C);
+	//A_LHS = SF2D + lambda*(C.transpose()*C);
+	A_LHS = (1.0-lambda)*SF2D + lambda*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -2168,7 +2169,7 @@ void VectorFields::normalizeBasis()
 
 void VectorFields::normalizeBasisAbs()
 {
-	Eigen::MatrixXd normSum(F.rows(), 2);
+	Eigen::MatrixXd normSum(F.rows(), 2), normSumN(F.rows(), 2);
 	BasisSumN.resize(BasisTemp.rows(), 2);
 	vector<Eigen::Triplet<double>> BNTriplet;
 	BNTriplet.reserve(BasisTemp.nonZeros());
@@ -2178,6 +2179,7 @@ void VectorFields::normalizeBasisAbs()
 	for (int i = 0; i < normSum.rows(); i++) {
 		for (int j = 0; j < normSum.cols(); j++) {
 			normSum(i, j) = 0.0;
+			normSumN(i, j) = 0.0;
 			BasisSumN(2 * i + 0, j) = 0.0;
 			BasisSumN(2 * i + 1, j) = 0.0;
 		}
@@ -2195,18 +2197,51 @@ void VectorFields::normalizeBasisAbs()
 		}
 	}
 
+	
 	// Normalize the system
 	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
-			double newValue = it.value() / normSum(it.row() / 2, it.col() % 2);
-			newValue *= sqrt(2.0);
+			double newValue = it.value() / normSum(it.row()/2, it.col()%2);
+			newValue *= (2.0);
 			// To have the basis with norm 2.0
 			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue));
 			BasisSumN(it.row(), it.col() % 2) += newValue;
 		}
 	}
 
+	/* Getting the norm at some locations */
+	//for (int k = 0; k < 100; k++) {
+	//	if (k % 2 == 1) continue;
+	//	double a = BasisSumN(k, 0);
+	//	double b = BasisSumN(k + 1, 0);
+	//	double n = a*a + b*b;
+	//	n = sqrt(n);
+	//	printf("--><%d> : [%.12f]", k, n);
+	//
+	//	a = BasisSumN(k, 1);
+	//	b = BasisSumN(k + 1, 1);
+	//	n = a*a + b*b;
+	//	n = sqrt(n);
+	//	printf(" | [%.12f] \n", n);
+	//}
+
 	Basis.setFromTriplets(BNTriplet.begin(), BNTriplet.end());	
+
+	for (int k = 0; k < Basis.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
+			if (it.row() % 2 == 1) continue;
+
+			double a = it.value();
+			double b = Basis.coeff(it.row() + 1, it.col());
+			double norm = sqrt(a*a + b*b);
+			normSumN(it.row() / 2, it.col() % 2) += norm;
+		}
+	}
+
+	for (int k = 0; k < 100; k++) {
+		printf("--> [%d]=<%.4f,%.4f>\n", k, normSumN(k, 0), normSumN(k, 1));
+		if (k % 2 == 1) continue; 
+	}
 }
 void VectorFields::setAndSolveUserSystem()
 {
@@ -2217,12 +2252,12 @@ void VectorFields::setAndSolveUserSystem()
 
 	setupUserBasis();
 	getUserConstraints();
-	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	setupLHSUserProblemMapped(A_LHSBar);
-	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
-	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	//setupLHSUserProblemMapped(A_LHSBar);
+	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -2344,7 +2379,8 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const double& lambda
 	cout << "> Constructing LHS (mapped)...";
 
 	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
-	A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+	A_LHSBar = (1.0-lambda)*SF2DBar + lambda*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
