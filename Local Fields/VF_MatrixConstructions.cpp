@@ -488,13 +488,13 @@ void VectorFields::constructMassMatrices()
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Mass matrices... \n";
-	//constructMassMatrixMV();
-	//constructMassMatrixMVinv();
+	constructMassMatrixMV();
+	constructMassMatrixMVinv();
 
 	// Face-based Mass Matrices
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
-	//constructMassMatrixMF3D();
+	constructMassMatrixMF3D();
 	//constructMassMatrixMF3Dinv();
 
 	t2 = chrono::high_resolution_clock::now();
@@ -834,7 +834,8 @@ void VectorFields::constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>
 
 void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D)
 {
-	LapDiv3D = MF3D*GF3D*MVinv*GF3D.transpose()*MF3D;
+	printf("GF3D=%dx%d | MF=%dx%d | MVinv=%dx%d\n", GF3D.rows(), GF3D.cols(), MF3D.rows(), MF3D.cols(), MVinv.rows(), MVinv.cols());
+	LapDiv3D = MF3D*(GF3D*MVinv*GF3D.transpose())*MF3D;
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
