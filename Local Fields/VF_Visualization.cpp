@@ -232,7 +232,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 2.0; 
+	const double EDGE_RATIO = 20.0; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -632,6 +632,14 @@ void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
 	Eigen::MatrixXd vColor;
 	igl::jet(arbField, true, vColor);
 	viewer.data().set_colors(vColor);
+}
+
+void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
+{
+	Eigen::VectorXd eigfields = Basis*eigFieldRed2D.col(i);
+	//eigfields = A*eigfields;
+
+	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

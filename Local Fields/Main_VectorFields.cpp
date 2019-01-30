@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=750, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -73,12 +73,13 @@ int main(int argc, char *argv[])
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
+	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
 
-	vectorFields.writeBasisToFile();
+	//vectorFields.writeBasisToFile();
 	//vectorFields.writeField3DToFile();
+	vectorFields.computeEigenFields();
 
 
 	/* ====================== TESTING BASIS ====================*/
@@ -103,8 +104,8 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	vectorFields.visualizeApproxResult(viewer);	
-	vectorFields.visualizeUserConstraints(viewer);
+	//vectorFields.visualizeApproxResult(viewer);	
+	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
@@ -163,10 +164,12 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeBasisNormalized(viewer, basisId);
 			break;
 		case '7':
-			vectorFields.visualizeBasisSum(viewer, 0);
+			eigToShow = max(eigToShow - 10, 0);
+			vectorFields.visualizeEigenfields(viewer, eigToShow);
 			break;
 		case '8':
-			vectorFields.visualizeBasisSum(viewer, 1);
+			eigToShow = min(eigToShow + 10, 2 * numSample - 1);
+			vectorFields.visualizeEigenfields(viewer, eigToShow);
 			break;
 		case '9':
 			vectorFields.visualizeApproximatedFields(viewer);

@@ -2457,6 +2457,16 @@ void VectorFields::obtainUserVectorFields()
 	cout << "Hello there \n" << endl; 
 }
 
+void VectorFields::computeEigenFields()
+{
+	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
+	Eigen::SparseMatrix<double> Sbar = Basis.transpose() * SF2D * Basis;
+	Sbar = -Sbar; 
+	//computeEigenGPU(Sbar, Mbar, eigFieldRed2D, eigValues);
+	computeEigenMatlab(Sbar, Mbar, eigFieldRed2D, eigValues);
+	cout << "::::: Eigen Values \n" << eigValues << endl; 
+}
+
 void VectorFields::measureApproxAccuracyL2Norm()
 {
 	Eigen::VectorXd diffV = Xf - XFullDim;
