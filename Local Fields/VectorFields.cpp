@@ -1613,7 +1613,7 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const double& lambda, Ei
 	cout << "> Setting up the LHS of the system... ";
 
 	//A_LHS = SF2D + lambda*(C.transpose()*C);
-	A_LHS = (1.0-lambda)*SF2D + lambda*C.transpose()*C;
+	A_LHS = SF2D + lambda*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -2322,7 +2322,7 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const double& lambda
 
 	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
 	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
-	A_LHSBar = (1.0-lambda)*SF2DBar + lambda*CBar.transpose()*CBar;
+	A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
