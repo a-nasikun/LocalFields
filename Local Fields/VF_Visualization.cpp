@@ -556,6 +556,11 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 	}
 }
 
+void VectorFields::visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v)
+{
+	visualize2DfieldsScaled(viewer, v, Eigen::RowVector3d(0.1, 0.9, 0.3), 4000);
+}
+
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());
@@ -616,9 +621,14 @@ void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::MatrixXd vColor;
-	igl::jet(arbField, true, vColor);
-	viewer.data().set_colors(vColor);
+	/* as a Function */
+	//Eigen::MatrixXd vColor;
+	//igl::jet(arbField, true, vColor);
+	//viewer.data().set_colors(vColor);
+
+	/* As a Vector field */
+	Eigen::RowVector3d color(0.8, 0.4, 0.2);
+	visualize2DfieldsScaled(viewer, arbField2D, color, 5000);
 }
 
 void VectorFields::visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID)

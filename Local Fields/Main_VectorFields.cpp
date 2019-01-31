@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -68,29 +68,35 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	vectorFields.setupGlobalProblem();
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
-	vectorFields.measureApproxAccuracyL2Norm();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
+	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
 	vectorFields.constructArbitraryField();
 	vectorFields.constructArbitraryField2D();
-	vectorFields.testBasis();
+	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
 
-	vectorFields.measureDirichletEnergy();
+	//vectorFields.measureDirichletEnergy();
+
+
+	/* ====================== TESTING BASIS ====================*/
+	Eigen::VectorXd v_in = vectorFields.arbField2D;
+	Eigen::VectorXd v_out;
+	const double mu = 0.04; 
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
@@ -103,7 +109,7 @@ int main(int argc, char *argv[])
 	/* VISUALIZATION FOR TESTING PURPOSE */
 	//vectorFields.visualizeNeighboringRings(viewer);
 	//vectorFields.visualizeDijkstraFace(viewer);
-	//vectorFields.visualizeArbField(viewer);
+	vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
@@ -181,7 +187,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'c':
 		case 'C':
-			
+			vectorFields.computeSmoothing(mu, v_in, v_out);
+			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			v_in = v_out; 
 			break; 
 		default:
 			break;
