@@ -114,6 +114,9 @@ public:
 	void solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 	void solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 
+	// APPLICATIONS ON GLOBAL SYSTEM
+	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
+
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
 	void farthestPointSampling();
@@ -197,6 +200,9 @@ public:
 	void visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer);
+
+	// VISUALIZATION of APPLICATIONs
+	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction

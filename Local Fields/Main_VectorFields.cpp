@@ -27,9 +27,11 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
+
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -83,8 +85,9 @@ int main(int argc, char *argv[])
 
 
 	/* ====================== TESTING BASIS ====================*/
-	//vectorFields.constructArbitraryField();
-	//vectorFields.constructArbitraryField2D();
+	vectorFields.constructArbitraryField();
+	vectorFields.constructArbitraryField2D();
+
 	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
@@ -95,6 +98,12 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeParallelTransportPath(viewer);
 	//vectorFields.visualizeParallelTransport(viewer);
 
+	//vectorFields.measureDirichletEnergy();
+
+	/* ====================== TESTING BASIS ====================*/
+	Eigen::VectorXd v_in = vectorFields.arbField2D;
+	Eigen::VectorXd v_out;
+	const double mu = 0.04;
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -112,7 +121,7 @@ int main(int argc, char *argv[])
 	/* VISUALIZATION FOR TESTING PURPOSE */
 	//vectorFields.visualizeNeighboringRings(viewer);
 	//vectorFields.visualizeDijkstraFace(viewer);
-	//vectorFields.visualizeArbField(viewer);
+	vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
@@ -196,7 +205,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'c':
 		case 'C':
-			
+			vectorFields.computeSmoothing(mu, v_in, v_out);
+			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			v_in = v_out; 
 			break; 
 		default:
 			break;

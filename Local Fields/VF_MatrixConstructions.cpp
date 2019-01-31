@@ -748,7 +748,7 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Divergent Part (2D) - Curl Part (2D) ";
-		SF2D = LapDiv2D - LapCurl2D;
+		SF2D = LapCurl2D - LapDiv2D;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;

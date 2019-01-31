@@ -1751,6 +1751,30 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)
+{
+	/* First flavour */
+	Eigen::SparseMatrix<double> A = MF2D + mu*SF2D;
+
+	/* Second flavour */
+	//Eigen::SparseMatrix<double> A = MF2D + mu*SF2D*MF2Dinv*SF2D;
+	Eigen::VectorXd b = MF2D*v_in;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A);
+	v_out = sparseSolver.solve(b);
+
+	/* Computing the L2-norm of the smoothed fields */
+	double diff1 = (v_out - v_in).transpose()*MF2D*(v_out - v_in);
+	double diff2 = v_in.transpose()*MF2D*v_in;
+	double sqrt_norm = sqrt(diff1 / diff2);
+	printf("The diff of v_out and v_in is %.10f \n", sqrt_norm);
+
+	/* Computing the energy */
+	double energy1 = v_in.transpose() * ((B2D * MF2D) * v_in);
+	double energy2 = v_out.transpose() * ((B2D * MF2D) * v_out);
+	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
+}
+
 void VectorFields::constructSamples(const int &n)
 {
 	numSample = n; 
