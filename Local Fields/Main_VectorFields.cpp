@@ -175,10 +175,10 @@ int main(int argc, char *argv[])
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
 			break;
-		case 'x':
-		case 'X':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			selectFace = !selectFace;
+		//case 'x':
+		//case 'X':
+			//C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			//selectFace = !selectFace;
 			//cout << "Select face: " << selectFace << endl; 
 			//if (selectFace) cout << "Face is selected" << endl; 
 			//selectedFace = rand() % F.rows();
@@ -187,10 +187,21 @@ int main(int argc, char *argv[])
 			break;
 		case 'c':
 		case 'C':
-			vectorFields.computeSmoothing(mu, v_in, v_out);
-			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			vectorFields.computeSmoothing(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
+		case 'x':
+		case 'X':
+			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			break;
+		case 'v':
+		case 'V':
+			vectorFields.visualize2DfieldsScaled(viewer, v_in, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			break; 
+		case 'b':
+		case 'B':
+			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			break;
 		default:
 			break;
 			return false;
