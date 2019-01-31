@@ -242,6 +242,49 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 	}
 }
 
+void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
+{
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 2.0;
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	/* Drawing faces */
+	Eigen::RowVector3d c, g;
+	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
+	for (int i = 0; i < FaceToDraw.size(); i += 1)
+	{
+		c = FC.row(FaceToDraw[i]);
+		g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
+		VectorBlock.row(i) = g;
+	}
+	//cout << "picking face to draw: done \n" << endl;
+
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);
+	for (int i = 0; i<FaceToDraw.size(); i += 1)
+	{
+		c = FC.row(FaceToDraw[i]);
+		//f = VectorBlock.row(i);
+		v = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+		ALoc = A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2);
+		f = (ALoc * v).transpose();
+		h1 = (ALoc* (rotMat1*v)).transpose();
+		h2 = (ALoc* (rotMat2*v)).transpose();
+		e = c + f.normalized()*lengthScale;
+		viewer.data().add_edges(c, e, color);
+		viewer.data().add_edges(e, e + h1.normalized()*lengthScale / HEAD_RATIO, color);
+		viewer.data().add_edges(e, e + h2.normalized()*lengthScale / HEAD_RATIO, color);
+	}
+}
+
 void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
 {
 	Eigen::Vector3d e;
