@@ -1896,7 +1896,7 @@ void VectorFields::constructBasis()
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
-				localField.measureXF(doubleArea, J);
+				//localField.measureXF(doubleArea, J);
 		}
 
 	}
@@ -2161,9 +2161,9 @@ void VectorFields::normalizeBasisAbs()
 	for (int i = 0; i < normSum.rows(); i++) {
 		for (int j = 0; j < normSum.cols(); j++) {
 			normSum(i, j) = 0.0;
-			normSumN(i, j) = 0.0;
-			BasisSumN(2 * i + 0, j) = 0.0;
-			BasisSumN(2 * i + 1, j) = 0.0;
+			//normSumN(i, j) = 0.0;
+			//BasisSumN(2 * i + 0, j) = 0.0;
+			//BasisSumN(2 * i + 1, j) = 0.0;
 		}
 	}
 
@@ -2193,16 +2193,16 @@ void VectorFields::normalizeBasisAbs()
 
 	Basis.setFromTriplets(BNTriplet.begin(), BNTriplet.end());	
 
-	for (int k = 0; k < Basis.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
-			if (it.row() % 2 == 1) continue;
-
-			double a = it.value();
-			double b = Basis.coeff(it.row() + 1, it.col());
-			double norm = sqrt(a*a + b*b);
-			normSumN(it.row() / 2, it.col() % 2) += norm;
-		}
-	}
+	//for (int k = 0; k < Basis.outerSize(); ++k) {
+	//	for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
+	//		if (it.row() % 2 == 1) continue;
+	//
+	//		double a = it.value();
+	//		double b = Basis.coeff(it.row() + 1, it.col());
+	//		double norm = sqrt(a*a + b*b);
+	//		normSumN(it.row() / 2, it.col() % 2) += norm;
+	//	}
+	//}
 
 	//for (int k = 0; k < 100; k++) {
 	//	printf("--> [%d]=<%.4f,%.4f>\n", k, normSumN(k, 0), normSumN(k, 1));
@@ -2234,7 +2234,7 @@ void VectorFields::setupUserBasis()
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Constructing Local Basis...";
+	cout << "> Computign Reduced Bi-Laplacian...";
 
 	B2DBar = Basis.transpose() * B2D * Basis; 
 

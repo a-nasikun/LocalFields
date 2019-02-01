@@ -30,12 +30,16 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
+
+	/* MODEL FOR TESTING, LARGE ONES */
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -79,8 +83,8 @@ int main(int argc, char *argv[])
 	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
-	vectorFields.constructArbitraryField();
-	vectorFields.constructArbitraryField2D();
+	//vectorFields.constructArbitraryField();
+	//vectorFields.constructArbitraryField2D();
 	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
@@ -101,15 +105,15 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer);	
-	//vectorFields.visualizeUserConstraints(viewer);
+	vectorFields.visualizeApproxResult(viewer);	
+	vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 	/* VISUALIZATION FOR TESTING PURPOSE */
 	//vectorFields.visualizeNeighboringRings(viewer);
 	//vectorFields.visualizeDijkstraFace(viewer);
-	vectorFields.visualizeArbField(viewer);
+	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
@@ -187,7 +191,7 @@ int main(int argc, char *argv[])
 			break;
 		case 'c':
 		case 'C':
-			vectorFields.computeSmoothing(mu, v_in, v_out);			
+			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
 		case 'x':
