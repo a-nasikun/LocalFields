@@ -191,10 +191,10 @@ int main(int argc, char *argv[])
 			viewer.data().set_mesh(V, F);
 			break;
 
-		case 'b':
-		case 'B':
-			vectorFields.visualizeLocalSubdomain(viewer);
-			break;
+		//case 'b':
+		//case 'B':
+		//	vectorFields.visualizeLocalSubdomain(viewer);
+		//	break;
 		//case 'x':
 		//case 'X':
 			//C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
