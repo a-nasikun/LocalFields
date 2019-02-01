@@ -143,6 +143,9 @@ public:
 	void testBasis();
 	void measureU1andJU0();
 
+	// APPLICATIONS ON REDUCED SYSTEM
+	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
+
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
 	void constructArbitraryField2D();
