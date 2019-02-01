@@ -2523,6 +2523,39 @@ void VectorFields::measureU1andJU0()
 	//cout << "_____|Xf(1)-J*Xf(0)|M = " << diffNorm << endl; 
 }
 
+/* ====================== APPLICATIONS ON REDUCED SYSTEM ============================*/
+void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)
+{
+	/* Reduced Matrices */
+	Eigen::SparseMatrix<double> MF2DBar = Basis.transpose()*MF2D*Basis; 
+	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose()*SF2D*Basis;
+	Eigen::VectorXd v_inBar = Basis.transpose()*v_in;
+	Eigen::VectorXd v_outBar;
+
+	/* First flavour */
+	Eigen::SparseMatrix<double> AL = MF2DBar + mu*SF2DBar ;
+
+	/* Second flavour */
+	//Eigen::SparseMatrix<double> A = MF2DBar + mu*SF2DBar*(Basis.transpose()*MF2Dinv*Basis)*SF2DBar;
+	Eigen::VectorXd b = MF2DBar*v_inBar;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(AL);
+	v_outBar = sparseSolver.solve(b);
+	v_out = Basis*v_outBar;
+	cout << "VOUT \n" << v_out.block(0, 0, 100, 1) << endl; 
+
+	/* Computing the L2-norm of the smoothed fields w.r.t input*/
+	double diff1 = (v_out - v_in).transpose()*MF2D*(v_out - v_in);
+	double diff2 = v_in.transpose()*MF2D*v_in;
+	double sqrt_norm = sqrt(diff1 / diff2);
+	printf("The diff of v_out and v_in is %.10f \n", sqrt_norm);
+
+	/* Computing the energy */
+	double energy1 = v_in.transpose() * ((B2D * MF2D) * v_in);
+	double energy2 = v_out.transpose() * ((B2D * MF2D) * v_out);
+	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
+}
+
 /* ====================== MESH-RELATED FUNCTIONS ============================*/
 void VectorFields::readMesh(const string &meshFile)
 {
