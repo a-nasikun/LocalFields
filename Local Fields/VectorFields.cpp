@@ -1826,7 +1826,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.3, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2555,6 +2555,32 @@ void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorX
 	double energy1 = v_in.transpose() * ((B2D * MF2D) * v_in);
 	double energy2 = v_out.transpose() * ((B2D * MF2D) * v_out);
 	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
+}
+
+void VectorFields::ConstructCurvatureTensor()
+{
+	/* Obtain the principal curvature using LibIGL (vertex-based) */
+	Eigen::MatrixXd PD1, PD2;
+	Eigen::VectorXd PV1, PV2;
+	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
+
+	/* Covert the vertex-based to face-based principal curvatures */
+	Eigen::MatrixXd CurvatureTensor3D;
+	CurvatureTensor3D.setZero(3*F.rows(), 2);
+	for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < F.cols(); j++)
+		{
+			/* Maximum curvature direction */
+			CurvatureTensor3D.block(3*i, 0, 3, 1) += (PD1.row(F(i, j))).transpose()/3.0;
+			/* Minimum curvature direction */
+			CurvatureTensor3D.block(3*i, 1, 3, 1) += (PD2.row(F(i, j))).transpose()/3.0;
+		}
+		//CurvatureTensor3D.row(i) /= double(F.cols());		
+	}
+
+	CurvatureTensor = A.transpose() * CurvatureTensor3D; 
+
 }
 
 /* ====================== MESH-RELATED FUNCTIONS ============================*/

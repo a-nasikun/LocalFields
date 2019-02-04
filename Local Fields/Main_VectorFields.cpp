@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
-	string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(5000);
+	vectorFields.selectFaceToDraw(2500);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -76,10 +76,10 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
 
@@ -103,11 +103,13 @@ int main(int argc, char *argv[])
 
 	//vectorFields.measureDirichletEnergy();
 
-	/* ====================== TESTING BASIS ====================*/
+	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	Eigen::VectorXd v_in = vectorFields.arbField2D;
 	Eigen::VectorXd v_out;
 	const double mu = 4; 
 
+	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
+	vectorFields.ConstructCurvatureTensor();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -117,8 +119,8 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	vectorFields.visualizeApproxResult(viewer);	
-	vectorFields.visualizeUserConstraints(viewer);
+	//vectorFields.visualizeApproxResult(viewer);	
+	//vectorFields.visualizeUserConstraints(viewer);
 	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
@@ -139,6 +141,9 @@ int main(int argc, char *argv[])
 	//testCUDA_LULinearSolver();
 	//testLDLTLinearSolver();
 	//testMKL_Pardiso();
+
+	/* VISUALIZATION OF APPLICATIONS */
+	vectorFields.visualizeCurvatureTensor(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{

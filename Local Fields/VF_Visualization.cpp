@@ -274,7 +274,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 20.0; 
+	const double EDGE_RATIO = 15.0; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -576,6 +576,35 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 void VectorFields::visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v)
 {
 	visualize2DfieldsScaled(viewer, v, Eigen::RowVector3d(0.1, 0.9, 0.3), 4000);
+}
+
+void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
+{
+	// Average edge length for sizing
+	const double avg = igl::avg_edge_length(V, F);
+	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8);
+
+	/* VERTEX BASED */
+	//// Draw a blue segment parallel to the minimal curvature direction
+	//viewer.data().add_edges(V + PD1*avg, V - PD1*avg, blue);
+
+	//// Draw a red segment parallel to the maximal curvature direction
+	//viewer.data().add_edges(V + PD2*avg, V - PD2*avg, red);
+
+	/* FACE BASED */
+	//viewer.data().add_edges(FC + avg*CurvatureTensor3D.block(0, 0, F.rows(), 3), FC - avg*CurvatureTensor3D.block(0, 0, F.rows(), 3), blue);
+	//viewer.data().add_edges(FC + avg*CurvatureTensor3D.block(0, 3, F.rows(), 3), FC - avg*CurvatureTensor3D.block(0, 3, F.rows(), 3), red);
+	
+	//for (int i = 0; i < F.rows(); i++) 
+	//{
+	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 0, 3, 1)).transpose(), blue);
+	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 1, 3, 1)).transpose(), red);
+	//}
+
+	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 5000);
+	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 5000);
+	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red, 5000);
+	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red, 5000);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
