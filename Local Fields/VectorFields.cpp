@@ -1799,9 +1799,9 @@ void VectorFields::constructBasis()
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Construting Basis...\n";
+	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.5, 2) + pow(1.5, 2));
+	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis

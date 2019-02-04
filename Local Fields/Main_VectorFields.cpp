@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=5000, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -34,12 +34,12 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
-	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
+	string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
