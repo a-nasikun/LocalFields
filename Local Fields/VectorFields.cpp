@@ -2564,6 +2564,14 @@ void VectorFields::ConstructCurvatureTensor()
 	Eigen::VectorXd PV1, PV2;
 	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
 
+	/* Test on curvature and mean curvature*/
+	double meanCurve1 = 0.5*(PV1(0) + PV2(0));
+	double curveDir1 = PD1.row(0).dot(PD2.row(0));
+	printf("Mean=%.4f | dot=%.4f \n", meanCurve1, curveDir1);
+	meanCurve1 = 0.5*(PV1(1) + PV2(1));
+	curveDir1 = PD1.row(1).dot(PD2.row(1));
+	printf("Mean=%.4f | dot=%.4f \n", meanCurve1, curveDir1);
+
 	/* Covert the vertex-based to face-based principal curvatures */
 	Eigen::MatrixXd CurvatureTensor3D;
 	CurvatureTensor3D.setZero(3*F.rows(), 2);
