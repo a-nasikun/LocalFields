@@ -117,6 +117,7 @@ public:
 
 	// APPLICATIONS ON GLOBAL SYSTEM
 	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
+	void computeEigenFields();
 
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
@@ -138,19 +139,20 @@ public:
 	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
-	void computeEigenFields();
-	void computeApproxEigenFields();
 
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
 	void testBasis();
 	void measureU1andJU0();
+	void measureL2NormEigVectors();
 
 	// APPLICATIONS ON REDUCED BASIS
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
 	void ConstructCurvatureTensor();
+	
+	void computeApproxEigenFields();
 
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
@@ -211,6 +213,8 @@ public:
 	// VISUALIZATION of APPLICATIONs
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
+
+
 
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction

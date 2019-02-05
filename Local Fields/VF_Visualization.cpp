@@ -712,7 +712,7 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 	viewer.data().set_mesh(V, F);
 
 	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
+	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 1.0);
 }
 
 void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
@@ -722,7 +722,7 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	viewer.data().set_mesh(V, F);
 
 	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
+	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 30.0);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

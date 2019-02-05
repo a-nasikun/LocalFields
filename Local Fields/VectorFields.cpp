@@ -2529,6 +2529,26 @@ void VectorFields::measureU1andJU0()
 	//cout << "_____|Xf(1)-J*Xf(0)|M = " << diffNorm << endl; 
 }
 
+void VectorFields::measureL2NormEigVectors()
+{
+	/* Getting overview of first few values*/
+	printf("FULL \t REDUCED\n");
+	for (int i = 0; i < 20; i++)
+	{
+		printf("%.4f \t %.4f \n", eigFieldFull2D(0,i), eigFieldReduced2D(0,i));
+	}
+
+	/* Computing the norm*/
+	for (int i = 0; i < 100; i++)
+	{
+		Eigen::VectorXd diff = eigFieldFull2D.col(i) - eigFieldReduced2D.col(i);
+		double norm1 = diff.transpose()*MF2D*diff; 
+		double norm2 = eigFieldFull2D.col(i).transpose()*MF2D*eigFieldFull2D.col(i); 
+		double l2norm = sqrt(norm1 / norm2);
+		printf("Norm of %d diff is %.10f \n", i, l2norm);
+	}
+}
+
 /* ====================== APPLICATIONS ON REDUCED SYSTEM ============================*/
 void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)
 {
