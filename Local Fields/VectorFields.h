@@ -139,6 +139,7 @@ public:
 	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
 	void computeEigenFields();
+	void computeApproxEigenFields();
 
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
@@ -172,6 +173,7 @@ public:
 	//void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
 	void visualizeDijkstra(igl::opengl::glfw::Viewer &viewer);
 	void visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i);
+	void visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i);
 	void visualizeArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID);
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);
@@ -251,8 +253,8 @@ protected:
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, localSystem;
-	Eigen::VectorXd					eigValues; 
-	Eigen::MatrixXd					eigFieldRed2D;
+	Eigen::VectorXd					eigValuesFull, eigValuesReduced;
+	Eigen::MatrixXd					eigFieldReduced2D, eigFieldFull2D;
 	vector<vector<Eigen::Vector2d>> mappedBasis; 
 	vector<vector<Eigen::Vector2d>> mappedBasis2;
 	vector<int>						PTpath, PTsharedEdges;

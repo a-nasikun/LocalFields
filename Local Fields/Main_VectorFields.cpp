@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=5000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -25,10 +25,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
+	string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 
@@ -54,7 +56,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(2500);
+	vectorFields.selectFaceToDraw(5000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -89,8 +91,8 @@ int main(int argc, char *argv[])
 
 
 	/* ====================== TESTING BASIS ====================*/
-	vectorFields.constructArbitraryField();
-	vectorFields.constructArbitraryField2D();
+	//vectorFields.constructArbitraryField();
+	//vectorFields.constructArbitraryField2D();
 	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
@@ -182,12 +184,14 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeBasisNormalized(viewer, basisId);
 			break;
 		case '7':
-			eigToShow = max(eigToShow - 10, 0);
+			eigToShow = max(eigToShow - 1, 0);
 			vectorFields.visualizeEigenfields(viewer, eigToShow);
+			printf("Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValues(eigToShow));
 			break;
 		case '8':
-			eigToShow = min(eigToShow + 10, 2 * numSample - 1);
+			eigToShow = min(eigToShow + 1, 2 * numSample - 1);
 			vectorFields.visualizeEigenfields(viewer, eigToShow);
+			printf("Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValues(eigToShow));
 			break;
 		case '9':
 			vectorFields.visualizeApproximatedFields(viewer);

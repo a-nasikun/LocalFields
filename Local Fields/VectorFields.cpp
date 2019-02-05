@@ -1819,28 +1819,28 @@ void VectorFields::farthestPointSampling()
 }
 
 void VectorFields::constructBasis()
-{	
+{
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.3, 2) + pow(1.5, 2));
-	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
+	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
 	try {
 		BasisTemp.resize(2 * F.rows(), 2 * Sample.size());
 	}
-	catch(string &msg) {
+	catch (string &msg) {
 		cout << "Cannot allocate memory for basis.." << endl;
 	}
-	
+
 	Basis.resize(BasisTemp.rows(), BasisTemp.cols());
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
 
-	
+
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 8;
 	durations.resize(NUM_PROCESS);
@@ -1849,18 +1849,18 @@ void VectorFields::constructBasis()
 		durations[i] = t1 - t1;
 		//cout << "Init dur " << i<< " = " << durations[i].count() << " seconds" << endl;
 	}
-	
+
 	int id, tid, ntids, ipts, istart, iproc;
-	
+
 
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
-	{		
+	{
 		iproc = omp_get_num_procs();
 		//iproc = 1; 
-		tid		= omp_get_thread_num();
-		ntids	= omp_get_num_threads();
-		ipts	= (int)ceil(1.00*(double)Sample.size() / (double)ntids);
-		istart	= tid * ipts;
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		istart = tid * ipts;
 		if (tid == ntids - 1) ipts = Sample.size() - istart;
 		if (ipts <= 0) ipts = 0;
 
@@ -1868,7 +1868,7 @@ void VectorFields::constructBasis()
 		for (int i = 0; i < F.rows(); i++) {
 			D(i) = numeric_limits<double>::infinity();
 		}
-		
+
 		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
 
 		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
@@ -1878,74 +1878,73 @@ void VectorFields::constructBasis()
 			if (id >= Sample.size()) break;
 
 			LocalFields localField(id);
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-				t2 = chrono::high_resolution_clock::now();
-				durations[0] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[0] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
-				t2 = chrono::high_resolution_clock::now();
-				durations[1] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[1] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalElements(F);
-				t2 = chrono::high_resolution_clock::now();
-				durations[2] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[2] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			//localField.constructMatrixBLocal(B2D);
 			localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-				t2 = chrono::high_resolution_clock::now();
-				durations[3] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[3] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalConstraints();
-				t2 = chrono::high_resolution_clock::now();
-				durations[4] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[4] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.setupRHSLocalProblemMapped();
-				t2 = chrono::high_resolution_clock::now();
-				durations[5] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[5] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.setupLHSLocalProblemMapped();
-				t2 = chrono::high_resolution_clock::now();
-				durations[6] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[6] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
-				t2 = chrono::high_resolution_clock::now();
-				durations[7] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[7] += t2 - t1;
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
 
-				localField.measureXF(doubleArea, J);
+			localField.measureXF(doubleArea, J);
 
-				// To get local elements for visualizing subdomain
-				if (id == 0) {
-					localSystem.resize(F.rows());
-					for (int fid = 0; fid < F.rows(); fid++) {
-						localSystem(fid) = 0.0;
-					}
-					for (int fid : localField.SubDomain) {
-						localSystem(fid) = 0.3;
-					}
-
-					for (int fid : localField.Boundary) {
-						localSystem(fid) = 0.7;
-					}
-
-					localSystem(localField.sampleID) = 1.0;
+			// To get local elements for visualizing subdomain
+			if (id == 0) {
+				localSystem.resize(F.rows());
+				for (int fid = 0; fid < F.rows(); fid++) {
+					localSystem(fid) = 0.0;
+				}
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
 				}
 
+				for (int fid : localField.Boundary) {
+					localSystem(fid) = 0.7;
+				}
 
+				localSystem(localField.sampleID) = 1.0;
+			}
+		}
 	}
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
-	cout << "in " << duration.count() << " seconds." << endl; 
+	cout << "in " << duration.count() << " seconds." << endl;
 
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
@@ -1953,7 +1952,7 @@ void VectorFields::constructBasis()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
-	
+
 	cout << "....Partition of unity of the basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -1987,7 +1986,8 @@ void VectorFields::constructBasis()
 	// Information about Basis
 	printf("> Basis Structure information \n");
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
-	printf("....NNZ per row = %.2f\n", (double) Basis.nonZeros() / (double) Basis.rows());
+	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
+
 }
 
 void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet)
@@ -2484,12 +2484,17 @@ void VectorFields::obtainUserVectorFields()
 
 void VectorFields::computeEigenFields()
 {
+	computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
+	cout << "::::: Eigen Values (Full Res) \n" << eigValuesReduced << endl;
+}
+
+void VectorFields::computeApproxEigenFields()
+{
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 	Eigen::SparseMatrix<double> Sbar = Basis.transpose() * SF2D * Basis;
-	Sbar = -Sbar; 
-	//computeEigenGPU(Sbar, Mbar, eigFieldRed2D, eigValues);
-	computeEigenMatlab(Sbar, Mbar, eigFieldRed2D, eigValues);
-	cout << "::::: Eigen Values \n" << eigValues << endl; 
+	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 }
 
 void VectorFields::measureApproxAccuracyL2Norm()
