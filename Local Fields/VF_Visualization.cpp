@@ -712,7 +712,7 @@ void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
 {
-	Eigen::VectorXd eigfields = eigFieldReduced2D.col(i);
+	Eigen::VectorXd eigfields = eigFieldFull2D.col(i);
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 

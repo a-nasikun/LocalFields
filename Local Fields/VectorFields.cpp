@@ -2485,7 +2485,7 @@ void VectorFields::obtainUserVectorFields()
 void VectorFields::computeEigenFields()
 {
 	computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
-	cout << "::::: Eigen Values (Full Res) \n" << eigValuesReduced << endl;
+	cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 }
 
 void VectorFields::computeApproxEigenFields()

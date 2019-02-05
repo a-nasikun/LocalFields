@@ -3,7 +3,8 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=1000, selectedVertex;
+int eigToShow = 0, basisId = 0, numSample = 1000, selectedVertex;
+int eigToShow2 = 0;
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
+	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
 	//vectorFields.writeBasisToFile();
 	//vectorFields.writeField3DToFile();
 	vectorFields.computeEigenFields();
+	vectorFields.computeApproxEigenFields();
 
 
 	/* ====================== TESTING BASIS ====================*/
@@ -186,12 +188,12 @@ int main(int argc, char *argv[])
 		case '7':
 			eigToShow = max(eigToShow - 1, 0);
 			vectorFields.visualizeEigenfields(viewer, eigToShow);
-			printf("Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValues(eigToShow));
+			printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
 			break;
 		case '8':
-			eigToShow = min(eigToShow + 1, 2 * numSample - 1);
+			eigToShow = min(eigToShow + 1, 2 * 100 - 1);
 			vectorFields.visualizeEigenfields(viewer, eigToShow);
-			printf("Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValues(eigToShow));
+			printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
 			break;
 		case '9':
 			vectorFields.visualizeApproximatedFields(viewer);
@@ -201,6 +203,18 @@ int main(int argc, char *argv[])
 		case '0':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			break;
+		case 'y':
+		case 'Y':
+			eigToShow2 = max(eigToShow2 - 1, 0);
+			vectorFields.visualizeApproxEigenfields(viewer, eigToShow2);
+			printf("[Approx] Eigen vector: %d (eigval=%.3f)\n", eigToShow2, vectorFields.eigValuesReduced(eigToShow2));
+			break;
+		case 'u':
+		case 'U':
+			eigToShow2 = min(eigToShow2 + 1, 2 * 100 - 1);
+			vectorFields.visualizeApproxEigenfields(viewer, eigToShow2);
+			printf("[Approx] Eigen vector: %d (eigval=%.3f)\n", eigToShow2, vectorFields.eigValuesReduced(eigToShow2));
 			break;
 
 		//case 'b':
