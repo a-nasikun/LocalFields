@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//vectorFields.testBasis();
-	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
-	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
+	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
+	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
 
 	/* ====================== PARALLEL TRANSPORT ====================*/
 	//vectorFields.computeDijkstraForParallelTransport(200, 5000);
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 		switch (key)
 		{
 		case '1':
-			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);			
+			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
 			vectorFields.visualizeApproximatedFields(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 			break;
 		case '3':
 			vectorFields.visualizeGlobalConstraints(viewer);
-			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
+			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//basisId = max(basisId - 1, 0);
 			//vectorFields.visualizeBasis(viewer, basisId);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 			break; 
 		case 'v':
 		case 'V':
-			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 1.0);
 			break; 
 		case 'b':
 		case 'B':

@@ -132,7 +132,7 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//viewer.data().clear();
 	//viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
-	visualize2DfieldsScaled(viewer, Xf, color, 5000);
+	visualize2DfieldsScaled(viewer, Xf, color, 2.0);
 }
 
 void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
@@ -267,14 +267,14 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	}
 }
 
-void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
+void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &scale)
 {
 	//viewer.data().clear();
 	//viewer.data().set_mesh(V, F);
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 1.0; 
+	const double EDGE_RATIO = scale; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -312,11 +312,6 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
 	}
 	//cout << "Drawing: done \n" << endl;
-}
-
-void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &percent)
-{
-
 }
 
 void VectorFields::visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
@@ -499,7 +494,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl; 
 	//visualize2DfieldsNormalized(viewer, XFullDim, color);
-	visualize2DfieldsScaled(viewer, XFullDim, color, 5000);
+	visualize2DfieldsScaled(viewer, XFullDim, color, 1.0);
 	//visualize2DfieldsRegular(viewer, XFullDim, color);
 }
 
@@ -575,7 +570,7 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 
 void VectorFields::visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v)
 {
-	visualize2DfieldsScaled(viewer, v, Eigen::RowVector3d(0.1, 0.9, 0.3), 4000);
+	visualize2DfieldsScaled(viewer, v, Eigen::RowVector3d(0.1, 0.9, 0.3), 1.0);
 }
 
 void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
@@ -601,10 +596,10 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 1, 3, 1)).transpose(), red);
 	//}
 
-	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 5000);
-	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 5000);
-	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red, 5000);
-	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red, 5000);
+	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 1.0);
+	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 1.0);
+	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
+	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
@@ -739,7 +734,7 @@ void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
 
 	/* As a Vector field */
 	Eigen::RowVector3d color(0.8, 0.4, 0.2);
-	visualize2DfieldsScaled(viewer, arbField2D, color, 5000);
+	visualize2DfieldsScaled(viewer, arbField2D, color, 1.0);
 }
 
 void VectorFields::visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID)
