@@ -2528,11 +2528,11 @@ void VectorFields::measureU1andJU0()
 void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)
 {
 	/* Reduced Matrices */
-	Eigen::SparseMatrix<double> MF2DBar = Basis.transpose()*MF2D*Basis; 
-	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose()*SF2D*Basis;
+	Eigen::SparseMatrix<double> MF2DBar = (Basis.transpose()*MF2D)*Basis; 
+	Eigen::SparseMatrix<double> SF2DBar = (Basis.transpose()*SF2D)*Basis;
 	Eigen::VectorXd v_inBar = Basis.transpose()*v_in;
 	Eigen::VectorXd v_outBar;
-
+	cout << "The reduced matrices are set up\n"; 
 	/* First flavour */
 	Eigen::SparseMatrix<double> AL = MF2DBar + mu*SF2DBar ;
 

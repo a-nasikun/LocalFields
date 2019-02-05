@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
 
 
 	/* ====================== TESTING BASIS ====================*/
-	//vectorFields.constructArbitraryField();
-	//vectorFields.constructArbitraryField2D();
+	vectorFields.constructArbitraryField();
+	vectorFields.constructArbitraryField2D();
 	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 5000);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 5000);
@@ -106,10 +106,10 @@ int main(int argc, char *argv[])
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	Eigen::VectorXd v_in = vectorFields.arbField2D;
 	Eigen::VectorXd v_out;
-	const double mu = 4; 
+	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	vectorFields.ConstructCurvatureTensor();
+	//vectorFields.ConstructCurvatureTensor();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 	//testMKL_Pardiso();
 
 	/* VISUALIZATION OF APPLICATIONS */
-	vectorFields.visualizeCurvatureTensor(viewer);
+	//vectorFields.visualizeCurvatureTensor(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -216,20 +216,23 @@ int main(int argc, char *argv[])
 			break;
 		case 'c':
 		case 'C':
+			printf("Computing smoothing on Reduced basis\n");
 			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
 		case 'x':
 		case 'X':
-			vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
-			break;
+			printf("Computing smoothing on full res\n");
+			vectorFields.computeSmoothing(mu, v_in, v_out);
+			v_in = v_out;
+			break; 
 		case 'v':
 		case 'V':
-			vectorFields.visualize2DfieldsScaled(viewer, v_in, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
 			break; 
 		case 'b':
 		case 'B':
-			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 100);
+			v_in = vectorFields.arbField2D; 
 			break;
 		default:
 			break;
