@@ -204,7 +204,7 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 {
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 2.0;
+	const double EDGE_RATIO = 0.2;
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -558,9 +558,14 @@ void VectorFields::visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const E
 
 void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
+	cout << "Visualizing the curvature fields\n";
 	// Average edge length for sizing
 	const double avg = igl::avg_edge_length(V, F);
 	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8);
+
+	/* From tensor */
+	Eigen::VectorXd maxCurvField = A*CurvatureTensorField.col(0);
+	Eigen::VectorXd minCurvField = A*CurvatureTensorField.col(1);
 
 	/* VERTEX BASED */
 	//// Draw a blue segment parallel to the minimal curvature direction
@@ -579,10 +584,15 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 1, 3, 1)).transpose(), red);
 	//}
 
-	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 1.0);
-	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 1.0);
-	visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
-	visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
+	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 1.0);
+	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 1.0);
+	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
+	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
+
+	visualize2DfieldsNormalized(viewer,  maxCurvField, blue, 2);
+	visualize2DfieldsNormalized(viewer, -maxCurvField, blue, 2);
+	visualize2DfieldsNormalized(viewer,  minCurvField, red,  2);
+	visualize2DfieldsNormalized(viewer, -minCurvField, red,  2);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/

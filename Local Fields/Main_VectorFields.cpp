@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=5000, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=100, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -83,8 +84,8 @@ int main(int argc, char *argv[])
 	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
-	vectorFields.constructArbitraryField();
-	vectorFields.constructArbitraryField2D();
+	//vectorFields.constructArbitraryField();
+	//vectorFields.constructArbitraryField2D();
 	//vectorFields.testBasis();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
@@ -98,7 +99,8 @@ int main(int argc, char *argv[])
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	//vectorFields.ConstructCurvatureTensor();
+	vectorFields.ConstructCurvatureTensor();
+	vectorFields.ComputeCurvatureFields();
 
 
 	/* ==================== VISUALIZATION ======================== */
@@ -133,7 +135,7 @@ int main(int argc, char *argv[])
 	//testMKL_Pardiso();
 
 	/* VISUALIZATION OF APPLICATIONS */
-	//vectorFields.visualizeCurvatureTensor(viewer);
+	vectorFields.visualizeCurvatureTensor(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{

@@ -148,6 +148,7 @@ public:
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
 	void ConstructCurvatureTensor();
+	void ComputeCurvatureFields();
 
 	// ITEMS FOR TESTING ONLY
 	void constructArbitraryField();
@@ -238,7 +239,7 @@ protected:
 	Eigen::SparseMatrix<double>		CBar, B2DBar;
 
 	// Variables related to Applications
-	Eigen::MatrixXd					CurvatureTensor;
+	Eigen::MatrixXd					CurvatureTensor, CurvatureTensorField;
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
