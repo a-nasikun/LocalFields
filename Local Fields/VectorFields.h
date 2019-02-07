@@ -167,6 +167,8 @@ public:
 	void constructParallelTransport();
 	void writeBasisToFile();
 	void writeField3DToFile();
+	void printDataForVTK();
+	void writeEigenFieldsForVTK();
 	
 	// VISUALIZATION of TESTING
 	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);

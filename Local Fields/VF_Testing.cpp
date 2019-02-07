@@ -1,4 +1,5 @@
 #include "VectorFields.h"
+#include <fstream>
 
 /* ====================== ITEMS FOR TESTING ONLY ============================*/
 void VectorFields::constructArbitraryField()
@@ -306,4 +307,76 @@ void VectorFields::writeField3DToFile()
 {
 	Eigen::VectorXd Field3D = A*XFullDim;
 	WriteDenseMatrixToMatlab(Field3D, "hello");
+}
+
+void VectorFields::printDataForVTK()
+{
+	/* PRint vertices*/
+	cout << "POINTS " << V.rows() << " float\n";
+	cout << V << endl;
+
+	/* Print faces */
+	cout << "POLYGONS " << F.rows() << " " << F.rows() * (F.cols()+1) << endl; 
+	for (int i = 0; i < F.rows(); i++)
+	{
+		cout << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << endl;
+	}
+
+	/* Print eigenfields*/
+	Eigen::VectorXd eig3D;
+	eig3D = A * eigFieldFull2D.col(0);
+	cout << "CELL_DATA " << F.rows() << endl; 
+	cout << "VECTORS EigenField float\n";
+	for (int i = 0; i < F.rows(); i++)
+	{
+		cout << F.cols() << " " << eig3D(3 * i + 0) << " " << eig3D(3 * i + 1) << " " << eig3D(3 * i + 2) << endl;
+	}
+}
+
+void VectorFields::writeEigenFieldsForVTK()
+{
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Torus_73k_EigFields_ref.vtk";
+	ofstream file(filename);
+	if (file.is_open())
+	{
+		file << "# vtk DataFile Version 2.0\n";
+		file << "Torus Eigenfields\n";
+		file << "ASCII\n";
+		file << "DATASET POLYDATA\n";
+
+		/* PRint vertices*/
+		file << "POINTS " << V.rows() << " float\n";
+		for (int i = 0; i < V.rows(); i++)
+		{
+			file << V(i, 0) << " " << V(i, 1) << " " << V(i, 2) << "\n";
+		}
+
+		/* Print faces */
+		file << "POLYGONS " << F.rows() << " " << F.rows() * (F.cols() + 1) << "\n";
+		for (int i = 0; i < F.rows(); i++)
+		{
+			file << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << "\n";
+		}
+
+		/* Print eigenfields*/
+		Eigen::VectorXd eig3D;
+		Eigen::MatrixXd EigFields;
+
+		//EigFields = Basis.block(0, 0, Basis.rows(), eigFieldReduced2D.cols())*eigFieldReduced2D;
+		EigFields = eigFieldFull2D;
+		double const scale = 20.0;
+		//for (int j = 0; j < EigFields.cols(); j++)
+		//{
+			eig3D = A * EigFields.col(3);
+			file << "CELL_DATA " << F.rows() << "\n";
+			file << "VECTORS EigenField_3 float\n";
+			for (int i = 0; i < F.rows(); i++)
+			{
+				file << scale*eig3D(3 * i + 0) << " " << scale*eig3D(3 * i + 1) << " " << scale*eig3D(3 * i + 2) << "\n";
+			}
+		//}
+
+		file.close();
+	}
+
 }
