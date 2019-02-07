@@ -1,5 +1,8 @@
 #include "VectorFields.h"
 
+#include <igl/per_vertex_normals.h>
+#include <Eigen/Eigenvalues>
+
 /* ====================== SETTING UP MATRICES ============================*/
 void VectorFields::constructConstraints()
 {
@@ -2584,36 +2587,118 @@ void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorX
 
 void VectorFields::ConstructCurvatureTensor()
 {
-	/* Obtain the principal curvature using LibIGL (vertex-based) */
-	Eigen::MatrixXd PD1, PD2;
-	Eigen::VectorXd PV1, PV2;
-	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
+	cout << "Constructing curvature tensor \n";
+	cout << "__Computing vertex normal\n";
+	/* Getting normals on each face */
+	Eigen::MatrixXd NV;
+	igl::per_vertex_normals(V, F, NV);
 
-	/* Test on curvature and mean curvature*/
-	double meanCurve1 = 0.5*(PV1(0) + PV2(0));
-	double curveDir1 = PD1.row(0).dot(PD2.row(0));
-	printf("Mean=%.4f | dot=%.4f \n", meanCurve1, curveDir1);
-	meanCurve1 = 0.5*(PV1(1) + PV2(1));
-	curveDir1 = PD1.row(1).dot(PD2.row(1));
-	printf("Mean=%.4f | dot=%.4f \n", meanCurve1, curveDir1);
+	/* Declare local variable for the loop here, to avoid excessive allocation (constructor) + de-allocation (destructor) */
+	double f2Form1, f2Form2, f2Form3;
+	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nT; 
+	Eigen::Matrix3d m1, m2, m3, mT; 
+	CurvatureTensor.resize(3 * F.rows(), 3);
 
-	/* Covert the vertex-based to face-based principal curvatures */
-	Eigen::MatrixXd CurvatureTensor3D;
-	CurvatureTensor3D.setZero(3*F.rows(), 2);
+	cout << "__Computing curvature tensor\n";
+	/* Loop over all faces */
 	for (int i = 0; i < F.rows(); i++)
 	{
-		for (int j = 0; j < F.cols(); j++)
-		{
-			/* Maximum curvature direction */
-			CurvatureTensor3D.block(3*i, 0, 3, 1) += (PD1.row(F(i, j))).transpose()/3.0;
-			/* Minimum curvature direction */
-			CurvatureTensor3D.block(3*i, 1, 3, 1) += (PD2.row(F(i, j))).transpose()/3.0;
-		}
-		//CurvatureTensor3D.row(i) /= double(F.cols());		
+		/* Getting the edges */
+		e1 = (V.row(F(i, 1)) - V.row(F(i, 0))).transpose();
+		e2 = (V.row(F(i, 2)) - V.row(F(i, 1))).transpose();
+		e3 = (V.row(F(i, 0)) - V.row(F(i, 2))).transpose();
+
+		/* Getting the rotated edge (CW, 90, on triangle plane->uses triangle normal)*/
+		nT = (NF.row(i)).transpose();
+		t1 = e1.cross(nT);
+		t2 = e2.cross(nT);
+		t3 = e3.cross(nT);
+
+		/* Getting normals for each edge center (average of two vertices) */
+		n1 = 0.5 * (NV.row(F(i, 0)) + NV.row(F(i, 1))).transpose(); n1.normalize();
+		n2 = 0.5 * (NV.row(F(i, 1)) + NV.row(F(i, 2))).transpose(); n2.normalize();
+		n3 = 0.5 * (NV.row(F(i, 2)) + NV.row(F(i, 0))).transpose(); n3.normalize();
+
+		/* Computing 2nd Fundamental form */
+		f2Form1 = 2.0 * (n2 - n3).dot(e1);
+		f2Form2 = 2.0 * (n3 - n1).dot(e2);
+		f2Form3 = 2.0 * (n1 - n2).dot(e3);
+
+		/* Computing the outer product */
+		m1 = t1 * t1.transpose();
+		m2 = t2 * t2.transpose();
+		m3 = t3 * t3.transpose();
+
+		/* Computing the curvature tensor on each face */
+		mT = 1.0 / doubleArea(i) *	(f2Form2 + f2Form3 - f2Form1) * m1 *
+									(f2Form3 + f2Form1 - f2Form2) * m2 *
+									(f2Form1 + f2Form2 - f2Form3) * m3;
+
+		/* Putting the result into each block*/
+		CurvatureTensor.block(3 * i, 0, 3, 3) = mT; 
 	}
+}
 
-	CurvatureTensor = A.transpose() * CurvatureTensor3D; 
+// [OLD] Wrong implementation
+//void VectorFields::ConstructCurvatureTensor()
+//{
+//	/* Obtain the principal curvature using LibIGL (vertex-based) */
+//	Eigen::MatrixXd PD1, PD2;
+//	Eigen::VectorXd PV1, PV2;
+//	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
+//
+//	/* Test on curvature and mean curvature*/
+//	double meanCurve1 = 0.5*(PV1(0) + PV2(0));
+//	double curveDir1 = PD1.row(0).dot(PD2.row(0));
+//	printf("Mean=%.4f | dot=%.4f \n", meanCurve1, curveDir1);
+//	meanCurve1 = 0.5*(PV1(1) + PV2(1));
+//	curveDir1 = PD1.row(1).dot(PD2.row(1));
+//	printf("Mean=%.4f | dot=%.4f \n", meanCurve1, curveDir1);
+//
+//	/* Covert the vertex-based to face-based principal curvatures */
+//	Eigen::MatrixXd CurvatureTensor3D;
+//	CurvatureTensor3D.setZero(3 * F.rows(), 2);
+//	for (int i = 0; i < F.rows(); i++)
+//	{
+//		for (int j = 0; j < F.cols(); j++)
+//		{
+//			/* Maximum curvature direction */
+//			CurvatureTensor3D.block(3 * i, 0, 3, 1) += (PD1.row(F(i, j))).transpose() / 3.0;
+//			/* Minimum curvature direction */
+//			CurvatureTensor3D.block(3 * i, 1, 3, 1) += (PD2.row(F(i, j))).transpose() / 3.0;
+//		}
+//		//CurvatureTensor3D.row(i) /= double(F.cols());		
+//	}
+//
+//	CurvatureTensor = A.transpose() * CurvatureTensor3D;
+//
+//}
 
+void VectorFields::ComputeCurvatureFields()
+{
+	cout << "COmputing curvature fields\n";
+	/* Resizing the principal curvatures */
+	CurvatureTensorField.resize(3 * F.rows(), 2);
+
+	/* Local variables */
+	Eigen::MatrixXd MLoc(3,3), TensorLoc(3, 3), EigFields;
+	Eigen::VectorXd eigVals; 
+
+
+	/* Dummy mass matrix*/
+	MLoc << 1.0, 0.0, 0.0,		0.0, 1.0, 0.0,		0.0, 0.0, 1.0; 
+
+	/* Computing the eigenvectors => principal curvatures */
+	for (int i = 0; i < F.rows(); i++)
+	{
+		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
+		computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
+		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
+		cout << "i=" << i << ":" << eigVals << endl; 
+
+		CurvatureTensorField.block(3 * i, 1, 3, 1) = (abs(eigVals(0))>abs(eigVals(1)) ? EigFields.col(0) : EigFields.col(2));
+		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(1);
+	}
 }
 
 /* ====================== MESH-RELATED FUNCTIONS ============================*/

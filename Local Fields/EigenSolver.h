@@ -28,6 +28,7 @@ using namespace std;
 
 /* Computing Eigenstructure in GPU */
 void computeEigenGPU(Eigen::SparseMatrix<double> &S_, Eigen::SparseMatrix<double> &M_, Eigen::MatrixXd &LDEigVec, Eigen::VectorXd &LDEigVal);
+void computeEigenGPU(Eigen::MatrixXd &S_, Eigen::MatrixXd &M_, Eigen::MatrixXd &LDEigVec, Eigen::VectorXd &LDEigVal);
 
 /* Computing Eigenstructure in Matlab */
 void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal);
