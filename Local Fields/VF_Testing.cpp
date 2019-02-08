@@ -335,48 +335,82 @@ void VectorFields::printDataForVTK()
 
 void VectorFields::writeEigenFieldsForVTK()
 {
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Torus_73k_EigFields_ref.vtk";
-	ofstream file(filename);
-	if (file.is_open())
+	for (int id = 0; id < 5; id++)
 	{
-		file << "# vtk DataFile Version 2.0\n";
-		file << "Torus Eigenfields\n";
-		file << "ASCII\n";
-		file << "DATASET POLYDATA\n";
-
-		/* PRint vertices*/
-		file << "POINTS " << V.rows() << " float\n";
-		for (int i = 0; i < V.rows(); i++)
+		string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Genus5_36K_EigFields_ref_"+ to_string(id+1) +".vtk";
+		
+		ofstream file(filename);
+		if (file.is_open())
 		{
-			file << V(i, 0) << " " << V(i, 1) << " " << V(i, 2) << "\n";
-		}
+			file << "# vtk DataFile Version 2.0\n";
+			file << "Torus Eigenfields\n";
+			file << "ASCII\n";
+			file << "DATASET POLYDATA\n";
 
-		/* Print faces */
-		file << "POLYGONS " << F.rows() << " " << F.rows() * (F.cols() + 1) << "\n";
-		for (int i = 0; i < F.rows(); i++)
-		{
-			file << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << "\n";
-		}
+			/* PRint vertices*/
+			file << "POINTS " << V.rows() << " double\n";
+			for (int i = 0; i < V.rows(); i++)
+			{
+				file << V(i, 0) << " " << V(i, 1) << " " << V(i, 2) << "\n";
+			}
 
-		/* Print eigenfields*/
-		Eigen::VectorXd eig3D;
-		Eigen::MatrixXd EigFields;
-
-		//EigFields = Basis.block(0, 0, Basis.rows(), eigFieldReduced2D.cols())*eigFieldReduced2D;
-		EigFields = eigFieldFull2D;
-		double const scale = 20.0;
-		//for (int j = 0; j < EigFields.cols(); j++)
-		//{
-			eig3D = A * EigFields.col(3);
-			file << "CELL_DATA " << F.rows() << "\n";
-			file << "VECTORS EigenField_3 float\n";
+			/* Print faces */
+			file << "POLYGONS " << F.rows() << " " << F.rows() * (F.cols() + 1) << "\n";
 			for (int i = 0; i < F.rows(); i++)
 			{
-				file << scale*eig3D(3 * i + 0) << " " << scale*eig3D(3 * i + 1) << " " << scale*eig3D(3 * i + 2) << "\n";
+				file << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << "\n";
 			}
-		//}
 
-		file.close();
+			/* Print eigenfields*/
+			Eigen::VectorXd eig3D;
+			Eigen::MatrixXd EigFields;
+
+			//EigFields = Basis.block(0, 0, Basis.rows(), eigFieldReduced2D.cols())*eigFieldReduced2D;
+			EigFields = eigFieldFull2D;
+			double const scale = 20.0;
+			eig3D = A * EigFields.col(id);
+
+			/* FACE-base DATA */
+			//file << "CELL_DATA " << F.rows() << "\n";
+			//file << "VECTORS EigenField_1 float\n";
+			//for (int i = 0; i < F.rows(); i++)
+			//{
+			//	file << scale*eig3D(3 * i + 0) << " " << scale*eig3D(3 * i + 1) << " " << scale*eig3D(3 * i + 2) << "\n";
+			//}
+
+			/* POINT-base DATA */
+			Eigen::VectorXd VEigFields;
+			VEigFields.setZero(3 * V.rows());
+			Eigen::VectorXi VNumNeighFaces;
+			VNumNeighFaces.setZero(V.rows());
+
+			for (int i = 0; i < F.rows(); i++)
+			{
+				VEigFields.block(3 * F(i, 0), 0, 3, 1) += eig3D.block(3 + i, 0, 3, 1);
+				VEigFields.block(3 * F(i, 1), 0, 3, 1) += eig3D.block(3 + i, 0, 3, 1);
+				VEigFields.block(3 * F(i, 2), 0, 3, 1) += eig3D.block(3 + i, 0, 3, 1);
+				//VEigFields.row(F(i, 0)) += EigFields.row(i);
+				//VEigFields.row(F(i, 1)) += EigFields.row(i);
+				//VEigFields.row(F(i, 2)) += EigFields.row(i);
+				VNumNeighFaces(F(i, 0)) += 1;
+				VNumNeighFaces(F(i, 1)) += 1;
+				VNumNeighFaces(F(i, 2)) += 1;
+			}
+
+			for (int i = 0; i < V.rows(); i++)
+			{
+				VEigFields.block(3 * i, 0, 3, 1) /= (double)VNumNeighFaces(i);
+				VEigFields.block(3 * i, 0, 3, 1) = VEigFields.block(3 * i, 0, 3, 1).normalized();
+			}
+
+			file << "POINT_DATA " << V.rows() << "\n";
+			file << "VECTORS EigenField_" << id+1 << " double\n";
+			for (int i = 0; i < V.rows(); i++)
+			{
+				file << scale*VEigFields(3 * i + 0) << " " << scale*VEigFields(3 * i + 1) << " " << scale*VEigFields(3 * i + 2) << "\n";
+			}
+
+			file.close();
+		}
 	}
-
 }
