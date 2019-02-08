@@ -147,7 +147,7 @@ public:
 	// APPLICATIONS ON REDUCED BASIS
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
-	void ConstructCurvatureTensor();
+	void ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 	void ComputeCurvatureFields();
 
 	// ITEMS FOR TESTING ONLY

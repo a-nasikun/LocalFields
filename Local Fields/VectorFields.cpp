@@ -2506,7 +2506,7 @@ void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorX
 	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
 }
 
-void VectorFields::ConstructCurvatureTensor()
+void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Constructing curvature tensor \n";
 	cout << "__Computing vertex normal\n";
@@ -2519,22 +2519,26 @@ void VectorFields::ConstructCurvatureTensor()
 	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nT; 
 	Eigen::Matrix3d m1, m2, m3, mT; 
 	CurvatureTensor.resize(3 * F.rows(), 3);
+	const double scale = 0.2 * avgEdgeLength; 
 
 	cout << "__Computing curvature tensor\n";
 	/* Loop over all faces */
 	for (int i = 0; i < F.rows(); i++)
+	//for (int i = 0; 20; i++)
 	{
 		/* Getting the edges */
 		e1 = (V.row(F(i, 1)) - V.row(F(i, 0))).transpose();
 		e2 = (V.row(F(i, 2)) - V.row(F(i, 1))).transpose();
 		e3 = (V.row(F(i, 0)) - V.row(F(i, 2))).transpose();
 
+		
+
 		/* Getting the rotated edge (CW, 90, on triangle plane->uses triangle normal)*/
 		nT = (NF.row(i)).transpose();
 		t1 = e1.cross(nT);
 		t2 = e2.cross(nT);
 		t3 = e3.cross(nT);
-
+				
 		/* Getting normals for each edge center (average of two vertices) */
 		n1 = 0.5 * (NV.row(F(i, 0)) + NV.row(F(i, 1))).transpose(); n1.normalize();
 		n2 = 0.5 * (NV.row(F(i, 1)) + NV.row(F(i, 2))).transpose(); n2.normalize();
@@ -2551,13 +2555,37 @@ void VectorFields::ConstructCurvatureTensor()
 		m3 = t3 * t3.transpose();
 
 		/* Computing the curvature tensor on each face */
-		mT = 1.0 / doubleArea(i) *	(f2Form2 + f2Form3 - f2Form1) * m1 *
-									(f2Form3 + f2Form1 - f2Form2) * m2 *
-									(f2Form1 + f2Form2 - f2Form3) * m3;
-
+		mT = 1.0 / (8.0*doubleArea(i)*doubleArea(i)) * ((f2Form2 + f2Form3 - f2Form1) * m1 +
+														(f2Form3 + f2Form1 - f2Form2) * m2 +
+														(f2Form1 + f2Form2 - f2Form3) * m3);
+		//cout << "M=" << i << ": "<< mT << endl; 
 		/* Putting the result into each block*/
 		CurvatureTensor.block(3 * i, 0, 3, 3) = mT; 
+
+		if (i == 0)
+		{
+			// Showing edges
+			viewer.data().add_edges(V.row(F(i, 0)), V.row(F(i, 0)) + e1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)), V.row(F(i, 1)) + e2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+
+			// Showing rotated edge => t
+			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+
+			// Showing the normals  ni
+			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+
+			cout << "MT=" << i << endl << ": " << mT << endl;
+			cout << "M1=" << f2Form1 << endl << ": " << m1 << endl;
+			cout << "M2=" << f2Form2 << endl << ": " << m2 << endl;
+			cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
+		}
 	}
+	cout << "Computation done\n";
 }
 
 // [OLD] Wrong implementation
@@ -2652,7 +2680,7 @@ void VectorFields::ComputeCurvatureFields()
 {
 	cout << "COmputing curvature fields\n";
 	/* Resizing the principal curvatures */
-	CurvatureTensorField.resize(3 * F.rows(), 2);
+	CurvatureTensorField.resize(3 * F.rows(), 3);
 
 	/* Local variables */
 	Eigen::MatrixXd MLoc(3,3), TensorLoc(3, 3), EigFields;
@@ -2667,11 +2695,11 @@ void VectorFields::ComputeCurvatureFields()
 	{
 		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
 		computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
-		sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+		sortEigenIndex((eigVals(0)), (eigVals(1)), (eigVals(2)), smallest, middle, largest);
 		cout << "i=" << i << ":" << eigVals << endl; 
 		CurvatureTensorField.block(3 * i, 0, 3, 1) = EigFields.col(largest);
 		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(middle);
-
+		CurvatureTensorField.block(3 * i, 2, 3, 1) = EigFields.col(smallest);
 
 		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
 		//sortEigenIndex(abs(eigSolver.eigenvalues()[0]), abs(eigSolver.eigenvalues()[1]), abs(eigSolver.eigenvalues()[2]), smallest, middle, largest);

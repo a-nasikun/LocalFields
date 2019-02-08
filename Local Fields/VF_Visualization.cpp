@@ -561,11 +561,12 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	cout << "Visualizing the curvature fields\n";
 	// Average edge length for sizing
 	const double avg = igl::avg_edge_length(V, F);
-	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8);
+	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8), green(0.2, 0.8, 0.2);
 
 	/* From tensor */
 	Eigen::VectorXd maxCurvField = A*CurvatureTensorField.col(0);
 	Eigen::VectorXd minCurvField = A*CurvatureTensorField.col(1);
+	Eigen::VectorXd midCurvField = A*CurvatureTensorField.col(2);
 
 	/* VERTEX BASED */
 	//// Draw a blue segment parallel to the minimal curvature direction
@@ -593,6 +594,8 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	visualize2DfieldsScaled(viewer, -maxCurvField, blue, 0.3);
 	visualize2DfieldsScaled(viewer,  minCurvField, red,  0.3);
 	visualize2DfieldsScaled(viewer, -minCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer,  midCurvField, green, 0.3);
+	visualize2DfieldsScaled(viewer, -midCurvField, green, 0.3);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
