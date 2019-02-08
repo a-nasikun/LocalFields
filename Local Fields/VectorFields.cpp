@@ -2510,7 +2510,7 @@ void VectorFields::ConstructCurvatureTensor()
 {
 	cout << "Constructing curvature tensor \n";
 	cout << "__Computing vertex normal\n";
-	/* Getting normals on each face */
+	/* Getting normals on each vertex */
 	Eigen::MatrixXd NV;
 	igl::per_vertex_normals(V, F, NV);
 
@@ -2595,6 +2595,59 @@ void VectorFields::ConstructCurvatureTensor()
 //
 //}
 
+
+/* Temporary functions*/
+
+
+void sortEigenIndex(double eig1, double eig2, double eig3, int& smallest, int& middle, int& largest)
+{
+	if (eig1 > eig2)
+	{
+		if (eig1 > eig3)
+		{
+			largest = 0;
+			if (eig2 > eig3)
+			{
+				middle = 1;
+				smallest = 2; 
+			} 
+			else
+			{
+				middle = 2; 
+				smallest = 1; 
+			}
+		}
+		else
+		{
+			largest = 2; 
+			middle = 0;
+			smallest = 1; 
+		}
+	}
+	else if (eig2 > eig3)
+	{
+		largest = 1;
+		if (eig1 > eig3)
+		{
+			middle = 0;
+			smallest = 2; 
+		} 
+		else
+		{
+			middle = 2;
+			smallest = 0;
+		}
+	} 
+	else
+	{
+		largest = 2; 
+		middle = 1;
+		smallest = 0;
+	}
+
+	printf("Eig1=%.4f, Eig2=%.4f, Eig3=%.4f  | smallest: %d, middle: %d, largest: %d\n", eig1, eig2, eig3, smallest, middle, largest);
+}
+
 void VectorFields::ComputeCurvatureFields()
 {
 	cout << "COmputing curvature fields\n";
@@ -2608,17 +2661,25 @@ void VectorFields::ComputeCurvatureFields()
 
 	/* Dummy mass matrix*/
 	MLoc << 1.0, 0.0, 0.0,		0.0, 1.0, 0.0,		0.0, 0.0, 1.0; 
-
+	int smallest, middle, largest; 
 	/* Computing the eigenvectors => principal curvatures */
 	for (int i = 0; i < F.rows(); i++)
 	{
 		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
 		computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
-		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
+		sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
 		cout << "i=" << i << ":" << eigVals << endl; 
+		CurvatureTensorField.block(3 * i, 0, 3, 1) = EigFields.col(largest);
+		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(middle);
 
-		CurvatureTensorField.block(3 * i, 1, 3, 1) = (abs(eigVals(0))>abs(eigVals(1)) ? EigFields.col(0) : EigFields.col(2));
-		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(1);
+
+		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
+		//sortEigenIndex(abs(eigSolver.eigenvalues()[0]), abs(eigSolver.eigenvalues()[1]), abs(eigSolver.eigenvalues()[2]), smallest, middle, largest);
+		//cout << "Largest eigfields: \n" << eigSolver.eigenvectors().col(largest);
+		//CurvatureTensorField.block(3 * i, 0, 3, 1) = eigSolver.eigenvectors().col(largest);
+		//CurvatureTensorField.block(3 * i, 1, 3, 1) = eigSolver.eigenvectors().col(middle);
+
+		
 	}
 }
 

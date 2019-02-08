@@ -589,10 +589,10 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
 	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
 
-	visualize2DfieldsNormalized(viewer,  maxCurvField, blue, 2);
-	visualize2DfieldsNormalized(viewer, -maxCurvField, blue, 2);
-	visualize2DfieldsNormalized(viewer,  minCurvField, red,  2);
-	visualize2DfieldsNormalized(viewer, -minCurvField, red,  2);
+	visualize2DfieldsScaled(viewer,  maxCurvField, blue, 0.3);
+	visualize2DfieldsScaled(viewer, -maxCurvField, blue, 0.3);
+	visualize2DfieldsScaled(viewer,  minCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer, -minCurvField, red,  0.3);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
