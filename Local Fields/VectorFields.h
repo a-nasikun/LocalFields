@@ -239,7 +239,7 @@ protected:
 	Eigen::SparseMatrix<double>		CBar, B2DBar;
 
 	// Variables related to Applications
-	Eigen::MatrixXd					CurvatureTensor, CurvatureTensorField, CurvatureTensorField2D;
+	Eigen::MatrixXd					CurvatureTensorField2D;
 	Eigen::SparseMatrix<double>		CurvatureTensor2D; 
 	// FOR TESTING ONLY
 public: 

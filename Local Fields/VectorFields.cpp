@@ -2518,7 +2518,6 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	double f2Form1, f2Form2, f2Form3;
 	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nTemp, nT; 
 	Eigen::Matrix3d m1, m2, m3, mT, mT2D; 
-	CurvatureTensor.resize(3 * F.rows(), 3);
 	CurvatureTensor2D.resize(2 * F.rows(), 2 * F.rows());
 	CurvatureTensor2D.reserve(2 * 2 * F.rows());			// 2*F rows, each with 2 non-zero entries
 	vector<Eigen::Triplet<double>> CTriplet;
@@ -2528,20 +2527,11 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	cout << "__Computing curvature tensor\n";
 	/* Loop over all faces */
 	for (int i = 0; i < F.rows(); i++)
-	//for (int i = 0; 20; i++)
 	{
 		/* Getting the edges */
 		e1 = (V.row(F(i, 1)) - V.row(F(i, 0))).transpose();
 		e2 = (V.row(F(i, 2)) - V.row(F(i, 1))).transpose();
 		e3 = (V.row(F(i, 0)) - V.row(F(i, 2))).transpose();
-
-		/* Check Neighborhood*/
-		printf("[%d] ==> \n", i);
-		//for (int j = 0; j < F.cols(); j++)
-		//{
-		//	printf("____ %d-th edge: %d->%d to Triangle %d (%d, %d, %d)\n", j, F(i, j), F(i, (j + 1) % F.cols()), AdjMF3N(i, j), F(AdjMF3N(i, j), 0), F(AdjMF3N(i, j), 1), F(AdjMF3N(i, j), 2));
-		//}
-
 
 		/* Getting the rotated edge (CW, 90, on triangle plane->uses triangle normal)*/
 		nT = (NF.row(i)).transpose();
@@ -2564,7 +2554,7 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 					nTemp.normalize();
 					n1 = nT + nTemp;
 					n1.normalize();
-					printf("____ The 1st edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 0), F(i, 1), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+					//printf("____ The 1st edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 0), F(i, 1), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
 				}
 			}
 		}
@@ -2580,7 +2570,7 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 					nTemp.normalize();
 					n2 = nT + nTemp;
 					n2.normalize();
-					printf("____ The 2nd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 1), F(i, 2), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+					//printf("____ The 2nd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 1), F(i, 2), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
 				}
 			}
 		}
@@ -2596,15 +2586,11 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 					nTemp.normalize();
 					n3 = nT + nTemp;
 					n3.normalize();
-					printf("____ The 3rd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 2), F(i, 0), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+					//printf("____ The 3rd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 2), F(i, 0), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
 				}
 			}
 		}
-
-		//n1 = (NV.row(F(i, 0)) + NV.row(F(i, 1))).transpose(); n1.normalize();
-		//n2 = (NV.row(F(i, 1)) + NV.row(F(i, 2))).transpose(); n2.normalize();
-		//n3 = (NV.row(F(i, 2)) + NV.row(F(i, 0))).transpose(); n3.normalize();
-
+		
 		/* Computing 2nd Fundamental form */
 		f2Form1 = 2.0 * (n2 - n3).dot(e1);
 		f2Form2 = 2.0 * (n3 - n1).dot(e2);
@@ -2617,9 +2603,6 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 
 		/* Computing the curvature tensor on each face */
 		mT = ( m1 + m2 + m3) / (2.0*doubleArea(i)*doubleArea(i));
-		//cout << "M=" << i << ": "<< mT << endl; 
-		/* Putting the result into each block*/
-		CurvatureTensor.block(3 * i, 0, 3, 3) = mT; 
 
 		/* Inserting the 2x2 matrix*/
 		Eigen::MatrixXd ALoc = A.block(3 * i, 2 * i, 3, 2);
@@ -2629,6 +2612,7 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, mT2D(0, 1)));
 		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, mT2D(1, 1)));
 
+		/* For testing purpose only*/
 		if (i == 0)
 		{
 			// Showing edges
@@ -2653,7 +2637,6 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
-	cout << "Computation done\n";
 }
 
 // [OLD] Wrong implementation
@@ -2746,50 +2729,31 @@ void sortEigenIndex(double eig1, double eig2, double eig3, int& smallest, int& m
 
 void VectorFields::ComputeCurvatureFields()
 {
-	cout << "COmputing curvature fields\n";
 	/* Resizing the principal curvatures */
-	CurvatureTensorField.resize(3 * F.rows(), 3);
 	CurvatureTensorField2D.resize(2 * F.rows(), 2);
 
 	/* Local variables */
-	Eigen::MatrixXd MLoc(3,3), TensorLoc(3, 3), EigFields;
 	Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
-	Eigen::VectorXd eigVals; 
 	Eigen::VectorXd eigVals2D;
 
 
 	/* Dummy mass matrix*/
-	MLoc << 1.0, 0.0, 0.0,		0.0, 1.0, 0.0,		0.0, 0.0, 1.0; 
 	MLoc2D << 1.0, 0.0,			0.0, 1.0; 
 	int smallest, middle, largest; 
 	/* Computing the eigenvectors => principal curvatures */
 	for (int i = 0; i < F.rows(); i++)
 	{
-		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
 		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
-		//computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
 		computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
 		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
-		//cout << "i=" << i << ":" << eigVals2D << endl; 
 		if (abs(eigVals2D(0)) > abs(eigVals2D(1))) { largest = 0; smallest = 1; }
 		else { largest = 1; smallest = 0; }
-		printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
-				i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
-				   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+		//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+		//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+		//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
 
-		//CurvatureTensorField.block(3 * i, 0, 3, 1) = EigFields.col(largest);
-		//CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(middle);
-		//CurvatureTensorField.block(3 * i, 2, 3, 1) = EigFields.col(smallest);
 		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
 		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
-
-		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
-		//sortEigenIndex(abs(eigSolver.eigenvalues()[0]), abs(eigSolver.eigenvalues()[1]), abs(eigSolver.eigenvalues()[2]), smallest, middle, largest);
-		//cout << "Largest eigfields: \n" << eigSolver.eigenvectors().col(largest);
-		//CurvatureTensorField.block(3 * i, 0, 3, 1) = eigSolver.eigenvectors().col(largest);
-		//CurvatureTensorField.block(3 * i, 1, 3, 1) = eigSolver.eigenvectors().col(middle);
-
-		
 	}
 }
 

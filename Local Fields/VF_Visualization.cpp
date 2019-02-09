@@ -560,49 +560,17 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Visualizing the curvature fields\n";
 	// Average edge length for sizing
-	const double avg = igl::avg_edge_length(V, F);
 	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8), green(0.2, 0.8, 0.2);
 
 	/* From tensor */
-	//Eigen::VectorXd maxCurvField = CurvatureTensorField.col(0);
-	//Eigen::VectorXd minCurvField = CurvatureTensorField.col(1);
-	//Eigen::VectorXd midCurvField = CurvatureTensorField.col(2);
 	Eigen::VectorXd maxCurvField = CurvatureTensorField2D.col(0);
 	Eigen::VectorXd minCurvField = CurvatureTensorField2D.col(1);
 
-	/* VERTEX BASED */
-	//// Draw a blue segment parallel to the minimal curvature direction
-	//viewer.data().add_edges(V + PD1*avg, V - PD1*avg, blue);
-
-	//// Draw a red segment parallel to the maximal curvature direction
-	//viewer.data().add_edges(V + PD2*avg, V - PD2*avg, red);
-
-	/* FACE BASED */
-	//viewer.data().add_edges(FC + avg*CurvatureTensor3D.block(0, 0, F.rows(), 3), FC - avg*CurvatureTensor3D.block(0, 0, F.rows(), 3), blue);
-	//viewer.data().add_edges(FC + avg*CurvatureTensor3D.block(0, 3, F.rows(), 3), FC - avg*CurvatureTensor3D.block(0, 3, F.rows(), 3), red);
-	
-	//for (int i = 0; i < F.rows(); i++) 
-	//{
-	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 0, 3, 1)).transpose(), blue);
-	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 1, 3, 1)).transpose(), red);
-	//}
-
-	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 1.0);
-	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 1.0);
-	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
-	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
-
-	visualize2DfieldsScaled(viewer,  maxCurvField, blue, 0.3);
-	visualize2DfieldsScaled(viewer, -maxCurvField, blue, 0.3);
-	visualize2DfieldsScaled(viewer,  minCurvField, red,  0.3);
-	visualize2DfieldsScaled(viewer, -minCurvField, red,  0.3);
-	//visualize2DfieldsScaled(viewer,  midCurvField, green, 0.3);
-	//visualize2DfieldsScaled(viewer, -midCurvField, green, 0.3);
-	
-	//visualize3Dfields(viewer, maxCurvField, red);	
-	//visualize3Dfields(viewer, -maxCurvField, red);
-	//visualize3Dfields(viewer, minCurvField, blue);
-	//visualize3Dfields(viewer, -minCurvField, blue);
+	/* FACE BASED */	
+	visualize2DfieldsScaled(viewer,  maxCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer, -maxCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer,  minCurvField, blue, 0.3);
+	visualize2DfieldsScaled(viewer, -minCurvField, blue, 0.3);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
