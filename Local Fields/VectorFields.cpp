@@ -2517,8 +2517,12 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	/* Declare local variable for the loop here, to avoid excessive allocation (constructor) + de-allocation (destructor) */
 	double f2Form1, f2Form2, f2Form3;
 	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nTemp, nT; 
-	Eigen::Matrix3d m1, m2, m3, mT; 
+	Eigen::Matrix3d m1, m2, m3, mT, mT2D; 
 	CurvatureTensor.resize(3 * F.rows(), 3);
+	CurvatureTensor2D.resize(2 * F.rows(), 2 * F.rows());
+	CurvatureTensor2D.reserve(2 * 2 * F.rows());			// 2*F rows, each with 2 non-zero entries
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * 2 * F.rows());						// 2*F rows, each with 2 non-zero entries
 	const double scale = 0.2 * avgEdgeLength; 
 
 	cout << "__Computing curvature tensor\n";
@@ -2617,6 +2621,14 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		/* Putting the result into each block*/
 		CurvatureTensor.block(3 * i, 0, 3, 3) = mT; 
 
+		/* Inserting the 2x2 matrix*/
+		Eigen::MatrixXd ALoc = A.block(3 * i, 2 * i, 3, 2);
+		mT2D = ALoc.transpose() * mT * ALoc;
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, mT2D(0, 0)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, mT2D(1, 0)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, mT2D(0, 1)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, mT2D(1, 1)));
+
 		if (i == 0)
 		{
 			// Showing edges
@@ -2640,6 +2652,7 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 			cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
 		}
 	}
+	CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	cout << "Computation done\n";
 }
 
@@ -2736,25 +2749,39 @@ void VectorFields::ComputeCurvatureFields()
 	cout << "COmputing curvature fields\n";
 	/* Resizing the principal curvatures */
 	CurvatureTensorField.resize(3 * F.rows(), 3);
+	CurvatureTensorField2D.resize(2 * F.rows(), 2);
 
 	/* Local variables */
 	Eigen::MatrixXd MLoc(3,3), TensorLoc(3, 3), EigFields;
+	Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
 	Eigen::VectorXd eigVals; 
+	Eigen::VectorXd eigVals2D;
 
 
 	/* Dummy mass matrix*/
 	MLoc << 1.0, 0.0, 0.0,		0.0, 1.0, 0.0,		0.0, 0.0, 1.0; 
+	MLoc2D << 1.0, 0.0,			0.0, 1.0; 
 	int smallest, middle, largest; 
 	/* Computing the eigenvectors => principal curvatures */
 	for (int i = 0; i < F.rows(); i++)
 	{
 		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
-		computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
-		sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
-		cout << "i=" << i << ":" << eigVals << endl; 
-		CurvatureTensorField.block(3 * i, 0, 3, 1) = EigFields.col(largest);
-		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(middle);
-		CurvatureTensorField.block(3 * i, 2, 3, 1) = EigFields.col(smallest);
+		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
+		//computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
+		computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+		//cout << "i=" << i << ":" << eigVals2D << endl; 
+		if (abs(eigVals2D(0)) > abs(eigVals2D(1))) { largest = 0; smallest = 1; }
+		else { largest = 1; smallest = 0; }
+		printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+				i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+				   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+
+		//CurvatureTensorField.block(3 * i, 0, 3, 1) = EigFields.col(largest);
+		//CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(middle);
+		//CurvatureTensorField.block(3 * i, 2, 3, 1) = EigFields.col(smallest);
+		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
+		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
 
 		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
 		//sortEigenIndex(abs(eigSolver.eigenvalues()[0]), abs(eigSolver.eigenvalues()[1]), abs(eigSolver.eigenvalues()[2]), smallest, middle, largest);

@@ -564,9 +564,11 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8), green(0.2, 0.8, 0.2);
 
 	/* From tensor */
-	Eigen::VectorXd maxCurvField = CurvatureTensorField.col(0);
-	Eigen::VectorXd minCurvField = CurvatureTensorField.col(1);
-	Eigen::VectorXd midCurvField = CurvatureTensorField.col(2);
+	//Eigen::VectorXd maxCurvField = CurvatureTensorField.col(0);
+	//Eigen::VectorXd minCurvField = CurvatureTensorField.col(1);
+	//Eigen::VectorXd midCurvField = CurvatureTensorField.col(2);
+	Eigen::VectorXd maxCurvField = CurvatureTensorField2D.col(0);
+	Eigen::VectorXd minCurvField = CurvatureTensorField2D.col(1);
 
 	/* VERTEX BASED */
 	//// Draw a blue segment parallel to the minimal curvature direction
@@ -590,17 +592,17 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
 	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
 
-	//visualize2DfieldsScaled(viewer,  maxCurvField, blue, 0.3);
-	//visualize2DfieldsScaled(viewer, -maxCurvField, blue, 0.3);
-	//visualize2DfieldsScaled(viewer,  minCurvField, red,  0.3);
-	//visualize2DfieldsScaled(viewer, -minCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer,  maxCurvField, blue, 0.3);
+	visualize2DfieldsScaled(viewer, -maxCurvField, blue, 0.3);
+	visualize2DfieldsScaled(viewer,  minCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer, -minCurvField, red,  0.3);
 	//visualize2DfieldsScaled(viewer,  midCurvField, green, 0.3);
 	//visualize2DfieldsScaled(viewer, -midCurvField, green, 0.3);
 	
-	visualize3Dfields(viewer, maxCurvField, red);	
-	visualize3Dfields(viewer, -maxCurvField, red);
-	visualize3Dfields(viewer, minCurvField, blue);
-	visualize3Dfields(viewer, -minCurvField, blue);
+	//visualize3Dfields(viewer, maxCurvField, red);	
+	//visualize3Dfields(viewer, -maxCurvField, red);
+	//visualize3Dfields(viewer, minCurvField, blue);
+	//visualize3Dfields(viewer, -minCurvField, blue);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
