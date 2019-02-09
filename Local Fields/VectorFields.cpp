@@ -2750,7 +2750,7 @@ void VectorFields::ComputeCurvatureFields()
 	{
 		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
 		computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
-		sortEigenIndex((eigVals(0)), (eigVals(1)), (eigVals(2)), smallest, middle, largest);
+		sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
 		cout << "i=" << i << ":" << eigVals << endl; 
 		CurvatureTensorField.block(3 * i, 0, 3, 1) = EigFields.col(largest);
 		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(middle);
