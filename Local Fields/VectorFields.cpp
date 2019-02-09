@@ -2516,7 +2516,7 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 
 	/* Declare local variable for the loop here, to avoid excessive allocation (constructor) + de-allocation (destructor) */
 	double f2Form1, f2Form2, f2Form3;
-	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nT; 
+	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nTemp, nT; 
 	Eigen::Matrix3d m1, m2, m3, mT; 
 	CurvatureTensor.resize(3 * F.rows(), 3);
 	const double scale = 0.2 * avgEdgeLength; 
@@ -2531,18 +2531,75 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		e2 = (V.row(F(i, 2)) - V.row(F(i, 1))).transpose();
 		e3 = (V.row(F(i, 0)) - V.row(F(i, 2))).transpose();
 
-		
+		/* Check Neighborhood*/
+		printf("[%d] ==> \n", i);
+		//for (int j = 0; j < F.cols(); j++)
+		//{
+		//	printf("____ %d-th edge: %d->%d to Triangle %d (%d, %d, %d)\n", j, F(i, j), F(i, (j + 1) % F.cols()), AdjMF3N(i, j), F(AdjMF3N(i, j), 0), F(AdjMF3N(i, j), 1), F(AdjMF3N(i, j), 2));
+		//}
+
 
 		/* Getting the rotated edge (CW, 90, on triangle plane->uses triangle normal)*/
 		nT = (NF.row(i)).transpose();
+		nT.normalize();
 		t1 = e1.cross(nT);
 		t2 = e2.cross(nT);
 		t3 = e3.cross(nT);
 				
 		/* Getting normals for each edge center (average of two vertices) */
-		n1 = 0.5 * (NV.row(F(i, 0)) + NV.row(F(i, 1))).transpose(); n1.normalize();
-		n2 = 0.5 * (NV.row(F(i, 1)) + NV.row(F(i, 2))).transpose(); n2.normalize();
-		n3 = 0.5 * (NV.row(F(i, 2)) + NV.row(F(i, 0))).transpose(); n3.normalize();
+		/* NOT THE MOST Efficient implementation */
+			/* Get the first neighbor's normal*/
+		for (int j = 0; j < F.cols(); j++)		// Loop over 3 neighbors of i-th face
+		{
+			int neigh = AdjMF3N(i, j);
+			for (int k = 0; k < F.cols(); k++)	// Loop over 3 vertices of the j-th neighbor
+			{
+				if (F(i, 0) == F(neigh, (k + 1) % F.cols()) && F(i, 1) == F(neigh, k))
+				{
+					nTemp = (NF.row(neigh)).transpose();
+					nTemp.normalize();
+					n1 = nT + nTemp;
+					n1.normalize();
+					printf("____ The 1st edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 0), F(i, 1), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+				}
+			}
+		}
+			/* Get the second neighbor's normal*/
+		for (int j = 0; j < F.cols(); j++)		// Loop over 3 neighbors of i-th face
+		{
+			int neigh = AdjMF3N(i, j);
+			for (int k = 0; k < F.cols(); k++)	// Loop over 3 vertices of the j-th neighbor
+			{
+				if (F(i, 1) == F(neigh, (k + 1) % F.cols()) && F(i, 2) == F(neigh, k))
+				{
+					nTemp = (NF.row(neigh)).transpose();
+					nTemp.normalize();
+					n2 = nT + nTemp;
+					n2.normalize();
+					printf("____ The 2nd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 1), F(i, 2), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+				}
+			}
+		}
+			/* Get the third neighbor neighbor's normal */
+		for (int j = 0; j < F.cols(); j++)		// Loop over 3 neighbors of i-th face
+		{
+			int neigh = AdjMF3N(i, j);
+			for (int k = 0; k < F.cols(); k++)	// Loop over 3 vertices of the j-th neighbor
+			{
+				if (F(i, 2) == F(neigh, (k + 1) % F.cols()) && F(i, 0) == F(neigh, k))
+				{
+					nTemp = (NF.row(neigh)).transpose();
+					nTemp.normalize();
+					n3 = nT + nTemp;
+					n3.normalize();
+					printf("____ The 3rd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 2), F(i, 0), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+				}
+			}
+		}
+
+		//n1 = (NV.row(F(i, 0)) + NV.row(F(i, 1))).transpose(); n1.normalize();
+		//n2 = (NV.row(F(i, 1)) + NV.row(F(i, 2))).transpose(); n2.normalize();
+		//n3 = (NV.row(F(i, 2)) + NV.row(F(i, 0))).transpose(); n3.normalize();
 
 		/* Computing 2nd Fundamental form */
 		f2Form1 = 2.0 * (n2 - n3).dot(e1);
@@ -2550,14 +2607,12 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		f2Form3 = 2.0 * (n1 - n2).dot(e3);
 
 		/* Computing the outer product */
-		m1 = t1 * t1.transpose();
-		m2 = t2 * t2.transpose();
-		m3 = t3 * t3.transpose();
+		m1 = (f2Form2 + f2Form3 - f2Form1) * (t1 * t1.transpose());
+		m2 = (f2Form3 + f2Form1 - f2Form2) * (t2 * t2.transpose());
+		m3 = (f2Form1 + f2Form2 - f2Form3) * (t3 * t3.transpose());
 
 		/* Computing the curvature tensor on each face */
-		mT = 1.0 / (8.0*doubleArea(i)*doubleArea(i)) * ((f2Form2 + f2Form3 - f2Form1) * m1 +
-														(f2Form3 + f2Form1 - f2Form2) * m2 +
-														(f2Form1 + f2Form2 - f2Form3) * m3);
+		mT = ( m1 + m2 + m3) / (2.0*doubleArea(i)*doubleArea(i));
 		//cout << "M=" << i << ": "<< mT << endl; 
 		/* Putting the result into each block*/
 		CurvatureTensor.block(3 * i, 0, 3, 3) = mT; 
