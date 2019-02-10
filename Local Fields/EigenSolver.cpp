@@ -229,7 +229,7 @@ void computeEigenGPU(Eigen::MatrixXd &S_, Eigen::MatrixXd &M_, Eigen::MatrixXd &
 /* Computing Eigenstructure in Matlab */
 void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal)
 {
-	printf("Size of S = %dx%d\n", S.rows(), S.cols());
+	//printf("Size of S = %dx%d\n", S.rows(), S.cols());
 	using namespace matlab::engine;
 	Engine *ep;
 	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
@@ -296,19 +296,20 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		cout << "CANNOT START MATLAB " << endl;
 	}
 	else {
-		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
+		//cout << "MATLAB STARTS. OH YEAH!!!" << endl;
 	}	 
 
 	// Compute Eigenvalue in Matlab
-	int NUM_EIGEN = 20;
+	int NUM_EIGEN = 2;
 
 	engPutVariable(ep, "MS", MS);
 	engPutVariable(ep, "MM", MM);
 
 	t3 = chrono::high_resolution_clock::now();
-	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,20,'smallestabs');");
+	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,2,'smallestabs');");
+	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	engEvalString(ep, "hold on; plot(1:20, EigVal(1:20),'LineWidth',1.5);"); // has to do it this way for "correct" plot
+	//engEvalString(ep, "hold on; plot(1:2, EigVal(1:2),'LineWidth',1.5);"); // has to do it this way for "correct" plot
 	t4 = chrono::high_resolution_clock::now();
 
 	//engEvalString(ep, "save('D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Dino_LDEigVec_15_5000','LDEigVec');");
@@ -327,11 +328,11 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	t2 = chrono::high_resolution_clock::now();
 	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
 	ts2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
-	printf("Time to compute %d first eigenstructure is %.5f. \n", NUM_EIGEN, time_span);
-	printf("Time to compute %d first eigenstructure (in MATLAB ONLY) is %.5f. \n", NUM_EIGEN, ts2);
+	//printf("Time to compute %d first eigenstructure is %.5f. \n", NUM_EIGEN, time_span);
+	//printf("Time to compute %d first eigenstructure (in MATLAB ONLY) is %.5f. \n", NUM_EIGEN, ts2);
 
 	// Testing out
 	//printf("Check orthogonality: \n Equal=%.5f, Not-Equal=%.5f\n", EigVec.col(0).transpose()*M*EigVec.col(0), EigVec.col(0).transpose()*M*EigVec.col(50));
 	//cout << "Eigen Vectors" << endl << EigVec.block(0, 0, 2, 10) << endl;
-	printf("EigenVector dimension: %dx%d\n", EigVec.rows(), EigVec.cols());
+	//printf("EigenVector dimension: %dx%d\n", EigVec.rows(), EigVec.cols());
 }

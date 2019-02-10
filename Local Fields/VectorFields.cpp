@@ -2813,23 +2813,38 @@ void VectorFields::ComputeCurvatureFields()
 
 	/* Local variables */
 	Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
+	Eigen::SparseMatrix<double> MLoc(2, 2), TensorLoc(2, 2);
 	Eigen::VectorXd eigVals2D;
-
+	
 
 	/* Dummy mass matrix*/
 	MLoc2D << 1.0, 0.0,			0.0, 1.0; 
+	MLoc.coeffRef(0, 0) = 1.0;
+	MLoc.coeffRef(1, 1) = 1.0;
 	int smallest, middle, largest; 
 	/* Computing the eigenvectors => principal curvatures */
 	for (int i = 0; i < F.rows(); i++)
 	{
 		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
+		vector<Eigen::Triplet<double>> TTriplet;
+		TTriplet.reserve(4);
+		TTriplet.push_back(Eigen::Triplet<double>(0, 0, CurvatureTensor2D.coeff(2 * i + 0, 2 * i + 0)));
+		TTriplet.push_back(Eigen::Triplet<double>(1, 0, CurvatureTensor2D.coeff(2 * i + 1, 2 * i + 0)));
+		TTriplet.push_back(Eigen::Triplet<double>(0, 1, CurvatureTensor2D.coeff(2 * i + 0, 2 * i + 1)));
+		TTriplet.push_back(Eigen::Triplet<double>(1, 1, CurvatureTensor2D.coeff(2 * i + 1, 2 * i + 1)));
+		TensorLoc.setFromTriplets(TTriplet.begin(), TTriplet.end());
+		
+		if (i == 0) cout << "HEYYYYY\n" << TensorLoc << endl << endl; 
+		if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
+
 		computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+		//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
 		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
 		if (abs(eigVals2D(0)) > abs(eigVals2D(1))) { largest = 0; smallest = 1; }
 		else { largest = 1; smallest = 0; }
-		//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
-		//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
-		//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+		printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+				i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+				   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
 
 		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
 		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
