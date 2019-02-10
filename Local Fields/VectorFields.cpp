@@ -2585,19 +2585,23 @@ void VectorFields::computeSmoothingApprox(const double& mu, const Eigen::VectorX
 	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
 }
 
-void VectorFields::ConstructCurvatureTensor()
+void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Constructing curvature tensor \n";
 	cout << "__Computing vertex normal\n";
-	/* Getting normals on each face */
+	/* Getting normals on each vertex */
 	Eigen::MatrixXd NV;
 	igl::per_vertex_normals(V, F, NV);
 
 	/* Declare local variable for the loop here, to avoid excessive allocation (constructor) + de-allocation (destructor) */
 	double f2Form1, f2Form2, f2Form3;
-	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nT; 
-	Eigen::Matrix3d m1, m2, m3, mT; 
-	CurvatureTensor.resize(3 * F.rows(), 3);
+	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nTemp, nT; 
+	Eigen::Matrix3d m1, m2, m3, mT, mT2D; 
+	CurvatureTensor2D.resize(2 * F.rows(), 2 * F.rows());
+	CurvatureTensor2D.reserve(2 * 2 * F.rows());			// 2*F rows, each with 2 non-zero entries
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * 2 * F.rows());						// 2*F rows, each with 2 non-zero entries
+	const double scale = 0.2 * avgEdgeLength; 
 
 	cout << "__Computing curvature tensor\n";
 	/* Loop over all faces */
@@ -2610,33 +2614,108 @@ void VectorFields::ConstructCurvatureTensor()
 
 		/* Getting the rotated edge (CW, 90, on triangle plane->uses triangle normal)*/
 		nT = (NF.row(i)).transpose();
+		nT.normalize();
 		t1 = e1.cross(nT);
 		t2 = e2.cross(nT);
 		t3 = e3.cross(nT);
-
+				
 		/* Getting normals for each edge center (average of two vertices) */
-		n1 = 0.5 * (NV.row(F(i, 0)) + NV.row(F(i, 1))).transpose(); n1.normalize();
-		n2 = 0.5 * (NV.row(F(i, 1)) + NV.row(F(i, 2))).transpose(); n2.normalize();
-		n3 = 0.5 * (NV.row(F(i, 2)) + NV.row(F(i, 0))).transpose(); n3.normalize();
-
+		/* NOT THE MOST Efficient implementation */
+			/* Get the first neighbor's normal*/
+		for (int j = 0; j < F.cols(); j++)		// Loop over 3 neighbors of i-th face
+		{
+			int neigh = AdjMF3N(i, j);
+			for (int k = 0; k < F.cols(); k++)	// Loop over 3 vertices of the j-th neighbor
+			{
+				if (F(i, 0) == F(neigh, (k + 1) % F.cols()) && F(i, 1) == F(neigh, k))
+				{
+					nTemp = (NF.row(neigh)).transpose();
+					nTemp.normalize();
+					n1 = nT + nTemp;
+					n1.normalize();
+					//printf("____ The 1st edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 0), F(i, 1), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+				}
+			}
+		}
+			/* Get the second neighbor's normal*/
+		for (int j = 0; j < F.cols(); j++)		// Loop over 3 neighbors of i-th face
+		{
+			int neigh = AdjMF3N(i, j);
+			for (int k = 0; k < F.cols(); k++)	// Loop over 3 vertices of the j-th neighbor
+			{
+				if (F(i, 1) == F(neigh, (k + 1) % F.cols()) && F(i, 2) == F(neigh, k))
+				{
+					nTemp = (NF.row(neigh)).transpose();
+					nTemp.normalize();
+					n2 = nT + nTemp;
+					n2.normalize();
+					//printf("____ The 2nd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 1), F(i, 2), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+				}
+			}
+		}
+			/* Get the third neighbor neighbor's normal */
+		for (int j = 0; j < F.cols(); j++)		// Loop over 3 neighbors of i-th face
+		{
+			int neigh = AdjMF3N(i, j);
+			for (int k = 0; k < F.cols(); k++)	// Loop over 3 vertices of the j-th neighbor
+			{
+				if (F(i, 2) == F(neigh, (k + 1) % F.cols()) && F(i, 0) == F(neigh, k))
+				{
+					nTemp = (NF.row(neigh)).transpose();
+					nTemp.normalize();
+					n3 = nT + nTemp;
+					n3.normalize();
+					//printf("____ The 3rd edge: %d->%d to Triangle %d (%d, %d, %d)\n", F(i, 2), F(i, 0), neigh, F(neigh, 0), F(neigh, 1), F(neigh, 2));
+				}
+			}
+		}
+		
 		/* Computing 2nd Fundamental form */
 		f2Form1 = 2.0 * (n2 - n3).dot(e1);
 		f2Form2 = 2.0 * (n3 - n1).dot(e2);
 		f2Form3 = 2.0 * (n1 - n2).dot(e3);
 
 		/* Computing the outer product */
-		m1 = t1 * t1.transpose();
-		m2 = t2 * t2.transpose();
-		m3 = t3 * t3.transpose();
+		m1 = (f2Form2 + f2Form3 - f2Form1) * (t1 * t1.transpose());
+		m2 = (f2Form3 + f2Form1 - f2Form2) * (t2 * t2.transpose());
+		m3 = (f2Form1 + f2Form2 - f2Form3) * (t3 * t3.transpose());
 
 		/* Computing the curvature tensor on each face */
-		mT = 1.0 / doubleArea(i) *	(f2Form2 + f2Form3 - f2Form1) * m1 *
-									(f2Form3 + f2Form1 - f2Form2) * m2 *
-									(f2Form1 + f2Form2 - f2Form3) * m3;
+		mT = ( m1 + m2 + m3) / (2.0*doubleArea(i)*doubleArea(i));
 
-		/* Putting the result into each block*/
-		CurvatureTensor.block(3 * i, 0, 3, 3) = mT; 
+		/* Inserting the 2x2 matrix*/
+		Eigen::MatrixXd ALoc = A.block(3 * i, 2 * i, 3, 2);
+		mT2D = ALoc.transpose() * mT * ALoc;
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, mT2D(0, 0)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, mT2D(1, 0)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, mT2D(0, 1)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, mT2D(1, 1)));
+
+		/* For testing purpose only*/
+		if (i == 0)
+		{
+			// Showing edges
+			viewer.data().add_edges(V.row(F(i, 0)), V.row(F(i, 0)) + e1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)), V.row(F(i, 1)) + e2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+
+			// Showing rotated edge => t
+			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+
+			// Showing the normals  ni
+			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+
+			cout << "MT=" << i << endl << ": " << mT << endl;
+			cout << "M1=" << f2Form1 << endl << ": " << m1 << endl;
+			cout << "M2=" << f2Form2 << endl << ": " << m2 << endl;
+			cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
+		}
 	}
+	CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
 
 // [OLD] Wrong implementation
@@ -2674,30 +2753,86 @@ void VectorFields::ConstructCurvatureTensor()
 //
 //}
 
+
+/* Temporary functions*/
+
+
+void sortEigenIndex(double eig1, double eig2, double eig3, int& smallest, int& middle, int& largest)
+{
+	if (eig1 > eig2)
+	{
+		if (eig1 > eig3)
+		{
+			largest = 0;
+			if (eig2 > eig3)
+			{
+				middle = 1;
+				smallest = 2; 
+			} 
+			else
+			{
+				middle = 2; 
+				smallest = 1; 
+			}
+		}
+		else
+		{
+			largest = 2; 
+			middle = 0;
+			smallest = 1; 
+		}
+	}
+	else if (eig2 > eig3)
+	{
+		largest = 1;
+		if (eig1 > eig3)
+		{
+			middle = 0;
+			smallest = 2; 
+		} 
+		else
+		{
+			middle = 2;
+			smallest = 0;
+		}
+	} 
+	else
+	{
+		largest = 2; 
+		middle = 1;
+		smallest = 0;
+	}
+
+	printf("Eig1=%.4f, Eig2=%.4f, Eig3=%.4f  | smallest: %d, middle: %d, largest: %d\n", eig1, eig2, eig3, smallest, middle, largest);
+}
+
 void VectorFields::ComputeCurvatureFields()
 {
-	cout << "COmputing curvature fields\n";
 	/* Resizing the principal curvatures */
-	CurvatureTensorField.resize(3 * F.rows(), 2);
+	CurvatureTensorField2D.resize(2 * F.rows(), 2);
 
 	/* Local variables */
-	Eigen::MatrixXd MLoc(3,3), TensorLoc(3, 3), EigFields;
-	Eigen::VectorXd eigVals; 
+	Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
+	Eigen::VectorXd eigVals2D;
 
 
 	/* Dummy mass matrix*/
-	MLoc << 1.0, 0.0, 0.0,		0.0, 1.0, 0.0,		0.0, 0.0, 1.0; 
-
+	MLoc2D << 1.0, 0.0,			0.0, 1.0; 
+	int smallest, middle, largest; 
 	/* Computing the eigenvectors => principal curvatures */
 	for (int i = 0; i < F.rows(); i++)
 	{
-		TensorLoc = CurvatureTensor.block(3 * i, 0, 3, 3);
-		computeEigenGPU(TensorLoc, MLoc, EigFields, eigVals);
-		//Eigen::EigenSolver<Eigen::MatrixXd> eigSolver(TensorLoc);
-		cout << "i=" << i << ":" << eigVals << endl; 
+		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
+		computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+		if (abs(eigVals2D(0)) > abs(eigVals2D(1))) { largest = 0; smallest = 1; }
+		else { largest = 1; smallest = 0; }
+		//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+		//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+		//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
 
-		CurvatureTensorField.block(3 * i, 1, 3, 1) = (abs(eigVals(0))>abs(eigVals(1)) ? EigFields.col(0) : EigFields.col(2));
-		CurvatureTensorField.block(3 * i, 1, 3, 1) = EigFields.col(1);
+		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
+		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
 	}
 }
 

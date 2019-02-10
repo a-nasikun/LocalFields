@@ -151,7 +151,7 @@ public:
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
 	void computeApproxEigenFields();
-	void ConstructCurvatureTensor();
+	void ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 	void ComputeCurvatureFields();
 
 	// ITEMS FOR TESTING ONLY
@@ -254,7 +254,8 @@ protected:
 	Eigen::SparseMatrix<double>		CBar, B2DBar;
 
 	// Variables related to Applications
-	Eigen::MatrixXd					CurvatureTensor, CurvatureTensorField;
+	Eigen::MatrixXd					CurvatureTensorField2D;
+	Eigen::SparseMatrix<double>		CurvatureTensor2D; 
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, localSystem;

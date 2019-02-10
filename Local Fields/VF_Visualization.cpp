@@ -382,8 +382,8 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color)
 {
 	// Reset
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
 
 	Eigen::Vector3d e;
 	Eigen::VectorXd blockLength(F.rows());
@@ -401,8 +401,8 @@ void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 		totalGrad += blockLength(i);
 	}
 
-	averageGrad = totalGrad / (double)F.rows();
-	double lengthScale = 1.0*avgEdgeLength / averageGrad;
+	//averageGrad = totalGrad / (double)F.rows();
+	double lengthScale = 0.2*avgEdgeLength; // / averageGrad;
 
 	for (int i = 0; i < F.rows(); i++)
 	{
@@ -578,39 +578,17 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Visualizing the curvature fields\n";
 	// Average edge length for sizing
-	const double avg = igl::avg_edge_length(V, F);
-	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8);
+	const Eigen::RowVector3d red(0.8, 0.2, 0.2), blue(0.2, 0.2, 0.8), green(0.2, 0.8, 0.2);
 
 	/* From tensor */
-	Eigen::VectorXd maxCurvField = A*CurvatureTensorField.col(0);
-	Eigen::VectorXd minCurvField = A*CurvatureTensorField.col(1);
+	Eigen::VectorXd maxCurvField = CurvatureTensorField2D.col(0);
+	Eigen::VectorXd minCurvField = CurvatureTensorField2D.col(1);
 
-	/* VERTEX BASED */
-	//// Draw a blue segment parallel to the minimal curvature direction
-	//viewer.data().add_edges(V + PD1*avg, V - PD1*avg, blue);
-
-	//// Draw a red segment parallel to the maximal curvature direction
-	//viewer.data().add_edges(V + PD2*avg, V - PD2*avg, red);
-
-	/* FACE BASED */
-	//viewer.data().add_edges(FC + avg*CurvatureTensor3D.block(0, 0, F.rows(), 3), FC - avg*CurvatureTensor3D.block(0, 0, F.rows(), 3), blue);
-	//viewer.data().add_edges(FC + avg*CurvatureTensor3D.block(0, 3, F.rows(), 3), FC - avg*CurvatureTensor3D.block(0, 3, F.rows(), 3), red);
-	
-	//for (int i = 0; i < F.rows(); i++) 
-	//{
-	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 0, 3, 1)).transpose(), blue);
-	//	viewer.data().add_edges(FC.row(i), FC.row(i) + avg*(CurvatureTensor3D.block(3 * i, 1, 3, 1)).transpose(), red);
-	//}
-
-	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(0), blue, 1.0);
-	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(0), blue, 1.0);
-	//visualize2DfieldsScaled(viewer,  CurvatureTensor.col(1), red,  1.0);
-	//visualize2DfieldsScaled(viewer, -CurvatureTensor.col(1), red,  1.0);
-
-	visualize2DfieldsNormalized(viewer,  maxCurvField, blue, 2);
-	visualize2DfieldsNormalized(viewer, -maxCurvField, blue, 2);
-	visualize2DfieldsNormalized(viewer,  minCurvField, red,  2);
-	visualize2DfieldsNormalized(viewer, -minCurvField, red,  2);
+	/* FACE BASED */	
+	visualize2DfieldsScaled(viewer,  maxCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer, -maxCurvField, red,  0.3);
+	visualize2DfieldsScaled(viewer,  minCurvField, blue, 0.3);
+	visualize2DfieldsScaled(viewer, -minCurvField, blue, 0.3);
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/

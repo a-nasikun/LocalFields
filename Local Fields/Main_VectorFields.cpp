@@ -124,8 +124,8 @@ int main(int argc, char *argv[])
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	//vectorFields.ConstructCurvatureTensor();
-	//vectorFields.ComputeCurvatureFields();
+	vectorFields.ConstructCurvatureTensor(viewer);
+	vectorFields.ComputeCurvatureFields();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
