@@ -2487,17 +2487,39 @@ void VectorFields::obtainUserVectorFields()
 
 void VectorFields::computeEigenFields()
 {
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Computing reference eigenproblem (in Matlab)... ";
+
 	computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
-	cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
+	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::computeApproxEigenFields()
 {
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Computing restricted eigenproblem (in Matlab)... ";
+
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 	Eigen::SparseMatrix<double> Sbar = Basis.transpose() * SF2D * Basis;
 	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
+	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
+
+	WriteSparseMatrixToMatlab(Basis, "hello");
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::measureApproxAccuracyL2Norm()
