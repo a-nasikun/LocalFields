@@ -300,16 +300,16 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	}	 
 
 	// Compute Eigenvalue in Matlab
-	int NUM_EIGEN = 2;
+	int NUM_EIGEN = 20;
 
 	engPutVariable(ep, "MS", MS);
 	engPutVariable(ep, "MM", MM);
 
 	t3 = chrono::high_resolution_clock::now();
-	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,2,'smallestabs');");
-	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
+	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,20,'smallestabs');");
+	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	//engEvalString(ep, "hold on; plot(1:2, EigVal(1:2),'LineWidth',1.5);"); // has to do it this way for "correct" plot
+	engEvalString(ep, "hold on; plot(1:20, EigVal(1:20),'LineWidth',1.5);"); // has to do it this way for "correct" plot
 	t4 = chrono::high_resolution_clock::now();
 
 	//engEvalString(ep, "save('D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Dino_LDEigVec_15_5000','LDEigVec');");
