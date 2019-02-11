@@ -1829,7 +1829,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2511,11 +2511,11 @@ void VectorFields::computeApproxEigenFields()
 
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 	Eigen::SparseMatrix<double> Sbar = Basis.transpose() * SF2D * Basis;
-	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
-	WriteSparseMatrixToMatlab(Basis, "hello");
+	//WriteSparseMatrixToMatlab(Basis, "hello");
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;

@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 
-int eigToShow = 0, basisId = 0, numSample = 1000, selectedVertex;
+int eigToShow = 0, basisId = 0, numSample = 500, selectedVertex;
 int eigToShow2 = 0;
 
 int main(int argc, char *argv[])

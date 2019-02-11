@@ -300,20 +300,22 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	}	 
 
 	// Compute Eigenvalue in Matlab
-	int NUM_EIGEN = 100;
+	int NUM_EIGEN = 500;
 
 	engPutVariable(ep, "MS", MS);
 	engPutVariable(ep, "MM", MM);
 
 	t3 = chrono::high_resolution_clock::now();
-	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,100,'smallestabs');");
+	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,500,'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	engEvalString(ep, "hold on; plot(1:100, EigVal(1:100),'LineWidth',1.5);"); // has to do it this way for "correct" plot
+	engEvalString(ep, "hold on; plot(1:500, EigVal(1:500),'LineWidth',1.5);"); // has to do it this way for "correct" plot
 	t4 = chrono::high_resolution_clock::now();
 
-	engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_LDEigVect_1000samples','EigVec');");
-	engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_LDEigVal_1000samples','EigVal');");
+	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_LDEigVect_1000samples','EigVec');");
+	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_LDEigVal_1000samples','EigVal');");
+	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_REigVect','EigVec');");
+	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_REigVal','EigVal');");
 	
 	result = engGetVariable(ep, "EigVal");
 	eigVal = (double*)malloc(NUM_EIGEN * sizeof(double));
