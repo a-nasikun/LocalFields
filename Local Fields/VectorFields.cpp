@@ -1829,7 +1829,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
+	double	coef = sqrt(pow(1.3, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2507,10 +2507,18 @@ void VectorFields::computeApproxEigenFields()
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
-	cout << "> Computing restricted eigenproblem (in Matlab)... ";
+	cout << "> Computing restricted eigenproblem (in Matlab)...\n ";
 
+	cout << "____Computing reduced system... ";
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 	Eigen::SparseMatrix<double> Sbar = Basis.transpose() * SF2D * Basis;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+
+	t1 = chrono::high_resolution_clock::now();
 	computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;

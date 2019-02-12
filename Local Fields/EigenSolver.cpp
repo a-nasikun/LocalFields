@@ -95,6 +95,10 @@ void computeEigenGPU(Eigen::SparseMatrix<double> &S_, Eigen::SparseMatrix<double
 	printf("after sygvd: info_gpu = %d\n", info_gpu);
 	assert(0 == info_gpu);
 
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+	printf("Time to compute eigenstructure is %.5f. \n", time_span);
+
 	// Copying back to EigenFormat (dense) for Eigenvalues and Eigenvectors
 	LDEigVec = Eigen::Map<Eigen::MatrixXd, 0, Eigen::OuterStride<>>(V, m, lda, Eigen::OuterStride<>(m));
 	LDEigVal = Eigen::Map<Eigen::VectorXd>(W, m);
@@ -113,6 +117,10 @@ void computeEigenGPU(Eigen::SparseMatrix<double> &S_, Eigen::SparseMatrix<double
 	if (d_work) cudaFree(d_work);
 	if (cusolverH) cusolverDnDestroy(cusolverH);
 	cudaDeviceReset();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+	printf("Getting out from CUDA: %.5f. \n", time_span);
 }
 
 void computeEigenGPU(Eigen::MatrixXd &S_, Eigen::MatrixXd &M_, Eigen::MatrixXd &LDEigVec, Eigen::VectorXd &LDEigVal)
