@@ -71,6 +71,9 @@ struct FacePair
 double SparseMatrixMaxValue(const Eigen::SparseMatrix<double> &M);
 void WriteDenseMatrixToMatlab(const Eigen::MatrixXd& M, const string& filename);
 void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const string& filename);
+void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename);
+void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& filename);
+void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename);
 
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);

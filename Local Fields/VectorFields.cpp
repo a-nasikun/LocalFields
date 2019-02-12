@@ -2493,13 +2493,19 @@ void VectorFields::computeEigenFields()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Computing reference eigenproblem (in Matlab)... ";
 
-	//computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
+	computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
-	WriteSparseMatrixToMatlab(MF2D, "hello");
+	//WriteSparseMatrixToMatlab(MF2D, "hello");
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::retrieveEigenFields()
+{
+	ReadDenseMatrixFromMatlab(eigFieldFull2D, "Hello");
+	ReadVectorFromMatlab(eigValuesFull, "hello");
 }
 
 void VectorFields::computeApproxEigenFields()
@@ -2529,6 +2535,13 @@ void VectorFields::computeApproxEigenFields()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::retrieveApproxEigenFields() 
+{
+	ReadSparseMatrixFromMatlab(Basis, "Hello");
+	ReadDenseMatrixFromMatlab(eigFieldReduced2D, "Hello");
+	ReadVectorFromMatlab(eigValuesReduced, "hello");
 }
 
 void VectorFields::measureApproxAccuracyL2Norm()

@@ -118,6 +118,7 @@ public:
 	// APPLICATIONS ON GLOBAL SYSTEM
 	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 	void computeEigenFields();
+	void retrieveEigenFields();
 
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
@@ -151,6 +152,7 @@ public:
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
 	void computeApproxEigenFields();
+	void retrieveApproxEigenFields();
 	void ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 	void ComputeCurvatureFields();
 

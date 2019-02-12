@@ -131,6 +131,92 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 
 }
 
+void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
+{
+	using namespace matlab::engine;
+	Engine *ep;
+	mxArray *eigValM, *eigVecM;		// for Matlab
+	double	*eigValE, *eigVecE;		// for Eigen
+	const int NUM_EIGEN = 20;
+	const int NUM_ROWS = 122880;
+	const int NUM_BLOCKS = 1;
+
+	M.resize(NUM_ROWS, NUM_BLOCKS*NUM_EIGEN);
+
+	// Start Matlab Engine
+	ep = engOpen(NULL);
+	if (!(ep = engOpen(""))) {
+		fprintf(stderr, "\nCan't start MATLAB engine\n");
+		cout << "CANNOT START MATLAB " << endl;
+	}
+	else {
+		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
+	}
+	
+	cout << "Loading Matrix" << endl;
+	engEvalString(ep, "load('D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect.mat');");
+	
+	// First 2 blocks
+	cout << "Retrieving the Matrix" << endl;
+	engEvalString(ep, "REVec = EigVec;");
+	eigVecM = engGetVariable(ep, "REVec");
+	eigVecE = (double*)malloc(NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
+	memcpy((void *)eigVecE, (void *)mxGetPr(eigVecM), NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
+
+	cout << "Converting the Matrix to Eigen format" << endl;
+	//Eigen::MatrixXd REigCont;
+	M.resize(NUM_ROWS, NUM_BLOCKS* NUM_EIGEN);
+	M = Eigen::Map<Eigen::MatrixXd, 0, Eigen::OuterStride<>>(eigVecE, NUM_ROWS, NUM_BLOCKS*NUM_EIGEN, Eigen::OuterStride<>(NUM_ROWS));
+	printf("Size of Matrix=%dx%d\n", M.rows(), M.cols());
+	//M.block(0, 0, NUM_ROWS, NUM_BLOCKS * NUM_EIGEN) = REigCont;
+	
+	engEvalString(ep, "clear;");
+	engClose(ep);
+}
+
+void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& filename)
+{
+	/// [TO DO]
+}
+
+void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename)
+{
+	using namespace matlab::engine;
+	Engine *ep;
+	mxArray *eigValM, *eigVecM;		// for Matlab
+	double	*eigValE, *eigVecE;		// for Eigen
+	const int NUM_EIGEN = 20;
+	const int NUM_ROWS = 122880;
+	const int NUM_BLOCKS = 1;
+
+	v.resize(NUM_BLOCKS*NUM_EIGEN);	
+
+	// Start Matlab Engine
+	ep = engOpen(NULL);
+	if (!(ep = engOpen(""))) {
+		fprintf(stderr, "\nCan't start MATLAB engine\n");
+		cout << "CANNOT START MATLAB " << endl;
+	}
+	else {
+		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
+	}
+
+	cout << "Loading Matrix" << endl;
+	engEvalString(ep, "load('D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal.mat');");
+
+	// Get the EIGENVALUES from Matlab => C++
+	cout << "Retrieving the eigenvalues" << endl;
+	eigValM = engGetVariable(ep, "EigVal");
+	eigValE = (double*)malloc(NUM_BLOCKS*NUM_EIGEN * sizeof(double));
+	memcpy((void *)eigValE, (void *)mxGetPr(eigValM), NUM_BLOCKS*NUM_EIGEN * sizeof(double));
+	v = Eigen::Map<Eigen::VectorXd>(eigValE, NUM_EIGEN);
+	cout << "Eigenvalues: \n" << v << endl; 
+
+		
+	engEvalString(ep, "clear;");
+	engClose(ep);
+}
+
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M)
 {
