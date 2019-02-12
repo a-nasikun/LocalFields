@@ -2493,8 +2493,9 @@ void VectorFields::computeEigenFields()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Computing reference eigenproblem (in Matlab)... ";
 
-	computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
+	//computeEigenMatlab(SF2D, MF2D, eigFieldFull2D, eigValuesFull);
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
+	WriteSparseMatrixToMatlab(MF2D, "hello");
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
