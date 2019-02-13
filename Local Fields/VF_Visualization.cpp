@@ -284,7 +284,8 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);	
 
 	/* Drawing faces */
-	//Eigen::RowVector3d c, g;
+	Eigen::RowVector3d c, g;
+
 	//Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
 	//for (int i = 0; i < FaceToDraw.size(); i += 1)
 	//{
