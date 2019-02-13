@@ -2526,8 +2526,8 @@ void VectorFields::computeApproxEigenFields()
 
 
 	t1 = chrono::high_resolution_clock::now();
-	computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
 	//WriteSparseMatrixToMatlab(Basis, "hello");

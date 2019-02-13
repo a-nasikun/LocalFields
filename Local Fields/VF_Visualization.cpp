@@ -274,7 +274,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	//viewer.data().set_mesh(V, F);
 
 	/* Some constants for arrow drawing */
-	const double HEAD_RATIO = 5.0;
+	const double HEAD_RATIO = 3.0;
 	const double EDGE_RATIO = scale; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
@@ -285,13 +285,13 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 
 	/* Drawing faces */
 	Eigen::RowVector3d c, g;
-	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
-	for (int i = 0; i < FaceToDraw.size(); i += 1)
-	{
-		c = FC.row(FaceToDraw[i]);												
-		g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
-	}
+	//Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
+	//for (int i = 0; i < FaceToDraw.size(); i += 1)
+	//{
+	//	c = FC.row(FaceToDraw[i]);												
+	//	g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
+	//	VectorBlock.row(i) = g;
+	//}
 	//cout << "picking face to draw: done \n" << endl;
 
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
@@ -697,21 +697,32 @@ void VectorFields::visualizeDijkstra(igl::opengl::glfw::Viewer &viewer)
 void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
 {
 	Eigen::VectorXd eigfields = eigFieldFull2D.col(i);
+	double l2norm = eigfields.transpose()*MF2D*eigfields;
+
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 
 	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 15.0);
+	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5.0);
 }
 
 void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
 {
 	Eigen::VectorXd eigfields = Basis*eigFieldReduced2D.col(i);
+	double l2norm = eigfields.transpose()*MF2D*eigfields;
+	eigfields /= sqrt(l2norm);
+	l2norm = eigfields.transpose()*MF2D*eigfields;
+
+	if (eigFieldFull2D.size() > 0)
+	{
+		if ((eigfields.transpose()*MF2D*eigFieldFull2D.col(i)) < 0) eigfields *= -1; 
+	}
+
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
-
+	
 	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 30.0);
+	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5.0);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

@@ -154,7 +154,7 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 	}
 	
 	cout << "Loading Matrix" << endl;
-	engEvalString(ep, "load('D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect.mat');");
+	engEvalString(ep, "load('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect.mat');");
 	
 	// First 2 blocks
 	cout << "Retrieving the Matrix" << endl;
@@ -202,7 +202,7 @@ void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename)
 	}
 
 	cout << "Loading Matrix" << endl;
-	engEvalString(ep, "load('D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal.mat');");
+	engEvalString(ep, "load('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal.mat');");
 
 	// Get the EIGENVALUES from Matlab => C++
 	cout << "Retrieving the eigenvalues" << endl;
