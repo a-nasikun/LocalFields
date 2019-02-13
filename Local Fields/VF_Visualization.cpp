@@ -274,7 +274,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	//viewer.data().set_mesh(V, F);
 
 	/* Some constants for arrow drawing */
-	const double HEAD_RATIO = 5.0;
+	const double HEAD_RATIO = 3.0;
 	const double EDGE_RATIO = scale; 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
@@ -284,14 +284,14 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);	
 
 	/* Drawing faces */
-	Eigen::RowVector3d c, g;
-	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
-	for (int i = 0; i < FaceToDraw.size(); i += 1)
-	{
-		c = FC.row(FaceToDraw[i]);												
-		g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
-	}
+	//Eigen::RowVector3d c, g;
+	//Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
+	//for (int i = 0; i < FaceToDraw.size(); i += 1)
+	//{
+	//	c = FC.row(FaceToDraw[i]);												
+	//	g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
+	//	VectorBlock.row(i) = g;
+	//}
 	//cout << "picking face to draw: done \n" << endl;
 
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
