@@ -203,7 +203,7 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 {
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 1.0;
+	const double EDGE_RATIO = 10.0;
 
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
@@ -703,8 +703,12 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 
-	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5.0);
+	/* Define some colors */
+	Eigen::RowVector3d purple(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0);
+	Eigen::RowVector3d blue(0.1, 0.0, 0.9);
+
+	visualize2DfieldsNormalized(viewer, eigfields, blue, 5000);
+	//visualize2DfieldsScaled(viewer, eigfields, blue, 150.0);
 }
 
 void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
@@ -714,16 +718,28 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	eigfields /= sqrt(l2norm);
 	l2norm = eigfields.transpose()*MF2D*eigfields;
 
+	/* Inverse the sign to match the reference */
 	if (eigFieldFull2D.size() > 0)
 	{
 		if ((eigfields.transpose()*MF2D*eigFieldFull2D.col(i)) < 0) eigfields *= -1; 
 	}
 
+	/* Computing the L2norm error */	
+	Eigen::VectorXd diff = eigFieldFull2D.col(i) - eigfields;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = eigFieldFull2D.col(i).transpose()*MF2D*eigFieldFull2D.col(i);
+	l2norm = sqrt(norm1 / norm2);
+	printf("L2 norm of %d approx is: %.5f\n", i, l2norm);
+
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
+
+	/* Define some colors */
+	Eigen::RowVector3d purple(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0);
+	Eigen::RowVector3d red(0.9, 0.1, 0.1);
 	
 	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5.0);
+	visualize2DfieldsScaled(viewer, eigfields, red, 150.0);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)
