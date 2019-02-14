@@ -349,7 +349,7 @@ void VectorFields::visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, c
 void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::SparseMatrix<double> &Field2D, const int &idx, const Eigen::RowVector3d &color)
 {	
 	/* Some constants for arrow drawing */
-	const double HEAD_RATIO = 5.0;
+	const double HEAD_RATIO = 3.0;
 	const double EDGE_RATIO = 1.0;
 
 	/*Computing the rotation angle for 1:3 ratio of arrow head */
