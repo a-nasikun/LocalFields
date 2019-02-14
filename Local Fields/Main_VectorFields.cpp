@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=10, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=100, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -14,10 +14,6 @@ int main(int argc, char *argv[])
 	igl::opengl::glfw::Viewer		viewer;
 	Eigen::MatrixXd					V;
 	Eigen::MatrixXi					F, E;
-
-	/* Multiple meshes, try to work on this one now */
-	Eigen::MatrixXd	V1, V2, V3;
-	Eigen::MatrixXi F1, F2, F3; 
 
 	// Hell there this is main function.
 
@@ -36,16 +32,15 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
-	
 
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -64,31 +59,6 @@ int main(int argc, char *argv[])
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
-	viewer.append_mesh();
-	viewer.data().set_mesh(V, F);
-	viewer.append_mesh();
-	viewer.data().set_mesh(V, F);
-	viewer.append_mesh();
-	viewer.data().set_mesh(V, F);
-
-	/* Test on multiple mesh*/
-	//V1 = V; F1 = F; 
-	//viewer.append_mesh();
-	//viewer.data().set_mesh(V1, F1);
-	//meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
-	//igl::readOBJ(meshFile, V1, F1);
-	//viewer.append_mesh();
-	//viewer.data().set_mesh(V1, F1);
-	//meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//igl::readOBJ(meshFile, V2, F2);
-	//viewer.append_mesh();
-	//viewer.data().set_mesh(V2, F2);
-	//meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//igl::readOBJ(meshFile, V3, F3);
-	//viewer.append_mesh();
-	//viewer.data().set_mesh(V3, F3);
-	//viewer.selected_data_index = 0; 
-
 
 	/* MATRIX CONSTRUCTIONS */
 	vectorFields.constructMassMatrices();
@@ -108,23 +78,20 @@ int main(int argc, char *argv[])
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	viewer.selected_data_index = 0; 
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
-	viewer.selected_data_index = 1;
-	vectorFields.constructArbitraryField();
-	vectorFields.constructArbitraryField2D();
+	//vectorFields.constructArbitraryField();
+	//vectorFields.constructArbitraryField2D();
 	//vectorFields.testBasis();
-	vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
+	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
 
 	//vectorFields.measureDirichletEnergy();
 
-	//viewer.selected_data_index = 1; 
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	Eigen::VectorXd v_in = vectorFields.arbField2D;
@@ -132,8 +99,8 @@ int main(int argc, char *argv[])
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	//vectorFields.ConstructCurvatureTensor(viewer);
-	//vectorFields.ComputeCurvatureFields();
+	vectorFields.ConstructCurvatureTensor(viewer);
+	vectorFields.ComputeCurvatureFields();
 
 
 	/* ==================== VISUALIZATION ======================== */
@@ -146,8 +113,7 @@ int main(int argc, char *argv[])
 	/* LOCAL  */
 	//vectorFields.visualizeApproxResult(viewer);	
 	//vectorFields.visualizeUserConstraints(viewer);
-	viewer.selected_data_index = 0; 
-	vectorFields.visualizeSamples(viewer);
+	//vectorFields.visualizeSamples(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	
 	/* VISUALIZATION FOR TESTING PURPOSE */
@@ -169,12 +135,7 @@ int main(int argc, char *argv[])
 	//testMKL_Pardiso();
 
 	/* VISUALIZATION OF APPLICATIONS */
-	//vectorFields.visualizeCurvatureTensor(viewer);
-
-	//viewer.selected_data_index = 3;
-	//vectorFields.visualizeBasis(viewer, 1);
-	//viewer.selected_data_index = 0;
-	//vectorFields.visualizeBasis(viewer, 0);
+	vectorFields.visualizeCurvatureTensor(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -186,21 +147,19 @@ int main(int argc, char *argv[])
 		{
 		case '1':
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
-			viewer.selected_data_index = (max(int(viewer.selected_data_index - 1), 0));
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
-			//vectorFields.visualizeApproxResult(viewer);
-			//vectorFields.visualizeUserConstraints(viewer);
-			viewer.selected_data_index = (min(int(viewer.selected_data_index + 1), 3));
+			vectorFields.visualizeApproxResult(viewer);
+			vectorFields.visualizeUserConstraints(viewer);
 			break;
 		case '3':
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
 			//vectorFields.visualizeGlobalConstraints(viewer);
-			basisId = max(basisId - 1, 0);
-			vectorFields.visualizeBasis(viewer, basisId);
+			//basisId = max(basisId - 1, 0);
+			//vectorFields.visualizeBasis(viewer, basisId);
 			break;
 		case '4':
 			basisId = min(basisId + 1, 2*numSample-1);

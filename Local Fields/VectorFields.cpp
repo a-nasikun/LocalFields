@@ -1780,8 +1780,8 @@ void VectorFields::farthestPointSampling()
 	}
 
 	srand(time(NULL));
-	//Sample[0] = rand() % F.rows();
-	Sample[0] = 0;
+	Sample[0] = rand() % F.rows();
+	//Sample[0] = 0;
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
 	//Eigen::VectorXi::Index maxIndex1;
@@ -1804,7 +1804,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.3, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
