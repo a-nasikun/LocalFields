@@ -417,8 +417,8 @@ void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
 {
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
 
 	int bId = id;
 	Eigen::RowVector3d color;
@@ -433,7 +433,7 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 		bId = 2 * Sample.size() - 1;
 	}
 
-	printf("Showing the %d BasisTemp field\n", bId);
+	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id/2]);
 	//visualize2DfieldsScaled(viewer, BasisTemp.col(bId), color);
 	visualize2DfieldsScaled(viewer, BasisTemp, bId, color);
 
@@ -443,8 +443,8 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 
 void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, const int &id)
 {
-	viewer.data().clear();
-	viewer.data().set_mesh(V, F);
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
 
 	int bId = id;
 	Eigen::RowVector3d color;
@@ -667,12 +667,12 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 	for (int i = 0; i < F.rows(); i++) dom(i) = 0.0;
 
 	for (std::set<int>::iterator it = SubDomain.begin(); it != SubDomain.end(); ++it) {
-		dom(*it) = 0.5;
-		if (*it == 542) dom(*it) = 1.0;
+		dom(*it) = 0.3;
+		if (*it == Sample[0]) dom(*it) = 1.0;
 	}
 
 	for (std::set<int>::iterator it = Boundary.begin(); it != Boundary.end(); ++it) {
-		dom(*it) = 0.25;
+		dom(*it) = 0.7;
 	}
 
 
@@ -782,4 +782,41 @@ void VectorFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
 			viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
 		}
 	}
+}
+
+void VectorFields::visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even)
+{
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 1.0;
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	/* Drawing faces */
+	Eigen::RowVector3d c, g;	
+
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e, color;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);
+
+	if (even)	color = Eigen::RowVector3d(1.0, 0.1, 0.0);
+	else		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
+	
+	c = FC.row(Sample[0]);
+	if(even)	v << 1.0, 0.0;
+	else 		v << 0.0, 1.0;
+	ALoc = A.block(3 * Sample[0], 2 * Sample[0], 3, 2);
+	f = (ALoc * v).transpose();
+	h1 = (ALoc* (rotMat1*v)).transpose();
+	h2 = (ALoc* (rotMat2*v)).transpose();
+	e = c + f*lengthScale;
+	viewer.data().add_edges(c, e, color);
+	viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+	viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+	
 }

@@ -176,6 +176,7 @@ public:
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 	void visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer);
+	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
