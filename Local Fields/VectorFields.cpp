@@ -1805,8 +1805,10 @@ void VectorFields::farthestPointSampling()
 	}
 
 	srand(time(NULL));
-	Sample[0] = rand() % F.rows();
+	//Sample[0] = rand() % F.rows();
 	//Sample[0] = 0;
+	Sample[0] = 70267; // Arma 43k
+	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
 	//Eigen::VectorXi::Index maxIndex1;
@@ -1924,6 +1926,15 @@ void VectorFields::constructBasis()
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
+
+			//localField.measureXF(doubleArea, J);
+
+			/* For visualization purpose only*/
+			if (id == 0)
+			{
+				SubDomain = localField.SubDomain;
+				Boundary = localField.Boundary;
+			}
 
 			localField.measureXF(doubleArea, J);
 

@@ -32,14 +32,14 @@ public:
 private:
 	int id;// , sampleID;
 	Eigen::MatrixXd					XfLoc, cLoc, bLoc, gLoc, hLoc;
-	Eigen::SparseMatrix<double>		BLoc, ALoc, CLoc, SF2DLoc, SF_Curl, SF_Div;
-	set<int>						BeyondBoundary;
+	Eigen::SparseMatrix<double>		BLoc, ALoc, CLoc, SF2DLoc, SF_Curl, SF_Div;	
 	vector<int>						LocalElements, GlobToLocMap;
 	Eigen::VectorXd					vEstimateLoc;
 
 public:
 	int								sampleID;
-	set<int>						SubDomain, Boundary;
+	set<int>						SubDomain, Boundary, BeyondBoundary;
+
 };
 
 

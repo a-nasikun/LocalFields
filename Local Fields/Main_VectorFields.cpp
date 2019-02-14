@@ -3,9 +3,9 @@
 
 #include "TestSolver.h"
 
-
 int eigToShow = 0, basisId = 0, numSample = 500, selectedVertex;
 int eigToShow2 = 0;
+
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
-
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -163,6 +162,11 @@ int main(int argc, char *argv[])
 	/* VISUALIZATION OF APPLICATIONS */
 	//vectorFields.visualizeCurvatureTensor(viewer);
 
+
+	/* FOR GENERATING IMAGES on PAPER */
+	vectorFields.visualizeSubdomain(viewer);
+	bool evenSpaceField = true; 
+
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
 		int selectedFace;
@@ -172,20 +176,23 @@ int main(int argc, char *argv[])
 		switch (key)
 		{
 		case '1':
+			vectorFields.visualizeSubdomain(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-			vectorFields.visualizeApproximatedFields(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeApproximatedFields(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
-			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeUserConstraints(viewer);
+			//vectorFields.visualizeApproxResult(viewer);
+			//vectorFields.visualizeUserConstraints(viewer);
+			evenSpaceField = !evenSpaceField; 
+			vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;
 		case '3':
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
 			//vectorFields.visualizeGlobalConstraints(viewer);
-			//basisId = max(basisId - 1, 0);
-			//vectorFields.visualizeBasis(viewer, basisId);
+			basisId = max(basisId - 1, 0);
+			vectorFields.visualizeBasis(viewer, basisId);
 			break;
 		case '4':
 			basisId = min(basisId + 1, 2*numSample-1);
@@ -305,7 +312,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.0f; 
+	viewer.data().line_width = 3.0f; 
 
 	return viewer.launch();
 }
