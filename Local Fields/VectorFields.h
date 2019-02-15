@@ -176,7 +176,7 @@ public:
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 	void visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer);
-	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);
+	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);	
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -242,9 +242,11 @@ protected:
 	// Variables related to Applications
 	Eigen::MatrixXd					CurvatureTensorField2D;
 	Eigen::SparseMatrix<double>		CurvatureTensor2D; 
+
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	Eigen::VectorXd					sampleDistance;
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints; 
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 private:

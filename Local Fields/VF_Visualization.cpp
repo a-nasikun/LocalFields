@@ -683,13 +683,19 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::RowVector3d color(0.1, 0.1, 0.8);
+	Eigen::RowVector3d color(0.0, 0.8, 0.0);
 	Eigen::RowVector3d c;
 
-	for (int i : Sample) {
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		viewer.data().add_points(c, color);
-	}
+	/* Point based */
+	//for (int i : Sample) {
+	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
+	//	viewer.data().add_points(c, color);
+	//}
+
+	/* Color based */
+	Eigen::MatrixXd FColor;
+	igl::jet(-sampleDistance, true, FColor);
+	viewer.data().set_colors(FColor);
 }
 
 void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)

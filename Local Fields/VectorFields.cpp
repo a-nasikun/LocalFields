@@ -1796,6 +1796,8 @@ void VectorFields::farthestPointSampling()
 		D.maxCoeff(&maxIndex);
 		Sample[i] = maxIndex;
 	}
+
+	sampleDistance = D; 
 }
 
 void VectorFields::constructBasis()

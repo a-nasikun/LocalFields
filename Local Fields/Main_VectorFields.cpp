@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId=0, numSample=1500, selectedVertex;
+int eigToShow = 0, basisId=0, numSample=5000, selectedVertex;
 
 int main(int argc, char *argv[])
 {
@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
+	//vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
@@ -138,8 +139,9 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeCurvatureTensor(viewer);
 
 	/* FOR GENERATING IMAGES on PAPER */
-	vectorFields.visualizeSubdomain(viewer);
+	//vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
+	vectorFields.visualizeSamples(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
