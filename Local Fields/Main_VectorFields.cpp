@@ -6,7 +6,6 @@
 int eigToShow = 0, basisId = 0, numSample = 500, selectedVertex;
 int eigToShow2 = 0;
 
-
 int main(int argc, char *argv[])
 {
 	bool selectFace = false;
@@ -49,6 +48,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
+	//vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -164,8 +164,9 @@ int main(int argc, char *argv[])
 
 
 	/* FOR GENERATING IMAGES on PAPER */
-	vectorFields.visualizeSubdomain(viewer);
+	//vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
+	vectorFields.visualizeSamples(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
