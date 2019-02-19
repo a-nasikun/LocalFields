@@ -2896,10 +2896,10 @@ void VectorFields::ComputeCurvatureFields()
 		if (i == 0) cout << "HEYYYYY\n" << TensorLoc << endl << endl; 
 		if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
 
-		computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
-		//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
+		//computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+		computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
 		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
-		if (abs(eigVals2D(0)) > abs(eigVals2D(1))) { largest = 0; smallest = 1; }
+		if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
 		else { largest = 1; smallest = 0; }
 		printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
 				i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
