@@ -92,7 +92,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedHardConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 50;
+	const int numConstraints = 5;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
