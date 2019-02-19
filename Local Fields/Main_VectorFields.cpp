@@ -74,15 +74,15 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	vectorFields.setupGlobalProblem();
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setAndSolveUserSystem();
-	vectorFields.measureApproxAccuracyL2Norm();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setAndSolveUserSystem();
+	//vectorFields.measureApproxAccuracyL2Norm();
 
 	/* ====================== TESTING BASIS ====================*/
 	//vectorFields.constructArbitraryField();
@@ -143,6 +143,10 @@ int main(int argc, char *argv[])
 	bool evenSpaceField = true; 
 	//vectorFields.visualizeSamples(viewer);
 
+	/* Variables for faces of face selection */
+	vector<int> ChosenFaces;
+	Eigen::RowVector3d constraintDir;
+
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
 		int selectedFace;
@@ -197,15 +201,15 @@ int main(int argc, char *argv[])
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
 			break;
-		//case 'x':
-		//case 'X':
-			//C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			//selectFace = !selectFace;
-			//cout << "Select face: " << selectFace << endl; 
-			//if (selectFace) cout << "Face is selected" << endl; 
-			//selectedFace = rand() % F.rows();
-			//cout << "Face: " << selectedFace << endl;
-			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+		case 'x':
+		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			selectFace = !selectFace;
+			cout << "Select face: " << selectFace << endl; 
+			if (selectFace) cout << "Face is selected" << endl; 
+			selectedFace = rand() % F.rows();
+			cout << "Face: " << selectedFace << endl;
+			vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
 		case 'c':
 		case 'C':
@@ -213,12 +217,12 @@ int main(int argc, char *argv[])
 			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
-		case 'x':
-		case 'X':
-			printf("Computing smoothing on full res\n");
-			vectorFields.computeSmoothing(mu, v_in, v_out);
-			v_in = v_out;
-			break; 
+		//case 'x':
+		//case 'X':
+		//	printf("Computing smoothing on full res\n");
+		//	vectorFields.computeSmoothing(mu, v_in, v_out);
+		//	v_in = v_out;
+		//	break; 
 		case 'v':
 		case 'V':
 			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 1.0);
@@ -239,10 +243,12 @@ int main(int argc, char *argv[])
 
 	
 	viewer.callback_mouse_move =
-		[&V, &F, &C, &selectFace](igl::opengl::glfw::Viewer& viewer, int, int)->bool
+		[&V, &F, &C, &selectFace, &ChosenFaces, &constraintDir, &vectorFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
 		int fid;
 		Eigen::Vector3f bc;
+		/* Collect the selected faces */
+		
 		// Cast a ray in the view direction starting from the mouse position
 		double x = viewer.current_mouse_x;
 		double y = viewer.core.viewport(3) - viewer.current_mouse_y;
@@ -254,9 +260,27 @@ int main(int argc, char *argv[])
 				// paint hit red
 				C.row(fid) << 1, 0, 0;
 				viewer.data().set_colors(C);
+				ChosenFaces.push_back(fid);
 				return true;
 			}
 		}
+		else {
+			/* Getting the length + direction of the constraints*/
+			const int constraintSize = ChosenFaces.size();
+			if (constraintSize > 0)
+			{
+				printf("Size of the contraints vector is %d\n", constraintSize);
+				constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize-1]) - vectorFields.FC.row(ChosenFaces[0]);
+				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+				//cout << "Hello there\n";
+			}
+			ChosenFaces.clear();
+			return false; 
+		}
+
+		
+		
+
 		return false;
 	};
 	viewer.callback_init = [&](igl::opengl::glfw::Viewer &viewer) {return false; };

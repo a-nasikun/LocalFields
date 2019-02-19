@@ -206,7 +206,8 @@ public:
 
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
-	Eigen::MatrixXd					V, FC, NF;
+	//Eigen::MatrixXd					V, FC, NF;
+	Eigen::MatrixXd					V, NF;
 	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
@@ -249,6 +250,7 @@ public:
 	Eigen::VectorXd					sampleDistance;
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints; 
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
+	Eigen::MatrixXd					FC;
 private:
 	
 };
