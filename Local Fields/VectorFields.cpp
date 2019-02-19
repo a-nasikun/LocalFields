@@ -2753,20 +2753,56 @@ void VectorFields::ComputeCurvatureFields()
 	MLoc2D << 1.0, 0.0,			0.0, 1.0; 
 	int smallest, middle, largest; 
 	/* Computing the eigenvectors => principal curvatures */
-	for (int i = 0; i < F.rows(); i++)
-	{
-		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
-		computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
-		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
-		if (abs(eigVals2D(0)) > abs(eigVals2D(1))) { largest = 0; smallest = 1; }
-		else { largest = 1; smallest = 0; }
-		//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
-		//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
-		//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
 
-		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
-		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
+	/* Making the construction parallel*/
+	int id, tid, ntids, ipts, istart, iproc;
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+	{
+		iproc = omp_get_num_procs();
+		//iproc = 1; 
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		istart = tid * ipts;
+		if (tid == ntids - 1) ipts = Sample.size() - istart;
+		if (ipts <= 0) ipts = 0;
+
+		Eigen::VectorXd				D(F.rows());
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
+		// Computing the values of each element
+		for (id = istart; id < (istart + ipts); id++) {
+			TensorLoc2D = CurvatureTensor2D.block(2 * id, 2 * id, 2, 2);
+			computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+			//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+			if ((eigVals2D(0)) >(eigVals2D(1))) { largest = 0; smallest = 1; }
+			else { largest = 1; smallest = 0; }
+			//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+			//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+			//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+
+			CurvatureTensorField2D.block(2 * id, 0, 2, 1) = EigFields2D.col(largest);
+			CurvatureTensorField2D.block(2 * id, 1, 2, 1) = EigFields2D.col(smallest);
+		}
 	}
+	
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
+	//	computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+	//	//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+	//	if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
+	//	else { largest = 1; smallest = 0; }
+	//	//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+	//	//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+	//	//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+	//
+	//	CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
+	//	CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
+	//}
 }
 
 /* ====================== MESH-RELATED FUNCTIONS ============================*/
