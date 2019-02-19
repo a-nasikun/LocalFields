@@ -2874,42 +2874,104 @@ void VectorFields::ComputeCurvatureFields()
 	Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
 	Eigen::SparseMatrix<double> MLoc(2, 2), TensorLoc(2, 2);
 	Eigen::VectorXd eigVals2D;
-	
+
 
 	/* Dummy mass matrix*/
-	MLoc2D << 1.0, 0.0,			0.0, 1.0; 
+	MLoc2D << 1.0, 0.0, 0.0, 1.0;
 	MLoc.coeffRef(0, 0) = 1.0;
 	MLoc.coeffRef(1, 1) = 1.0;
-	int smallest, middle, largest; 
+	int smallest, middle, largest;
 	/* Computing the eigenvectors => principal curvatures */
-	for (int i = 0; i < F.rows(); i++)
+
+	/* Making the construction parallel*/
+	int id, tid, ntids, ipts, istart, iproc;
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
-		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
-		vector<Eigen::Triplet<double>> TTriplet;
-		TTriplet.reserve(4);
-		TTriplet.push_back(Eigen::Triplet<double>(0, 0, CurvatureTensor2D.coeff(2 * i + 0, 2 * i + 0)));
-		TTriplet.push_back(Eigen::Triplet<double>(1, 0, CurvatureTensor2D.coeff(2 * i + 1, 2 * i + 0)));
-		TTriplet.push_back(Eigen::Triplet<double>(0, 1, CurvatureTensor2D.coeff(2 * i + 0, 2 * i + 1)));
-		TTriplet.push_back(Eigen::Triplet<double>(1, 1, CurvatureTensor2D.coeff(2 * i + 1, 2 * i + 1)));
-		TensorLoc.setFromTriplets(TTriplet.begin(), TTriplet.end());
-		
-		if (i == 0) cout << "HEYYYYY\n" << TensorLoc << endl << endl; 
-		if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
+		iproc = omp_get_num_procs();
+		//iproc = 1; 
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		istart = tid * ipts;
+		if (tid == ntids - 1) ipts = Sample.size() - istart;
+		if (ipts <= 0) ipts = 0;
 
-		//computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
-		//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
-		computeEigenMatlab(TensorLoc, MLoc, (int) MLoc.rows(), EigFields2D, eigVals2D, "hello there");
-		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
-		if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
-		else { largest = 1; smallest = 0; }
-		printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
-				i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
-				   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
+		// Computing the values of each element
+		for (id = istart; id < (istart + ipts); id++) {
+			TensorLoc2D = CurvatureTensor2D.block(2 * id, 2 * id, 2, 2);
+			vector<Eigen::Triplet<double>> TTriplet;
+			TTriplet.reserve(4);
+			TTriplet.push_back(Eigen::Triplet<double>(0, 0, CurvatureTensor2D.coeff(2 * id + 0, 2 * id + 0)));
+			TTriplet.push_back(Eigen::Triplet<double>(1, 0, CurvatureTensor2D.coeff(2 * id + 1, 2 * id + 0)));
+			TTriplet.push_back(Eigen::Triplet<double>(0, 1, CurvatureTensor2D.coeff(2 * id + 0, 2 * id + 1)));
+			TTriplet.push_back(Eigen::Triplet<double>(1, 1, CurvatureTensor2D.coeff(2 * id + 1, 2 * id + 1)));
+			TensorLoc.setFromTriplets(TTriplet.begin(), TTriplet.end());
 
-		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
-		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
+			//if (i == 0) cout << "HEYYYYY\n" << TensorLoc << endl << endl;
+			//if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
+
+			TensorLoc2D = CurvatureTensor2D.block(2 * id, 2 * id, 2, 2);
+			computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+			//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
+			computeEigenMatlab(TensorLoc, MLoc, (int)MLoc.rows(), EigFields2D, eigVals2D, "hello there");
+			//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+			if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
+			else { largest = 1; smallest = 0; }
+			//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+			//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+			//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+
+			CurvatureTensorField2D.block(2 * id, 0, 2, 1) = EigFields2D.col(largest);
+			CurvatureTensorField2D.block(2 * id, 1, 2, 1) = EigFields2D.col(smallest);
+		}
 	}
 }
+
+//
+//<<<<<<< HEAD
+//		TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
+//		vector<Eigen::Triplet<double>> TTriplet;
+//		TTriplet.reserve(4);
+//		TTriplet.push_back(Eigen::Triplet<double>(0, 0, CurvatureTensor2D.coeff(2 * i + 0, 2 * i + 0)));
+//		TTriplet.push_back(Eigen::Triplet<double>(1, 0, CurvatureTensor2D.coeff(2 * i + 1, 2 * i + 0)));
+//		TTriplet.push_back(Eigen::Triplet<double>(0, 1, CurvatureTensor2D.coeff(2 * i + 0, 2 * i + 1)));
+//		TTriplet.push_back(Eigen::Triplet<double>(1, 1, CurvatureTensor2D.coeff(2 * i + 1, 2 * i + 1)));
+//		TensorLoc.setFromTriplets(TTriplet.begin(), TTriplet.end());
+//		
+//		if (i == 0) cout << "HEYYYYY\n" << TensorLoc << endl << endl; 
+//		if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
+//
+//		//computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+//		//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
+//		computeEigenMatlab(TensorLoc, MLoc, (int) MLoc.rows(), EigFields2D, eigVals2D, "hello there");
+//		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+//		if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
+//		else { largest = 1; smallest = 0; }
+//		printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+//				i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+//				   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+//
+//		CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
+//		CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
+//=======		
+
+	
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	TensorLoc2D = CurvatureTensor2D.block(2 * i, 2 * i, 2, 2);
+	//	computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+	//	//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
+	//	if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
+	//	else { largest = 1; smallest = 0; }
+	//	//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+	//	//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
+	//	//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+	//
+	//	CurvatureTensorField2D.block(2 * i, 0, 2, 1) = EigFields2D.col(largest);
+	//	CurvatureTensorField2D.block(2 * i, 1, 2, 1) = EigFields2D.col(smallest);
+	//}
+
 
 /* ====================== MESH-RELATED FUNCTIONS ============================*/
 void VectorFields::readMesh(const string &meshFile)
