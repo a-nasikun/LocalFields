@@ -2897,7 +2897,8 @@ void VectorFields::ComputeCurvatureFields()
 		if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
 
 		//computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
-		computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
+		//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
+		computeEigenMatlab(TensorLoc, MLoc, (int) MLoc.rows(), EigFields2D, eigVals2D, "hello there");
 		//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
 		if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
 		else { largest = 1; smallest = 0; }
