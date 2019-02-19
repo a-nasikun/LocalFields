@@ -2750,29 +2750,29 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, mT2D(1, 1)));
 
 		/* For testing purpose only*/
-		if (i <= 20)
-		{
-			// Showing edges
-			viewer.data().add_edges(V.row(F(i, 0)), V.row(F(i, 0)) + e1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			viewer.data().add_edges(V.row(F(i, 1)), V.row(F(i, 1)) + e2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
-
-			// Showing rotated edge => t
-			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
-
-			// Showing the normals  ni
-			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
-
-			cout << "MT=" << i << endl << ": " << mT << endl;
-			cout << "MT2D=" << i << endl << ": " << mT2D << endl;
-			//cout << "M1=" << f2Form1 << endl << ": " << m1 << endl;
-			//cout << "M2=" << f2Form2 << endl << ": " << m2 << endl;
-			//cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
-		}
+		//if (i <= 20)
+		//{
+		//	// Showing edges
+		//	viewer.data().add_edges(V.row(F(i, 0)), V.row(F(i, 0)) + e1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 1)), V.row(F(i, 1)) + e2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+		//
+		//	// Showing rotated edge => t
+		//	viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+		//
+		//	// Showing the normals  ni
+		//	viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+		//
+		//	cout << "MT=" << i << endl << ": " << mT << endl;
+		//	cout << "MT2D=" << i << endl << ": " << mT2D << endl;
+		//	//cout << "M1=" << f2Form1 << endl << ": " << m1 << endl;
+		//	//cout << "M2=" << f2Form2 << endl << ": " << m2 << endl;
+		//	//cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
+		//}
 	}
 	CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
@@ -2870,17 +2870,9 @@ void VectorFields::ComputeCurvatureFields()
 	/* Resizing the principal curvatures */
 	CurvatureTensorField2D.resize(2 * F.rows(), 2);
 
-	/* Local variables */
-	Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
-	Eigen::SparseMatrix<double> MLoc(2, 2), TensorLoc(2, 2);
-	Eigen::VectorXd eigVals2D;
 
 
-	/* Dummy mass matrix*/
-	MLoc2D << 1.0, 0.0, 0.0, 1.0;
-	MLoc.coeffRef(0, 0) = 1.0;
-	MLoc.coeffRef(1, 1) = 1.0;
-	int smallest, middle, largest;
+	
 	/* Computing the eigenvectors => principal curvatures */
 
 	/* Making the construction parallel*/
@@ -2891,14 +2883,30 @@ void VectorFields::ComputeCurvatureFields()
 		//iproc = 1; 
 		tid = omp_get_thread_num();
 		ntids = omp_get_num_threads();
-		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		//ipts = (int)ceil(1.00*(double)F.rows() / (double)ntids);
+		ipts = F.rows() / ntids;
 		istart = tid * ipts;
-		if (tid == ntids - 1) ipts = Sample.size() - istart;
+		if (tid == ntids - 1) ipts = F.rows() - istart;
 		if (ipts <= 0) ipts = 0;
 
 		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
 		// Computing the values of each element
 		for (id = istart; id < (istart + ipts); id++) {
+			printf("Row of %d \n", id);
+			if (id >= F.rows()) "This is an ERROR!!!\n";
+
+			/* Local variables */
+			Eigen::MatrixXd MLoc2D(2, 2), TensorLoc2D(2, 2), EigFields2D;
+			Eigen::SparseMatrix<double> MLoc(2, 2), TensorLoc(2, 2);
+			Eigen::VectorXd eigVals2D;
+
+			/* Dummy mass matrix*/
+			MLoc2D << 1.0, 0.0, 0.0, 1.0;
+			MLoc.coeffRef(0, 0) = 1.0;
+			MLoc.coeffRef(1, 1) = 1.0;
+			int smallest, middle, largest;
+
+
 			TensorLoc2D = CurvatureTensor2D.block(2 * id, 2 * id, 2, 2);
 			vector<Eigen::Triplet<double>> TTriplet;
 			TTriplet.reserve(4);
@@ -2912,15 +2920,15 @@ void VectorFields::ComputeCurvatureFields()
 			//if (i == 0) cout << "HEYYYYY\n" << TensorLoc2D << endl << endl;
 
 			TensorLoc2D = CurvatureTensor2D.block(2 * id, 2 * id, 2, 2);
-			computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
+			//computeEigenGPU(TensorLoc2D, MLoc2D, EigFields2D, eigVals2D);
 			//computeEigenMatlab(TensorLoc, MLoc, EigFields2D, eigVals2D);
 			computeEigenMatlab(TensorLoc, MLoc, (int)MLoc.rows(), EigFields2D, eigVals2D, "hello there");
 			//sortEigenIndex(abs(eigVals(0)), abs(eigVals(1)), abs(eigVals(2)), smallest, middle, largest);
 			if ((eigVals2D(0)) > (eigVals2D(1))) { largest = 0; smallest = 1; }
 			else { largest = 1; smallest = 0; }
-			//printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
-			//		i, eigVals2D(0), EigFields2D(0, 0), EigFields2D(1, 0),
-			//		   eigVals2D(1), EigFields2D(0, 1), EigFields2D(1, 1));
+			printf("__[%d] eigVal1=%.4f, eigVec[%.4f;%.4f]  \t eigVal2=%.4f, eigVec[%.4f;%.4f]\n",
+					id, eigVals2D(smallest), EigFields2D(0, smallest), EigFields2D(1, smallest),
+					    eigVals2D(largest),  EigFields2D(0, largest),  EigFields2D(1, largest));
 
 			CurvatureTensorField2D.block(2 * id, 0, 2, 1) = EigFields2D.col(largest);
 			CurvatureTensorField2D.block(2 * id, 1, 2, 1) = EigFields2D.col(smallest);
