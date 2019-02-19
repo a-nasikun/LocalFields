@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
 
 	/* ========================= PRE-PROCESS ==============================*/
@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
@@ -125,8 +125,8 @@ int main(int argc, char *argv[])
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	//vectorFields.ConstructCurvatureTensor(viewer);
-	//vectorFields.ComputeCurvatureFields();
+	vectorFields.ConstructCurvatureTensor(viewer);
+	vectorFields.ComputeCurvatureFields();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -160,13 +160,13 @@ int main(int argc, char *argv[])
 	//testMKL_Pardiso();
 
 	/* VISUALIZATION OF APPLICATIONS */
-	//vectorFields.visualizeCurvatureTensor(viewer);
+	vectorFields.visualizeCurvatureTensor(viewer);
 
 
 	/* FOR GENERATING IMAGES on PAPER */
 	//vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
-	vectorFields.visualizeSamples(viewer);
+	//vectorFields.visualizeSamples(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{

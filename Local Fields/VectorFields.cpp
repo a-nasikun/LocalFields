@@ -2653,7 +2653,8 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	/* Declare local variable for the loop here, to avoid excessive allocation (constructor) + de-allocation (destructor) */
 	double f2Form1, f2Form2, f2Form3;
 	Eigen::Vector3d t1, t2, t3, e1, e2, e3, n1, n2, n3, nTemp, nT; 
-	Eigen::Matrix3d m1, m2, m3, mT, mT2D; 
+	Eigen::Matrix3d m1, m2, m3, mT;
+	Eigen::Matrix2d mT2D;
 	CurvatureTensor2D.resize(2 * F.rows(), 2 * F.rows());
 	CurvatureTensor2D.reserve(2 * 2 * F.rows());			// 2*F rows, each with 2 non-zero entries
 	vector<Eigen::Triplet<double>> CTriplet;
@@ -2749,7 +2750,7 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, mT2D(1, 1)));
 
 		/* For testing purpose only*/
-		if (i == 0)
+		if (i <= 20)
 		{
 			// Showing edges
 			viewer.data().add_edges(V.row(F(i, 0)), V.row(F(i, 0)) + e1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
@@ -2767,9 +2768,10 @@ void VectorFields::ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 
 			cout << "MT=" << i << endl << ": " << mT << endl;
-			cout << "M1=" << f2Form1 << endl << ": " << m1 << endl;
-			cout << "M2=" << f2Form2 << endl << ": " << m2 << endl;
-			cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
+			cout << "MT2D=" << i << endl << ": " << mT2D << endl;
+			//cout << "M1=" << f2Form1 << endl << ": " << m1 << endl;
+			//cout << "M2=" << f2Form2 << endl << ": " << m2 << endl;
+			//cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
 		}
 	}
 	CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
