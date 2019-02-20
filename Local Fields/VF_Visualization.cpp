@@ -224,6 +224,12 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 	}
 	//cout << "picking face to draw: done \n" << endl;
 
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Adding edges... ";
+
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d f, h1, h2, e;
 	Eigen::Vector2d v;
@@ -242,6 +248,10 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 		viewer.data().add_edges(e, e + h1.normalized()*lengthScale / HEAD_RATIO, color);
 		viewer.data().add_edges(e, e + h2.normalized()*lengthScale / HEAD_RATIO, color);
 	}
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
