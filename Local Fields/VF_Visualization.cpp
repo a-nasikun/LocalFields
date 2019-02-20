@@ -250,8 +250,8 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 	Eigen::SparseMatrix<double> ALoc(3*FaceToDraw.size(), 2*FaceToDraw.size());
 	vector<Eigen::Triplet<double>> ATriplet;
 	ATriplet.reserve(6 * FaceToDraw.size());
-	Eigen::VectorXd fieldLoc(2*FaceToDraw.size()), fields3D(3*FaceToDraw.size());
-	Eigen::MatrixXd TFields(FaceToDraw.size(),F.cols());
+	Eigen::VectorXd fieldLoc(2*FaceToDraw.size()), fields3D(3*FaceToDraw.size()), rot1Field, rot2Field;
+	Eigen::MatrixXd TFields(FaceToDraw.size(),F.cols()), Head1Fields(FaceToDraw.size(), F.cols()), Head2Fields(FaceToDraw.size(), F.cols());
 
 	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
@@ -268,16 +268,27 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 	}
 	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
 	fields3D = ALoc * fieldLoc;
+	/* The head of the arrows */
+	rot1Field = MRot1*fieldLoc;
+	rot1Field = ALoc * rot1Field;
+	rot2Field = MRot2*fieldLoc;
+	rot2Field = ALoc * rot2Field;
 
 	/* Transform field to Matrix format */
 	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
 		TFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+		Head1Fields.row(i) = (rot1Field.block(3 * i, 0, 3, 1)).transpose();
+		Head2Fields.row(i) = (rot2Field.block(3 * i, 0, 3, 1)).transpose();
 	}
 	TFields.rowwise().normalize();
+	Head1Fields.rowwise().normalize();
+	Head2Fields.rowwise().normalize();
 
-	/* Draw the fields */
+	/* Draw the fields */	
 	viewer.data().add_edges(FCLoc, FCLoc + TFields*avgEdgeLength, color);
+	viewer.data().add_edges(FCLoc + TFields*avgEdgeLength, FCLoc + TFields*avgEdgeLength + Head1Fields*avgEdgeLength/HEAD_RATIO, color);
+	viewer.data().add_edges(FCLoc + TFields*avgEdgeLength, FCLoc + TFields*avgEdgeLength + Head2Fields*avgEdgeLength / HEAD_RATIO, color);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
