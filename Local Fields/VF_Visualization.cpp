@@ -203,56 +203,154 @@ void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer
 
 void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
 {
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Adding edges... ";
+
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
-	const double EDGE_RATIO = 2;
+	const double EDGE_RATIO = 2.0;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
 	Eigen::Matrix2d rotMat1, rotMat2;
+	Eigen::SparseMatrix<double> MRot1(2*FaceToDraw.size(), 2 * FaceToDraw.size()), MRot2(2 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> R1Triplet, R2Triplet;
+	R1Triplet.reserve(2 * 2 * FaceToDraw.size());
+	R2Triplet.reserve(2 * 2 * FaceToDraw.size());
+	Eigen::MatrixXd FCLoc(FaceToDraw.size(), 3);
+
 	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
 	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
 
-	/* Drawing faces */
-	Eigen::RowVector3d c, g;
-	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
-	for (int i = 0; i < FaceToDraw.size(); i += 1)
+	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
-		c = FC.row(FaceToDraw[i]);
-		g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
-		VectorBlock.row(i) = g;
+		/* Rotation matrix for the first head */
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, rotMat1(0, 0)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, rotMat1(1, 0)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, rotMat1(0, 1)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, rotMat1(1, 1)));
+
+		/* Rotation matrix for the second head */
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, rotMat2(0, 0)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, rotMat2(1, 0)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, rotMat2(0, 1)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, rotMat2(1, 1)));
+
+		/* Getting the face center of selected faces */
+		FCLoc.row(i) = FC.row(FaceToDraw[i]);
 	}
-	//cout << "picking face to draw: done \n" << endl;
+	MRot1.setFromTriplets(R1Triplet.begin(), R1Triplet.end());
+	MRot2.setFromTriplets(R2Triplet.begin(), R2Triplet.end());
 
-	// For Timing
-	chrono::high_resolution_clock::time_point	t1, t2;
-	chrono::duration<double>					duration;
-	t1 = chrono::high_resolution_clock::now();
-	cout << "> Adding edges... ";
+	/* Getting the local data from the population of data */
+	Eigen::SparseMatrix<double> ALoc(3*FaceToDraw.size(), 2*FaceToDraw.size());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(6 * FaceToDraw.size());
+	Eigen::VectorXd fieldLoc(2*FaceToDraw.size()), fields3D(3*FaceToDraw.size());
+	Eigen::MatrixXd TFields(FaceToDraw.size(),F.cols());
 
-	double lengthScale = EDGE_RATIO*avgEdgeLength;
-	Eigen::RowVector3d f, h1, h2, e;
-	Eigen::Vector2d v;
-	Eigen::MatrixXd ALoc(3, 2);
-	for (int i = 0; i<FaceToDraw.size(); i += 1)
+	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
-		c = FC.row(FaceToDraw[i]);
-		//f = VectorBlock.row(i);
-		v = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
-		ALoc = A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2);
-		f = (ALoc * v).transpose();
-		h1 = (ALoc* (rotMat1*v)).transpose();
-		h2 = (ALoc* (rotMat2*v)).transpose();
-		e = c + f.normalized()*lengthScale;
-		viewer.data().add_edges(c, e, color);
-		viewer.data().add_edges(e, e + h1.normalized()*lengthScale / HEAD_RATIO, color);
-		viewer.data().add_edges(e, e + h2.normalized()*lengthScale / HEAD_RATIO, color);
+		/* Getting the selected ALoc from A */
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 1)));
+
+		/* Getting the selected face */
+		fieldLoc.block(2 * i, 0, 2, 1) = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
 	}
+	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	fields3D = ALoc * fieldLoc;
+
+	/* Transform field to Matrix format */
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		TFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+	}
+	TFields.rowwise().normalize();
+
+	/* Draw the fields */
+	viewer.data().add_edges(FCLoc, FCLoc + TFields*avgEdgeLength, color);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 }
+
+//void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
+//{
+//	/* Some constants for arrow drawing */
+//	const double HEAD_RATIO = 3.0;
+//	const double EDGE_RATIO = 2;
+//
+//	/* Computing the rotation angle for 1:3 ratio of arrow head */
+//	double rotAngle = M_PI - atan(1.0 / 3.0);
+//	Eigen::Matrix2d rotMat1, rotMat2;
+//	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+//	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+//
+//	/* Drawing faces */
+//	Eigen::RowVector3d c, g;
+//	Eigen::MatrixXd VectorBlock(FaceToDraw.size(), F.cols());
+//	for (int i = 0; i < FaceToDraw.size(); i += 1)
+//	{
+//		c = FC.row(FaceToDraw[i]);
+//		g = (A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2) * field2D.block(2 * FaceToDraw[i], 0, 2, 1)).transpose();
+//		VectorBlock.row(i) = g;
+//	}
+//	//cout << "picking face to draw: done \n" << endl;
+//
+//	// For Timing
+//	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+//	chrono::duration<double>					duration, da, de;
+//	t1 = chrono::high_resolution_clock::now();
+//	cout << "> Adding edges... ";
+//
+//	duration = t1 - t1; 
+//	da = duration;
+//	de = duration; 
+//
+//	double lengthScale = EDGE_RATIO*avgEdgeLength;
+//	Eigen::RowVector3d f, h1, h2, e;
+//	Eigen::Vector2d v;
+//	Eigen::MatrixXd ALoc(3, 2);
+//	for (int i = 0; i<FaceToDraw.size(); i += 1)
+//	{
+//		c = FC.row(FaceToDraw[i]);
+//		//f = VectorBlock.row(i);
+//		v = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+//		
+//		ta1 = chrono::high_resolution_clock::now();
+//		ALoc = A.block(3 * FaceToDraw[i], 2 * FaceToDraw[i], 3, 2);
+//		ta2 = chrono::high_resolution_clock::now();
+//		da += (ta2 - ta1);
+//
+//		f = (ALoc * v).transpose();
+//		h1 = (ALoc* (rotMat1*v)).transpose();
+//		h2 = (ALoc* (rotMat2*v)).transpose();
+//		e = c + f.normalized()*lengthScale;
+//		
+//		te1 = chrono::high_resolution_clock::now();
+//		viewer.data().add_edges(c, e, color);
+//		viewer.data().add_edges(e, e + h1.normalized()*lengthScale / HEAD_RATIO, color);
+//		viewer.data().add_edges(e, e + h2.normalized()*lengthScale / HEAD_RATIO, color);
+//		te2 = chrono::high_resolution_clock::now();
+//		de += (te2 - te1);
+//	}
+//
+//	t2 = chrono::high_resolution_clock::now();
+//	duration = t2 - t1;
+//	cout << "in " << duration.count() << " seconds" << endl;
+//	cout << "___computing ALoc in " << da.count() << " seconds" << endl;
+//	cout << "___Adding edges in " << de.count() << " seconds" << endl;
+//}
 
 void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color)
 {

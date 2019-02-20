@@ -162,6 +162,7 @@ public:
 	void testCurlEnergy();
 	int selectRandomFace();
 	void checkB2DStructure();
+	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
 	
 	// VISUALIZATION of TESTING
 	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);	

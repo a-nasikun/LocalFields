@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
+	//vectorFields.testEdgesAddition(viewer);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
 	//vectorFields.visualizeSoftConstraints(viewer);

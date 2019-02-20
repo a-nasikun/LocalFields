@@ -206,3 +206,28 @@ void VectorFields::checkB2DStructure()
 	cout << endl;
 
 }
+
+void VectorFields::testEdgesAddition(igl::opengl::glfw::Viewer &viewer)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Adding edges... ";
+
+	/* Adding edges */
+	Eigen::MatrixXd transformedFields(F.rows(), F.cols());
+	Eigen::VectorXd fields3D = A*arbField2D; 
+	for (int i = 0; i < F.rows(); i++)
+	{
+		transformedFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+	}
+
+	viewer.data().add_edges(FC, FC + transformedFields*avgEdgeLength, Eigen::RowVector3d(0.0, 0.8, 0.1));
+
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+}
