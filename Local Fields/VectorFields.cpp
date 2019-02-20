@@ -14,8 +14,9 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedHardConstraints();
+	//constructSpecifiedHardConstraints();
 	//constructSoftConstraints();
+	constructInteractiveConstraints();	
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -87,10 +88,16 @@ void VectorFields::constructRingConstraints()
 	c.col(1) << 0.0, 1.0, zeroElements;
 }
 
+void VectorFields::pushNewUserConstraints(const int& fInit, const int& fEnd)
+{
+	userVisualConstraints.push_back(fInit);
+	userVisualConstraints.push_back(fEnd);
+}
+
 void VectorFields::constructSpecifiedHardConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 50;
+	const int numConstraints = 5;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -122,7 +129,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 	for (int i : constraints) {
 		globalConstraints[counter1++] = i;
 	}
-	
+		
 	// For testing only
 	//computeDijkstraDistanceFaceForSampling(curPoint, D);
 	//Eigen::VectorXi::Index counterPart;
@@ -161,15 +168,52 @@ void VectorFields::constructSpecifiedHardConstraints()
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());
+}
 
+void VectorFields::constructInteractiveConstraints()
+{
+	/* Define the constraints */
+	const int numConstraints = userVisualConstraints.size() / 2; 
+	globalConstraints.resize(numConstraints);
+	vector<Eigen::Vector2d> constraintValues(numConstraints);
 
-	// Setting up vector c (There are 1 vector c)
-	srand(time(NULL));
-	
-	for (int i = 0; i < globalConstraints.size(); i++) {
-		
+	/* Global constraints from user input */
+	for (int i = 0; i < userVisualConstraints.size(); i += 2)
+	{
+		/* Location of constraints */
+		globalConstraints[i/2] = userVisualConstraints[i];
+		//printf("Constraint[%d]: %d-->%d\n", i / 2, userVisualConstraints[i], userVisualConstraints[i + 1]);
+
+		/* Getting the constraints + making them into local coordinates */
+		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i+1]) - FC.row(userVisualConstraints[i]);
+		//cout << "___ constraint in 3D: " << dir << endl;
+		Eigen::MatrixXd ALoc(3, 2);
+		ALoc = A.block(3 * userVisualConstraints[i], 2 * userVisualConstraints[i], 3, 2);
+		Eigen::Vector2d normDir = ALoc.transpose() * dir.transpose();
+		normDir.normalize();
+		//cout << "___ constraint in 2D: " << normDir << endl;
+		constraintValues[i / 2] = normDir; 
 	}
-	//printf("cBar=%dx%d\n", c.rows(), c.cols());
+
+	/* Setting up matrix C and column vector c */
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+	c.resize(2 * globalConstraints.size());
+
+	/* Putting the constraints into action */
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		c(counter, 0) = constraintValues[i](0);
+		counter++;
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		c(counter, 0) = constraintValues[i](1);
+		counter++;
+	}
+	C.resize(2 * globalConstraints.size(), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
 
 void VectorFields::constructSingularities()
@@ -1548,7 +1592,8 @@ void VectorFields::setupGlobalProblem()
 	Eigen::SparseMatrix<double>		A_LHS;
 	//Eigen::VectorXd					vEst;
 	double lambda = 0.4; 
-		
+	
+	constructConstraints();
 	setupRHSGlobalProblemMapped(g, h, vEst, b);
 	setupLHSGlobalProblemMapped(A_LHS);
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
@@ -2310,6 +2355,8 @@ void VectorFields::getUserConstraints()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Obtaining user constraints ";
 
+	constructConstraints();
+
 	userConstraints = globalConstraints; 
 	CBar			= C * Basis;
 	cBar			= c;
@@ -3014,6 +3061,29 @@ void VectorFields::readMesh(const string &meshFile)
 	// Printing Mesh-related information
 	printf("....V=%dx%d\n", V.rows(), V.cols());
 	printf("....F=%dx%d\n", F.rows(), F.cols());
+}
+
+void VectorFields::readArrowMesh(const string &meshFile)
+{
+	// For actual work of reading mesh object
+	VArrow.resize(0, 0);
+	FArrow.resize(0, 0);
+
+	if (meshFile.substr(meshFile.find_last_of(".") + 1) == "off") {
+		igl::readOFF(meshFile, VArrow, FArrow);
+	}
+	else if (meshFile.substr(meshFile.find_last_of(".") + 1) == "obj") {
+		igl::readOBJ(meshFile, VArrow, FArrow);
+	}
+	else {
+		cout << "Error! File type can be either .OFF or .OBJ only." << endl;
+		cout << "Program will exit in 2 seconds." << endl;
+		Sleep(2000);
+		exit(10);
+	}
+
+	printf("....V=%dx%d\n", VArrow.rows(), VArrow.cols());
+	printf("....F=%dx%d\n", FArrow.rows(), FArrow.cols());
 }
 
 void VectorFields::getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F)

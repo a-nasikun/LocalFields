@@ -43,6 +43,7 @@ class VectorFields
 public:
 	// MESH-related Functions
 	void readMesh(const string &meshFile);
+	void readArrowMesh(const string &meshFile);
 	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void computeFaceCenter();
 
@@ -99,7 +100,9 @@ public:
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
+	void pushNewUserConstraints(const int& fInit, const int& fEnd);
 	void constructSpecifiedHardConstraints();
+	void constructInteractiveConstraints();
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
@@ -157,6 +160,11 @@ public:
 	void ComputeCurvatureFields();
 
 	// ITEMS FOR TESTING ONLY
+	void constructParallelTransport();
+	void writeBasisToFile();
+	void writeField3DToFile();
+	void printDataForVTK();
+	void writeEigenFieldsForVTK();
 	void constructArbitraryField();
 	void constructArbitraryField2D();
 	void testMappingMatrix();
@@ -166,11 +174,7 @@ public:
 	void testCurlEnergy();
 	int selectRandomFace();
 	void checkB2DStructure();
-	void constructParallelTransport();
-	void writeBasisToFile();
-	void writeField3DToFile();
-	void printDataForVTK();
-	void writeEigenFieldsForVTK();
+	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
 	
 	// VISUALIZATION of TESTING
 	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
@@ -199,11 +203,9 @@ public:
 	void visualizeGradient(igl::opengl::glfw::Viewer &viewer, const GradientToShow &type);
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
 	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
-	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
+	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
-	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces);
-	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &scale);
 	void visualize2DfieldsRegular(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::SparseMatrix<double> &Field2D, const int &idx, const Eigen::RowVector3d &color);
@@ -223,8 +225,9 @@ public:
 
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
-	Eigen::MatrixXd					V, FC, NF;
-	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
+	//Eigen::MatrixXd					V, FC, NF;
+	Eigen::MatrixXd					V, NF, VArrow;
+	Eigen::MatrixXi					F, FArrow, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
@@ -239,7 +242,7 @@ protected:
 	// Variable related to global problem
 	Eigen::SparseMatrix<double>		C; 
 	Eigen::VectorXd					c, Xf;
-	vector<int>						LocalElements, userConstraints, globalConstraints;
+	vector<int>						LocalElements, userConstraints, globalConstraints, userVisualConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
 	set<int>						SubDomain, Boundary;
@@ -269,9 +272,10 @@ public:
 	vector<vector<Eigen::Vector2d>> mappedBasis2;
 	vector<int>						PTpath, PTsharedEdges;
 	vector<Eigen::Vector2d>			parallelTransport;
-	vector<vector<int>>				sharedEdgesVect, curvesConstraints; 
-	vector<vector<Eigen::Vector2d>>	constraintVect2D; 
+	vector<vector<int>>				sharedEdgesVect, curvesConstraints;
 	Eigen::VectorXd					sampleDistance;
+	vector<vector<Eigen::Vector2d>>	constraintVect2D;
+	Eigen::MatrixXd					FC;
 private:
 	
 };

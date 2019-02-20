@@ -6,6 +6,7 @@
 int eigToShow = 0, basisId = 0, numSample = 500, selectedVertex;
 int eigToShow2 = 0;
 
+
 int main(int argc, char *argv[])
 {
 	bool selectFace = false;
@@ -29,9 +30,9 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -53,6 +54,7 @@ int main(int argc, char *argv[])
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
 	vectorFields.readMesh(meshFile);
+	vectorFields.readArrowMesh("../LocalFields/Models/arrow.obj");
 	//vectorFields.computeEdges();
 	vectorFields.computeAverageEdgeLength();
 	vectorFields.computeFaceCenter();
@@ -85,9 +87,9 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -125,8 +127,8 @@ int main(int argc, char *argv[])
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	vectorFields.ConstructCurvatureTensor(viewer);
-	vectorFields.ComputeCurvatureFields();
+	//vectorFields.ConstructCurvatureTensor(viewer);
+	//vectorFields.ComputeCurvatureFields();
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
@@ -146,6 +148,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeDijkstraFace(viewer);
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
+	//vectorFields.testEdgesAddition(viewer);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
 	//vectorFields.visualizeSoftConstraints(viewer);
@@ -160,13 +163,17 @@ int main(int argc, char *argv[])
 	//testMKL_Pardiso();
 
 	/* VISUALIZATION OF APPLICATIONS */
-	vectorFields.visualizeCurvatureTensor(viewer);
+	//vectorFields.visualizeCurvatureTensor(viewer);
 
 
 	/* FOR GENERATING IMAGES on PAPER */
 	//vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
 	//vectorFields.visualizeSamples(viewer);
+
+	/* Variables for faces of face selection */
+	vector<int> ChosenFaces;
+	Eigen::RowVector3d constraintDir;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -177,16 +184,16 @@ int main(int argc, char *argv[])
 		switch (key)
 		{
 		case '1':
-			vectorFields.visualizeSubdomain(viewer);
+			//vectorFields.visualizeSubdomain(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
-			//vectorFields.visualizeApproxResult(viewer);
-			//vectorFields.visualizeUserConstraints(viewer);
-			evenSpaceField = !evenSpaceField; 
-			vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
+			vectorFields.visualizeApproxResult(viewer);
+			vectorFields.visualizeUserConstraints(viewer);
+			//evenSpaceField = !evenSpaceField; 
+			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;
 		case '3':
 			//vectorFields.visualizeGlobalConstraints(viewer);
@@ -226,6 +233,7 @@ int main(int argc, char *argv[])
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
 			break;
+
 		case 'y':
 		case 'Y':
 			eigToShow2 = max(eigToShow2 - 1, 0);
@@ -252,6 +260,11 @@ int main(int argc, char *argv[])
 			//if (selectFace) cout << "Face is selected" << endl; 
 			//selectedFace = rand() % F.rows();
 			//cout << "Face: " << selectedFace << endl;
+		case 'x':
+		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			selectFace = !selectFace;			
+
 			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
 		case 'c':
@@ -260,12 +273,12 @@ int main(int argc, char *argv[])
 			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
-		case 'x':
-		case 'X':
-			printf("Computing smoothing on full res\n");
-			vectorFields.computeSmoothing(mu, v_in, v_out);
-			v_in = v_out;
-			break; 
+		//case 'x':
+		//case 'X':
+		//	printf("Computing smoothing on full res\n");
+		//	vectorFields.computeSmoothing(mu, v_in, v_out);
+		//	v_in = v_out;
+		//	break; 
 		case 'v':
 		case 'V':
 			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 1.0);
@@ -274,6 +287,18 @@ int main(int argc, char *argv[])
 		case 'B':
 			v_in = vectorFields.arbField2D; 
 			break;
+		case ' ':
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
+			cout << "\n========================= GLOBAL PROBLEM =============================\n";
+			vectorFields.setupGlobalProblem();			
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
+			//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+			//vectorFields.setAndSolveUserSystem();
+			//vectorFields.visualizeApproxResult(viewer);
+			//vectorFields.visualizeUserConstraints(viewer);
+			break; 
 		default:
 			break;
 			return false;
@@ -286,23 +311,45 @@ int main(int argc, char *argv[])
 
 	
 	viewer.callback_mouse_move =
-		[&V, &F, &C, &selectFace](igl::opengl::glfw::Viewer& viewer, int, int)->bool
+		[&V, &F, &C, &selectFace, &ChosenFaces, &constraintDir, &vectorFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
 		int fid;
 		Eigen::Vector3f bc;
+		/* Collect the selected faces */
+		
 		// Cast a ray in the view direction starting from the mouse position
 		double x = viewer.current_mouse_x;
 		double y = viewer.core.viewport(3) - viewer.current_mouse_y;
 		if (selectFace) {
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
-			{
-				cout << "Face " << fid << " is selected." << endl; 
+			{				
 				// paint hit red
 				C.row(fid) << 1, 0, 0;
-				viewer.data().set_colors(C);
+				//viewer.data().set_colors(C);
+				ChosenFaces.push_back(fid);
+				if (ChosenFaces.size() == 1)
+				{
+					viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+				}
+
 				return true;
 			}
+		}
+		else {
+			/* Getting the length + direction of the constraints*/
+			const int constraintSize = ChosenFaces.size();
+			if (constraintSize > 0)
+			{
+				//printf("Size of the contraints vector is %d\n", constraintSize);
+				constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize-1]) - vectorFields.FC.row(ChosenFaces[0]);
+				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				ChosenFaces.clear();
+				//cout << "Hello there\n";
+			}
+			return false; 
 		}
 		return false;
 	};
@@ -313,7 +360,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 3.0f; 
+	viewer.data().line_width = 1.0f; 
 
 	return viewer.launch();
 }
