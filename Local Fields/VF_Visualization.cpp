@@ -415,12 +415,30 @@ void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
 void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer)
 {
 	const double ARRAW_RATIO = 4.0; 
-	for (int i = 0; i < globalConstraints.size(); i++) {
-		Eigen::RowVector3d cc, g, v1, v2, v3;
-		cc = FC.row(globalConstraints[i]);
-		g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
-		viewer.data().add_edges(cc, cc + ARRAW_RATIO*g*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
-		viewer.data().add_points(cc, Eigen::RowVector3d(0.1, 0.1, 0.2));
+	//for (int i = 0; i < globalConstraints.size(); i++) {
+	//	Eigen::RowVector3d cc, g, v1, v2, v3;
+	//	cc = FC.row(globalConstraints[i]);
+	//	g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
+	//	viewer.data().add_edges(cc, cc + ARRAW_RATIO*g*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
+	//	viewer.data().add_points(cc, Eigen::RowVector3d(0.1, 0.1, 0.2));
+	//}
+
+	cout << "Trying to add the arrow \n";
+	for (int i = 0; i < globalConstraints.size(); i++)
+	{
+		//Eigen::RowVector3d g;
+		//g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
+
+
+
+
+		Eigen::MatrixXd VArrowNew = VArrow*(ARRAW_RATIO*avgEdgeLength) + FC.row(globalConstraints[i]).replicate(VArrow.rows(),1);
+		//VArrowNew *= (ARRAW_RATIO*avgEdgeLength); 
+		 
+		viewer.append_mesh();
+		viewer.data().set_mesh(VArrowNew, FArrow);
+		viewer.data().set_colors(Eigen::RowVector3d(1.0, 0.0, 0.0));
+		viewer.selected_data_index = 0; 
 	}
 }
 

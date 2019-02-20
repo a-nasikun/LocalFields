@@ -2887,6 +2887,29 @@ void VectorFields::readMesh(const string &meshFile)
 	printf("....F=%dx%d\n", F.rows(), F.cols());
 }
 
+void VectorFields::readArrowMesh(const string &meshFile)
+{
+	// For actual work of reading mesh object
+	VArrow.resize(0, 0);
+	FArrow.resize(0, 0);
+
+	if (meshFile.substr(meshFile.find_last_of(".") + 1) == "off") {
+		igl::readOFF(meshFile, VArrow, FArrow);
+	}
+	else if (meshFile.substr(meshFile.find_last_of(".") + 1) == "obj") {
+		igl::readOBJ(meshFile, VArrow, FArrow);
+	}
+	else {
+		cout << "Error! File type can be either .OFF or .OBJ only." << endl;
+		cout << "Program will exit in 2 seconds." << endl;
+		Sleep(2000);
+		exit(10);
+	}
+
+	printf("....V=%dx%d\n", VArrow.rows(), VArrow.cols());
+	printf("....F=%dx%d\n", FArrow.rows(), FArrow.cols());
+}
+
 void VectorFields::getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F)
 {
 	V = this->V;

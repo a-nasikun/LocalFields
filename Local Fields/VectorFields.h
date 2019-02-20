@@ -43,6 +43,7 @@ class VectorFields
 public:
 	// MESH-related Functions
 	void readMesh(const string &meshFile);
+	void readArrowMesh(const string &meshFile);
 	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void computeFaceCenter();
 
@@ -208,8 +209,8 @@ public:
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
 	//Eigen::MatrixXd					V, FC, NF;
-	Eigen::MatrixXd					V, NF;
-	Eigen::MatrixXi					F, E, AdjMF3N, EdgePairMatrix;
+	Eigen::MatrixXd					V, NF, VArrow;
+	Eigen::MatrixXi					F, FArrow, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
