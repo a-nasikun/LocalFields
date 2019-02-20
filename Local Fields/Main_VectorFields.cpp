@@ -205,11 +205,7 @@ int main(int argc, char *argv[])
 		case 'x':
 		case 'X':
 			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			selectFace = !selectFace;
-			cout << "Select face: " << selectFace << endl; 
-			if (selectFace) cout << "Face is selected" << endl; 
-			selectedFace = rand() % F.rows();
-			cout << "Face: " << selectedFace << endl;
+			selectFace = !selectFace;			
 			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
 		case 'c':
@@ -235,14 +231,14 @@ int main(int argc, char *argv[])
 		case ' ':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-			//vectorFields.setupGlobalProblem();			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
-			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-			vectorFields.setAndSolveUserSystem();
-			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeUserConstraints(viewer);
+			cout << "\n========================= GLOBAL PROBLEM =============================\n";
+			vectorFields.setupGlobalProblem();			
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
+			//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+			//vectorFields.setAndSolveUserSystem();
+			//vectorFields.visualizeApproxResult(viewer);
+			//vectorFields.visualizeUserConstraints(viewer);
 			break; 
 		default:
 			break;
@@ -268,8 +264,7 @@ int main(int argc, char *argv[])
 		if (selectFace) {
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
-			{
-				cout << "Face " << fid << " is selected." << endl; 
+			{				
 				// paint hit red
 				C.row(fid) << 1, 0, 0;
 				//viewer.data().set_colors(C);
@@ -287,14 +282,14 @@ int main(int argc, char *argv[])
 			const int constraintSize = ChosenFaces.size();
 			if (constraintSize > 0)
 			{
-				printf("Size of the contraints vector is %d\n", constraintSize);
+				//printf("Size of the contraints vector is %d\n", constraintSize);
 				constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize-1]) - vectorFields.FC.row(ChosenFaces[0]);
 				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				ChosenFaces.clear();
 				//cout << "Hello there\n";
 			}
-			ChosenFaces.clear();
 			return false; 
 		}
 		return false;

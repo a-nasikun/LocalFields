@@ -184,16 +184,16 @@ void VectorFields::constructInteractiveConstraints()
 	{
 		/* Location of constraints */
 		globalConstraints[i/2] = userVisualConstraints[i];
-		printf("Constraint[%d]: %d-->%d\n", i / 2, userVisualConstraints[i], userVisualConstraints[i + 1]);
+		//printf("Constraint[%d]: %d-->%d\n", i / 2, userVisualConstraints[i], userVisualConstraints[i + 1]);
 
 		/* Getting the constraints + making them into local coordinates */
 		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i+1]) - FC.row(userVisualConstraints[i]);
-		cout << "___ constraint in 3D: " << dir << endl;
+		//cout << "___ constraint in 3D: " << dir << endl;
 		Eigen::MatrixXd ALoc(3, 2);
 		ALoc = A.block(3 * userVisualConstraints[i], 2 * userVisualConstraints[i], 3, 2);
 		Eigen::Vector2d normDir = ALoc.transpose() * dir.transpose();
 		normDir.normalize();
-		cout << "___ constraint in 2D: " << normDir << endl;
+		//cout << "___ constraint in 2D: " << normDir << endl;
 		constraintValues[i / 2] = normDir; 
 	}
 
@@ -203,7 +203,7 @@ void VectorFields::constructInteractiveConstraints()
 	CTriplet.reserve(2 * globalConstraints.size());
 	c.resize(2 * globalConstraints.size());
 
-	/* Inserting the constraints into action */
+	/* Putting the constraints into action */
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
