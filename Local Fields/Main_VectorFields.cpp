@@ -78,9 +78,9 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
 			if (selectFace) cout << "Face is selected" << endl; 
 			selectedFace = rand() % F.rows();
 			cout << "Face: " << selectedFace << endl;
-			vectorFields.visualizeRandomFace(viewer, selectedFace);
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
 		case 'c':
 		case 'C':
@@ -231,6 +231,18 @@ int main(int argc, char *argv[])
 		case 'B':
 			v_in = vectorFields.arbField2D; 
 			break;
+		case ' ':
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
+			//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+			//vectorFields.setupGlobalProblem();			
+			//vectorFields.visualizeApproximatedFields(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
+			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+			vectorFields.setAndSolveUserSystem();
+			vectorFields.visualizeApproxResult(viewer);
+			vectorFields.visualizeUserConstraints(viewer);
+			break; 
 		default:
 			break;
 			return false;
@@ -259,8 +271,13 @@ int main(int argc, char *argv[])
 				cout << "Face " << fid << " is selected." << endl; 
 				// paint hit red
 				C.row(fid) << 1, 0, 0;
-				viewer.data().set_colors(C);
+				//viewer.data().set_colors(C);
 				ChosenFaces.push_back(fid);
+				if (ChosenFaces.size() == 1)
+				{
+					viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+				}
+
 				return true;
 			}
 		}
@@ -272,15 +289,13 @@ int main(int argc, char *argv[])
 				printf("Size of the contraints vector is %d\n", constraintSize);
 				constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize-1]) - vectorFields.FC.row(ChosenFaces[0]);
 				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 				//cout << "Hello there\n";
 			}
 			ChosenFaces.clear();
 			return false; 
 		}
-
-		
-		
-
 		return false;
 	};
 	viewer.callback_init = [&](igl::opengl::glfw::Viewer &viewer) {return false; };

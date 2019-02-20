@@ -98,7 +98,9 @@ public:
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
+	void pushNewUserConstraints(const int& fInit, const int& fEnd);
 	void constructSpecifiedHardConstraints();
+	void constructInteractiveConstraints();
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
@@ -223,7 +225,7 @@ protected:
 	// Variable related to global problem
 	Eigen::SparseMatrix<double>		C; 
 	Eigen::VectorXd					c, Xf;
-	vector<int>						LocalElements, userConstraints, globalConstraints;
+	vector<int>						LocalElements, userConstraints, globalConstraints, userVisualConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
 	set<int>						SubDomain, Boundary;
