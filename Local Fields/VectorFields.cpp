@@ -2274,7 +2274,7 @@ void VectorFields::setAndSolveUserSystem()
 	Eigen::SparseMatrix<double>		A_LHSBar;
 	const double lambda = 0.4; 
 
-	setupUserBasis();
+	//setupUserBasis();
 	getUserConstraints();
 	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
 	setupLHSUserProblemMapped(A_LHSBar);
