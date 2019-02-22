@@ -217,6 +217,11 @@ void VectorFields::constructInteractiveConstraints()
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
+void VectorFields::resetInteractiveConstraints()
+{
+	userVisualConstraints.clear();
+	userVisualConstraints.shrink_to_fit();
+}
 
 void VectorFields::constructSingularities()
 {
@@ -1853,7 +1858,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2274,7 +2279,7 @@ void VectorFields::setAndSolveUserSystem()
 	Eigen::SparseMatrix<double>		A_LHSBar;
 	const double lambda = 0.4; 
 
-	//setupUserBasis();
+	//setupReducedBiLaplacian();
 	getUserConstraints();
 	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
 	setupLHSUserProblemMapped(A_LHSBar);
@@ -2286,7 +2291,7 @@ void VectorFields::setAndSolveUserSystem()
 	mapSolutionToFullRes();
 }
 
-void VectorFields::setupUserBasis()
+void VectorFields::setupReducedBiLaplacian()
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
