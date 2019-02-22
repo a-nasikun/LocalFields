@@ -103,6 +103,7 @@ public:
 	void pushNewUserConstraints(const int& fInit, const int& fEnd);
 	void constructSpecifiedHardConstraints();
 	void constructInteractiveConstraints();
+	void resetInteractiveConstraints();
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
@@ -133,7 +134,7 @@ public:
 
 	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
 	void setAndSolveUserSystem();
-	void setupUserBasis();
+	void setupReducedBiLaplacian();
 	void getUserConstraints();
 	void setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar);

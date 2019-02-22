@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
-	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
+	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(5000);
+	vectorFields.selectFaceToDraw(7500);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	vectorFields.setupUserBasis();
+	vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -231,13 +231,19 @@ int main(int argc, char *argv[])
 			printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
 			break;
 		case '9':
-			vectorFields.visualizeApproximatedFields(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
-			vectorFields.visualizeSingularitiesConstraints(viewer);
+			//vectorFields.visualizeApproximatedFields(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeSingularitiesConstraints(viewer);
+			vectorFields.resetInteractiveConstraints();
 			break;
-		case '0':
+		case '0':			
+			viewer.selected_data_index = 0;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.selected_data_index = 1;
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
+			viewer.selected_data_index = 0;			
 			break;
 
 		case 'y':
@@ -292,6 +298,13 @@ int main(int argc, char *argv[])
 		case 'b':
 		case 'B':
 			v_in = vectorFields.arbField2D; 
+			break;
+		case 'r':
+		case 'R':
+			cout << "\n========================= GLOBAL PROBLEM =============================\n";
+			vectorFields.setupGlobalProblem();
+			vectorFields.visualizeApproximatedFields(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case ' ':
 			viewer.data().clear();
