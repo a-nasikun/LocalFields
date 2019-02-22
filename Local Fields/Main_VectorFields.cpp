@@ -3,7 +3,8 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId = 0, numSample = 500, selectedVertex;
+int eigToShow = 0, basisId = 0, selectedVertex;
+int numSample = 500;
 int eigToShow2 = 0;
 
 
@@ -32,10 +33,10 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
@@ -69,6 +70,10 @@ int main(int argc, char *argv[])
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
+	viewer.append_mesh();
+	viewer.data().set_mesh(V, F);
+	viewer.data().show_lines = false; 
+	viewer.selected_data_index = 0; 
 
 	/* MATRIX CONSTRUCTIONS */
 	vectorFields.constructMassMatrices();
@@ -90,6 +95,7 @@ int main(int argc, char *argv[])
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
+	vectorFields.setupUserBasis();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -191,7 +197,7 @@ int main(int argc, char *argv[])
 			break;
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeUserConstraints(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;
@@ -290,14 +296,13 @@ int main(int argc, char *argv[])
 		case ' ':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			cout << "\n========================= GLOBAL PROBLEM =============================\n";
-			vectorFields.setupGlobalProblem();			
-			vectorFields.visualizeApproximatedFields(viewer);
+			//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+			//vectorFields.setupGlobalProblem();			
+			//vectorFields.visualizeApproximatedFields(viewer);
+			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+			vectorFields.setAndSolveUserSystem();
+			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
-			//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-			//vectorFields.setAndSolveUserSystem();
-			//vectorFields.visualizeApproxResult(viewer);
-			//vectorFields.visualizeUserConstraints(viewer);
 			break; 
 		default:
 			break;
@@ -346,6 +351,18 @@ int main(int argc, char *argv[])
 				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+
+				/* UPdating the mesh information */
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				//vectorFields.setupGlobalProblem();			
+				//vectorFields.visualizeApproximatedFields(viewer);
+				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				vectorFields.setAndSolveUserSystem();
+				vectorFields.visualizeApproxResult(viewer);
+				vectorFields.visualizeGlobalConstraints(viewer);
+
 				ChosenFaces.clear();
 				//cout << "Hello there\n";
 			}

@@ -255,7 +255,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
 {
-	visualize2Dfields(viewer, field2D, color, 2.0, true);	
+	visualize2Dfields(viewer, field2D, color, 5.0, true);	
 }
 
 void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &scale)
@@ -430,32 +430,105 @@ void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer)
 {
+	/* ORIGINAL + OVERLAY on 2nd Mesh */
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0; 
-	//for (int i = 0; i < globalConstraints.size(); i++) {
-	//	Eigen::RowVector3d cc, g, v1, v2, v3;
-	//	cc = FC.row(globalConstraints[i]);
-	//	g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
-	//	viewer.data().add_edges(cc, cc + ARRAW_RATIO*g*avgEdgeLength, Eigen::RowVector3d(0.1, 0.1, 0.2));
-	//	viewer.data().add_points(cc, Eigen::RowVector3d(0.1, 0.1, 0.2));
-	//}
+	const double EDGE_RATIO = 4.0;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d color(0.0, 0.0, 0.2);
+	
+	viewer.selected_data_index = 1; 
+	viewer.data().line_width = 5.0;
+	viewer.data().point_size = 5.0;
+	viewer.data().show_lines = false;
 
-	cout << "Trying to add the arrow \n";
-	for (int i = 0; i < globalConstraints.size(); i++)
-	{
-		//Eigen::RowVector3d g;
-		//g = (A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose();
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+	
+	Eigen::MatrixXd ALoc(3, 2);
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		Eigen::RowVector3d cc, g, h1, h2, v1, v2, v3, e, f, n;
+		Eigen::Vector2d v; 
+		cc = FC.row(globalConstraints[i]);
+		n = NF.row(globalConstraints[i]);
+		n *= (avgEdgeLength/10.0); 
+		ALoc = A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2);
+		v = c.block(2 * i, 0, 2, 1);
+		g = (ALoc * v).transpose();
+		cc += n; 
+		f = cc + g*lengthScale;
+		viewer.data().add_edges(cc, f, color);
+		viewer.data().add_points(cc, color);
 
+		h1 = (ALoc * (rotMat1*c.block(2 * i, 0, 2, 1))).transpose();
+		h2 = (ALoc * (rotMat2*c.block(2 * i, 0, 2, 1))).transpose();
 
-
-
-		Eigen::MatrixXd VArrowNew = VArrow*(ARRAW_RATIO*avgEdgeLength) + FC.row(globalConstraints[i]).replicate(VArrow.rows(),1);
-		//VArrowNew *= (ARRAW_RATIO*avgEdgeLength); 
-		 
-		viewer.append_mesh();
-		viewer.data().set_mesh(VArrowNew, FArrow);
-		viewer.data().set_colors(Eigen::RowVector3d(1.0, 0.0, 0.0));
-		viewer.selected_data_index = 0; 
+		viewer.data().add_edges(f, f + h1*lengthScale/HEAD_RATIO, color);
+		viewer.data().add_edges(f, f + h2*lengthScale/HEAD_RATIO, color);
 	}
+	 
+	viewer.selected_data_index = 0; 
+	
+
+	/* 3D ARROW -> FAILED */
+	//Eigen::RowVector3d y(0.0, 1.0, 0.0);
+	//cout << "Trying to add the arrow \n";
+	//for (int i = 0; i < globalConstraints.size(); i++)
+	//{
+	//	/* Computing rotation matrix */
+	//	Eigen::RowVector3d g,n, cross;
+	//	Eigen::Matrix3d RotMat;
+	//	g = ((A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose());
+	//	g.normalize();
+	//	//n = g.cross(y);
+	//	n = (NF.row(globalConstraints[i]));
+	//	n.normalize();
+	//	double angle = acos(y.dot(g));
+	//	cross = g.cross(y);
+	//	if (n.dot(cross)<0)
+	//	{
+	//		angle = -angle; 
+	//	}
+	//	cout << i << "__y: " << y << endl;
+	//	cout << "__g: " << g << endl;
+	//	cout << "__n: " << n << endl;
+	//	cout << "__cross(y,g): " << cross << endl;
+	//	cout << "__angle " << angle * 180.0/M_PI << endl;
+	//
+	//	double cosA = cos(angle);
+	//	double sinA = sin(angle);
+	//
+	//	RotMat(0, 0) = cross(0)*cross(0)*(1.0 - cosA) + cosA;
+	//	RotMat(0, 1) = cross(0)*cross(1)*(1.0 - cosA) - cross(2)*sinA;
+	//	RotMat(0, 2) = cross(0)*cross(2)*(1.0 - cosA) + cross(1)*sinA;
+	//	RotMat(1, 0) = cross(0)*cross(1)*(1.0 - cosA) + cross(2)*sinA;
+	//	RotMat(1, 1) = cross(1)*cross(1)*(1.0 - cosA) + cosA;
+	//	RotMat(1, 2) = cross(1)*cross(2)*(1.0 - cosA) - cross(0)*sinA;
+	//	RotMat(2, 0) = cross(0)*cross(2)*(1.0 - cosA) - cross(1)*sinA; 
+	//	RotMat(2, 1) = cross(1)*cross(2)*(1.0 - cosA) - cross(0)*sinA;
+	//	RotMat(2, 2) = cross(2)*cross(2)*(1.0 - cosA) + cosA; 
+	//
+	//
+	//	Eigen::MatrixXd VArrowNew(VArrow.rows(), VArrow.cols());
+	//	for (int j = 0; j < VArrow.rows(); j++)
+	//	{
+	//		VArrowNew.row(j) = (RotMat*(VArrow.row(j)).transpose()).transpose();
+	//	}
+	//	
+	//	VArrowNew = VArrowNew*(ARRAW_RATIO*avgEdgeLength) + FC.row(globalConstraints[i]).replicate(VArrow.rows(), 1);
+	//	
+	//	//VArrowNew *= (ARRAW_RATIO*avgEdgeLength); 
+	//	 
+	//	viewer.append_mesh();
+	//	viewer.data().set_mesh(VArrowNew, FArrow);
+	//	viewer.data().set_colors(Eigen::RowVector3d(1.0, 0.0, 0.0));
+	//	viewer.data().show_lines = false; 
+	//	viewer.selected_data_index = 0; 
+	//}
 }
 
 void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)
