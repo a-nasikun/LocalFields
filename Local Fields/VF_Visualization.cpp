@@ -542,6 +542,120 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 		viewer.data().add_points(V.row(i), Eigen::RowVector3d(0.1, 0.9, 0.3));
 	}
 }
+void VectorFields::write2DFieldsForVTK(const Eigen::VectorXd &field2D, const string& dataName, const string& filename)
+{
+	ofstream file(filename);
+
+	cout << "Trying to write files \n";
+
+	if (file.is_open())
+	{
+		/* Print headers */
+		file << "# vtk DataFile Version 2.0\n";
+		file << dataName << "\n";
+		file << "ASCII\n";
+		file << "DATASET POLYDATA\n";
+
+		/* Print vertices */
+		file << "POINTS " << V.rows() << " double\n";
+		for (int i = 0; i < V.rows(); i++)
+		{
+			file << V(i, 0) << " " << V(i, 1) << " " << V(i, 2) << "\n";
+		}
+		
+		/* Print faces */
+		file << "POLYGONS " << F.rows() << " " << F.rows() * (F.cols() + 1) << "\n";
+		for (int i = 0; i < F.rows(); i++)
+		{
+			file << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << "\n";
+		}
+
+		cout << "Converting to world space \n";
+		/* Print eigenfields*/
+		Eigen::VectorXd field3D;
+		Eigen::MatrixXd Fields3D;
+		double const scale = 1.0;
+		//field3D = A * field2D;
+		field3D = A * Xf;
+
+		//cout << "FACE-based\n";
+		///* FACE-base DATA */
+		//file << "CELL_DATA " << F.rows() << "\n";
+		//file << "VECTORS " << dataName << "_faceBased double\n";
+		//for (int i = 0; i < F.rows(); i++)
+		//{
+		//	Eigen::Vector3d v;
+		//	v << field3D(3 * i + 0), field3D(3 * i + 1), field3D(3 * i + 2);
+		//	v.normalize();
+		//	//file << scale*field3D(3 * i + 0) << " " << scale*field3D(3 * i + 1) << " " << scale*field3D(3 * i + 2) << "\n";
+		//	file << v(0) << " " << v(1) << " " << v(2) << "\n";
+		//}
+		 
+		//file << "POINTS_DATA" << V.rows() << "\n";
+		//file << "NORMALS vertex_normals float \n";
+		//Eigen::MatrixXd NV;
+		//igl::per_vertex_normals(V, F, NV);
+		//for (int i = 0; i < V.rows(); i++)
+		//{
+		//	file << NV(i, 0) << " " << NV(i, 1) << " " << NV(i, 2) << "\n";
+		//}
+
+		//file << "NORMALS face_normals float\n";
+		//for (int i = 0; i < F.rows(); i++)
+		//{
+		//	file << NF(i, 0) << " " << NF(i, 1) << " " << NF(i, 2) << "\n";
+		//}
+
+		cout << "VERTEX-based Mode\n"; 
+		/* VERTEX-based DATA */
+		Eigen::VectorXd vFields3D;
+		vFields3D.setZero(3 * V.rows());
+		Eigen::VectorXi VNumNeighFaces;
+		VNumNeighFaces.setZero(V.rows());
+		Eigen::VectorXd VSumAngles;
+		VSumAngles.setZero(V.rows());
+
+		for (int i = 0; i < F.rows(); i++)
+		{
+			//vFields3D.block(3 * F(i, 0), 0, 3, 1) += doubleArea(i)*field3D.block(3 + i, 0, 3, 1);
+			//vFields3D.block(3 * F(i, 1), 0, 3, 1) += doubleArea(i)*field3D.block(3 + i, 0, 3, 1);
+			//vFields3D.block(3 * F(i, 2), 0, 3, 1) += doubleArea(i)*field3D.block(3 + i, 0, 3, 1);
+			vFields3D.block(3 * F(i, 0), 0, 3, 1) += field3D.block(3 + i, 0, 3, 1);
+			vFields3D.block(3 * F(i, 1), 0, 3, 1) += field3D.block(3 + i, 0, 3, 1);
+			vFields3D.block(3 * F(i, 2), 0, 3, 1) += field3D.block(3 + i, 0, 3, 1);
+			VNumNeighFaces(F(i, 0)) += 1;
+			VNumNeighFaces(F(i, 1)) += 1;
+			VNumNeighFaces(F(i, 2)) += 1;
+			VSumAngles(F(i, 0)) += doubleArea(i);
+			VSumAngles(F(i, 1)) += doubleArea(i);
+			VSumAngles(F(i, 2)) += doubleArea(i);
+		}
+		
+		for (int i = 0; i < V.rows(); i++)
+		{
+			vFields3D.block(3 * i, 0, 3, 1) /= (double)VNumNeighFaces(i);
+			//vFields3D.block(3 * i, 0, 3, 1) /= (double)VSumAngles(i);
+			vFields3D.block(3 * i, 0, 3, 1) = vFields3D.block(3 * i, 0, 3, 1).normalized();
+		}
+		
+		file << "POINT_DATA " << V.rows() << "\n";
+		file << "VECTORS " << dataName << "_VertexBased double\n";
+		for (int i = 0; i < V.rows(); i++)
+		{
+			file << scale*vFields3D(3 * i + 0) << " " << scale*vFields3D(3 * i + 1) << " " << scale*vFields3D(3 * i + 2) << "\n";
+		}
+
+		file << "NORMALS vertex_normals float \n";
+		Eigen::MatrixXd NV;
+		igl::per_vertex_normals(V, F, NV);
+		for (int i = 0; i < V.rows(); i++)
+		{
+			file << NV(i, 0) << " " << NV(i, 1) << " " << NV(i, 2) << "\n";
+		}
+		cout << "Closing files\n";
+		file.close();
+	}
+}
 
 void VectorFields::visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v)
 {

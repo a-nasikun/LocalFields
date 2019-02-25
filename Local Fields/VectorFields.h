@@ -202,6 +202,7 @@ public:
 	void visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer);
+	void write2DFieldsForVTK(const Eigen::VectorXd &field2D, const string& dataName, const string& filename);
 
 	// VISUALIZATION of APPLICATIONs
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
@@ -240,7 +241,7 @@ protected:
 
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;
-	Eigen::VectorXd					XLowDim, XFullDim;
+	//Eigen::VectorXd					XLowDim, XFullDim;
 	Eigen::SparseMatrix<double>		CBar, B2DBar;
 
 	// Variables related to Applications
@@ -249,6 +250,7 @@ protected:
 
 	// FOR TESTING ONLY
 public: 
+	Eigen::VectorXd					XLowDim, XFullDim;
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
 	Eigen::VectorXd					sampleDistance;
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints; 

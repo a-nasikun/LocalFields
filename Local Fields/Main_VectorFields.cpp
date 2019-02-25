@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	vectorFields.setupReducedBiLaplacian();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
+	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
@@ -259,6 +259,11 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			break; 
+		case 'Z':
+		case 'z':
+			vectorFields.write2DFieldsForVTK(vectorFields.XFullDim, "VectorFields_2", "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/VFieldsDes_SmallDragon_vBased.vtk");
+			break; 
+
 		default:
 			break;
 			return false;
@@ -310,12 +315,12 @@ int main(int argc, char *argv[])
 				/* UPdating the mesh information */
 				viewer.data().clear();
 				viewer.data().set_mesh(V, F);
-				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				//vectorFields.setupGlobalProblem();			
-				//vectorFields.visualizeApproximatedFields(viewer);
-				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.setAndSolveUserSystem();
-				vectorFields.visualizeApproxResult(viewer);
+				cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				vectorFields.setupGlobalProblem();			
+				vectorFields.visualizeApproximatedFields(viewer);
+				//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				//vectorFields.setAndSolveUserSystem();
+				//vectorFields.visualizeApproxResult(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
 
 				ChosenFaces.clear();
