@@ -255,7 +255,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
 {
-	visualize2Dfields(viewer, field2D, color, 3.0, true);	
+	visualize2Dfields(viewer, field2D, color, 2.0, true);	
 }
 
 void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &scale)
@@ -843,14 +843,15 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	if (eigFieldFull2D.size() > 0)
 	{
 		if ((eigfields.transpose()*MF2D*eigFieldFull2D.col(i)) < 0) eigfields *= -1; 
+
+		/* Computing the L2norm error */	
+		Eigen::VectorXd diff = eigFieldFull2D.col(i) - eigfields;
+		double norm1 = diff.transpose()*MF2D*diff;
+		double norm2 = eigFieldFull2D.col(i).transpose()*MF2D*eigFieldFull2D.col(i);
+		l2norm = sqrt(norm1 / norm2);
+		printf("L2 norm of %d approx is: %.5f\n", i, l2norm);
 	}
 
-	/* Computing the L2norm error */	
-	Eigen::VectorXd diff = eigFieldFull2D.col(i) - eigfields;
-	double norm1 = diff.transpose()*MF2D*diff;
-	double norm2 = eigFieldFull2D.col(i).transpose()*MF2D*eigFieldFull2D.col(i);
-	l2norm = sqrt(norm1 / norm2);
-	printf("L2 norm of %d approx is: %.5f\n", i, l2norm);
 
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
@@ -860,7 +861,8 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	Eigen::RowVector3d red(0.9, 0.1, 0.1);
 	
 	//visualize2DfieldsNormalized(viewer, eigfields, Eigen::RowVector3d(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0), 5000);
-	visualize2DfieldsScaled(viewer, eigfields, red, 150.0);
+	//visualize2DfieldsScaled(viewer, eigfields, red, 150.0);
+	visualize2Dfields(viewer, eigfields, red, 1.5, true);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

@@ -155,7 +155,7 @@ public:
 	// APPLICATIONS ON REDUCED BASIS
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
-	void computeApproxEigenFields();
+	void computeApproxEigenFields(const int &numEigs);
 	void retrieveApproxEigenFields();
 	void ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 	void ComputeCurvatureFields();
@@ -276,7 +276,7 @@ public:
 	vector<Eigen::Vector2d>			parallelTransport;
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints;
 	Eigen::VectorXd					XLowDim, XFullDim;
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
 	Eigen::VectorXd					sampleDistance;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 	Eigen::MatrixXd					FC;

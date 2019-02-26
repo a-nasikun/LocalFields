@@ -1855,9 +1855,9 @@ void VectorFields::farthestPointSampling()
 	}
 
 	srand(time(NULL));
-	//Sample[0] = rand() % F.rows();
+	Sample[0] = rand() % F.rows();
 	//Sample[0] = 0;
-	Sample[0] = 70267; // Arma 43k
+	//Sample[0] = 70267; // Arma 43k
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
@@ -2573,7 +2573,7 @@ void VectorFields::retrieveEigenFields()
 	ReadVectorFromMatlab(eigValuesFull, "hello");
 }
 
-void VectorFields::computeApproxEigenFields()
+void VectorFields::computeApproxEigenFields(const int &numEigs)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -2592,7 +2592,8 @@ void VectorFields::computeApproxEigenFields()
 
 	t1 = chrono::high_resolution_clock::now();
 	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+	computeEigenMatlab(Sbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, "hello");
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
 	//WriteSparseMatrixToMatlab(Basis, "hello");
