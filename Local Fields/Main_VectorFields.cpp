@@ -6,7 +6,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
-int eigsToCompute = 100; 
+int eigsToCompute = 50; 
 
 int main(int argc, char *argv[])
 {
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	//vectorFields.computeEigenFields();
+	vectorFields.computeEigenFields();
 	//vectorFields.retrieveEigenFields();
 	vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();

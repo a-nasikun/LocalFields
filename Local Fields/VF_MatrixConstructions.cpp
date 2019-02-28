@@ -715,9 +715,14 @@ void VectorFields::constructStiffnessMatrices()
 
 	// Declare variables, only required as temporary structure for creating SF2D (Stiffness matrix in local frame)
 	Eigen::SparseMatrix<double> LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+	Eigen::SparseMatrix<double> LapDiv3DAsym;
 
 	constructStiffnessMatrixSF3D(LapCurl3D, LapDiv3D);
 	constructStiffnessMatrixSF2D(LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D);
+
+	/* For eigenfields */
+	constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
+	constructStiffnessMatrixSF2DAsym(LapCurl2D, LapDiv3DAsym);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -748,7 +753,7 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Divergent Part (2D) - Curl Part (2D) ";
-		SF2D = LapCurl2D - LapDiv2D;
+		SF2D = LapCurl2D + LapDiv2D;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -772,6 +777,12 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	//JGMGJ	= J*GMG*J;
 	//SF2D	= MF2D*(GMG - JGMGJ)*MF2D;
 
+}
+
+void VectorFields::constructStiffnessMatrixSF2DAsym(Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3DAsym)
+{
+	Eigen::SparseMatrix<double> LapDiv2DAsym = A.transpose() * LapDiv3DAsym * A;
+	SF2DAsym = LapCurl2D + LapDiv2DAsym;
 }
 
 void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)
@@ -891,10 +902,11 @@ void VectorFields::constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>
 	constructStiffnessMatrixDivPart3D_Explicit(LapDiv3D);
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D)
+void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3DAsym)
 {
 	printf("GF3D=%dx%d | MF=%dx%d | MVinv=%dx%d\n", GF3D.rows(), GF3D.cols(), MF3D.rows(), MF3D.cols(), MVinv.rows(), MVinv.cols());
-	LapDiv3D = MF3D*(GF3D*MVinv*GF3D.transpose())*MF3D;
+	//LapDiv3D = MF3D*(GF3D*MVinv*GF3D.transpose())*MF3D;
+	LapDiv3DAsym = MF3D*(GF3D*MVinv*GF3D.transpose())*MF3D;
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
@@ -918,7 +930,7 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 
 				edge = n.cross(edge);
-				Eigen::Matrix3d		block = (3.0 / area) * edge * edge.transpose();
+				Eigen::Matrix3d		block = -(3.0 / area) * edge * edge.transpose();
 
 
 				// ITS BLOCK ==> OFF_DIAGONAL

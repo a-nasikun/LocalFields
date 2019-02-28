@@ -75,11 +75,12 @@ public:
 	void constructMassMatrixMF3Dinv();
 	void constructStiffnessMatrices();
 	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
+	void constructStiffnessMatrixSF2DAsym(Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3DAsym);
 	void constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D);
 	void constructStiffnessMatrixCurlPart2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D);
 	void constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>& LapDiv3D);
-	void constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3DAsym);
 	void constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	void constructGradient3D();
@@ -231,6 +232,7 @@ protected:
 	Eigen::MatrixXd					V, NF, VArrow;
 	Eigen::MatrixXi					F, FArrow, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
+	Eigen::SparseMatrix<double>		SF2DAsym; 
 	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
 	Eigen::VectorXd					doubleArea;
