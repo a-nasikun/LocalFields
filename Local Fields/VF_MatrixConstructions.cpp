@@ -615,7 +615,7 @@ void VectorFields::constructMassMatrixMF2D()
 	MFTriplet.reserve(2 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
-		double area = doubleArea(i) / 2;
+		double area = doubleArea(i) / 2.0;
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, area));
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, area));
 	}
@@ -664,7 +664,7 @@ void VectorFields::constructMassMatrixMF3D()
 	MFTriplet.reserve(2 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
-		double area = doubleArea(i) / 2;
+		double area = doubleArea(i) / 2.0;
 		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, area));
 		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, area));
 		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, area));
@@ -823,16 +823,16 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
-		double				area1 = doubleArea(i);
-		Eigen::RowVector3d	n1 = NF.row(i);
+		double				area1 = doubleArea(i)/ 2.0;
+		//Eigen::RowVector3d	n1 = NF.row(i);
 		for (int j = 0; j < F.cols(); j++) {
 			int				neigh = AdjMF3N(i, j);
 
 			if (neigh > i) {
-				double				area2 = doubleArea(neigh);
+				double				area2 = doubleArea(neigh) / 2.0;
 				double				area = area1 + area2;
 				Eigen::RowVector3d	n2 = NF.row(neigh);
-				Eigen::RowVector3d	n = (n1 + n2) / 2.0;
+				//Eigen::RowVector3d	n = (n1 + n2) / 2.0;
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 				//edge = n.cross(edge);
 				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
@@ -917,16 +917,16 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 	LTriplet.reserve(12 * 3 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
-		double				area1 = doubleArea(i);
+		double				area1 = doubleArea(i) / 2.0;
 		Eigen::RowVector3d	n1 = NF.row(i);
 		for (int j = 0; j < F.cols(); j++) {
 			int				neigh = AdjMF3N(i, j);
 
 			if (neigh > i) {
-				double				area2 = doubleArea(neigh);
+				double				area2 = doubleArea(neigh) / 2.0 ;
 				double				area = area1 + area2;
 				Eigen::RowVector3d	n2 = NF.row(neigh);
-				Eigen::RowVector3d	n = (n1 + n2) / 2.0;
+				Eigen::RowVector3d	n = (n1 + n2) / 2.0; n.normalize();
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 
 				edge = n.cross(edge);

@@ -1883,7 +1883,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.1, 2) + pow(1.9, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2173,90 +2173,6 @@ void VectorFields::normalizeBasis()
 	int numElements = Basis.rows();
 	//cout << "Average non-zeros is " << (double)numNonZeroes / (double)numElements << endl; 
 }
-
-//void VectorFields::normalizeBasisAbs()
-//{
-//	Eigen::MatrixXd BasisSum(BasisTemp.rows(), 2);
-//	BasisSumN.resize(BasisTemp.rows(), 2);
-//	Eigen::MatrixXd normSum(BasisTemp.rows(), 2);
-//	Eigen::MatrixXd BasisNorm(F.rows(), 2);
-//	Eigen::MatrixXi nonZeros(BasisTemp.rows(), 2);
-//	for (int i = 0; i < nonZeros.rows(); i++) {
-//		for (int j = 0; j < nonZeros.cols(); j++) {
-//			nonZeros(i, j) = 0;
-//			BasisSum(i, j) = 0.0;
-//			BasisSumN(i, j) = 0.0;
-//		}
-//	}
-//	vector<Eigen::Triplet<double>> BNTriplet;
-//
-//
-//	// Getting the sum of each pair on each frame AND
-//	// Counting the non-zeros per rows
-//	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
-//		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
-//			BasisSum(it.row(), it.col() % 2) += abs(it.value());
-//			nonZeros(it.row(), it.col() % 2) += 1;
-//		}
-//	}
-//
-//	// Computing the norm
-//	for (int i = 0; i < F.rows(); i++) {
-//		double frame1Norm, frame2Norm, a, b;
-//		a = BasisSum(2 * i + 0, 0);
-//		b = BasisSum(2 * i + 1, 0);
-//		frame1Norm = sqrt(a*a + b*b);
-//
-//		a = BasisSum(2 * i + 0, 1);
-//		b = BasisSum(2 * i + 1, 1);
-//		frame2Norm = sqrt(a*a + b*b);
-//
-//		BasisNorm(i, 0) = frame1Norm;
-//		BasisNorm(i, 1) = frame2Norm;
-//	}
-//
-//	// Constructing normalized basis each element of basis
-//	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
-//		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
-//			double newValue = it.value() / BasisNorm(it.row() / 2, it.col() % 2);
-//			//double newValue = it.value();
-//			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue));
-//		}
-//	}
-//	Basis.setFromTriplets(BNTriplet.begin(), BNTriplet.end());
-//
-//	// Check Normalization
-//	// Getting the sum of each pair on each frame
-//	for (int k = 0; k < Basis.outerSize(); ++k) {
-//		for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
-//			BasisSumN(it.row(), it.col() % 2) += it.value();
-//		}
-//	}
-//
-//	// Computing the norm
-//	for (int i = 0; i < F.rows(); i++) {
-//		double frame1Norm, frame2Norm, a, b;
-//		a = BasisSumN(2 * i + 0, 0);
-//		b = BasisSumN(2 * i + 1, 0);
-//		frame1Norm = sqrt(a*a + b*b);
-//
-//		a = BasisSumN(2 * i + 0, 1);
-//		b = BasisSumN(2 * i + 1, 1);
-//		frame2Norm = sqrt(a*a + b*b);
-//
-//		BasisNorm(i, 0) = frame1Norm;
-//		BasisNorm(i, 1) = frame2Norm;
-//	}
-//
-//	// Show result (The sum=> should all be equal to 1
-//	//for (int i = 0; i < F.rows(); i++) {
-//	//	printf("[%.6f][%.6f]\n", BasisSumN.block(2*i,0,2,1).norm(), BasisSumN.block(2 * i, 1, 2, 1).norm());
-//	//}
-//
-//	int numNonZeroes = Basis.nonZeros();
-//	int numElements = Basis.rows();
-//	cout << "Average non-zeros is " << (double)numNonZeroes / (double)numElements << endl;
-//}
 
 void VectorFields::normalizeBasisAbs()
 {
@@ -2584,7 +2500,7 @@ void VectorFields::computeApproxEigenFields(const int &numEigs)
 
 	cout << "____Computing reduced system... ";
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
-	Eigen::SparseMatrix<double> SAsymbar = Basis.transpose() * SF2DAsym * Basis;
+	Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -2594,7 +2510,7 @@ void VectorFields::computeApproxEigenFields(const int &numEigs)
 	t1 = chrono::high_resolution_clock::now();
 	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	computeEigenMatlab(SAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, "hello");
+	computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, "hello");
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
 	//WriteSparseMatrixToMatlab(Basis, "hello");

@@ -44,9 +44,9 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
@@ -373,12 +373,12 @@ int main(int argc, char *argv[])
 				/* UPdating the mesh information */
 				viewer.data().clear();
 				viewer.data().set_mesh(V, F);
-				cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				vectorFields.setupGlobalProblem();			
-				vectorFields.visualizeApproximatedFields(viewer);
-				//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				//vectorFields.setAndSolveUserSystem();
-				//vectorFields.visualizeApproxResult(viewer);
+				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				//vectorFields.setupGlobalProblem();			
+				//vectorFields.visualizeApproximatedFields(viewer);
+				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				vectorFields.setAndSolveUserSystem();
+				vectorFields.visualizeApproxResult(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
 
 				ChosenFaces.clear();
