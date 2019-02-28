@@ -757,26 +757,6 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
-
-	// Free-ing memory, by clearing:
-	// __ LapDiv3D
-	// __ LapCurl3D
-	// __ LapDiv2D
-	// __ LapCurl2D
-	//LapDiv3D.resize(0, 0);
-	//LapCurl3D.resize(0, 0);
-	//LapDiv2D.resize(0, 0);
-	//LapCurl2D.resize(0, 0);
-	//printf("Size of LD3=%d, LC3=%d, LD2=%d, LC2=%d:\n", LapDiv3D.size(), LapCurl3D.size(), LapDiv2D.size(), LapCurl2D.size());
-	//printf("____SF2D=%dx%d [%.5f per-row (%d) filled]\n", SF2D.rows(), SF2D.cols(), (double)SF2D.nonZeros()/((double) SF2D.rows()), SF2D.nonZeros());
-
-	// Implicit Construction
-	//Eigen::SparseMatrix<double> GMG, JGMGJ;
-	//printf("Dim check: G=%dx%d, M=%dx%d\n", GF2D.rows(), GF2D.cols(), MVinv.rows(), MVinv.cols());
-	//GMG		= GF2D*MVinv*GF2D.transpose();
-	//JGMGJ	= J*GMG*J;
-	//SF2D	= MF2D*(GMG - JGMGJ)*MF2D;
-
 }
 
 void VectorFields::constructStiffnessMatrixSF2DAsym(Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3DAsym)
@@ -808,7 +788,7 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Divergent Part - Curl Part ";
-		//SF3D = LapDiv3D - LapCurl3D;
+		//SF3D = LapDiv3D + LapCurl3D;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -823,13 +803,13 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 	LTriplet.reserve(12 * LapCurl3D.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
-		double				area1 = doubleArea(i)/ 2.0;
+		double				area1 = doubleArea(i)/2.0;
 		//Eigen::RowVector3d	n1 = NF.row(i);
 		for (int j = 0; j < F.cols(); j++) {
 			int				neigh = AdjMF3N(i, j);
 
 			if (neigh > i) {
-				double				area2 = doubleArea(neigh) / 2.0;
+				double				area2 = doubleArea(neigh)/2.0;
 				double				area = area1 + area2;
 				Eigen::RowVector3d	n2 = NF.row(neigh);
 				//Eigen::RowVector3d	n = (n1 + n2) / 2.0;
@@ -917,20 +897,21 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 	LTriplet.reserve(12 * 3 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
-		double				area1 = doubleArea(i) / 2.0;
+		double				area1 = doubleArea(i)/2.0;
 		Eigen::RowVector3d	n1 = NF.row(i);
 		for (int j = 0; j < F.cols(); j++) {
 			int				neigh = AdjMF3N(i, j);
 
 			if (neigh > i) {
-				double				area2 = doubleArea(neigh) / 2.0 ;
+				double				area2 = doubleArea(neigh)/2.0;
 				double				area = area1 + area2;
 				Eigen::RowVector3d	n2 = NF.row(neigh);
 				Eigen::RowVector3d	n = (n1 + n2) / 2.0; n.normalize();
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 
 				edge = n.cross(edge);
-				Eigen::Matrix3d		block = -(3.0 / area) * edge * edge.transpose();
+				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
+
 
 
 				// ITS BLOCK ==> OFF_DIAGONAL
