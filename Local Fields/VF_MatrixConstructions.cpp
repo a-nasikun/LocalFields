@@ -743,6 +743,16 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
+	/* For testing only*/
+	cout << "SF3D block\n" << LapCurl3D.block(0, 0, 10, 100) << endl;
+	cout << "SF2D block\n" << LapCurl2D.block(0, 0, 10, 100) << endl; 
+	//for (int j = 0; j < F.cols(); j++)
+	//{
+	//	int el = 5; 
+	//	int neigh = AdjMF3N(el, j);
+	//	cout << "****First block: \n" << LapCurl2D.block(2*el,2*neigh,2,2) << endl;
+	//}
+	
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (2D) Divergent part ";
@@ -814,9 +824,12 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 				Eigen::RowVector3d	n2 = NF.row(neigh);
 				//Eigen::RowVector3d	n = (n1 + n2) / 2.0;
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
+				edge.normalize();
 				//edge = n.cross(edge);
 				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
 
+				/* For testing only*/
+				if (i == 0) cout << "****First block: \n" << block << endl; 
 
 				// ITS BLOCK
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 0, block(0, 0)));	// row 1
@@ -910,6 +923,7 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 
 				edge = n.cross(edge);
+				edge.normalize();
 				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
 
 
