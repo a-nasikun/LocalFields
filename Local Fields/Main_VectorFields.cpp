@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
 	vectorFields.readMesh(meshFile);
-	vectorFields.readArrowMesh("../LocalFields/Models/arrow.obj");
+	//vectorFields.readArrowMesh("../LocalFields/Models/arrow.obj");
 	//vectorFields.computeEdges();
 	vectorFields.computeAverageEdgeLength();
 	vectorFields.computeFaceCenter();
