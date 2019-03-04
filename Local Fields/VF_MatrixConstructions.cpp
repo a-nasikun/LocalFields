@@ -680,8 +680,8 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	cout << "in " << duration.count() << " seconds" << endl;
 
 	/* For testing only*/
-	cout << "SF3D block\n" << LapCurl3D.block(0, 0, 10, 100) << endl;
-	cout << "SF2D block\n" << LapCurl2D.block(0, 0, 10, 100) << endl; 
+	//cout << "SF3D block\n" << LapCurl3D.block(0, 0, 10, 100) << endl;
+	//cout << "SF2D block\n" << LapCurl2D.block(0, 0, 10, 100) << endl; 
 	//for (int j = 0; j < F.cols(); j++)
 	//{
 	//	int el = 5; 

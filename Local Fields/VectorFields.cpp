@@ -14,9 +14,9 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedHardConstraints();
+	constructSpecifiedHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();
+	//constructInteractiveConstraints();
 	
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -99,7 +99,7 @@ void VectorFields::pushNewUserConstraints(const int& fInit, const int& fEnd)
 void VectorFields::constructSpecifiedHardConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 5;
+	const int numConstraints = 20;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -1919,7 +1919,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(0.4, 2) + pow(0.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2366,6 +2366,13 @@ void VectorFields::setupReducedBiLaplacian()
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 	printf(".... Local Basis = %dx%d\n", B2DBar.rows(), B2DBar.cols());
+
+	/* Getting the information about nonzeros */
+	double nnz_num = (double)B2DBar.nonZeros() / (double)B2DBar.rows();
+	double nnz_perc = nnz_num / (double)B2DBar.cols();
+	printf(".... NNZ per row = %.2f\n", nnz_num);
+	printf(".... Percentage of NNZ = %.20f \n", nnz_perc*100);
+
 }
 void VectorFields::getUserConstraints()
 {	
