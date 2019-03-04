@@ -152,7 +152,8 @@ public:
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
-	void testBasis();
+	void testBasis_NoRegularizer();
+	void testBasis_WithRegularizer();
 	void measureU1andJU0();
 
 	// APPLICATIONS ON REDUCED BASIS
