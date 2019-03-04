@@ -14,9 +14,9 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedHardConstraints();
+	constructSpecifiedHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();	
+	//constructInteractiveConstraints();
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -97,7 +97,7 @@ void VectorFields::pushNewUserConstraints(const int& fInit, const int& fEnd)
 void VectorFields::constructSpecifiedHardConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 5;
+	const int numConstraints = 20;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -1804,6 +1804,67 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+// RANK-2 TENSOR
+void VectorFields::constructMappingMatrix_TensorR2()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Constructing Mapping matrices (Global/World-Coord to Local Frame)... ";
+
+
+	AT2R.resize(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(3 * 3 * F.rows());
+	Eigen::Vector3d e, f, n;
+	Eigen::Vector3d eeT, efT, feT, efTfeT, ffT;
+
+	for (int i = 0; i < F.rows(); i++) {
+		/* Computing the basic elements */
+		e = V.row(F(i, 1)) - V.row(F(i, 0));
+		e.normalize();
+
+		n = NF.row(i);
+		n.normalize();
+
+		f = n.cross(e);
+		f.normalize();
+
+		/* Computing the values for tensor */
+
+
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, e(0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, e(1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, e(2)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, f(0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, f(1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, f(2)));
+	}
+
+	A.setFromTriplets(ATriplet.begin(), ATriplet.end());
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::constructStiffnessMatrixSF2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
+{
+
+}
+
+void VectorFields::constructStiffnessMatrixCurlPart2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D)
+{
+
+}
+
+void VectorFields::constructStiffnessMatrixDivPart2D_TensorR2(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
+{
+
+}
+
+// APPLICATIONS ON GLOBAL SYSTEM
 void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)
 {
 	/* First flavour */
@@ -1883,7 +1944,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.9, 2));
+	double	coef = sqrt(pow(0.4, 2) + pow(0.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2267,6 +2328,13 @@ void VectorFields::setupReducedBiLaplacian()
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 	printf(".... Local Basis = %dx%d\n", B2DBar.rows(), B2DBar.cols());
+
+	/* Getting the information about nonzeros */
+	double nnz_num = (double)B2DBar.nonZeros() / (double)B2DBar.rows();
+	double nnz_perc = nnz_num / (double)B2DBar.cols();
+	printf(".... NNZ per row = %.2f\n", nnz_num);
+	printf(".... Percentage of NNZ = %.20f \n", nnz_perc*100);
+
 }
 void VectorFields::getUserConstraints()
 {	

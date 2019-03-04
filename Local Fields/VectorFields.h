@@ -120,6 +120,13 @@ public:
 	void solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 	void solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 
+	// RANK-2 TENSOR
+	void constructMappingMatrix_TensorR2();
+	void constructStiffnessMatrixSF2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
+	void constructStiffnessMatrixCurlPart2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D);
+	void constructStiffnessMatrixDivPart2D_TensorR2(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
+	
+
 	// APPLICATIONS ON GLOBAL SYSTEM
 	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 	void computeEigenFields();
@@ -232,8 +239,8 @@ protected:
 	Eigen::MatrixXd					V, NF, VArrow;
 	Eigen::MatrixXi					F, FArrow, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
-	Eigen::SparseMatrix<double>		SF2DAsym; 
-	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, J;
+	Eigen::SparseMatrix<double>		SF2DAsym;
+	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, AT2R, J;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
 	Eigen::VectorXd					doubleArea;
 	vector<set<int>>				AdjMV, AdjMF2Ring, NeighRing;
