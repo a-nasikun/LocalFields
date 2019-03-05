@@ -50,7 +50,7 @@ void VectorFields::constructArbitraryField2D()
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::testBasis_NoRegularizer()
+void VectorFields::testBasis_NoRegularizer(double &error)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -96,6 +96,7 @@ void VectorFields::testBasis_NoRegularizer()
 	double norm1 = diff.transpose()*MF2D*diff;
 	double norm2 = v.transpose()*MF2D*v;
 	double normL2 = sqrt(norm1 / norm2); 
+	error = normL2; 
 
 	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl; 
 
@@ -163,6 +164,35 @@ void VectorFields::testBasis_WithRegularizer()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::projectionTest()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;	
+
+
+	const int NUM_TEST = 500;
+	Eigen::VectorXd errors(NUM_TEST);
+
+	for (int i = 0; i < NUM_TEST; i++)
+	{
+		t1 = chrono::high_resolution_clock::now();
+
+		/* Reference results */
+		setupGlobalProblem();
+
+		/* Projection to the subspace */
+		testBasis_NoRegularizer(errors(i));
+		//testBasis_WithRegularizer();
+
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors(i), duration.count());		
+	}
+
+	cout << "ERRORS: \n" <<  errors << endl; 
 }
 
 void VectorFields::testMappingMatrix()

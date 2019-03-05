@@ -101,6 +101,7 @@ public:
 	void constructRingConstraints();
 	void pushNewUserConstraints(const int& fInit, const int& fEnd);
 	void constructSpecifiedHardConstraints();
+	void constructRandomHardConstraints();
 	void constructInteractiveConstraints();
 	void resetInteractiveConstraints();
 	void constructSingularities();
@@ -152,8 +153,9 @@ public:
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
-	void testBasis_NoRegularizer();
+	void testBasis_NoRegularizer(double &error);
 	void testBasis_WithRegularizer();
+	void projectionTest();
 	void measureU1andJU0();
 
 	// APPLICATIONS ON REDUCED BASIS
