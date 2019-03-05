@@ -6,7 +6,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
-int eigsToCompute = 50; 
+int eigsToCompute = 20; 
 
 int main(int argc, char *argv[])
 {
@@ -88,8 +88,8 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
@@ -118,11 +118,12 @@ int main(int argc, char *argv[])
 	//double error; 
 	//vectorFields.testBasis_NoRegularizer(error);
 	//vectorFields.testBasis_WithRegularizer();
-	vectorFields.projectionTest();
+	//vectorFields.projectionTest();
+	
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
-	vectorFields.visualizeApproximatedFields(viewer);
-	vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0);
-	vectorFields.visualizeGlobalConstraints(viewer);
+	//vectorFields.visualizeApproximatedFields(viewer);
+	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0);
+	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.measureDirichletEnergy();
 
 	/* ====================== PARALLEL TRANSPORT ====================*/

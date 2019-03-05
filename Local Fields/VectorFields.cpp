@@ -3,6 +3,7 @@
 #include <igl/per_vertex_normals.h>
 #include <Eigen/Eigenvalues>
 #include <random>
+#include <Eigen/OrderingMethods>
 
 /* ====================== SETTING UP MATRICES ============================*/
 void VectorFields::constructConstraints()
@@ -1774,7 +1775,7 @@ void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::Spa
 	
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);	
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);			
 	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
 
 	// FIRST BASIS
@@ -2604,7 +2605,7 @@ void VectorFields::computeEigenFields()
 	cout << "> Computing reference eigenproblem (in Matlab)... ";
 
 	//computeEigenMatlab(SF2DAsym, MF2D, eigFieldFull2D, eigValuesFull);
-	computeEigenMatlab(SF2DAsym, MF2D, 50, eigFieldFull2D, eigValuesFull, "hello");
+	computeEigenMatlab(SF2DAsym, MF2D, 20, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
 
