@@ -51,24 +51,26 @@ void VectorFields::constructArbitraryField2D()
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::testBasis()
+void VectorFields::testBasis_NoRegularizer(double &error)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Testing basis 2D of arbitrary field...\n";
+	cout << "> Testing basis 2D of arbitrary field without regularizer...\n";
 
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
 	Eigen::SparseMatrix<double> BB = Basis;// BasisTemp;
-	//Eigen::VectorXd				v = Xf; 
-	Eigen::VectorXd				v =  arbField2D;
+	Eigen::VectorXd				v = Xf; 
+	//Eigen::VectorXd				v =  arbField2D;
 	Eigen::VectorXd				a = (v.transpose()*MF2D*BB).transpose();
 	Eigen::SparseMatrix<double> B = BB.transpose() * MF2D * BB;
 
 	cout << "____Solving linear system variables\n";
-	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+
 	Eigen::VectorXd w = sparseSolver.solve(a);
 
 	if (sparseSolver.info() != Eigen::Success) {
@@ -97,6 +99,7 @@ void VectorFields::testBasis()
 	double norm1 = diff.transpose()*MF2D*diff;
 	double norm2 = v.transpose()*MF2D*v;
 	double normL2 = sqrt(norm1 / norm2); 
+	error = normL2; 
 
 	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl; 
 
@@ -105,6 +108,94 @@ void VectorFields::testBasis()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::testBasis_WithRegularizer()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Testing basis 2D of arbitrary field (with regularizer)...\n";
+
+	// Construct matrices for Test
+	cout << "____Assigning variables\n";
+	Eigen::SparseMatrix<double> BB = Basis;// BasisTemp;
+	Eigen::VectorXd				v = Xf; 
+	//Eigen::VectorXd				v = arbField2D;
+	Eigen::VectorXd				a = (v.transpose()*MF2D*BB).transpose();
+	Eigen::SparseMatrix<double> B1 = BB.transpose() * MF2D * BB;
+	Eigen::SparseMatrix<double> B2 = BB.transpose() * SF2D * MF2D * BB;
+	const double lambda = 0.5; 
+	Eigen::SparseMatrix<double> B = B1 + lambda*B2;
+
+	cout << "____Solving linear system variables\n";
+	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	Eigen::VectorXd w = sparseSolver.solve(a);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	//Eigen::VectorXd wb;
+	wb.resize(BB.rows());
+
+	for (int i = 0; i < BB.rows(); i++) {
+		wb(i) = 0.0;
+	}
+
+	cout << "____Getting total SUM(wi*bi) \n";
+	for (int i = 0; i < w.rows(); i++) {
+		wb += w(i)*BB.col(i);
+	}
+
+	// Compare their L2-Norm
+	cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = v - wb;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = v.transpose()*MF2D*v;
+	double normL2 = sqrt(norm1 / norm2);
+
+	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl;
+
+	//cout << "Weight: \n" << w << endl; 
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::projectionTest()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;	
+
+
+	const int NUM_TEST = 30;
+	Eigen::VectorXd errors(NUM_TEST);
+
+	for (int i = 0; i < NUM_TEST; i++)
+	{
+		t1 = chrono::high_resolution_clock::now();
+
+		/* Reference results */
+		setupGlobalProblem();
+
+		/* Projection to the subspace */
+		testBasis_NoRegularizer(errors(i));
+		//testBasis_WithRegularizer();
+
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors(i), duration.count());		
+	}
+
+	cout << "ERRORS: \n" <<  errors << endl; 
 }
 
 void VectorFields::testMappingMatrix()

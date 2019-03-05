@@ -2,6 +2,7 @@
 
 #include <igl/per_vertex_normals.h>
 #include <Eigen/Eigenvalues>
+#include <random>
 
 /* ====================== SETTING UP MATRICES ============================*/
 void VectorFields::constructConstraints()
@@ -15,6 +16,7 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	constructSpecifiedHardConstraints();
+	//constructRandomHardConstraints();
 	//constructSoftConstraints();
 	//constructInteractiveConstraints();
 
@@ -109,9 +111,15 @@ void VectorFields::constructSpecifiedHardConstraints()
 		D(i) = numeric_limits<double>::infinity();
 	}
 
+	/* Random number generator */
+	std::random_device rd;								// Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
+	std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+
 	srand(time(NULL));
 	//int curPoint = rand() % F.rows();
-	int curPoint = 0; 
+	//int curPoint = 0; 
+	int curPoint = dis(gen);
 	constraints.insert(curPoint);
 
 	// Creating constraints using farthest point sampling
@@ -145,16 +153,21 @@ void VectorFields::constructSpecifiedHardConstraints()
 	vector<Eigen::Triplet<double>> CTriplet;
 	CTriplet.reserve(2 * globalConstraints.size());
 	c.resize(2 * globalConstraints.size());
+	Eigen::Vector2d cRand;
 
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
+		cRand(0) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand.normalize();
+
 		//const double alpha = M_PI / 2.0; 
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, cos(alpha)));
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, -sin(alpha)));
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * counterPart + 0, 1.0));
 		//c(2 * counter + 0, 0) = 1.0;
-		c(counter, 0) = 1.0;
+		c(counter, 0) = cRand(0);
 		counter++;
 
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
@@ -162,12 +175,60 @@ void VectorFields::constructSpecifiedHardConstraints()
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, cos(alpha)));
 		//c(2 * counter + 1, 0) = 1.0;
 		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * counterPart + 1, 1.0));
-		c(counter, 0) = 1.0;
+		c(counter, 0) = cRand(1);
 		counter++;
 	}
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	//printf("Cp=%dx%d\n", C.rows(), C.cols());
+}
+
+void VectorFields::constructRandomHardConstraints()
+{
+	// Define the constraints
+	const int numConstraints = 20;
+	set<int> constraints;
+	globalConstraints.resize(numConstraints);
+
+	/* Random number generator */
+	std::random_device rd;								// Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
+	std::uniform_int_distribution<> dis(0, F.rows()-1); // From 0 to F.rows()-1
+	
+	/* Creating random constraints */
+	do {
+		int constraintFace = dis(gen);
+		constraints.insert(constraintFace);
+	} while (constraints.size() < numConstraints);
+	
+	int counter1 = 0;
+	for (int i : constraints) {
+		globalConstraints[counter1++] = i;
+	}
+	
+	// Setting up matrix C
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+	c.resize(2 * globalConstraints.size());
+	Eigen::Vector2d cRand;
+
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		cRand(0) = (double)(rand() % F.rows()) / (double) F.rows();
+		cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand.normalize();
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		c(counter, 0) = cRand(0);
+		counter++;
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		c(counter, 0) = cRand(1);
+		counter++;
+	}
+	C.resize(2 * globalConstraints.size(), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
 
 void VectorFields::constructInteractiveConstraints()
@@ -1944,7 +2005,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(0.4, 2) + pow(0.5, 2));
+	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis

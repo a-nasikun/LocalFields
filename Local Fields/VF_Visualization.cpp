@@ -132,7 +132,8 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//viewer.data().clear();
 	//viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
-	visualize2DfieldsScaled(viewer, Xf, color, 5);
+	//visualize2DfieldsScaled(viewer, Xf, color, 5);
+	visualize2Dfields(viewer, Xf, color, 2.0, false);
 	//visualize2DfieldsNormalized(viewer, Xf, color, 4000);
 }
 
@@ -142,7 +143,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
 	chrono::duration<double>					duration, da, de;
 	t1 = chrono::high_resolution_clock::now();
-	cout << "> Adding edges... ";
+	//cout << "> Adding edges... ";
 
 //<<<<<<< HEAD
 //	for (int i = 0; i < F.rows(); i++)
@@ -250,7 +251,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
+	//cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
