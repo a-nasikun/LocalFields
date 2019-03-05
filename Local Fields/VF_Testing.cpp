@@ -67,7 +67,9 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	Eigen::SparseMatrix<double> B = BB.transpose() * MF2D * BB;
 
 	cout << "____Solving linear system variables\n";
-	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+
 	Eigen::VectorXd w = sparseSolver.solve(a);
 
 	if (sparseSolver.info() != Eigen::Success) {
@@ -173,7 +175,7 @@ void VectorFields::projectionTest()
 	chrono::duration<double>					duration;	
 
 
-	const int NUM_TEST = 500;
+	const int NUM_TEST = 30;
 	Eigen::VectorXd errors(NUM_TEST);
 
 	for (int i = 0; i < NUM_TEST; i++)

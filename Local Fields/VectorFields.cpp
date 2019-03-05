@@ -15,8 +15,8 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
+	constructSpecifiedHardConstraints();
+	//constructRandomHardConstraints();
 	//constructSoftConstraints();
 	//constructInteractiveConstraints();
 	
