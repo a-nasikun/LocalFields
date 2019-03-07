@@ -1087,3 +1087,9 @@ void VectorFields::constructMatrixB()
 	// FREE-ing Memory, not the best practice but used to save space for large mesh
 	//SF2D.resize(0, 0);
 }
+
+// GETTER AND SETTER of IMPORTANT ELEMENTS
+Eigen::VectorXd VectorFields::getRefFields() const
+{
+	return Xf; 
+}

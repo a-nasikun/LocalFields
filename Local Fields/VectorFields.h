@@ -218,6 +218,9 @@ public:
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 
+	// GETTER AND SETTER of IMPORTANT ELEMENTS
+	Eigen::VectorXd getRefFields() const; 
+
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
 	//Eigen::MatrixXd					V, FC, NF;

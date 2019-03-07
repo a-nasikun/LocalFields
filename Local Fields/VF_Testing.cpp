@@ -60,11 +60,11 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
-	Eigen::SparseMatrix<double> BB = Basis;// BasisTemp;
+	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = Xf; 
 	//Eigen::VectorXd				v =  arbField2D;
-	Eigen::VectorXd				a = (v.transpose()*MF2D*BB).transpose();
-	Eigen::SparseMatrix<double> B = BB.transpose() * MF2D * BB;
+	Eigen::VectorXd				a = (v.transpose()*MF2D*U).transpose();
+	Eigen::SparseMatrix<double> B = U.transpose() * MF2D * U;
 
 	cout << "____Solving linear system variables\n";
 	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
@@ -81,16 +81,17 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	}
 
 	//Eigen::VectorXd wb;
-	wb.resize(BB.rows());
+	wb.resize(U.rows());
 
-	for (int i = 0; i < BB.rows(); i++) {
+	for (int i = 0; i < U.rows(); i++) {
 		wb(i) = 0.0;
 	}
 
 	cout << "____Getting total SUM(wi*bi) \n";
-	for (int i = 0; i < w.rows(); i++) {
-		wb += w(i)*BB.col(i);
-	}
+	//for (int i = 0; i < w.rows(); i++) {
+	//	wb += w(i)*U.col(i);
+	//}
+	wb = U*w; 
 
 	// Compare their L2-Norm
 	cout << "____Computing L2-norm \n";
@@ -119,14 +120,15 @@ void VectorFields::testBasis_WithRegularizer()
 
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
-	Eigen::SparseMatrix<double> BB = Basis;// BasisTemp;
+	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = Xf; 
 	//Eigen::VectorXd				v = arbField2D;
-	Eigen::VectorXd				a = (v.transpose()*MF2D*BB).transpose();
-	Eigen::SparseMatrix<double> B1 = BB.transpose() * MF2D * BB;
-	Eigen::SparseMatrix<double> B2 = BB.transpose() * SF2D * MF2D * BB;
-	const double lambda = 0.5; 
-	Eigen::SparseMatrix<double> B = B1 + lambda*B2;
+	Eigen::VectorXd				a = (U.transpose()*MF2D*v).transpose();
+	//Eigen::SparseMatrix<double> B1 = U.transpose() * MF2D * U;
+	//Eigen::SparseMatrix<double> B2 = U.transpose() * SF2D * MF2D * U;
+	const double lambda = 0.005; 
+	//Eigen::SparseMatrix<double> B = B1 + lambda*B2;
+	Eigen::SparseMatrix<double> B = U.transpose()*(MF2D+lambda*B2D)*U;
 
 	cout << "____Solving linear system variables\n";
 	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
@@ -141,16 +143,17 @@ void VectorFields::testBasis_WithRegularizer()
 	}
 
 	//Eigen::VectorXd wb;
-	wb.resize(BB.rows());
+	wb.resize(U.rows());
 
-	for (int i = 0; i < BB.rows(); i++) {
+	for (int i = 0; i < U.rows(); i++) {
 		wb(i) = 0.0;
 	}
 
 	cout << "____Getting total SUM(wi*bi) \n";
-	for (int i = 0; i < w.rows(); i++) {
-		wb += w(i)*BB.col(i);
-	}
+	//for (int i = 0; i < w.rows(); i++) {
+	//	wb += w(i)*U.col(i);
+	//}
+	wb = U*w; 
 
 	// Compare their L2-Norm
 	cout << "____Computing L2-norm \n";
@@ -160,6 +163,10 @@ void VectorFields::testBasis_WithRegularizer()
 	double normL2 = sqrt(norm1 / norm2);
 
 	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl;
+
+	double energyInput = v.transpose()*B2D*v; 
+	double energyOutput = wb.transpose()*B2D*v;
+	cout << "Energy: Input= " << energyInput << ", \t\t Output= " << energyOutput << endl; 
 
 	//cout << "Weight: \n" << w << endl; 
 
@@ -175,7 +182,7 @@ void VectorFields::projectionTest()
 	chrono::duration<double>					duration;	
 
 
-	const int NUM_TEST = 30;
+	const int NUM_TEST = 1;
 	Eigen::VectorXd errors(NUM_TEST);
 
 	for (int i = 0; i < NUM_TEST; i++)
@@ -186,8 +193,8 @@ void VectorFields::projectionTest()
 		setupGlobalProblem();
 
 		/* Projection to the subspace */
-		testBasis_NoRegularizer(errors(i));
-		//testBasis_WithRegularizer();
+		//testBasis_NoRegularizer(errors(i));
+		testBasis_WithRegularizer();
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
