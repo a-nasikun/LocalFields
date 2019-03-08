@@ -145,6 +145,16 @@ void VectorFields::testBasis_WithRegularizer(double &error)
 	double norm2 = wRef.transpose()*MF2D*wRef;
 	error = sqrt(norm1 / norm2);
 	cout << "ERROR: " << error << endl; 
+
+	/* Measuring the energy */
+	double energy1 = wRef.transpose()*B2D*wRef;
+	double energy2 = wApp.transpose()*B2D*wApp;
+	cout << "ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl; 
+
+	/* Measuring the 'length' of each vector */
+	double length1 = wRef.transpose()*MF2D*wRef;
+	double length2 = wApp.transpose()*MF2D*wApp;
+	cout << "[LENGTH] => Ref=" << length1 << ", Approx:" << length2 << endl;
 }
 
 void VectorFields::testBasis_WithRegularizer()
