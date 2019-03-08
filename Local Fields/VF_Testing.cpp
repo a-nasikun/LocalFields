@@ -110,6 +110,43 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
+void VectorFields::testBasis_WithRegularizer(double &error)
+{
+	/* SETUP FOR REFERENCE SYSTEM */
+	Eigen::VectorXd vIn = Xf;
+	const double lambda = 0.02;
+	Eigen::SparseMatrix<double> ARef = MF2D + lambda*B2D;
+	Eigen::VectorXd				bRef = MF2D*vIn; 
+	Eigen::VectorXd				wRef;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> solverRef(ARef); 
+	wRef = solverRef.solve(bRef);
+	projRef = wRef; 
+
+	/* SETUP FOR THE APPROXIMATION */
+	Eigen::SparseMatrix<double> AApp = Basis.transpose() * ARef * Basis;
+	Eigen::VectorXd				bApp = Basis.transpose() * bRef; 
+	Eigen::VectorXd				q, wApp;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> solverApp(AApp);
+	q = solverApp.solve(bApp);
+	wApp = Basis*q; 
+	projApprox = wApp;
+
+	/* MEASURING ERROR/DIFFERENCE */
+	cout << "Test some elements: \n";
+	for (int i = 0; i < min(10, (int) wApp.rows()); i++)
+	{
+		cout << "Ref: " << wRef(i) << "\t\t\t Approx.: " << wApp(i) << endl; 
+	}
+
+	Eigen::VectorXd diff = wRef - wApp;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = wRef.transpose()*MF2D*wRef;
+	error = sqrt(norm1 / norm2);
+	cout << "ERROR: " << error << endl; 
+}
+
 void VectorFields::testBasis_WithRegularizer()
 {
 	// For Timing
@@ -194,7 +231,8 @@ void VectorFields::projectionTest()
 
 		/* Projection to the subspace */
 		//testBasis_NoRegularizer(errors(i));
-		testBasis_WithRegularizer();
+		testBasis_WithRegularizer(errors(i));
+		//testBasis_WithRegularizer();
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;

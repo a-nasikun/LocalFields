@@ -154,6 +154,7 @@ public:
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
 	void testBasis_NoRegularizer(double &error);
+	void testBasis_WithRegularizer(double &error);
 	void testBasis_WithRegularizer();
 	void projectionTest();
 	void measureU1andJU0();
@@ -264,7 +265,7 @@ protected:
 	// FOR TESTING ONLY
 public: 
 	Eigen::VectorXd					XLowDim, XFullDim;
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, projRef, projApprox;
 	Eigen::VectorXd					sampleDistance;
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints; 
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
