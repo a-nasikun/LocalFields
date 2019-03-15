@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -119,10 +119,11 @@ int main(int argc, char *argv[])
 	//vectorFields.testBasis_NoRegularizer(error);
 	//vectorFields.testBasis_WithRegularizer();
 	//vectorFields.projectionTest();
-	
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0);
+	//vectorFields.visualizeApproximatedFields(viewer);	
+	//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
+	//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.measureDirichletEnergy();
 
@@ -133,7 +134,8 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeParallelTransport(viewer);
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
-	Eigen::VectorXd v_in = vectorFields.arbField2D;
+	//Eigen::VectorXd v_in = vectorFields.arbField2D;
+	Eigen::VectorXd v_in = vectorFields.getRefFields();
 	Eigen::VectorXd v_out;
 	const double mu = 0.04; 
 
@@ -251,6 +253,7 @@ int main(int argc, char *argv[])
 			viewer.selected_data_index = 0;			
 			break;
 
+
 		case 'y':
 		case 'Y':
 			eigToShow2 = max(eigToShow2 - 1, 0);
@@ -277,25 +280,27 @@ int main(int argc, char *argv[])
 			//if (selectFace) cout << "Face is selected" << endl; 
 			//selectedFace = rand() % F.rows();
 			//cout << "Face: " << selectedFace << endl;
-		case 'x':
-		case 'X':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			selectFace = !selectFace;			
+		//case 'x':
+		//case 'X':
+		//	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+		//	selectFace = !selectFace;			
+		//	//vectorFields.visualizeRandomFace(viewer, selectedFace);
+		//	break;
 
-			//vectorFields.visualizeRandomFace(viewer, selectedFace);
-			break;
 		case 'c':
 		case 'C':
 			printf("Computing smoothing on Reduced basis\n");
 			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
-		//case 'x':
-		//case 'X':
-		//	printf("Computing smoothing on full res\n");
-		//	vectorFields.computeSmoothing(mu, v_in, v_out);
-		//	v_in = v_out;
-		//	break; 
+		case 'x':
+		case 'X':
+			printf("Computing smoothing on full res\n");
+			vectorFields.computeSmoothing(mu, v_in, v_out);
+			vectorFields.visualize2Dfields(viewer, v_out, Eigen::RowVector3d(0.9, 0.1, 0.0), 2.0, true);
+			//vectorFields.visualize2Dfields(viewer, v_in, Eigen::RowVector3d(0.0, 0.1, 0.9), 2.0, true);
+			v_in = v_out;
+			break; 
 		case 'v':
 		case 'V':
 			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 1.0);

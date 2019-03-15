@@ -158,6 +158,7 @@ public:
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
 	void testBasis_NoRegularizer(double &error);
+	void testBasis_WithRegularizer(double &error);
 	void testBasis_WithRegularizer();
 	void projectionTest();
 	void measureU1andJU0();
@@ -233,8 +234,9 @@ public:
 	// VISUALIZATION of APPLICATIONs
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
-
-
+	
+	// GETTER AND SETTER of IMPORTANT ELEMENTS
+	Eigen::VectorXd getRefFields() const; 
 
 protected:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
@@ -279,7 +281,8 @@ protected:
 
 	// FOR TESTING ONLY
 public: 
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, localSystem;
+	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	Eigen::VectorXd					localSystem;
 	Eigen::VectorXd					eigValuesFull, eigValuesReduced;
 	Eigen::MatrixXd					eigFieldReduced2D, eigFieldFull2D;
 	vector<vector<Eigen::Vector2d>> mappedBasis; 
@@ -289,6 +292,7 @@ public:
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints;
 	Eigen::VectorXd					XLowDim, XFullDim;
 	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, projRef, projApprox;
 	Eigen::VectorXd					sampleDistance;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 	Eigen::MatrixXd					FC;

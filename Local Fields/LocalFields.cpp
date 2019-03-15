@@ -222,6 +222,7 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, 
 	//======================== BLoc from B2D =========================
 	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
 	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(20*2*LocalElements.size());
 
 	for (int i = 0; i < LocalElements.size(); i++) {
 		int li = LocalElements[i];
@@ -241,6 +242,46 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, 
 				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, B2D.coeff(2 * li + 0, 2 * neigh + 1)));
 				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, B2D.coeff(2 * li + 1, 2 * neigh + 0)));
 				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, B2D.coeff(2 * li + 1, 2 * neigh + 1)));
+			}
+		}
+	}
+	BLoc.setFromTriplets(BTriplet.begin(), BTriplet.end());
+}
+
+void LocalFields::constructMatrixBLocalDirectInsert(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring)
+{
+	//======================== BLoc from B2D =========================
+	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+	BLoc.reserve(Eigen::VectorXd::Constant(2 * LocalElements.size(),20));
+	vector<Eigen::Triplet<double>> BTriplet;
+
+
+	for (int i = 0; i < LocalElements.size(); i++) {
+		int li = LocalElements[i];
+		// Get the DIAGONAL Elements from B2D Matrix
+		BLoc.insert(2 * i + 0, 2 * i + 0) = B2D.coeff(2 * li + 0, 2 * li + 0);
+		BLoc.insert(2 * i + 0, 2 * i + 1) = B2D.coeff(2 * li + 0, 2 * li + 1);
+		BLoc.insert(2 * i + 1, 2 * i + 0) = B2D.coeff(2 * li + 1, 2 * li + 0);
+		BLoc.insert(2 * i + 1, 2 * i + 1) = B2D.coeff(2 * li + 1, 2 * li + 1);
+		//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, B2D.coeff(2 * li + 0, 2 * li + 0)));
+		//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, B2D.coeff(2 * li + 0, 2 * li + 1)));
+		//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, B2D.coeff(2 * li + 1, 2 * li + 0)));
+		//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, B2D.coeff(2 * li + 1, 2 * li + 1)));
+
+		// Get the NEIGHBORING elements
+		//for (int j = 0; j < AdjMF3N.cols(); j++) {
+		for (int j : AdjMF2Ring[LocalElements[i]]) {
+			const int neigh = j;
+			if (GlobToLocMap[neigh] >= 0) {
+				int neighLoc = GlobToLocMap[neigh];
+				//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, B2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, B2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, B2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				//BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, B2D.coeff(2 * li + 1, 2 * neigh + 1)));
+				BLoc.insert(2 * i + 0, 2 * neighLoc + 0) = B2D.coeff(2 * li + 0, 2 * neigh + 0);
+				BLoc.insert(2 * i + 0, 2 * neighLoc + 1) = B2D.coeff(2 * li + 0, 2 * neigh + 1);
+				BLoc.insert(2 * i + 1, 2 * neighLoc + 0) = B2D.coeff(2 * li + 1, 2 * neigh + 0);
+				BLoc.insert(2 * i + 1, 2 * neighLoc + 1) = B2D.coeff(2 * li + 1, 2 * neigh + 1);
 			}
 		}
 	}
