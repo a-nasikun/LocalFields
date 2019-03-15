@@ -23,6 +23,7 @@ public:
 	void constructLocalElements(const Eigen::MatrixXi &F);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring);
+	void constructMatrixBLocalDirectInsert(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring);
 	void constructLocalConstraints();
 	void setupRHSLocalProblemMapped();
 	void setupLHSLocalProblemMapped();
