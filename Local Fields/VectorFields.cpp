@@ -2013,7 +2013,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.1, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.0, 2) + pow(0.7, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2153,8 +2153,9 @@ void VectorFields::constructBasis()
 	cout << "....Partition of unity of the basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
+	Basis = BasisTemp; 
 	//normalizeBasis();
-	normalizeBasisAbs();
+	//normalizeBasisAbs();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
