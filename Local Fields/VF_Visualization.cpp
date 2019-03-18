@@ -133,7 +133,7 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
 	//visualize2Dfields(viewer, Xf, color, 2.0, false);
-	visualize2Dfields(viewer, Xf, color, 2.0, true);
+	visualize2Dfields(viewer, Xf, color, 2.0, false);
 }
 
 void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
@@ -347,6 +347,7 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	Eigen::RowVector3d color;
 	if (id % 2 == 0) {
 		color = Eigen::RowVector3d(1.0, 0.1, 0.2);
+		//color = Eigen::RowVector3d(0.6, 0.2, 0.2);
 	}
 	else {
 		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
@@ -371,10 +372,12 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	int bId = id;
 	Eigen::RowVector3d color;
 	if (id % 2 == 0) {
-		color = Eigen::RowVector3d(1.0, 0.1, 0.2);
+		//color = Eigen::RowVector3d(1.0, 0.1, 0.2);
+		color = Eigen::RowVector3d(0.6, 0.2, 0.2);
 	}
 	else {
-		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
+		//color = Eigen::RowVector3d(0.0, 0.1, 1.0);
+		color = Eigen::RowVector3d(0.2, 0.2, 0.6);
 	}
 
 	if (id >= 2 * Sample.size()) {
@@ -862,8 +865,8 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	Eigen::RowVector3d purple(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0);
 	Eigen::RowVector3d red(0.9, 0.1, 0.1);	
 	
-	visualize2Dfields(viewer, eigfields, red, 3, false);
-	//visualize2Dfields(viewer, eigfields, red, 3, true);
+	//visualize2Dfields(viewer, eigfields, red, 3, false);
+	visualize2Dfields(viewer, eigfields, red, 3, true);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

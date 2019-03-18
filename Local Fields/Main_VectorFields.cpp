@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 5000;
+int numSample = 1000;
 int eigToShow2 = 0;
 int eigsToCompute = 20; 
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(5000);
+	vectorFields.selectFaceToDraw(15000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	vectorFields.constructGradient3D();
 	vectorFields.constructStiffnessMatrices();
 	vectorFields.constructMatrixB();
-	vectorFields.constructConstraints();
+	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
@@ -104,9 +104,9 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	vectorFields.computeEigenFields();
+	//vectorFields.computeEigenFields();
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute);
+	//vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.printDataForVTK();
@@ -280,12 +280,12 @@ int main(int argc, char *argv[])
 			//if (selectFace) cout << "Face is selected" << endl; 
 			//selectedFace = rand() % F.rows();
 			//cout << "Face: " << selectedFace << endl;
-		//case 'x':
-		//case 'X':
-		//	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-		//	selectFace = !selectFace;			
-		//	//vectorFields.visualizeRandomFace(viewer, selectedFace);
-		//	break;
+		case 'x':
+		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			selectFace = !selectFace;			
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			break;
 
 		case 'c':
 		case 'C':
@@ -293,14 +293,14 @@ int main(int argc, char *argv[])
 			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
-		case 'x':
-		case 'X':
-			printf("Computing smoothing on full res\n");
-			vectorFields.computeSmoothing(mu, v_in, v_out);
-			vectorFields.visualize2Dfields(viewer, v_out, Eigen::RowVector3d(0.9, 0.1, 0.0), 2.0, true);
-			//vectorFields.visualize2Dfields(viewer, v_in, Eigen::RowVector3d(0.0, 0.1, 0.9), 2.0, true);
-			v_in = v_out;
-			break; 
+		//case 'x':
+		//case 'X':
+		//	printf("Computing smoothing on full res\n");
+		//	vectorFields.computeSmoothing(mu, v_in, v_out);
+		//	vectorFields.visualize2Dfields(viewer, v_out, Eigen::RowVector3d(0.9, 0.1, 0.0), 2.0, true);
+		//	//vectorFields.visualize2Dfields(viewer, v_in, Eigen::RowVector3d(0.0, 0.1, 0.9), 2.0, true);
+		//	v_in = v_out;
+		//	break; 
 		case 'v':
 		case 'V':
 			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 1.0);
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.0f; 
+	viewer.data().line_width = 1.5f; 
 
 	return viewer.launch();
 }

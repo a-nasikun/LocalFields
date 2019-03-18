@@ -921,10 +921,11 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 				Eigen::RowVector3d	n2 = NF.row(neigh);
 				Eigen::RowVector3d	n = (n1 + n2) / 2.0; n.normalize();
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
-
-				edge = n.cross(edge);
+				Eigen::Vector3d		edge1, edge2; 
+				edge1 = n.cross(edge);
+				edge2 = n.cross(edge);
 				//edge.normalize();
-				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
+				Eigen::Matrix3d		block = (-3.0 / area) * edge1 * edge2.transpose();
 
 
 
