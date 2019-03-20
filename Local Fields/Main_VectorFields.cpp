@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId=0, selectedVertex;
-int numSample = 1000;
+int numSample = 500;
 
 int main(int argc, char *argv[])
 {
@@ -80,14 +80,14 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	vectorFields.setupGlobalProblem();
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	vectorFields.setupReducedBiLaplacian();
+	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
@@ -97,12 +97,12 @@ int main(int argc, char *argv[])
 	//double error; 
 	//vectorFields.testBasis_NoRegularizer(error);
 	//vectorFields.testBasis_WithRegularizer();
-	vectorFields.projectionTest();
+	//vectorFields.projectionTest();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
-	vectorFields.visualizeApproximatedFields(viewer);	
+	//vectorFields.visualizeApproximatedFields(viewer);	
 	//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
-	vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
-	vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
+	//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.measureDirichletEnergy();
 

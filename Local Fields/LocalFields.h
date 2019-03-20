@@ -22,10 +22,10 @@ public:
 	void constructBoundary(const Eigen::MatrixXi& F, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring);
 	void constructLocalElements(const Eigen::MatrixXi &F);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D);
-	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring);
-	void constructLocalConstraints();
+	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet);
+	void constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet);
 	void setupRHSLocalProblemMapped();
-	void setupLHSLocalProblemMapped();
+	void setupLHSLocalProblemMapped(const vector<Eigen::Triplet<double>>& BTriplet, const vector<Eigen::Triplet<double>>& C1Triplet, const vector<Eigen::Triplet<double>>& C2Triplet);
 	void solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTriplet);
 	void measureXF(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& J);
 
