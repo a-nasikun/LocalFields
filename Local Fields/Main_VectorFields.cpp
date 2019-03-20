@@ -3,6 +3,7 @@
 
 #include "TestSolver.h"
 
+
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	vectorFields.setupReducedBiLaplacian();
+	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();

@@ -185,6 +185,7 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D)
 	//======================== BLoc from B2D =========================
 	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
 	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(4 * 2 * BLoc.rows());
 
 	for (int i = 0; i < LocalElements.size(); i++) {
 		int li = LocalElements[i];
@@ -217,12 +218,17 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D)
 
 }
 
-void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring)
+void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet)
 {
 	//======================== BLoc from B2D =========================
 	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+
 	vector<Eigen::Triplet<double>> BTriplet;
-	BTriplet.reserve(20*2*LocalElements.size());
+	//BTriplet.reserve(100 * BLoc.rows());
+	BTriplet.reserve(20 * 2 * LocalElements.size());
+	
+	
+
 
 	for (int i = 0; i < LocalElements.size(); i++) {
 		int li = LocalElements[i];
@@ -288,16 +294,32 @@ void LocalFields::constructMatrixBLocalDirectInsert(const Eigen::SparseMatrix<do
 	BLoc.setFromTriplets(BTriplet.begin(), BTriplet.end());
 }
 
-void LocalFields::constructLocalConstraints()
+//void LocalFields::constructLocalConstraints()
+void LocalFields::constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet)
 {
 	// Setting up matrix C
 	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * Boundary.size());
+	C1Triplet.reserve(2 * Boundary.size());
+	C2Triplet.reserve(2 * Boundary.size());
 	int counter = 0;
-	CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[sampleID] + 0, 1.0));
-	CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	const int BCols = BLoc.cols();
+	const int BRows = BLoc.rows();
+	CTriplet.push_back(Eigen::Triplet<double>(counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
+	CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
+	C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID],     BCols + counter, 1.0));
+	C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID] + 1, BCols + counter+1, 1.0));
+	counter++;
 	for (int bound : Boundary) {
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[bound] + 0, 1.0));
-		CTriplet.push_back(Eigen::Triplet<double>(counter++, 2 * GlobToLocMap[bound] + 1, 1.0));
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * GlobToLocMap[bound] + 0, 1.0));
+		CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
+		C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter, 2 * GlobToLocMap[bound], 1.0));
+		C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
+		C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound], BCols + counter, 1.0));
+		C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound] + 1, BCols + counter + 1, 1.0));
+		counter++;
 	}
 	CLoc.resize(2 + 2 * Boundary.size(), BLoc.cols());
 	CLoc.setFromTriplets(CTriplet.begin(), CTriplet.end());
@@ -332,47 +354,31 @@ void LocalFields::setupRHSLocalProblemMapped()
 	bLoc.col(1) << gLoc, hLoc;
 }
 
-void LocalFields::setupLHSLocalProblemMapped()
+void LocalFields::setupLHSLocalProblemMapped(const vector<Eigen::Triplet<double>>& BTriplet, const vector<Eigen::Triplet<double>>& C1Triplet, const vector<Eigen::Triplet<double>>& C2Triplet)
 {
 	ALoc.resize(BLoc.rows() + CLoc.rows(), BLoc.cols() + CLoc.rows());
 
 	vector<Eigen::Triplet<double>>				ATriplet;
-	ATriplet.reserve(10 * BLoc.rows() + CLoc.rows()); // In practice it's only 8, but allocate 10 for safety
-	//vector<Eigen::Triplet<double>>::iterator	it2;
-	//it2 = ATriplet.begin();
-	//it2 = std::prev(ATriplet.end());
+	ATriplet.reserve(20 * BLoc.rows() + 2*CLoc.rows()); // In practice it's only 16, but allocate 20 for safety
+	//ATriplet.reserve(BTriplet.size() + C1Triplet.size() + C2Triplet.size());
+	//ATriplet.insert(ATriplet.end(), BTriplet.begin(), BTriplet.end());
+	//ATriplet.insert(ATriplet.end(), C1Triplet.begin(), C1Triplet.end());
+	//ATriplet.insert(ATriplet.end(), C2Triplet.begin(), C2Triplet.end());
+
 	for (int k = 0; k < BLoc.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BLoc, k); it; ++it) {
-			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
-			//it2 = ATriplet.insert(it2, Eigen::Triplet<double>(it.row(), it.col(), it.value()));
-			//it2 = std::next(it2, 1);
-
-			//ATriplet.insert(ATriplet.end(), Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));		
 		}
 	}
-
+	
 	for (int k = 0; k < CLoc.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(CLoc, k); it; ++it) {
 			/* PUSH BACK */
 			ATriplet.push_back(Eigen::Triplet<double>(BLoc.rows() + it.row(), it.col(), it.value()));
-			ATriplet.push_back(Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));
-			
-			/* INSERT with NEXT Iterator*/
-			//it2 = ATriplet.insert(it2, Eigen::Triplet<double>(BLoc.rows() + it.row(), it.col(), it.value()));
-			//it2 = std::next(it2, 1);
-			//it2 = ATriplet.insert(it2, Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));
-			//it2 = std::next(it2, 1);
-
-			/* INSERT at the END */
-			//ATriplet.insert(ATriplet.end(), Eigen::Triplet<double>(BLoc.rows() + it.row(), it.col(), it.value()));
-			//ATriplet.insert(ATriplet.end(), Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));
+			ATriplet.push_back(Eigen::Triplet<double>(it.col(), BLoc.cols() + it.row(), it.value()));			
 		}
 	}
 	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
-
-	//printf("Size of A Triplet = %d\n", ATriplet.size());
-	//cout << "Sample ID [" << id << "]'s LHS is constructed, with " << ALoc.rows() << "x" << ALoc.cols() << "with nonzeros= " << ALoc.nonZeros() << endl;
-
 }
 
 void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTriplet)

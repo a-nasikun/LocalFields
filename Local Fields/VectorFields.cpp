@@ -2064,6 +2064,8 @@ void VectorFields::constructBasis()
 		for (id = istart; id < (istart + ipts); id++) {
 			if (id >= Sample.size()) break;
 
+			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
+
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
@@ -2082,13 +2084,15 @@ void VectorFields::constructBasis()
 
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructMatrixBLocal(B2D);
-			localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-			//localField.constructMatrixBLocalDirectInsert(B2D,AdjMF2Ring);
+			//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
+			localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);
+			//localField.constructMatrixBLocalDirectInsert(B2D,AdjMF2Ring);				
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalConstraints();
+			localField.constructLocalConstraints(C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[4] += t2 - t1;
 
@@ -2096,9 +2100,10 @@ void VectorFields::constructBasis()
 			localField.setupRHSLocalProblemMapped();
 			t2 = chrono::high_resolution_clock::now();
 			durations[5] += t2 - t1;
-
+			
 			t1 = chrono::high_resolution_clock::now();
 			localField.setupLHSLocalProblemMapped();
+			localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[6] += t2 - t1;
 
