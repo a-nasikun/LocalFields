@@ -2091,7 +2091,7 @@ void VectorFields::constructBasis()
 			durations[3] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalConstraints();
+			//localField.constructLocalConstraints();
 			localField.constructLocalConstraints(C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[4] += t2 - t1;
@@ -2102,7 +2102,7 @@ void VectorFields::constructBasis()
 			durations[5] += t2 - t1;
 			
 			t1 = chrono::high_resolution_clock::now();
-			localField.setupLHSLocalProblemMapped();
+			//localField.setupLHSLocalProblemMapped();
 			localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[6] += t2 - t1;

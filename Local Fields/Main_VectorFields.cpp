@@ -105,9 +105,9 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	//vectorFields.computeEigenFields();
+	vectorFields.computeEigenFields();
 	//vectorFields.retrieveEigenFields();
-	//vectorFields.computeApproxEigenFields(eigsToCompute);
+	vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.printDataForVTK();

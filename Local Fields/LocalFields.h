@@ -26,7 +26,7 @@ public:
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet);
 	void constructMatrixBLocalDirectInsert(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring);
 	void constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet);	
-	void constructLocalConstraints();
+	//void constructLocalConstraints();
 	void setupRHSLocalProblemMapped();
 	void setupLHSLocalProblemMapped(const vector<Eigen::Triplet<double>>& BTriplet, const vector<Eigen::Triplet<double>>& C1Triplet, const vector<Eigen::Triplet<double>>& C2Triplet);
 	void solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTriplet);

@@ -223,7 +223,7 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, 
 	//======================== BLoc from B2D =========================
 	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
 
-	vector<Eigen::Triplet<double>> BTriplet;
+	//vector<Eigen::Triplet<double>> BTriplet;
 	//BTriplet.reserve(100 * BLoc.rows());
 	BTriplet.reserve(20 * 2 * LocalElements.size());
 	
