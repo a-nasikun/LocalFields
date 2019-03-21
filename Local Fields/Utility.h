@@ -74,6 +74,7 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename);
 void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& filename);
 void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename);
+void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);

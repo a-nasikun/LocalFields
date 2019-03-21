@@ -137,6 +137,7 @@ public:
 	void constructSamples(const int &n);
 	void farthestPointSampling();
 	void constructBasis();	
+	void constructBasisEigenVects();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
 	void normalizeBasis();
 	void normalizeBasisAbs();
@@ -190,7 +191,7 @@ public:
 	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
 	
 	// VISUALIZATION of TESTING
-	void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
+	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 	void visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	void visualizeVertexFacesNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx);
 	//void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
@@ -285,6 +286,7 @@ public:
 	Eigen::VectorXd					localSystem;
 	Eigen::VectorXd					eigValuesFull, eigValuesReduced;
 	Eigen::MatrixXd					eigFieldReduced2D, eigFieldFull2D;
+	Eigen::MatrixXd					eigFieldsLocal;
 	vector<vector<Eigen::Vector2d>> mappedBasis; 
 	vector<vector<Eigen::Vector2d>> mappedBasis2;
 	vector<int>						PTpath, PTsharedEdges;

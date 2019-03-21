@@ -5,7 +5,7 @@
 
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 1000;
+int numSample = 100;
 int eigToShow2 = 0;
 int eigsToCompute = 20; 
 
@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
@@ -95,8 +95,9 @@ int main(int argc, char *argv[])
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
-	//vectorFields.setupReducedBiLaplacian();
+	//vectorFields.constructBasis();
+	vectorFields.constructBasisEigenVects();
+	vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
 
 	vectorFields.computeEigenFields();
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute);
+	//vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.printDataForVTK();

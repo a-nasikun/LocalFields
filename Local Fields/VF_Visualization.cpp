@@ -370,14 +370,16 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	//viewer.data().set_mesh(V, F);
 
 	int bId = id;
-	Eigen::RowVector3d color;
+	Eigen::RowVector3d color, color2;
 	if (id % 2 == 0) {
 		//color = Eigen::RowVector3d(1.0, 0.1, 0.2);
-		color = Eigen::RowVector3d(0.6, 0.2, 0.2);
+		color  = Eigen::RowVector3d(0.6, 0.2, 0.2);
+		color2 = Eigen::RowVector3d(0.4, 0.8, 0.8);
 	}
 	else {
 		//color = Eigen::RowVector3d(0.0, 0.1, 1.0);
-		color = Eigen::RowVector3d(0.2, 0.2, 0.6);
+		color  = Eigen::RowVector3d(0.2, 0.2, 0.6);
+		color2 = Eigen::RowVector3d(0.8, 0.8, 0.4);
 	}
 
 	if (id >= 2 * Sample.size()) {
@@ -389,6 +391,12 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+
+	//if (id < 2)
+	//{
+	//	printf(">  Showing local eigenfields [%d] \n", id);
+	//	visualize2Dfields(viewer, eigFieldsLocal.col(id), color2, 0.6, false);
+	//}
 }
 
 void VectorFields::visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const int &id)
@@ -718,51 +726,6 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
-void VectorFields::visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
-{
-	printf("Size of M=%dx%d\n", M.rows(), M.cols());
-
-	using namespace matlab::engine;
-	Engine *ep;
-	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigs;
-
-	const int NNZ_M = M.nonZeros();
-	int nnzMCounter = 0;
-
-	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
-	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
-	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
-
-	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
-	srm = mxGetPr(MM);
-	irm = mxGetIr(MM);
-	jcm = mxGetJc(MM);
-
-	// Getting matrix M
-	jcm[0] = nnzMCounter;
-	for (int i = 0; i < M.outerSize(); i++) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
-			srm[nnzMCounter] = it.value();
-			irm[nnzMCounter] = it.row();
-			nnzMCounter++;
-		}
-		jcm[i + 1] = nnzMCounter;
-	}
-
-	// Start Matlab Engine
-	ep = engOpen(NULL);
-	if (!(ep = engOpen(""))) {
-		fprintf(stderr, "\nCan't start MATLAB engine\n");
-		cout << "CANNOT START MATLAB " << endl;
-	}
-	else {
-		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
-	}
-
-	engPutVariable(ep, "M", MM);
-	engEvalString(ep, "spy(M)");
-}
-
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());
 	Eigen::MatrixXd vColor;
