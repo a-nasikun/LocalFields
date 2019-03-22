@@ -450,12 +450,70 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 	MF2DLoc.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
 	//cout << "MF2d loc done\n";
 	if (id == 0) visualizeSparseMatrixInMatlab(SF2DLoc);
-	
+
 
 	computeEigenMatlab(SF2DLoc, MF2DLoc, 4, EigVectLoc, eigValsLoc, "hello");
-	printf("[%d] Eigenvalues: %.5f, %.5f, %.5f, %.5f\n", id, eigValsLoc(0), eigValsLoc(1), eigValsLoc(2), eigValsLoc(3));
+	//printf("EigVec Size=%dx%d \t\t elements=%d\n", EigVectLoc.rows(), EigVectLoc.cols(), InnerElements.size());
+
+	//printf("[%d] Eigenvalues: %.5f, %.5f, %.5f, %.5f\n", id, eigValsLoc(0), eigValsLoc(1), eigValsLoc(2), eigValsLoc(3));
+	Eigen::VectorXd vect1; vect1.resize(EigVectLoc.col(0).size());
+	Eigen::VectorXd vect2; vect2.resize(EigVectLoc.col(1).size());
+	Eigen::VectorXd EigVectTemp1, EigVectTemp2;
+	EigVectTemp1.resize(EigVectLoc.rows());
+	EigVectTemp2.resize(EigVectLoc.rows());
+
+	//if (id == 0)
+	{
+		for (int k = 0; k < InnerElements.size(); k++)
+		{
+			Eigen::Vector2d v1;
+			v1 << EigVectLoc(2 * k, 0), EigVectLoc(2 * k + 1, 0); //;;, .block(2 * k, 0, 2, 1);
+			v1.normalize();
+			EigVectTemp1(2 * k+0) = v1(0);
+			EigVectTemp1(2 * k+1) = v1(1);
+
+			Eigen::Vector2d v2;
+			v2 << EigVectLoc(2 * k, 1), EigVectLoc(2 * k + 1, 1); //;;, .block(2 * k, 0, 2, 1);
+			v2.normalize();
+			EigVectTemp2(2 * k + 0) = v2(0);
+			EigVectTemp2(2 * k + 1) = v2(1);
+			//cout << k << ": " << v1 << endl; 
+		}
+	}
+
+	//double energy1 = EigVectTemp1.transpose()*SF2DLoc*EigVectTemp1;
+	//double energy2 = EigVectTemp2.transpose()*SF2DLoc*EigVectTemp2;
+	double energy1 = EigVectLoc.col(0).transpose()*SF2DLoc* EigVectLoc.col(0);
+	double energy2 = EigVectLoc.col(1).transpose()*SF2DLoc* EigVectLoc.col(1);
+	printf("[%d] Energy: %.11f \t\t %.11f\n", id, energy1, energy2);
 	//cout << "Eigenvectors \n";
 	//cout << EigVectLoc.block(0, 0, 100, 2) << endl << endl;
+	//printf("Local elements: %d, eigveacts col=%d \n", InnerElements.size(), EigVectLoc.rows());
+	//for (int k = 0; k < InnerElements.size(); k++)
+	//{
+	//	//cout << "k= " << k << endl; 
+	//	Eigen::Vector2d v1; 
+	//	v1 = EigVectLoc.block(2 * k, 0, 2, 1);
+	//	//v1 << EigVectLoc( 2 * k + 0,0), EigVectLoc(2 * k + 1,0);
+	//	//cout << "\t" << v1;
+	//	v1.normalize();
+	//	vect1.block(2 * k, 0, 2, 1) = v1; 
+	//	//cout << "\t" << v1;
+	//
+	//	Eigen::Vector2d v2;
+	//	//v2 << EigVectLoc(2 * k + 0,1), EigVectLoc(2 * k + 1,1);
+	//	v2 = EigVectLoc.block(2 * k, 1, 2, 1);
+	//	v2.normalize();
+	//	vect2.block(2 * k, 1, 2, 1) = v2;
+	//	//cout << vect2 << endl; 
+	//}
+	//printf("Size: Vec1=%d, SF2D=%dx%d; Vec2=%d\n", vect1.rows(), SF2DLoc.rows(), SF2DLoc.cols(), vect2.rows());
+
+	
+	
+	
+	
+	
 	
 	for (int i = 0; i < InnerElements.size(); i++)
 	{
