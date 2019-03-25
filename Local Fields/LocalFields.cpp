@@ -183,12 +183,13 @@ void LocalFields::computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Ei
 {
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 	
-	// Computing distance for initial sample points S
+	/* Computing distance for initial sample points S */
 	dijksFaceDist.resize(LocalElements.size());
 	for (int i = 0; i < LocalElements.size(); i++) {
 		dijksFaceDist(i) = numeric_limits<double>::infinity();
 	}
 	
+	/* Initializing values for the sample/center element */
 	const int center = GlobToLocMap[sampleID];
 	dijksFaceDist(center) = 0.0f;
 	VertexPair vp{ center, dijksFaceDist(center) };
@@ -196,25 +197,24 @@ void LocalFields::computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Ei
 	Eigen::RowVector3d const c0 = FC.row(sampleID);
 	
 	double distFromCenter = numeric_limits<double>::infinity();
+	double maxDist = 0; 
 
-	// For other vertices in mesh
+	/* For other vertices in mesh */
 	do {
 		if (DistPQueue.size() == 0) break;
 		VertexPair vp1 = DistPQueue.top();
 		distFromCenter = vp1.distance;
 		DistPQueue.pop();
 	
-		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		/* Updating the distance for neighbors of vertex of lowest distance in priority queue */
 		int const elem = vp1.vId;
 		//Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
 		Eigen::RowVector3d const c1 = FC.row(LocalElements[elem]);
 		for (auto it = 0; it != F.cols(); ++it) {
 			const int neigh = GlobToLocMap[AdjMF3N(LocalElements[elem], it)];
-			//if (GlobToLocMap[neigh] < 0) continue; // only work with those in local elements
 			if (neigh < 0) continue; // only work with those in local elements			
-
-			//Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
 			Eigen::RowVector3d const c2 = FC.row(LocalElements[neigh]);
+			
 			/* Regular Dikjstra */
 			//double dist = (c2 - c1).norm();
 			//double tempDist = distFromCenter + dist;
@@ -226,10 +226,29 @@ void LocalFields::computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Ei
 				dijksFaceDist(neigh) = tempDist;
 				VertexPair vp2{ neigh,tempDist };
 				DistPQueue.push(vp2);
+
+				if (tempDist > maxDist) maxDist = tempDist; 
 			}
 		}
 	} while (!DistPQueue.empty());
+
+	/* Taking care of components in boundary */
+	for (int i : Boundary)
+	{
+		//dijksFaceDist(GlobToLocMap[i]) = numeric_limits<double>::infinity();
+		dijksFaceDist(GlobToLocMap[i]) = maxDist;
+	}
+
+	/* Conversion to the scaling factor */
+	scalingFactor.setZero(LocalElements.size());
+	const double pCube = 1 / (pow(maxDist, 3));
+	const double pSquare = 1 / (pow(maxDist, 2));
+	for (int i = 0; i < LocalElements.size(); i++)
+	{
+		scalingFactor(i) = 2 * dijksFaceDist(i)*dijksFaceDist(i)*dijksFaceDist(i)*pCube - 3 * dijksFaceDist(i)*dijksFaceDist(i)*pSquare + 1; 
+	}
 	
+	/* Getting values for visualization */
 	if (id == 0)
 	{
 		dijksFaceDistMapped.setOnes(F.rows());
@@ -237,7 +256,9 @@ void LocalFields::computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Ei
 	
 		for (int i = 0; i < LocalElements.size(); i++)
 		{
-			dijksFaceDistMapped(LocalElements[i]) = dijksFaceDist(GlobToLocMap[LocalElements[i]]);
+			//dijksFaceDistMapped(LocalElements[i]) = dijksFaceDist(GlobToLocMap[LocalElements[i]]);
+			//dijksFaceDistMapped(LocalElements[i]) = dijksFaceDist(i);
+			dijksFaceDistMapped(LocalElements[i]) = scalingFactor(i);
 		}
 	}
 

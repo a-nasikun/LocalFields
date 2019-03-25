@@ -947,6 +947,6 @@ void VectorFields::visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer)
 	}
 
 	Eigen::MatrixXd FColor;
-	igl::jet(distColor, true, FColor);
+	igl::jet(distColor, false, FColor);
 	viewer.data().set_colors(FColor);
 }

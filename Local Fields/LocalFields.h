@@ -42,7 +42,7 @@ private:
 
 public:
 	set<int>						SubDomain, Boundary, BeyondBoundary;
-	Eigen::VectorXd					dijksFaceDistMapped;
+	Eigen::VectorXd					dijksFaceDistMapped, scalingFactor;
 };
 
 
