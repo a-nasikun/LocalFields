@@ -16,10 +16,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	//constructSpecifiedHardConstraints();
+	constructSpecifiedHardConstraints();
 	//constructRandomHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();
+	//constructInteractiveConstraints();
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -2756,7 +2756,7 @@ void VectorFields::obtainUserVectorFields()
 	cout << "Hello there \n" << endl; 
 }
 
-void VectorFields::computeEigenFields()
+void VectorFields::computeEigenFields(const int &numEigs)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -2765,7 +2765,7 @@ void VectorFields::computeEigenFields()
 	cout << "> Computing reference eigenproblem (in Matlab)... ";
 
 	//computeEigenMatlab(SF2DAsym, MF2D, eigFieldFull2D, eigValuesFull);
-	computeEigenMatlab(SF2DAsym, MF2D, 20, eigFieldFull2D, eigValuesFull, "hello");
+	computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
 

@@ -132,7 +132,7 @@ public:
 
 	// APPLICATIONS ON GLOBAL SYSTEM
 	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
-	void computeEigenFields();
+	void computeEigenFields(const int &numEigs);
 	void retrieveEigenFields();
 
 	// LOCAL SYSTEM
