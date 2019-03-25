@@ -76,17 +76,17 @@ int main(int argc, char *argv[])
 	vectorFields.constructGradient3D();
 	vectorFields.constructStiffnessMatrices();
 	vectorFields.constructMatrixB();
-	vectorFields.constructConstraints();
+	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
@@ -120,8 +120,8 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
@@ -222,26 +222,26 @@ int main(int argc, char *argv[])
 			viewer.data().set_mesh(V, F);
 			viewer.selected_data_index = 0;			
 			break;
-		//case 'x':
-		//case 'X':
-		//	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-		//	selectFace = !selectFace;			
-		//	//vectorFields.visualizeRandomFace(viewer, selectedFace);
-		//	break;
+		case 'x':
+		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			selectFace = !selectFace;			
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			break;
 		case 'c':
 		case 'C':
 			printf("Computing smoothing on Reduced basis\n");
 			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
 			v_in = v_out; 
 			break; 
-		case 'x':
-		case 'X':
-			printf("Computing smoothing on full res\n");
-			vectorFields.computeSmoothing(mu, v_in, v_out);
-			vectorFields.visualize2Dfields(viewer, v_out, Eigen::RowVector3d(0.9, 0.1, 0.0), 2.0, true);
-			//vectorFields.visualize2Dfields(viewer, v_in, Eigen::RowVector3d(0.0, 0.1, 0.9), 2.0, true);
-			v_in = v_out;
-			break; 
+		//case 'x':
+		//case 'X':
+		//	printf("Computing smoothing on full res\n");
+		//	vectorFields.computeSmoothing(mu, v_in, v_out);
+		//	vectorFields.visualize2Dfields(viewer, v_out, Eigen::RowVector3d(0.9, 0.1, 0.0), 2.0, true);
+		//	//vectorFields.visualize2Dfields(viewer, v_in, Eigen::RowVector3d(0.0, 0.1, 0.9), 2.0, true);
+		//	v_in = v_out;
+		//	break; 
 		case 'v':
 		case 'V':
 			vectorFields.visualize2DfieldsScaled(viewer, v_out, Eigen::RowVector3d(0.6, 0.2, 0.3), 1.0);

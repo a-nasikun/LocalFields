@@ -2058,7 +2058,7 @@ void VectorFields::constructBasis()
 
 				t1 = chrono::high_resolution_clock::now();
 				//localField.constructMatrixBLocal(B2D);
-				localField.constructMatrixBLocal(B2D, AdjMF2Ring);
+				//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
 				localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);
 				//localField.constructMatrixBLocalDirectInsert(B2D,AdjMF2Ring);				
 				t2 = chrono::high_resolution_clock::now();

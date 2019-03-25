@@ -78,6 +78,7 @@ public:
 	void constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D);
 	void constructStiffnessMatrixCurlPart2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D);
 	void constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>& LapDiv3D);
+	void constructStiffnessMatrixDivPart3DFromCurl3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D);
 	void constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
