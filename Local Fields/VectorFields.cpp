@@ -2272,10 +2272,15 @@ void VectorFields::constructBasisEigenVects()
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;			
 
+			// Get the patch for id 0
+			if(id==0)
+				localPatchElements = localField.InnerElements;
+
 			t1 = chrono::high_resolution_clock::now();
 			//localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
-			localField.constructLocalEigenProblem(SF2DAsym, AdjMF2Ring, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblem(SF2DAsym, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[7] += t2 - t1;
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 

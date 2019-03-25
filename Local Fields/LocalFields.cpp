@@ -343,7 +343,7 @@ void LocalFields::constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Tr
 
 void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const vector<set<int>>& AdjMF2Ring, Eigen::VectorXd& doubleArea, Eigen::MatrixXd &EigVectLocal)
 {
-	cout << "Constructing local eigen problem\n ";
+	cout << "[MOD] Constructing local eigen problem\n ";
 	//======================== BLoc from B2D =========================
 	//BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
 	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc;
@@ -364,10 +364,10 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, doubleArea(li)));
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, doubleArea(li)));
 
-		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, SF2D.coeff(2 * li + 0, 2 * li + 0)));
-		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, SF2D.coeff(2 * li + 0, 2 * li + 1)));
-		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, SF2D.coeff(2 * li + 1, 2 * li + 0)));
-		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, SF2D.coeff(2 * li + 1, 2 * li + 1)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, SF2D.coeff(2 * li + 0, 2 * li + 0)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, SF2D.coeff(2 * li + 0, 2 * li + 1)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, SF2D.coeff(2 * li + 1, 2 * li + 0)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, SF2D.coeff(2 * li + 1, 2 * li + 1)));
 
 		// Get the NEIGHBORING elements
 		//for (int j = 0; j < AdjMF3N.cols(); j++) {
@@ -375,10 +375,17 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 			const int neigh = j;
 			if (GlobToLocInnerMap[neigh] >= 0) {
 				int neighLoc = GlobToLocInnerMap[neigh];
+				/* For non-diagonal elements */
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
+
+				/* Diagonal elements */
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, -SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, -SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, -SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, -SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
 			}
 		}
 	}
@@ -419,12 +426,12 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 	vector<Eigen::Triplet<double>> MFTriplet;
 	MFTriplet.reserve(2 * InnerElements.size());
 
-	//cout << "Collecting inner elements\n";
+	//cout << "MOD == Collecting inner elements\n";
 	for (int i = 0; i < InnerElements.size(); i++) {
 		int li = InnerElements[i];
 		// Get the DIAGONAL Elements from B2D Matrix
-		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, doubleArea(li)));
-		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, doubleArea(li)));
+		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, doubleArea(li)/2.0));
+		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, doubleArea(li)/2.0));
 
 		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, SF2D.coeff(2 * li + 0, 2 * li + 0)));
 		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, SF2D.coeff(2 * li + 0, 2 * li + 1)));
@@ -437,10 +444,17 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 			const int neigh = j;
 			if (GlobToLocInnerMap[neigh] >= 0) {
 				int neighLoc = GlobToLocInnerMap[neigh];
+				/* Non diagonal elements*/
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
 				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
+
+				/* Diagonal elements */
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, -1.0 * SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, -1.0 * SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, -1.0 * SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, -1.0 * SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
 			}
 		}
 	}
@@ -449,13 +463,13 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 	//cout << "SF2d loc done\n";
 	MF2DLoc.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
 	//cout << "MF2d loc done\n";
-	if (id == 0) visualizeSparseMatrixInMatlab(SF2DLoc);
+	//if (id == 0) visualizeSparseMatrixInMatlab(SF2DLoc);
 
 
 	computeEigenMatlab(SF2DLoc, MF2DLoc, 4, EigVectLoc, eigValsLoc, "hello");
 	//printf("EigVec Size=%dx%d \t\t elements=%d\n", EigVectLoc.rows(), EigVectLoc.cols(), InnerElements.size());
 
-	//printf("[%d] Eigenvalues: %.5f, %.5f, %.5f, %.5f\n", id, eigValsLoc(0), eigValsLoc(1), eigValsLoc(2), eigValsLoc(3));
+	printf("[%d] Eigenvalues: %.5f, %.5f, %.5f, %.5f\n", id, eigValsLoc(0), eigValsLoc(1), eigValsLoc(2), eigValsLoc(3));
 	Eigen::VectorXd vect1; vect1.resize(EigVectLoc.col(0).size());
 	Eigen::VectorXd vect2; vect2.resize(EigVectLoc.col(1).size());
 	Eigen::VectorXd EigVectTemp1, EigVectTemp2;
@@ -525,6 +539,132 @@ void LocalFields::constructLocalEigenProblem(const Eigen::SparseMatrix<double>& 
 		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 1, EigVectLoc(2 * i + 0, 1)));
 		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 1, EigVectLoc(2 * i + 1, 1)));
 	}	
+}
+
+void LocalFields:: constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const Eigen::MatrixXd &AdjMF3N, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
+{
+	//cout << "Constructing local eigen problem\n ";
+	//======================== BLoc from B2D =========================
+	//BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc;
+	SF2DLoc.resize(2 * InnerElements.size(), 2 * InnerElements.size());
+	MF2DLoc.resize(2 * InnerElements.size(), 2 * InnerElements.size());
+	Eigen::VectorXd eigValsLoc;
+	Eigen::MatrixXd EigVectLoc;
+
+	vector<Eigen::Triplet<double>> SFTriplet;
+	SFTriplet.reserve(20 * 2 * InnerElements.size());
+	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(2 * InnerElements.size());
+
+	//cout << "MOD == Collecting inner elements\n";
+	for (int i = 0; i < InnerElements.size(); i++) {
+		int li = InnerElements[i];
+		// Get the DIAGONAL Elements from B2D Matrix
+		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, doubleArea(li)));
+		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, doubleArea(li)));
+
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, SF2D.coeff(2 * li + 0, 2 * li + 0)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, SF2D.coeff(2 * li + 0, 2 * li + 1)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, SF2D.coeff(2 * li + 1, 2 * li + 0)));
+		//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, SF2D.coeff(2 * li + 1, 2 * li + 1)));
+
+		// Get the NEIGHBORING elements
+		for (int j = 0; j < AdjMF3N.cols(); j++) {
+			//for (int j : AdjMF2Ring[InnerElements[i]]) {
+			const int neigh = j;
+			if (GlobToLocInnerMap[neigh] >= 0) {
+				int neighLoc = GlobToLocInnerMap[neigh];
+				/* Non diagonal elements*/
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
+
+				/* Diagonal elements */
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, -1.0 * SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, -1.0 * SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, -1.0 * SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, -1.0 * SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
+			}
+		}
+	}
+	//cout << "Makign the matrix\n";
+	SF2DLoc.setFromTriplets(SFTriplet.begin(), SFTriplet.end());
+	//cout << "SF2d loc done\n";
+	MF2DLoc.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
+	//cout << "MF2d loc done\n";
+	//if (id == 0) visualizeSparseMatrixInMatlab(SF2DLoc);
+
+
+	computeEigenMatlab(SF2DLoc, MF2DLoc, 4, EigVectLoc, eigValsLoc, "hello");
+	//printf("EigVec Size=%dx%d \t\t elements=%d\n", EigVectLoc.rows(), EigVectLoc.cols(), InnerElements.size());
+
+	printf("[%d] Eigenvalues: %.5f, %.5f, %.5f, %.5f\n", id, eigValsLoc(0), eigValsLoc(1), eigValsLoc(2), eigValsLoc(3));
+	Eigen::VectorXd vect1; vect1.resize(EigVectLoc.col(0).size());
+	Eigen::VectorXd vect2; vect2.resize(EigVectLoc.col(1).size());
+	Eigen::VectorXd EigVectTemp1, EigVectTemp2;
+	EigVectTemp1.resize(EigVectLoc.rows());
+	EigVectTemp2.resize(EigVectLoc.rows());
+
+	//if (id == 0)
+	{
+		for (int k = 0; k < InnerElements.size(); k++)
+		{
+			Eigen::Vector2d v1;
+			v1 << EigVectLoc(2 * k, 0), EigVectLoc(2 * k + 1, 0); //;;, .block(2 * k, 0, 2, 1);
+			v1.normalize();
+			EigVectTemp1(2 * k + 0) = v1(0);
+			EigVectTemp1(2 * k + 1) = v1(1);
+
+			Eigen::Vector2d v2;
+			v2 << EigVectLoc(2 * k, 1), EigVectLoc(2 * k + 1, 1); //;;, .block(2 * k, 0, 2, 1);
+			v2.normalize();
+			EigVectTemp2(2 * k + 0) = v2(0);
+			EigVectTemp2(2 * k + 1) = v2(1);
+			//cout << k << ": " << v1 << endl; 
+		}
+	}
+
+	//double energy1 = EigVectTemp1.transpose()*SF2DLoc*EigVectTemp1;
+	//double energy2 = EigVectTemp2.transpose()*SF2DLoc*EigVectTemp2;
+	double energy1 = EigVectLoc.col(0).transpose()*SF2DLoc* EigVectLoc.col(0);
+	double energy2 = EigVectLoc.col(1).transpose()*SF2DLoc* EigVectLoc.col(1);
+	printf("[%d] Energy: %.11f \t\t %.11f\n", id, energy1, energy2);
+	//cout << "Eigenvectors \n";
+	//cout << EigVectLoc.block(0, 0, 100, 2) << endl << endl;
+	//printf("Local elements: %d, eigveacts col=%d \n", InnerElements.size(), EigVectLoc.rows());
+	//for (int k = 0; k < InnerElements.size(); k++)
+	//{
+	//	//cout << "k= " << k << endl; 
+	//	Eigen::Vector2d v1; 
+	//	v1 = EigVectLoc.block(2 * k, 0, 2, 1);
+	//	//v1 << EigVectLoc( 2 * k + 0,0), EigVectLoc(2 * k + 1,0);
+	//	//cout << "\t" << v1;
+	//	v1.normalize();
+	//	vect1.block(2 * k, 0, 2, 1) = v1; 
+	//	//cout << "\t" << v1;
+	//
+	//	Eigen::Vector2d v2;
+	//	//v2 << EigVectLoc(2 * k + 0,1), EigVectLoc(2 * k + 1,1);
+	//	v2 = EigVectLoc.block(2 * k, 1, 2, 1);
+	//	v2.normalize();
+	//	vect2.block(2 * k, 1, 2, 1) = v2;
+	//	//cout << vect2 << endl; 
+	//}
+	//printf("Size: Vec1=%d, SF2D=%dx%d; Vec2=%d\n", vect1.rows(), SF2DLoc.rows(), SF2DLoc.cols(), vect2.rows());
+
+	
+	for (int i = 0; i < InnerElements.size(); i++)
+	{
+		// First column ==> First basis (2 elements per-local frame)
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 0, EigVectLoc(2 * i + 0, 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 0, EigVectLoc(2 * i + 1, 0)));
+
+		// Second column ==> Second basis (2 elements per-local frame)
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 1, EigVectLoc(2 * i + 0, 1)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 1, EigVectLoc(2 * i + 1, 1)));
+	}
 }
 
 void LocalFields::setupRHSLocalProblemMapped()

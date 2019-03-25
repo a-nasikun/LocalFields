@@ -585,3 +585,92 @@ void VectorFields::testEdgesAddition(igl::opengl::glfw::Viewer &viewer)
 	cout << "in " << duration.count() << " seconds" << endl;
 
 }
+
+void VectorFields::testEnergyOfLocalPatch(igl::opengl::glfw::Viewer &viewer)
+{
+	// Identifying elements of local patch
+	for (int i = 0; i < localPatchElements.size(); i++)
+	{
+		viewer.data().add_points(FC.row(localPatchElements[i]), Eigen::RowVector3d(0.0, 0.2, 0.9));
+	}
+
+	// Map from Global to Local
+	vector<int> GlobToLocMap; 
+	GlobToLocMap.resize(F.rows());
+	for (int i = 0; i < F.rows(); i++)
+	{
+		GlobToLocMap[i] = -1;
+	}
+
+	int counter = 0;
+	for (int face : localPatchElements) {
+		GlobToLocMap[face] = counter;
+		counter++;
+	}
+
+	// Construct Mass Matrix
+	vector<Eigen::Triplet<double>> MTriplet;
+	MTriplet.reserve(2 * localPatchElements.size());
+	Eigen::SparseMatrix<double> MLocal(2 * localPatchElements.size(), 2 * localPatchElements.size());
+	for (int i = 0; i < localPatchElements.size(); i++)
+	{
+		MTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, doubleArea(localPatchElements[i]) / 2.0));
+		MTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, doubleArea(localPatchElements[i]) / 2.0));
+	}
+	MLocal.setFromTriplets(MTriplet.begin(), MTriplet.end());
+
+	// Obtain the Stiffness matrix on the patch
+	vector<Eigen::Triplet<double>> SFTriplet;
+	SFTriplet.reserve(2 * localPatchElements.size());
+	Eigen::SparseMatrix<double> SFLocal(2 * localPatchElements.size(), 2 * localPatchElements.size());
+	for (int i = 0; i < localPatchElements.size(); i++)
+	{
+		// Diagonal elements
+		int li = localPatchElements[i];
+		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, SF2D.coeff(2 * li + 0, 2 * li + 0)));
+		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, SF2D.coeff(2 * li + 0, 2 * li + 1)));
+		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, SF2D.coeff(2 * li + 1, 2 * li + 0)));
+		SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, SF2D.coeff(2 * li + 1, 2 * li + 1)));
+
+		// Non-diagonal elements
+		for (int j : AdjMF2Ring[li]) {
+			const int neigh = j;
+			if (GlobToLocMap[neigh] >= 0) {
+				int neighLoc = GlobToLocMap[neigh];
+				/* Non diagonal elements*/
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
+
+				/* Diagonal elements */
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, -1.0 * SF2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, -1.0 * SF2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, -1.0 * SF2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				//SFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, -1.0 * SF2D.coeff(2 * li + 1, 2 * neigh + 1)));
+			}
+		}		
+	}
+
+	SFLocal.setFromTriplets(SFTriplet.begin(), SFTriplet.end());
+	visualizeSparseMatrixInMatlab(SFLocal);
+
+	// Get the components of the harmonic energy on the patch
+	Eigen::VectorXd localHarmEnergy(2 * localPatchElements.size());
+	for (int i = 0; i < localPatchElements.size(); i++)
+	{
+		Eigen::Vector2d vectLoc;
+		vectLoc(0) = eigFieldFull2D(2 * localPatchElements[i] + 0, 0);
+		vectLoc(1) = eigFieldFull2D(2 * localPatchElements[i] + 1, 0);
+		//vectLoc.normalize();
+		localHarmEnergy(2 * i + 0) = vectLoc(0);
+		localHarmEnergy(2 * i + 1) = vectLoc(1);
+	}
+
+	// Compute the dirichlet energy
+	double energy = localHarmEnergy.transpose()*SFLocal*localHarmEnergy;
+	printf("Local Energy = %.5f\n", energy);
+
+	double totalEnergy = eigFieldFull2D.col(0).transpose() * SF2D * eigFieldFull2D.col(0);
+	printf("Total Energy = %.5f\n", totalEnergy);
+}

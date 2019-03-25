@@ -28,6 +28,7 @@ public:
 	void constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet);	
 	void constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const vector<set<int>>& AdjMF2Ring, Eigen::VectorXd& doubleArea, Eigen::MatrixXd &EigLocal);
 	void constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const vector<set<int>>& AdjMF2Ring, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
+	void constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const Eigen::MatrixXd &AdjMF3N, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	//void constructLocalConstraints();
 	void setupRHSLocalProblemMapped();
 	void setupLHSLocalProblemMapped(const vector<Eigen::Triplet<double>>& BTriplet, const vector<Eigen::Triplet<double>>& C1Triplet, const vector<Eigen::Triplet<double>>& C2Triplet);
@@ -38,12 +39,13 @@ private:
 	int id;// , sampleID;
 	Eigen::MatrixXd					XfLoc, cLoc, bLoc, gLoc, hLoc;
 	Eigen::SparseMatrix<double>		BLoc, ALoc, CLoc, SF2DLoc, SF_Curl, SF_Div;	
-	vector<int>						LocalElements, GlobToLocMap, GlobToLocInnerMap, InnerElements;
+	vector<int>						LocalElements, GlobToLocMap, GlobToLocInnerMap;// , InnerElements;
 	Eigen::VectorXd					vEstimateLoc;
 
 public:
 	int								sampleID;
 	set<int>						SubDomain, Boundary, BeyondBoundary;
+	vector<int>						InnerElements; 
 
 };
 

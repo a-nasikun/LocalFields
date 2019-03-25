@@ -189,6 +189,7 @@ public:
 	int selectRandomFace();
 	void checkB2DStructure();
 	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
+	void testEnergyOfLocalPatch(igl::opengl::glfw::Viewer &viewer);
 	
 	// VISUALIZATION of TESTING
 	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
@@ -289,7 +290,7 @@ public:
 	Eigen::MatrixXd					eigFieldsLocal;
 	vector<vector<Eigen::Vector2d>> mappedBasis; 
 	vector<vector<Eigen::Vector2d>> mappedBasis2;
-	vector<int>						PTpath, PTsharedEdges;
+	vector<int>						PTpath, PTsharedEdges, localPatchElements;
 	vector<Eigen::Vector2d>			parallelTransport;
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints;
 	Eigen::VectorXd					XLowDim, XFullDim;
