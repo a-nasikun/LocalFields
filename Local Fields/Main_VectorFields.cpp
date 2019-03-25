@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 
 	/* ====================== GLOBAL PROBLEM ====================*/
-	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
@@ -149,8 +149,8 @@ int main(int argc, char *argv[])
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
+	vectorFields.visualizeApproximatedFields(viewer);
+	vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.visualizeSingularitiesConstraints(viewer);
 	//vectorFields.visualizeSharedEdges(viewer);
 
@@ -256,8 +256,6 @@ int main(int argc, char *argv[])
 			viewer.data().set_mesh(V, F);
 			viewer.selected_data_index = 0;			
 			break;
-
-
 		case 'y':
 		case 'Y':
 			eigToShow2 = max(eigToShow2 - 1, 0);
@@ -279,6 +277,7 @@ int main(int argc, char *argv[])
 		//case 'X':
 			//C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
 			//selectFace = !selectFace;
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 
 			//cout << "Select face: " << selectFace << endl; 
 			//if (selectFace) cout << "Face is selected" << endl; 
@@ -290,7 +289,6 @@ int main(int argc, char *argv[])
 			selectFace = !selectFace;			
 			//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			break;
-
 		case 'c':
 		case 'C':
 			printf("Computing smoothing on Reduced basis\n");

@@ -790,7 +790,8 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
-		constructStiffnessMatrixDivPart3D(LapDiv3D);
+		//constructStiffnessMatrixDivPart3D(LapDiv3D);
+		constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D, LapDiv3D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -893,6 +894,31 @@ void VectorFields::constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>
 
 	// EXPLICIT Construction
 	constructStiffnessMatrixDivPart3D_Explicit(LapDiv3D);
+}
+
+void VectorFields::constructStiffnessMatrixDivPart3DFromCurl3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)
+{
+	/* Constructing the rotation matrix J on 3D/world coordinate */
+	Eigen::SparseMatrix<double> J3D(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> JTriplet;
+	JTriplet.reserve(2 * 3 * F.rows());
+		
+	Eigen::RowVector3d n3d; 
+	for (int i = 0; i < F.rows(); i++)
+	{
+		n3d = NF.row(i);
+		n3d.normalize();
+		JTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, -n3d(2)));
+		JTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2, n3d(1)));
+		JTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0, n3d(2)));
+		JTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, -n3d(0)));
+		JTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, -n3d(1)));
+		JTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, n3d(0)));
+	}
+
+	/* Building the Divergent operator from Curl Operator */
+	J3D.setFromTriplets(JTriplet.begin(), JTriplet.end());
+	LapDiv3D = (-J3D * LapCurl3D) *J3D;
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3DAsym)
