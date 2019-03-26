@@ -798,7 +798,7 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 
 	/* Visualizing the fields*/
 	//visualize2Dfields(viewer, eigfields, blue, 3, true);
-	visualize2Dfields(viewer, eigfields, purple, 1, false);
+	visualize2Dfields(viewer, eigfields, purple, 3, false);
 }
 
 void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i)

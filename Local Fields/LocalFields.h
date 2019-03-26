@@ -43,9 +43,6 @@ private:
 	Eigen::SparseMatrix<double>		BLoc, ALoc, CLoc, SF2DLoc, SF_Curl, SF_Div;	
 	vector<int>						LocalElements, GlobToLocMap, GlobToLocInnerMap;// , InnerElements;
 	Eigen::VectorXd					vEstimateLoc, dijksFaceDist;
-	vector<int>						LocalElements, GlobToLocMap;
-	Eigen::VectorXd					vEstimateLoc;
-
 
 public:
 	int								sampleID;
