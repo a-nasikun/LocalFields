@@ -213,6 +213,7 @@ public:
 	void visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);	
+	void visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -298,7 +299,7 @@ public:
 	Eigen::VectorXd					XLowDim, XFullDim;
 	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
 	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, projRef, projApprox;
-	Eigen::VectorXd					sampleDistance;
+	Eigen::VectorXd					sampleDistance, patchDijkstraDist;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 	Eigen::MatrixXd					FC;
 private:

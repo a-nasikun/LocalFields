@@ -1107,3 +1107,21 @@ void VectorFields::visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, co
 	
 }
 
+
+void VectorFields::visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::VectorXd distColor;
+	distColor.setZero(F.rows());
+	
+	for (int i = 0; i < F.rows(); i++)
+	{
+		if (patchDijkstraDist(i) < numeric_limits<double>::infinity())
+		{
+			distColor(i) = patchDijkstraDist(i);
+		}
+	}
+
+	Eigen::MatrixXd FColor;
+	igl::jet(distColor, false, FColor);
+	viewer.data().set_colors(FColor);
+}

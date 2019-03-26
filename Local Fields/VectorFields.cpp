@@ -16,10 +16,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedHardConstraints();
+	//constructSpecifiedHardConstraints();
 	//constructRandomHardConstraints();
 	//constructSoftConstraints();
-	//constructInteractiveConstraints();
+	constructInteractiveConstraints();
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -2107,24 +2107,25 @@ void VectorFields::constructBasis()
 			t2 = chrono::high_resolution_clock::now();
 			durations[6] += t2 - t1;
 
-			t1 = chrono::high_resolution_clock::now();
+
+				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
+
+				t1 = chrono::high_resolution_clock::now();
 			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[7] += t2 - t1;
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
-
+			//printf("Dijkstra of id=%d\n", id);
 			//localField.measureXF(doubleArea, J);
 
-			/* For visualization purpose only*/
 			if (id == 0)
 			{
 				SubDomain = localField.SubDomain;
 				Boundary = localField.Boundary;
+				patchDijkstraDist = localField.dijksFaceDistMapped;
 			}
-
-			localField.measureXF(doubleArea, J);
 
 			// To get local elements for visualizing subdomain
 			if (id == 0) {

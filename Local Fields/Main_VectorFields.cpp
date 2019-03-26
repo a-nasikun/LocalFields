@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
 	/* ====================== LOCAL ELEMENTS ====================*/
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
-	vectorFields.constructBasisEigenVects();
-	//vectorFields.setupReducedBiLaplacian();
+	vectorFields.constructBasis();
+	//vectorFields.constructBasisEigenVects();
+	vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -166,6 +166,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	//vectorFields.testEdgesAddition(viewer);
+	vectorFields.visualizePatchDijkstra(viewer);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
 	//vectorFields.visualizeSoftConstraints(viewer);
