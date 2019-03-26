@@ -493,8 +493,47 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 
 	XfLoc.col(1) = -x.block(0, 0, BLoc.rows(), 1) + vEstimateLoc;
 
+	/* Scale the vector fields accordingly */
+	Eigen::MatrixXd XfLScaled(XfLoc.rows(), XfLoc.cols());
+	Eigen::Vector2d vTemp;
+	for (int i = 0; i < LocalElements.size(); i++)
+	{
+		if (scalingFactor(i) < 1e-8)
+		{
+			/* The boundary elements */
+			XfLScaled(2 * i + 0, 0) = 0;
+			XfLScaled(2 * i + 1, 0) = 0;
+			XfLScaled(2 * i + 0, 1) = 0;
+			XfLScaled(2 * i + 1, 1) = 0;
+		}
+		else
+		{
+			/* First components */
+			vTemp = XfLoc.block(2 * i, 0, 2, 1);
+			vTemp.normalize();
+			XfLScaled.block(2 * i, 0, 2, 1) = scalingFactor(i)*vTemp;
 
+			/* Second components */
+			vTemp = XfLoc.block(2 * i, 1, 2, 1);
+			vTemp.normalize();
+			XfLScaled.block(2 * i, 1, 2, 1) = scalingFactor(i)*vTemp;
+		}
+	}
 
+	for (int i = 0; i < LocalElements.size(); i++) {
+		// FIRST Option => Construct the BASIS first, then NORMALIZE it.
+		// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
+		// Let's do the FIRST option first, my gut feeling tells me this is a better opion..^^
+		// First column ==> First basis (2 elements per-local frame)
+		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 0, XfLScaled(2 * i + 0, 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 0, XfLScaled(2 * i + 1, 0)));
+
+		// Second column ==> Second basis (2 elements per-local frame)
+		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 1, XfLScaled(2 * i + 0, 1)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 1, XfLScaled(2 * i + 1, 1)));
+	}
+
+	/* No Scaling *
 	for (int i = 0; i < LocalElements.size(); i++) {
 		// FIRST Option => Construct the BASIS first, then NORMALIZE it.
 		// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
@@ -507,8 +546,7 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 1, XfLoc(2 * i + 0, 1)));
 		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 1, XfLoc(2 * i + 1, 1)));
 	}
-
-	//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
+	*/
 }
 
 void LocalFields::measureXF(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& J)

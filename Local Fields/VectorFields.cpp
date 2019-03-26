@@ -15,10 +15,10 @@ void VectorFields::constructConstraints()
 
 	//construct1CentralConstraint();
 	//constructRingConstraints();
-	constructSpecifiedHardConstraints();
+	//constructSpecifiedHardConstraints();
 	//constructRandomHardConstraints();
 	//constructSoftConstraints();
-	//constructInteractiveConstraints();
+	constructInteractiveConstraints();
 	
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -2079,6 +2079,8 @@ void VectorFields::constructBasis()
 				t2 = chrono::high_resolution_clock::now();
 				durations[6] += t2 - t1;
 
+				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
+
 				t1 = chrono::high_resolution_clock::now();
 			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 				t2 = chrono::high_resolution_clock::now();
@@ -2087,7 +2089,6 @@ void VectorFields::constructBasis()
 			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
 				//printf("Dijkstra of id=%d\n", id);
-				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
 
 				//localField.measureXF(doubleArea, J);
 
