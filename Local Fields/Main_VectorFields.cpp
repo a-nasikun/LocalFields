@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
 	//vectorFields.constructBasisEigenVects();
-	vectorFields.setupReducedBiLaplacian();
+	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	vectorFields.computeEigenFields(eigsToCompute);
+	//vectorFields.computeEigenFields(eigsToCompute);
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute);
+	//vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	//vectorFields.testEdgesAddition(viewer);
-	vectorFields.visualizePatchDijkstra(viewer);
+	//vectorFields.visualizePatchDijkstra(viewer);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
 	//vectorFields.visualizeSoftConstraints(viewer);
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
 
 	/* FOR GENERATING IMAGES on PAPER */
-	//vectorFields.visualizeSubdomain(viewer);
+	vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
 	//vectorFields.visualizeSamples(viewer);
 
