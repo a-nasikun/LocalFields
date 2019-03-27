@@ -2059,13 +2059,13 @@ void VectorFields::constructBasis()
 				t1 = chrono::high_resolution_clock::now();
 				//localField.constructMatrixBLocal(B2D);
 				//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-				localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);
-				//localField.constructMatrixBLocalDirectInsert(B2D,AdjMF2Ring);				
+				localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
 				t2 = chrono::high_resolution_clock::now();
 				durations[3] += t2 - t1;
 
 				t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalConstraints(C1Triplet, C2Triplet);
+				//localField.constructLocalConstraints(C1Triplet, C2Triplet);
+				localField.constructLocalConstraintsWithLaplacian(doubleArea, SF2D, C1Triplet, C2Triplet);
 				t2 = chrono::high_resolution_clock::now();
 				durations[4] += t2 - t1;
 
@@ -2085,18 +2085,14 @@ void VectorFields::constructBasis()
 			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 				t2 = chrono::high_resolution_clock::now();
 				durations[7] += t2 - t1;
-			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
-			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
-
-				//printf("Dijkstra of id=%d\n", id);
-
+			
 				//localField.measureXF(doubleArea, J);
 
 				if (id == 0)
 				{
 					SubDomain = localField.SubDomain;
 					Boundary = localField.Boundary;
-					patchDijkstraDist = localField.dijksFaceDistMapped; 
+					//patchDijkstraDist = localField.dijksFaceDistMapped; 
 				}
 		}
 

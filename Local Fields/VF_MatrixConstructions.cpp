@@ -720,8 +720,8 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
-		//constructStiffnessMatrixDivPart3D(LapDiv3D);
-		constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D, LapDiv3D);
+		constructStiffnessMatrixDivPart3D(LapDiv3D);
+		//constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D, LapDiv3D);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;

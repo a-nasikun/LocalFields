@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	vectorFields.setupReducedBiLaplacian();
+	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeArbField(viewer);
 	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
 	//vectorFields.testEdgesAddition(viewer);
-	vectorFields.visualizePatchDijkstra(viewer);
+	//vectorFields.visualizePatchDijkstra(viewer);
 	
 	//vectorFields.visualizeCurveConstraints(viewer);
 	//vectorFields.visualizeSoftConstraints(viewer);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeCurvatureTensor(viewer);
 
 	/* FOR GENERATING IMAGES on PAPER */
-	//vectorFields.visualizeSubdomain(viewer);
+	vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
 	//vectorFields.visualizeSamples(viewer);
 

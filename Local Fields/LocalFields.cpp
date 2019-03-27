@@ -384,38 +384,106 @@ void LocalFields::constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Tr
 {
 	// Setting up matrix C
 	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * Boundary.size());
-	C1Triplet.reserve(2 * Boundary.size());
-	C2Triplet.reserve(2 * Boundary.size());
+	CTriplet.reserve(2 + 2 * Boundary.size());
+	//C1Triplet.reserve(2 * Boundary.size());
+	//C2Triplet.reserve(2 * Boundary.size());
 	int counter = 0;
 	const int BCols = BLoc.cols();
 	const int BRows = BLoc.rows();
-	CTriplet.push_back(Eigen::Triplet<double>(counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
-	CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
-	C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
-	C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
-	C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID],     BCols + counter, 1.0));
-	C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID] + 1, BCols + counter+1, 1.0));
-	counter++;
-	for (int bound : Boundary) {
-		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * GlobToLocMap[bound] + 0, 1.0));
-		CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
-		C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter, 2 * GlobToLocMap[bound], 1.0));
-		C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
-		C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound], BCols + counter, 1.0));
-		C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound] + 1, BCols + counter + 1, 1.0));
-		counter++;
-	}
-	CLoc.resize(2 + 2 * Boundary.size(), BLoc.cols());
-	CLoc.setFromTriplets(CTriplet.begin(), CTriplet.end());
 
 	// Setting up vector c (There are 2 vector c)
 	cLoc.resize(2 + 2 * Boundary.size(), 2);
-	Eigen::VectorXd zeroElements(2 * Boundary.size());
-	for (int i = 0; i < zeroElements.size(); i++) zeroElements(i) = 0.0;
-	cLoc.col(0) << 1.0, 0.0, zeroElements;
-	cLoc.col(1) << 0.0, 1.0, zeroElements;
-		
+
+	/* Set-up the constraint matrix C */
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
+	//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID],     BCols + counter, 1.0));
+	//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID] + 1, BCols + counter+1, 1.0));
+	cLoc(2*counter, 0) = 1.0; cLoc(2*counter+1, 0) = 0.0; 
+	cLoc(2*counter, 1) = 0.0; cLoc(2*counter+1, 1) = 1.0;
+	counter++;
+	for (int bound : Boundary) {
+		CTriplet.push_back(Eigen::Triplet<double>(2*counter, 2 * GlobToLocMap[bound] + 0, 1.0));
+		CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
+		//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter, 2 * GlobToLocMap[bound], 1.0));
+		//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
+		//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound], BCols + counter, 1.0));
+		//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound] + 1, BCols + counter + 1, 1.0));
+		cLoc(2*counter, 0) = 0.0; cLoc(2*counter + 1, 0) = 0.0;
+		cLoc(2*counter, 1) = 0.0; cLoc(2*counter + 1, 1) = 0.0;
+		counter++;
+	}
+	CLoc.resize(2 + 2 * Boundary.size(), BLoc.cols());
+	CLoc.setFromTriplets(CTriplet.begin(), CTriplet.end());	
+}
+
+void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& SF2D, vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet)
+{
+	// Setting up matrix C
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(4 + 2 * Boundary.size());
+	//C1Triplet.reserve(2 * Boundary.size());
+	//C2Triplet.reserve(2 * Boundary.size());
+	int counter = 0;
+	const int BCols = BLoc.cols();
+	const int BRows = BLoc.rows();
+
+	// Setting up vector c (There are 2 vector c)
+	cLoc.resize(4 + 2 * Boundary.size(), 2);
+	
+
+	/* Getting local Laplacian */
+	Eigen::Matrix2d SF2DLoc;
+	SF2DLoc(0, 0) = SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 0);
+	SF2DLoc(0, 1) = SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 1);
+	SF2DLoc(1, 0) = SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 0);
+	SF2DLoc(1, 1) = SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 1);
+	const double mInvLoc = 2.0/doubleArea(sampleID);				// 1/area of a triangle = 2 / doubleArea of a triangle
+	SF2DLoc *= mInvLoc; 
+
+	/* Set-up the constraint matrix C 
+	*  ==> Hard constraint on direction 	*/
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter, 2 * GlobToLocMap[sampleID] + 0, 1.0));
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	cLoc(2*counter, 0) = 1.0; cLoc(2*counter+1, 0) = 0.0;
+	cLoc(2*counter, 1) = 0.0; cLoc(2*counter+1, 1) = 1.0;
+	counter++;
+	/* == > Hard constraint on Vector Laplacian 	*/
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 0, SF2DLoc(0,0)));
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 1, SF2DLoc(0,1)));
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 0, SF2DLoc(1,0)));
+	CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 1, SF2DLoc(1,1)));
+	cLoc(2*counter, 0) = 0.0;  cLoc(2*counter + 1, 0) = 1.0;
+	cLoc(2*counter, 1) = -1.0; cLoc(2*counter + 1, 1) = 0.0;
+	counter++;
+
+
+	//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
+	//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[sampleID] + 1, 1.0));
+	//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID],     BCols + counter, 1.0));
+	//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[sampleID] + 1, BCols + counter+1, 1.0));
+	for (int bound : Boundary) {
+		CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[bound] + 0, 1.0));
+		CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
+		//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter, 2 * GlobToLocMap[bound], 1.0));
+		//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter + 1, 2 * GlobToLocMap[bound] + 1, 1.0));
+		//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound], BCols + counter, 1.0));
+		//C2Triplet.push_back(Eigen::Triplet<double>(2 * GlobToLocMap[bound] + 1, BCols + counter + 1, 1.0));
+		cLoc(2*counter, 0) = 0.0; cLoc(2*counter + 1, 0) = 0.0;
+		cLoc(2*counter, 1) = 0.0; cLoc(2*counter + 1, 1) = 0.0;
+		counter++;
+	}
+	CLoc.resize(4 + 2 * Boundary.size(), BLoc.cols());
+	CLoc.setFromTriplets(CTriplet.begin(), CTriplet.end());
+
+	// Setting up vector c (There are 2 vector c)
+	//cLoc.resize(4 + 2 * Boundary.size(), 2);
+	//Eigen::VectorXd zeroElements;
+	//zeroElements.setZero(2 * Boundary.size());
+	//cLoc.col(0) << 1.0, 0.0, 0.0, 1.0, zeroElements;
+	//cLoc.col(1) << 0.0, 1.0, -1.0, 0.0, zeroElements;
 	//cout << "Sample ID [" << id << "] has CLoc=" << CLoc.rows() << "x" << CLoc.cols() << ". cLoc " << cLoc.size() << "." << endl;
 }
 
@@ -520,6 +588,7 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 		}
 	}
 
+	/* With Scaling
 	for (int i = 0; i < LocalElements.size(); i++) {
 		// FIRST Option => Construct the BASIS first, then NORMALIZE it.
 		// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
@@ -532,8 +601,10 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 1, XfLScaled(2 * i + 0, 1)));
 		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 1, XfLScaled(2 * i + 1, 1)));
 	}
+	*/ 
 
-	/* No Scaling *
+
+	/* No Scaling */
 	for (int i = 0; i < LocalElements.size(); i++) {
 		// FIRST Option => Construct the BASIS first, then NORMALIZE it.
 		// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
@@ -546,7 +617,7 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 1, XfLoc(2 * i + 0, 1)));
 		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 1, XfLoc(2 * i + 1, 1)));
 	}
-	*/
+	
 }
 
 void LocalFields::measureXF(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& J)
