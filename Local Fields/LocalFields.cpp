@@ -419,7 +419,7 @@ void LocalFields::constructLocalConstraints(vector<Eigen::Triplet<double>>& C1Tr
 	CLoc.setFromTriplets(CTriplet.begin(), CTriplet.end());	
 }
 
-void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& doubleArea, const Eigen::SparseMatrix<double>& SF2D, vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet)
+void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& doubleArea, const Eigen::MatrixXi &AdjMF3N, const Eigen::SparseMatrix<double>& SF2D, vector<Eigen::Triplet<double>>& C1Triplet, vector<Eigen::Triplet<double>>& C2Triplet)
 {
 	// Setting up matrix C
 	vector<Eigen::Triplet<double>> CTriplet;
@@ -435,13 +435,16 @@ void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& 
 	
 
 	/* Getting local Laplacian */
-	Eigen::Matrix2d SF2DLoc;
-	SF2DLoc(0, 0) = SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 0);
-	SF2DLoc(0, 1) = SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 1);
-	SF2DLoc(1, 0) = SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 0);
-	SF2DLoc(1, 1) = SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 1);
-	const double mInvLoc = 2.0/doubleArea(sampleID);				// 1/area of a triangle = 2 / doubleArea of a triangle
-	SF2DLoc *= mInvLoc; 
+	//Eigen::Matrix2d SF2DLoc;
+	//SF2DLoc(0, 0) = SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 0);
+	//SF2DLoc(0, 1) = SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 1);
+	//SF2DLoc(1, 0) = SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 0);
+	//SF2DLoc(1, 1) = SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 1);
+	//const double mInvLoc = 2.0/doubleArea(sampleID);				// 1/area of a triangle = 2 / doubleArea of a triangle
+	//SF2DLoc *= mInvLoc; 
+
+	
+
 
 	/* Set-up the constraint matrix C 
 	*  ==> Hard constraint on direction 	*/
@@ -450,14 +453,45 @@ void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& 
 	cLoc(2*counter, 0) = 1.0; cLoc(2*counter+1, 0) = 0.0;
 	cLoc(2*counter, 1) = 0.0; cLoc(2*counter+1, 1) = 1.0;
 	counter++;
-	/* == > Hard constraint on Vector Laplacian 	*/
-	CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 0, SF2DLoc(0,0)));
-	CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 1, SF2DLoc(0,1)));
-	CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 0, SF2DLoc(1,0)));
-	CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 1, SF2DLoc(1,1)));
-	cLoc(2*counter, 0) = 0.0;  cLoc(2*counter + 1, 0) = 1.0;
-	cLoc(2*counter, 1) = -1.0; cLoc(2*counter + 1, 1) = 0.0;
+	
+	
+	/* Hard constraint -> Laplacian of the sample face */
+	Eigen::MatrixXd SF2DBlock(2, 8);
+	double mInv = 2.0 / doubleArea(sampleID);
+	SF2DBlock(0, 0) = mInv * SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 0);
+	SF2DBlock(0, 1) = mInv * SF2D.coeff(2 * sampleID + 0, 2 * sampleID + 1);
+	SF2DBlock(1, 0) = mInv * SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 0);
+	SF2DBlock(1, 1) = mInv * SF2D.coeff(2 * sampleID + 1, 2 * sampleID + 1);	
+	CTriplet.push_back(Eigen::Triplet<double>(2 * counter,     2 * GlobToLocMap[sampleID] + 0,     SF2DBlock(0, 0)));
+	CTriplet.push_back(Eigen::Triplet<double>(2 * counter,     2 * GlobToLocMap[sampleID] + 1,     SF2DBlock(0, 1)));
+	CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * GlobToLocMap[sampleID] + 0, SF2DBlock(1, 0)));
+	CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * GlobToLocMap[sampleID] + 1, SF2DBlock(1, 1)));
+	for (int i = 0; i < 3; i++)
+	{
+		const int neigh = AdjMF3N(sampleID, i);
+		mInv = 2.0 / doubleArea(neigh);
+		SF2DBlock(0, 2+2*i+0) = mInv * SF2D.coeff(2 * neigh + 0, 2 * neigh + 0);
+		SF2DBlock(0, 2+2*i+1) = mInv * SF2D.coeff(2 * neigh + 0, 2 * neigh + 1);
+		SF2DBlock(1, 2+2*i+0) = mInv * SF2D.coeff(2 * neigh + 1, 2 * neigh + 0);
+		SF2DBlock(1, 2+2*i+1) = mInv * SF2D.coeff(2 * neigh + 1, 2 * neigh + 1);
+		CTriplet.push_back(Eigen::Triplet<double>(2 * counter,     2 * GlobToLocMap[neigh] + 0, SF2DBlock(0, 2 + 2 * i + 0)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * counter,     2 * GlobToLocMap[neigh] + 1, SF2DBlock(0, 2 + 2 * i + 1)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * GlobToLocMap[neigh] + 0, SF2DBlock(1, 2 + 2 * i + 0)));
+		CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * GlobToLocMap[neigh] + 1, SF2DBlock(1, 2 + 2 * i + 1)));
+	}
+	cLoc(2 * counter, 0) = 0.0;  cLoc(2 * counter + 1, 0) = 1.0;
+	cLoc(2 * counter, 1) = -1.0; cLoc(2 * counter + 1, 1) = 0.0;
 	counter++;
+
+	/* == > Hard constraint on Vector Laplacian 	*/
+	//CTriplet.push_back(Eigen::Triplet<double>(2*counter, ))
+	//CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 0, SF2DLoc(0,0)));
+	//CTriplet.push_back(Eigen::Triplet<double>(2*counter,     2 * GlobToLocMap[sampleID] + 1, SF2DLoc(0,1)));
+	//CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 0, SF2DLoc(1,0)));
+	//CTriplet.push_back(Eigen::Triplet<double>(2*counter + 1, 2 * GlobToLocMap[sampleID] + 1, SF2DLoc(1,1)));
+	//cLoc(2*counter, 0) = 0.0;  cLoc(2*counter + 1, 0) = 1.0;
+	//cLoc(2*counter, 1) = -1.0; cLoc(2*counter + 1, 1) = 0.0;
+	//counter++;
 
 
 	//C1Triplet.push_back(Eigen::Triplet<double>(BRows + counter,     2 * GlobToLocMap[sampleID] + 0, 1.0));
