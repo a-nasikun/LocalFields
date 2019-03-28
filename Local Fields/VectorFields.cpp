@@ -2085,36 +2085,36 @@ void VectorFields::constructBasis()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructMatrixBLocal(B2D);
 			//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-			localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);
-			//localField.constructMatrixBLocalDirectInsert(B2D,AdjMF2Ring);				
+			//localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructLocalConstraints();
 			//localField.constructLocalConstraints(C1Triplet, C2Triplet);
-			//localField.constructLocalConstraintsWithLaplacian(doubleArea, SF2D, C1Triplet, C2Triplet);
-			localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF3N, SF2D, C1Triplet, C2Triplet);
+			//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF3N, SF2D, C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[4] += t2 - t1;
 
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.setupRHSLocalProblemMapped();
+			//localField.setupRHSLocalProblemMapped();
 			t2 = chrono::high_resolution_clock::now();
 			durations[5] += t2 - t1;
 			
 			t1 = chrono::high_resolution_clock::now();
 			//localField.setupLHSLocalProblemMapped();
-			localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
+			//localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[6] += t2 - t1;
 
 
 				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
 
-				t1 = chrono::high_resolution_clock::now();
-			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
+			//localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[7] += t2 - t1;
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
@@ -2148,9 +2148,10 @@ void VectorFields::constructBasis()
 			}
 
 			/* Localized eigenproblems */
-			if (id == 0)
+			if (id == 5)
 			{
-				localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+				//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+				localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
 			}
 
 		}
@@ -2770,6 +2771,7 @@ void VectorFields::computeEigenFields(const int &numEigs)
 
 	//computeEigenMatlab(SF2DAsym, MF2D, eigFieldFull2D, eigValuesFull);
 	computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
+	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
 
