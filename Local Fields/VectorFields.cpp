@@ -2093,7 +2093,8 @@ void VectorFields::constructBasis()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructLocalConstraints();
 			//localField.constructLocalConstraints(C1Triplet, C2Triplet);
-			localField.constructLocalConstraintsWithLaplacian(doubleArea, SF2D, C1Triplet, C2Triplet);
+			//localField.constructLocalConstraintsWithLaplacian(doubleArea, SF2D, C1Triplet, C2Triplet);
+			localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF3N, SF2D, C1Triplet, C2Triplet);
 			t2 = chrono::high_resolution_clock::now();
 			durations[4] += t2 - t1;
 
