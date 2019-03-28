@@ -5,7 +5,7 @@
 
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 1000;
+int numSample = 100;
 int eigToShow2 = 0;
 int eigsToCompute = 20; 
 
@@ -97,9 +97,9 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();

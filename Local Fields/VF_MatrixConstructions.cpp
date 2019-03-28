@@ -554,7 +554,7 @@ void VectorFields::constructMassMatrices()
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
 	constructMassMatrixMF3D();
-	//constructMassMatrixMF3Dinv();
+	constructMassMatrixMF3Dinv();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -715,15 +715,17 @@ void VectorFields::constructStiffnessMatrices()
 
 	// Declare variables, only required as temporary structure for creating SF2D (Stiffness matrix in local frame)
 	Eigen::SparseMatrix<double> LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
-	Eigen::SparseMatrix<double> LapDiv3DAsym, Lap3D;
+	Eigen::SparseMatrix<double> LapDiv3DAsym, SF, Lap3D;
 
 	constructStiffnessMatrixSF3D(LapCurl3D, LapDiv3D);
 	constructStiffnessMatrixSF2D(LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D);
 
 	/* For eigenfields */
 	constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
-	Lap3D = LapCurl3D + LapDiv3DAsym;
-	WriteSparseMatrixToMatlab(Lap3D, "Hello");
+	//SF = LapCurl3D + LapDiv3DAsym;
+	////SF = LapCurl3D + LapDiv3D;
+	//Lap3D = MF3Dinv * SF;
+	//WriteSparseMatrixToMatlab(Lap3D, "Hello");
 	constructStiffnessMatrixSF2DAsym(LapCurl2D, LapDiv3DAsym);
 
 	t2 = chrono::high_resolution_clock::now();
