@@ -715,13 +715,15 @@ void VectorFields::constructStiffnessMatrices()
 
 	// Declare variables, only required as temporary structure for creating SF2D (Stiffness matrix in local frame)
 	Eigen::SparseMatrix<double> LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
-	Eigen::SparseMatrix<double> LapDiv3DAsym;
+	Eigen::SparseMatrix<double> LapDiv3DAsym, Lap3D;
 
 	constructStiffnessMatrixSF3D(LapCurl3D, LapDiv3D);
 	constructStiffnessMatrixSF2D(LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D);
 
 	/* For eigenfields */
 	constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
+	Lap3D = LapCurl3D + LapDiv3DAsym;
+	WriteSparseMatrixToMatlab(Lap3D, "Hello");
 	constructStiffnessMatrixSF2DAsym(LapCurl2D, LapDiv3DAsym);
 
 	t2 = chrono::high_resolution_clock::now();
@@ -773,6 +775,8 @@ void VectorFields::constructStiffnessMatrixSF2DAsym(Eigen::SparseMatrix<double>&
 {
 	Eigen::SparseMatrix<double> LapDiv2DAsym = A.transpose() * LapDiv3DAsym * A;
 	SF2DAsym = LapCurl2D + LapDiv2DAsym;
+
+	//WriteSparseMatrixToMatlab(SF2DAsym, "Hello");
 }
 
 void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)

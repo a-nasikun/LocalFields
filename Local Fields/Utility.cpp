@@ -127,7 +127,7 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 
 	// WORKSTATION
 	//engEvalString(ep, "save('E:/Local Programming/Localized Bases for Vector Fields/LocalFields_build/ForChristopher/Armadillo/Basis','Basis');");
-	engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Neptune_Mass','MF');");
+	engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Brezel1920_Nasikun','MF');");
 
 }
 
@@ -260,6 +260,43 @@ void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M)
 	engPutVariable(ep, "M", MM);
 	engEvalString(ep, "spy(M)");
 }
+
+
+void ReadChristopherStiffnessMatrix(const string &filename, Eigen::SparseMatrix<double> &M)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	int i, j;
+	double v;
+	int counter = 0;
+
+	vector<Eigen::Triplet<double>> MTriplet;
+	MTriplet.reserve(6000 * 20);
+
+	if (file.is_open())
+	{
+		getline(file, oneLine);
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			i = stoi(oneWord);
+			getline(iStream, oneWord, ' ');
+			j = stoi(oneWord);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+
+			MTriplet.push_back(Eigen::Triplet<double>(i, j, v));
+		}
+	}
+	file.close();
+
+	printf("Size=%dx%d, with %d elements\n", i + 1, i + 1, MTriplet.size());
+	M.resize(i + 1, i + 1);
+	M.setFromTriplets(MTriplet.begin(), MTriplet.end());
+}
+
+
 
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M)
