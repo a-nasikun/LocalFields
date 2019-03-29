@@ -76,6 +76,8 @@ void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& fi
 void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename);
 void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 void ReadChristopherStiffnessMatrix(const string &filename, Eigen::SparseMatrix<double> &M);
+double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M);
+
 
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
