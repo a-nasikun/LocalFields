@@ -67,7 +67,7 @@ struct FacePair
 
 double SparseMatrixMaxValue(const Eigen::SparseMatrix<double> &M);
 double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M);
-
+double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv);
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
 

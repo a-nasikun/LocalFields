@@ -488,18 +488,27 @@ void VectorFields::constructMassMatrices()
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Mass matrices... \n";
-	constructMassMatrixMV();
-	constructMassMatrixMVinv();
+	//constructMassMatrixMV();
+	//constructMassMatrixMVinv();
 
 	// Face-based Mass Matrices
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
-	constructMassMatrixMF3D();
+	//constructMassMatrixMF3D();
 	//constructMassMatrixMF3Dinv();
+
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "..in Total of " << duration.count() << " seconds" << endl;
+
+	/* For the purpose of TESTING */
+	//cout << "Size of mass matrices " << endl;
+	//printf("____MV=%dx%d \n", MV.rows(), MV.cols());
+	//printf("____MF2D=%dx%d \n", MF2D.rows(), MF2D.cols());
+	//printf("____MF3D=%dx%d \n", MF3D.rows(), MF3D.cols());
+	//cout << "MV \n" << MV.block(0, 0, 30, 30) << endl;
+	//cout << "MF2D \n" << MF2D.block(0, 0, 30, 30) << endl;
 }
 
 void VectorFields::constructMassMatrixMV()
@@ -509,7 +518,8 @@ void VectorFields::constructMassMatrixMV()
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing vertex-based Mass matrix... ";
 
-	igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_DEFAULT, MV);
+	//igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_DEFAULT, MV);
+	igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_BARYCENTRIC, MV);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -673,38 +683,55 @@ void VectorFields::constructStiffnessMatrices()
 
 void VectorFields::loadStiffnessMatrices()
 {
-	Eigen::SparseMatrix<double> MVerts, MFaces, MFields, G, GStar, JMat; 
+	Eigen::SparseMatrix<double> MVerts, MEdges, MFields, G, GStar, JMat; 
+	Eigen::SparseMatrix<double> MVertsInv, MEdgesInv, MFieldsInv;
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
-	string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
+	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
+	//string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
 	string file_MVerts	= folder + "M_Verts.txt";
-	string file_MFaces	= folder + "M_Faces.txt";
+	string file_MEdges	= folder + "M_Edges.txt";
 	string file_MFields = folder + "M_Fields.txt";
 	string file_G		= folder + "M_G.txt";
 	string file_GStar	= folder + "M_GStar.txt";
 	string file_J		= folder + "M_J.txt";
 
 	/* Loading the files */
-	cout << "___Load MVerts \n";
+	cout << "MVertices \n";
 	LoadSparseMatrixFromTxtFile(file_MVerts, MVerts);
-	cout << "___Load MFaces \n";
-	LoadSparseMatrixFromTxtFile(file_MFaces, MFaces);
-	cout << "___Load MFields \n";
+	cout << "MEdges \n";
+	LoadSparseMatrixFromTxtFile(file_MEdges, MEdges);
+	cout << "MFields \n";
 	LoadSparseMatrixFromTxtFile(file_MFields, MFields);
-	cout << "___Load Grad \n";
+	cout << "Grad \n";
 	LoadSparseMatrixFromTxtFile(file_G, G);
-	cout << "___Load GStar \n";
+	cout << "GStar \n";
 	LoadSparseMatrixFromTxtFile(file_GStar, GStar);
-	cout << "___Load JMat \n";
+	cout << "JRot \n";
 	LoadSparseMatrixFromTxtFile(file_J, JMat);
+
+	/* Construct Mass Matrices */
+	ConstructInverseMassMatrix(MVerts, MVertsInv);
+	ConstructInverseMassMatrix(MEdges, MEdgesInv);
+	ConstructInverseMassMatrix(MFields, MFieldsInv);
+	MV = MVerts; 
+	MVinv = MVertsInv;
+	MF3D = MFields;
+	MF3Dinv = MFieldsInv;
+
+
+	/* For the purpose of testing */
+	cout << "MVerts \n" << MVerts.block(0, 0, 30, 30) << endl;
+	cout << "MEdges \n" << MEdges.block(0, 0, 30, 30) << endl;
+	cout << "MFields \n" << MFields.block(0, 0, 30, 30) << endl; 
+	
 
 	/* Converting the matrices */
 	cout << "Computing the SF3D\n";	
-	printf("Size of MF2Dinv = %dx%d \n", MF2Dinv.rows(), MF2Dinv.cols());
-	//SF3D = MFields * (G*MVinv*G.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields; 
-	SF3D = MFields * (GStar*MF2Dinv*GStar.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields;
-	cout << "Computing the SF2D\n";
+	/* Non-conforming + Non-conforming */
+	//SF3D = MFields * (GStar*MEdgesInv*GStar.transpose() - JMat * GStar * MEdgesInv * GStar.transpose() * JMat) * MFields;
+	SF3D = MF3D * (GStar * MEdgesInv * GStar.transpose() - JMat*GStar*MEdgesInv*GStar.transpose()*JMat) * MF3D;
 	SF2D = A.transpose() * SF3D * A;	
 }
 

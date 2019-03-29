@@ -26,10 +26,21 @@ double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<d
 
 	if (file.is_open())
 	{
-		getline(file, oneLine);
+		/* Get the size of the matrix */
+		getline(file, oneLine);		
+		istringstream iStream1(oneLine);
+		getline(iStream1, oneWord, ' ');
+		const int m = stoi(oneWord);
+		getline(iStream1, oneWord, ' ');
+		const int n = stoi(oneWord);
+		printf("Size=%d x %d ", m, n);
+		M.resize(m,n);
+
+		/* Obtain each member elements */
 		while (getline(file, oneLine))
 		{
 			counter = 0; 
+
 			istringstream iStream(oneLine);
 
 			for (string word; iStream >> word; )
@@ -51,22 +62,28 @@ double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<d
 				}
 				counter++;
 			}
-			//getline(iStream, oneWord, ' ');
-			//i = stoi(oneWord);
-			//getline(iStream, oneWord, ' ');
-			//j = stoi(oneWord);
-			//getline(iStream, oneWord, ' ');
-			//v = stod(oneWord);
-
-			//MTriplet.push_back(Eigen::Triplet<double>(i, j, v));
 			i++;
 		}
 	}
 	file.close();
-
-	printf("Size=%dx%d, with %d elements\n", i + 1, i + 1, MTriplet.size());
-	M.resize(i + 1, i + 1);
+	printf(", with %d elements\n", MTriplet.size());	
 	M.setFromTriplets(MTriplet.begin(), MTriplet.end());
+}
+
+/* Obtain the inverse of Mass Matrix M, to get MInv*/
+double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv)
+{
+	MInv.resize(M.rows(), M.cols());
+	vector<Eigen::Triplet<double>> MTriplet;
+	MTriplet.reserve(M.rows());
+
+	/* Getting the sum of every non-zero elements in a row */
+	for (int k = 0; k < M.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(M, k); it; ++it) {
+			MTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), 1.0 / it.value()));
+		}
+	}
+	MInv.setFromTriplets(MTriplet.begin(), MTriplet.end());
 }
 
 //template<typename Scalar>
