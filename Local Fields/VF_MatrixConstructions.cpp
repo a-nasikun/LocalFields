@@ -671,6 +671,43 @@ void VectorFields::constructStiffnessMatrices()
 
 }
 
+void VectorFields::loadStiffnessMatrices()
+{
+	Eigen::SparseMatrix<double> MVerts, MFaces, MFields, G, GStar, JMat; 
+	printf("> Loading matrices from Christopher's JavaView\n");
+
+	/* File locations */
+	string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
+	string file_MVerts	= folder + "M_Verts.txt";
+	string file_MFaces	= folder + "M_Faces.txt";
+	string file_MFields = folder + "M_Fields.txt";
+	string file_G		= folder + "M_G.txt";
+	string file_GStar	= folder + "M_GStar.txt";
+	string file_J		= folder + "M_J.txt";
+
+	/* Loading the files */
+	cout << "___Load MVerts \n";
+	LoadSparseMatrixFromTxtFile(file_MVerts, MVerts);
+	cout << "___Load MFaces \n";
+	LoadSparseMatrixFromTxtFile(file_MFaces, MFaces);
+	cout << "___Load MFields \n";
+	LoadSparseMatrixFromTxtFile(file_MFields, MFields);
+	cout << "___Load Grad \n";
+	LoadSparseMatrixFromTxtFile(file_G, G);
+	cout << "___Load GStar \n";
+	LoadSparseMatrixFromTxtFile(file_GStar, GStar);
+	cout << "___Load JMat \n";
+	LoadSparseMatrixFromTxtFile(file_J, JMat);
+
+	/* Converting the matrices */
+	cout << "Computing the SF3D\n";	
+	printf("Size of MF2Dinv = %dx%d \n", MF2Dinv.rows(), MF2Dinv.cols());
+	//SF3D = MFields * (G*MVinv*G.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields; 
+	SF3D = MFields * (GStar*MF2Dinv*GStar.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields;
+	cout << "Computing the SF2D\n";
+	SF2D = A.transpose() * SF3D * A;	
+}
+
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)
 {
 	Matrix2D = A.transpose() * Matrix3D * A;

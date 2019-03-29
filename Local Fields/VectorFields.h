@@ -73,6 +73,7 @@ public:
 	void constructMassMatrixMF3D();
 	void constructMassMatrixMF3Dinv();
 	void constructStiffnessMatrices();
+	void loadStiffnessMatrices();
 	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D);
 	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	void constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D_Conform, Eigen::SparseMatrix<double>& LapDiv3D_Conform, Eigen::SparseMatrix<double>& LapCurl3D_NonConform, Eigen::SparseMatrix<double>& LapDiv3D_NonConform);

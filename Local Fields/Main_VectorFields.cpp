@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId=0, selectedVertex;
-int numSample = 500;
+int numSample = 250;
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
-	string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
+	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n"; 
@@ -74,7 +75,8 @@ int main(int argc, char *argv[])
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructGradient3D();
-	vectorFields.constructStiffnessMatrices();
+	//vectorFields.constructStiffnessMatrices();
+	vectorFields.loadStiffnessMatrices();
 	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
