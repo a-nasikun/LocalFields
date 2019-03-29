@@ -655,15 +655,25 @@ void VectorFields::constructStiffnessMatrices()
 	cout << "> Constructing stiffness matrices...\n";
 
 	// Declare variables, only required as temporary structure for creating SF2D (Stiffness matrix in local frame)
-	Eigen::SparseMatrix<double> LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D;
+	Eigen::SparseMatrix<double> LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_NonConform, LapDiv2D_NonConform;
+	Eigen::SparseMatrix<double> LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_Conform, LapDiv2D_Conform;
 
-	constructStiffnessMatrixSF3D(LapCurl3D, LapDiv3D);
-	constructStiffnessMatrixSF2D(LapCurl3D, LapCurl2D, LapDiv3D, LapDiv2D);
+	constructStiffnessMatrixSF3D(LapCurl3D_Conform, LapDiv3D_Conform, LapCurl3D_NonConform, LapDiv3D_NonConform);
+
+	constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_NonConform, LapDiv2D_NonConform);
+	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_Conform, LapDiv2D_Conform);	
+	//constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_Conform, LapDiv2D_Conform);
+	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_NonConform, LapDiv2D_NonConform);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "..in total of" << duration.count() << " seconds" << endl;
 
+}
+
+void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)
+{
+	Matrix2D = A.transpose() * Matrix3D * A;
 }
 
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
@@ -678,16 +688,6 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
-
-	/* For testing only*/
-	//cout << "SF3D block\n" << LapCurl3D.block(0, 0, 10, 100) << endl;
-	//cout << "SF2D block\n" << LapCurl2D.block(0, 0, 10, 100) << endl; 
-	//for (int j = 0; j < F.cols(); j++)
-	//{
-	//	int el = 5; 
-	//	int neigh = AdjMF3N(el, j);
-	//	cout << "****First block: \n" << LapCurl2D.block(2*el,2*neigh,2,2) << endl;
-	//}
 	
 
 	t1 = chrono::high_resolution_clock::now();
@@ -705,14 +705,15 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)
+void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& LapCurl3D_Conform, Eigen::SparseMatrix<double>& LapDiv3D_Conform, Eigen::SparseMatrix<double>& LapCurl3D_NonConform, Eigen::SparseMatrix<double>& LapDiv3D_NonConform)
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Curl part ";
-		constructStiffnessMatrixCurlPart3D(LapCurl3D);
+		constructStiffnessMatrixCurlPart3D_Conform(LapCurl3D_Conform);
+		constructStiffnessMatrixCurlPart3D_NonConform(LapCurl3D_NonConform);		
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -720,43 +721,45 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
-		constructStiffnessMatrixDivPart3D(LapDiv3D);
-		//constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D, LapDiv3D);
+		constructStiffnessMatrixDivPart3D_Conform(LapDiv3D_Conform);
+		constructStiffnessMatrixDivPart3D_NonConform(LapDiv3D_NonConform);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
 
-	t1 = chrono::high_resolution_clock::now();
-	cout << "....Divergent Part - Curl Part ";
-		//SF3D = LapDiv3D + LapCurl3D;
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
+	//t1 = chrono::high_resolution_clock::now();
+	//cout << "....Divergent Part - Curl Part ";
+	//	//SF3D = LapDiv3D + LapCurl3D;
+	//t2 = chrono::high_resolution_clock::now();
+	//duration = t2 - t1;
+	//cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double>& LapCurl3D)
+void VectorFields::constructStiffnessMatrixCurlPart3D_Conform(Eigen::SparseMatrix<double>& LapCurl3D_Conform)
+{
+	LapCurl3D_Conform = ((-MF3D * J3D) * (GF3D * MVinv)) * (GF3D.transpose() * (J3D * MF3D));
+	//LapDiv3D = MF3D*(GF3D*MVinv*GF3D.transpose())*MF3D;
+}
+
+void VectorFields::constructStiffnessMatrixCurlPart3D_NonConform(Eigen::SparseMatrix<double>& LapCurl3D_NonConform)
 {
 
-	LapCurl3D.resize(3 * F.rows(), 3 * F.rows());
-	LapCurl3D.reserve(3 * F.rows() * 4);
+	LapCurl3D_NonConform.resize(3 * F.rows(), 3 * F.rows());
+	LapCurl3D_NonConform.reserve(3 * F.rows() * 4);
 	vector<Eigen::Triplet<double>> LTriplet;
-	LTriplet.reserve(12 * LapCurl3D.rows());
+	LTriplet.reserve(12 * LapCurl3D_NonConform.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
 		double				area1 = doubleArea(i)/2.0;
-		Eigen::RowVector3d	n1 = NF.row(i);
 		for (int j = 0; j < F.cols(); j++) {
 			int				neigh = AdjMF3N(i, j);
 
 			if (neigh > i) {
 				double				area2 = doubleArea(neigh)/2.0;
 				double				area = area1 + area2;
-				Eigen::RowVector3d	n2 = NF.row(neigh);
-				Eigen::RowVector3d	n = (n1 + n2) / 2.0;
+
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
-				//edge.normalize();
-				//edge = n.cross(edge);
 				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
 
 				/* For testing only*/
@@ -809,21 +812,22 @@ void VectorFields::constructStiffnessMatrixCurlPart3D(Eigen::SparseMatrix<double
 			}
 		}
 	}
-	LapCurl3D.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	LapCurl3D_NonConform.setFromTriplets(LTriplet.begin(), LTriplet.end());
 }
 
 void VectorFields::constructStiffnessMatrixCurlPart2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D)
 {
-	LapCurl2D = A.transpose() * LapCurl3D * A;
+	//LapCurl2D = A.transpose() * LapCurl3D * A;
+	constructStiffnessMatrixSF2D(LapCurl3D, LapCurl2D);
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3D(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	// IMPLICIT Construction for Divergent Part
-	//constructStiffnessMatrixDivPart3D_Implicit(LapDiv3D);
+	//constructStiffnessMatrixDivPart3D_Conform(LapDiv3D);
 
 	// EXPLICIT Construction
-	constructStiffnessMatrixDivPart3D_Explicit(LapDiv3D);
+	constructStiffnessMatrixDivPart3D_NonConform(LapDiv3D);
 }
 
 void VectorFields::constructStiffnessMatrixDivPart3DFromCurl3D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)
@@ -851,13 +855,13 @@ void VectorFields::constructStiffnessMatrixDivPart3DFromCurl3D(Eigen::SparseMatr
 	LapDiv3D = (-J3D * LapCurl3D) *J3D;
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3D_Implicit(Eigen::SparseMatrix<double>& LapDiv3D)
+void VectorFields::constructStiffnessMatrixDivPart3D_Conform(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	printf("GF3D=%dx%d | MF=%dx%d | MVinv=%dx%d\n", GF3D.rows(), GF3D.cols(), MF3D.rows(), MF3D.cols(), MVinv.rows(), MVinv.cols());
 	LapDiv3D = MF3D*(GF3D*MVinv*GF3D.transpose())*MF3D;
 }
 
-void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatrix<double>& LapDiv3D)
+void VectorFields::constructStiffnessMatrixDivPart3D_NonConform(Eigen::SparseMatrix<double>& LapDiv3D)
 {
 	LapDiv3D.resize(3 * F.rows(), 3 * F.rows());
 	LapDiv3D.reserve(3 * F.rows() * 4);
@@ -934,11 +938,8 @@ void VectorFields::constructStiffnessMatrixDivPart3D_Explicit(Eigen::SparseMatri
 
 void VectorFields::constructStiffnessMatrixDivPart2D(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
 {
-	// IMPLICT
-	//LapDiv2D = MF2D*GF2D*MVinv*GF2D.transpose()*MF2D;
-
-	// EXPLICIT
-	LapDiv2D = A.transpose() * LapDiv3D * A;
+	//LapDiv2D = A.transpose() * LapDiv3D * A;
+	constructStiffnessMatrixSF2D(LapDiv3D, LapDiv2D);
 }
 
 void VectorFields::constructGradient3D()
@@ -1039,12 +1040,14 @@ void VectorFields::rearrangeGradient3D(Eigen::SparseMatrix<double> &Grad3D)
 
 void VectorFields::constructRotationMatrix()
 {
+	/* Rotation in 2D/Local Space */
 	J.resize(2 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> JTriplet;
 	JTriplet.reserve(2 * 2 * F.rows());
 	const double cosT = 0.0, sinT = 1.0;
 
-	for (int i = 0; i < F.rows(); i++) {
+	for (int i = 0; i < F.rows(); i++) 
+	{
 		// Constructing the triplet
 		JTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, cosT));		// column 1
 		JTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, sinT));
@@ -1055,6 +1058,23 @@ void VectorFields::constructRotationMatrix()
 	J.setFromTriplets(JTriplet.begin(), JTriplet.end());
 	//cout << "Matrix J" << endl << J.block(0, 0, 10, 10) << endl << endl;
 	//visualizeSparseMatrixInMatlab(J);
+
+	/* Rotation in 3D/Global Space */
+	J3D.resize(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> J3DTriplet;
+	J3DTriplet.reserve(3 * 3 * F.rows());
+
+	for (int i = 0; i < F.rows(); i++) 
+	{
+		J3DTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 1, -NF(i, 2)));
+		J3DTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 2,  NF(i, 1)));
+		J3DTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 0,  NF(i, 2)));
+		J3DTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 2, -NF(i, 0)));
+		J3DTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 0, -NF(i, 1)));
+		J3DTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1,  NF(i, 0)));
+	}
+	J3D.setFromTriplets(J3DTriplet.begin(), J3DTriplet.end());
+	//visualizeSparseMatrixInMatlab(J3D);
 }
 
 void VectorFields::constructMappingMatrix()
