@@ -2111,9 +2111,9 @@ void VectorFields::constructBasis()
 				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
-			//localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
+			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[7] += t2 - t1;
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 

@@ -730,13 +730,15 @@ void VectorFields::constructStiffnessMatrices()
 	//constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_Conform, LapDiv2D_Conform);
 	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_NonConform, LapDiv2D_NonConform);
 
-	/* For eigenfields */
-	constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
+	/* Checking Laplacian *
+	*  Compared to Christopher's Matrix */
+	//constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
 	//SF = LapCurl3D + LapDiv3DAsym;
 	////SF = LapCurl3D + LapDiv3D;
 	//Lap3D = MF3Dinv * SF;
 	//WriteSparseMatrixToMatlab(Lap3D, "Hello");
-	constructStiffnessMatrixSF2DAsym(LapCurl2D, LapDiv3DAsym);
+
+	constructStiffnessMatrixSF2DAsym(LapCurl3D_NonConform, LapDiv3D_Conform);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -779,11 +781,10 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 }
 
 //<<<<<<< HEAD
-void VectorFields::constructStiffnessMatrixSF2DAsym(Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3DAsym)
-{
-	Eigen::SparseMatrix<double> LapDiv2DAsym = A.transpose() * LapDiv3DAsym * A;
-	SF2DAsym = LapCurl2D + LapDiv2DAsym;
-
+void VectorFields::constructStiffnessMatrixSF2DAsym(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapDiv3D)
+{	
+	SF2DAsym = A.transpose() * (LapDiv3D) * A  + A.transpose() * LapCurl3D * A;
+	//SF2DAsym = A.transpose() * (LapDiv3D + LapCurl3D) * A;
 	//WriteSparseMatrixToMatlab(SF2DAsym, "Hello");
 }
 
