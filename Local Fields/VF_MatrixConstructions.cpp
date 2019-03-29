@@ -744,6 +744,7 @@ void VectorFields::constructStiffnessMatrices()
 void VectorFields::loadStiffnessMatrices()
 {
 	Eigen::SparseMatrix<double> MVerts, MFaces, MFields, G, GStar, JMat; 
+	Eigen::SparseMatrix<double> SF3DAsym;
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
@@ -772,10 +773,11 @@ void VectorFields::loadStiffnessMatrices()
 	/* Converting the matrices */
 	cout << "Computing the SF3D\n";	
 	printf("Size of MF2Dinv = %dx%d \n", MF2Dinv.rows(), MF2Dinv.cols());
-	//SF3D = MFields * (G*MVinv*G.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields; 
+	SF3DAsym = MFields * (G*MVinv*G.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields; 
 	SF3D = MFields * (GStar*MF2Dinv*GStar.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields;
 	cout << "Computing the SF2D\n";
 	SF2D = A.transpose() * SF3D * A;	
+	SF2DAsym = A.transpose() * SF3DAsym * A; 
 }
 
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)

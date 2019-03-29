@@ -4,9 +4,9 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 500;
+int numSample = 1000;
 int eigToShow2 = 0;
-int eigsToCompute = 20; 
+int eigsToCompute = 100; 
 
 
 int main(int argc, char *argv[])
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
 	vectorFields.computeEigenFields(eigsToCompute);
 	//vectorFields.retrieveEigenFields();
-	//vectorFields.computeApproxEigenFields(eigsToCompute);
+	vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);
