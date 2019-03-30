@@ -83,7 +83,7 @@ void WriteDenseMatrixToMatlab(const Eigen::MatrixXd& M, const string& filename)
 
 void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const string& filename)
 {
-	printf("Size of M=%dx%d\n", M.rows(), M.cols());
+	printf("Saving matrix with the size of M=%dx%d\n", M.rows(), M.cols());
 
 	using namespace matlab::engine;
 	Engine *ep;
@@ -128,7 +128,7 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 
 	// WORKSTATION
 	//engEvalString(ep, "save('E:/Local Programming/Localized Bases for Vector Fields/LocalFields_build/ForChristopher/Armadillo/Basis','Basis');");
-	engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Brezel1920_Nasikun','MF');");
+	engEvalString(ep, "save('D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Torus60k_Christopher','MF');");
 
 }
 

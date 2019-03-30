@@ -547,14 +547,16 @@ void VectorFields::constructMassMatrices()
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Mass matrices... \n";
-	//constructMassMatrixMV();
-	//constructMassMatrixMVinv();
+
+	/* Vertices-based Mass Matrices */
+	constructMassMatrixMV();
+	constructMassMatrixMVinv();
 
 	// Face-based Mass Matrices
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
-	//constructMassMatrixMF3D();
-	//constructMassMatrixMF3Dinv();
+	constructMassMatrixMF3D();
+	constructMassMatrixMF3Dinv();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -738,6 +740,7 @@ void VectorFields::constructStiffnessMatrices()
 	/* Checking Laplacian *
 	*  Compared to Christopher's Matrix */
 	//constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
+	printf("Conform Div=%dx%d, non-Conforming Curl=%dx%d\n", LapDiv3D_Conform.rows(), LapDiv3D_Conform.cols(), LapCurl3D_NonConform.rows(), LapCurl3D_NonConform.cols());
 	SF = LapCurl3D_NonConform + LapDiv3D_Conform;	
 	Lap3D = MF3Dinv * SF;
 	WriteSparseMatrixToMatlab(Lap3D, "Hello");
@@ -759,7 +762,7 @@ void VectorFields::loadStiffnessMatrices()
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
-	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
+	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Genus2_60k/";
 	//string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
 	string file_MVerts	= folder + "M_Verts.txt";
 	string file_MEdges	= folder + "M_Edges.txt";
@@ -805,11 +808,13 @@ void VectorFields::loadStiffnessMatrices()
 	SF3D = MF3D * (GStar * MEdgesInv * GStar.transpose() - JMat*GStar*MEdgesInv*GStar.transpose()*JMat) * MF3D;
 
 	/* Conforming + Non-conforming */
-	SF3DAsym = MFields * (G*MVinv*G.transpose() - JMat*GStar * MF2Dinv * GStar.transpose() * JMat) * MFields; 
+	SF3DAsym = MFields * (G*MVinv*G.transpose() - JMat*GStar * MEdgesInv * GStar.transpose() * JMat) * MFields;
 	cout << "Computing the SF2D\n";
 
 	SF2D = A.transpose() * SF3D * A;	
 	SF2DAsym = A.transpose() * SF3DAsym * A; 
+
+	WriteSparseMatrixToMatlab(MF3Dinv*SF3DAsym, "Hello");
 }
 
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)
