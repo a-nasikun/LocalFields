@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 1000;
+int numSample = 100;
 int eigToShow2 = 0;
 int eigsToCompute = 50; 
 
@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -112,9 +112,9 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	vectorFields.computeEigenFields(eigsToCompute);
+	//vectorFields.computeEigenFields(eigsToCompute);
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute);
+	//vectorFields.computeApproxEigenFields(eigsToCompute);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);

@@ -392,16 +392,16 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
 
-	if (id < 2)
-	{
-		printf(">  Showing local eigenfields [%d] \n", id);
-		visualize2Dfields(viewer, eigFieldsLocal.col(id), color2, 0.6, false);
-	} 
-	else
-	{
+	//if (id < 2)
+	//{
+	//	printf(">  Showing local eigenfields [%d] \n", id);
+	//	visualize2Dfields(viewer, eigFieldsLocal.col(id), color2, 0.6, false);
+	//} 
+	//else
+	//{
 		printf("Showing the %d Basis field\n", bId);
 		visualize2DfieldsScaled(viewer, Basis, bId, color);
-	}
+	//}
 }
 
 void VectorFields::visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const int &id)
