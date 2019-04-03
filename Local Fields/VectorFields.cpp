@@ -313,7 +313,7 @@ void VectorFields::constructInteractiveConstraintsWithLaplacian()
 	}
 
 	/* Putting the constraints into action with LAPLACIAN CONSTRAINTS */
-	Eigen::SparseMatrix<double> LapVFields = /*MF2Dinv **/ SF2DAsym;
+	Eigen::SparseMatrix<double> LapVFields = /*MF2Dinv * */SF2DAsym;
 
 	//int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
@@ -322,16 +322,18 @@ void VectorFields::constructInteractiveConstraintsWithLaplacian()
 		{
 			for (Eigen::SparseMatrix<double>::InnerIterator it(LapVFields, k); it; ++it)
 			{
+				printf("[%d, %d] = %.4f\n", it.row(), it.col(), it.value());
 				//const double mInv = 2 / doubleArea(floor(it.row() / 2));
 				CTriplet.push_back(Eigen::Triplet<double>(2*numConstraints+2*i+(k - gC), it.row(), it.value()));
 			}
 		}
-		c(2*numConstraints+2*i, 0) = 0;
-		c(2*numConstraints+2*i+ 1, 0) = 0;
+		c(2*numConstraints+2*i, 0) = 0.0;
+		c(2*numConstraints+2*i+ 1, 0) = -1;
 	}
 
 	C.resize(4 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	//visualizeSparseMatrixInMatlab(C);
 }
 
 void VectorFields::resetInteractiveConstraints()
@@ -2151,9 +2153,9 @@ void VectorFields::constructBasis()
 
 				t1 = chrono::high_resolution_clock::now();
 				//localField.constructLocalConstraints();
-				//localField.constructLocalConstraints(C1Triplet, C2Triplet);
+				localField.constructLocalConstraints(C1Triplet, C2Triplet);
 				//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF2Ring, SF2D, C1Triplet, C2Triplet);
-				localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
+				//localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
 				t2 = chrono::high_resolution_clock::now();
 				durations[4] += t2 - t1;
 
@@ -2204,11 +2206,16 @@ void VectorFields::constructBasis()
 				}
 
 				localSystem(localField.sampleID) = 1.0;
+
+				
 			}
 
 			/* Localized eigenproblems */
-			if (id == 5)
+			if (id == 15)
 			{
+				Eigen::SparseMatrix<double> MTempStiff;
+				localField.obtainLocalMatrixPatch2D(SF2D, MTempStiff);
+				//visualizeSparseMatrixInMatlab(MTempStiff);
 				//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
 				//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
 			}

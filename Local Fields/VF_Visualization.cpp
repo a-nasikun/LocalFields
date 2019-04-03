@@ -133,7 +133,7 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
 
-	visualize2Dfields(viewer, Xf, color, 2.0, false);
+	visualize2Dfields(viewer, Xf, color, 1.0, false);
 	//visualize2Dfields(viewer, Xf, color, 2.0, true);
 }
 

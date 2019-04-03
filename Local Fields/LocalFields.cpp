@@ -282,6 +282,54 @@ void LocalFields::computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Ei
 
 }
 
+void LocalFields::obtainLocalMatrixPatch2D(const Eigen::SparseMatrix<double>& MGlob, Eigen::SparseMatrix<double>& MPatch)
+{
+	//cout << id <<  "Setting up local patch matrix\n";
+	const int localSize = LocalElements.size();
+	MPatch.resize(2 * localSize, 2 * localSize);
+	Eigen::SparseMatrix<double> MTemp;
+	vector<Eigen::Triplet<double>> MTriplet, MTempTriplet;
+	MTriplet.reserve(20 * 2 * localSize);
+	MTempTriplet.reserve(20 * MGlob.rows());
+	//Eigen::MatrixXd MTempDense;
+	//MTempDense.setZero(MGlob.rows(), 2 * localSize);
+	
+	// Setup the big chunk of large matrix in dense format
+	//cout << id << "Creating the big chunk matrix\n";
+	for (int i = 0; i <localSize; i++)										// iterate over all local elements
+	{
+		const int localEl = LocalElements[i];
+		for (int k = 2 * localEl; k <= 2 * localEl + 1; k++)			// there are 2 columns for each local elements
+		{
+			for (Eigen::SparseMatrix<double>::InnerIterator it(MGlob, k); it; ++it) {	// obtain elements on each column
+				//int nEl = GlobToLocMap[floor(it.row() / 2)];
+				//if (nEl < 0) continue;
+				int elRow = 2 * i + (k-2*localEl);
+				MTempTriplet.push_back(Eigen::Triplet<double>(elRow, it.row(), it.value()));
+			}
+		}
+	}
+	MTemp.resize(2 * localSize, MGlob.rows());
+	MTemp.setFromTriplets(MTempTriplet.begin(), MTempTriplet.end());
+
+	// Create local patch of the global matrix M (MGlob -> MPatch);
+	//cout << id << "Creating the smaller chunk matrix\n";
+	for (int i = 0; i <localSize; i++)										// iterate over all local elements
+	{
+		const int localEl = LocalElements[i];
+		for (int k = 2 * localEl; k <= 2 * localEl + 1; k++)			// there are 2 columns for each local elements
+		{
+			for (Eigen::SparseMatrix<double>::InnerIterator it(MTemp, k); it; ++it) {	// obtain elements on each column
+				int elCol = 2 * i + (k - 2 * localEl);
+				MTriplet.push_back(Eigen::Triplet<double>(it.row(), elCol, it.value()));
+			}
+		}
+	}	
+	MPatch.setFromTriplets(MTriplet.begin(), MTriplet.end());
+	//visualizeSparseMatrixInMatlab(MPatch);
+	//cout << "[DONE!] Setting up local patch matrix\n";
+}
+
 void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D)
 {
 	
@@ -323,35 +371,37 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D)
 
 void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet)
 {
+	//cout << "Trying to get B2D for id " << id << endl; 
+	obtainLocalMatrixPatch2D(B2D, BLoc);
 	//======================== BLoc from B2D =========================
-	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
-
-	//vector<Eigen::Triplet<double>> BTriplet;
-	//BTriplet.reserve(100 * BLoc.rows());
-	BTriplet.reserve(20 * 2 * LocalElements.size());
-	
-	for (int i = 0; i < LocalElements.size(); i++) {
-		int li = LocalElements[i];
-		// Get the DIAGONAL Elements from B2D Matrix
-		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, B2D.coeff(2 * li + 0, 2 * li + 0)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, B2D.coeff(2 * li + 0, 2 * li + 1)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, B2D.coeff(2 * li + 1, 2 * li + 0)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, B2D.coeff(2 * li + 1, 2 * li + 1)));
-
-		// Get the NEIGHBORING elements
-		//for (int j = 0; j < AdjMF3N.cols(); j++) {
-		for(int j:AdjMF2Ring[LocalElements[i]]){
-			const int neigh = j;
-			if (GlobToLocMap[neigh] >= 0) {
-				int neighLoc = GlobToLocMap[neigh];
-				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, B2D.coeff(2 * li + 0, 2 * neigh + 0)));
-				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, B2D.coeff(2 * li + 0, 2 * neigh + 1)));
-				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, B2D.coeff(2 * li + 1, 2 * neigh + 0)));
-				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, B2D.coeff(2 * li + 1, 2 * neigh + 1)));
-			}
-		}
-	}
-	BLoc.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	//BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+	//
+	////vector<Eigen::Triplet<double>> BTriplet;
+	////BTriplet.reserve(100 * BLoc.rows());
+	//BTriplet.reserve(20 * 2 * LocalElements.size());
+	//
+	//for (int i = 0; i < LocalElements.size(); i++) {
+	//	int li = LocalElements[i];
+	//	// Get the DIAGONAL Elements from B2D Matrix
+	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, B2D.coeff(2 * li + 0, 2 * li + 0)));
+	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, B2D.coeff(2 * li + 0, 2 * li + 1)));
+	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, B2D.coeff(2 * li + 1, 2 * li + 0)));
+	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, B2D.coeff(2 * li + 1, 2 * li + 1)));
+	//
+	//	// Get the NEIGHBORING elements
+	//	//for (int j = 0; j < AdjMF3N.cols(); j++) {
+	//	for(int j:AdjMF2Ring[LocalElements[i]]){
+	//		const int neigh = j;
+	//		if (GlobToLocMap[neigh] >= 0) {
+	//			int neighLoc = GlobToLocMap[neigh];
+	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, B2D.coeff(2 * li + 0, 2 * neigh + 0)));
+	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, B2D.coeff(2 * li + 0, 2 * neigh + 1)));
+	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, B2D.coeff(2 * li + 1, 2 * neigh + 0)));
+	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, B2D.coeff(2 * li + 1, 2 * neigh + 1)));
+	//		}
+	//	}
+	//}
+	//BLoc.setFromTriplets(BTriplet.begin(), BTriplet.end());
 }
 
 void LocalFields::constructMatrixBLocalDirectInsert(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring)

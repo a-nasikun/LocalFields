@@ -22,6 +22,7 @@ public:
 	void constructBoundary(const Eigen::MatrixXi& F, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring);
 	void constructLocalElements(const Eigen::MatrixXi &F);
 	void computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const Eigen::MatrixXd &FC, const Eigen::MatrixXi &AdjMF3N);
+	void obtainLocalMatrixPatch2D(const Eigen::SparseMatrix<double>& MGlob, Eigen::SparseMatrix<double>& MPatch);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D);
 	//void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet);
