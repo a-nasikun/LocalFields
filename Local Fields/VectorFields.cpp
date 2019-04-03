@@ -19,7 +19,8 @@ void VectorFields::constructConstraints()
 	//constructSpecifiedHardConstraints();
 	//constructRandomHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();
+	//constructInteractiveConstraints();
+	constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -89,12 +90,6 @@ void VectorFields::constructRingConstraints()
 	for (int i = 0; i < zeroElements.size(); i++) zeroElements(i) = 0.0;
 	c.col(0) << 1.0, 0.0, zeroElements;
 	c.col(1) << 0.0, 1.0, zeroElements;
-}
-
-void VectorFields::pushNewUserConstraints(const int& fInit, const int& fEnd)
-{
-	userVisualConstraints.push_back(fInit);
-	userVisualConstraints.push_back(fEnd);
 }
 
 void VectorFields::constructSpecifiedHardConstraints()
@@ -232,6 +227,11 @@ void VectorFields::constructRandomHardConstraints()
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
 
+void VectorFields::pushNewUserConstraints(const int& fInit, const int& fEnd)
+{
+	userVisualConstraints.push_back(fInit);
+	userVisualConstraints.push_back(fEnd);
+}
 void VectorFields::constructInteractiveConstraints()
 {
 	/* Define the constraints */
@@ -244,11 +244,9 @@ void VectorFields::constructInteractiveConstraints()
 	{
 		/* Location of constraints */
 		globalConstraints[i/2] = userVisualConstraints[i];
-		//printf("Constraint[%d]: %d-->%d\n", i / 2, userVisualConstraints[i], userVisualConstraints[i + 1]);
 
 		/* Getting the constraints + making them into local coordinates */
 		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i+1]) - FC.row(userVisualConstraints[i]);
-		//cout << "___ constraint in 3D: " << dir << endl;
 		Eigen::MatrixXd ALoc(3, 2);
 		ALoc = A.block(3 * userVisualConstraints[i], 2 * userVisualConstraints[i], 3, 2);
 		Eigen::Vector2d normDir = ALoc.transpose() * dir.transpose();
@@ -264,19 +262,78 @@ void VectorFields::constructInteractiveConstraints()
 	c.resize(2 * globalConstraints.size());
 
 	/* Putting the constraints into action */
-	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
-		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
-		c(counter, 0) = constraintValues[i](0);
-		counter++;
-
-		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
-		c(counter, 0) = constraintValues[i](1);
-		counter++;
-	}
+		CTriplet.push_back(Eigen::Triplet<double>(2*i+0, 2 * globalConstraints[i] + 0, 1.0));
+		c(2*i+0) = constraintValues[i](0);		
+	
+		CTriplet.push_back(Eigen::Triplet<double>(2*i+1, 2 * globalConstraints[i] + 1, 1.0));
+		c(2*i+1) = constraintValues[i](1);
+	}	
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 }
+
+void VectorFields::constructInteractiveConstraintsWithLaplacian()
+{
+	/* Define the constraints */
+	const int numConstraints = userVisualConstraints.size() / 2;
+	globalConstraints.clear();
+	globalConstraints.shrink_to_fit();
+	globalConstraints.resize(numConstraints);
+	vector<Eigen::Vector2d> constraintValues(numConstraints);
+
+	/* Global constraints from user input */
+	for (int i = 0; i < userVisualConstraints.size(); i += 2)
+	{
+		/* Location of constraints */
+		globalConstraints[i / 2] = userVisualConstraints[i];
+
+		/* Getting the constraints + making them into local coordinates */
+		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i + 1]) - FC.row(userVisualConstraints[i]);
+		Eigen::MatrixXd ALoc(3, 2);
+		ALoc = A.block(3 * userVisualConstraints[i], 2 * userVisualConstraints[i], 3, 2);
+		Eigen::Vector2d normDir = ALoc.transpose() * dir.transpose();
+		normDir.normalize();
+		constraintValues[i / 2] = normDir;
+	}
+
+	/* Setting up matrix C and column vector c */
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(40 * globalConstraints.size());
+	c.resize(4 * globalConstraints.size());
+
+	/* Putting the constraints into action */
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * globalConstraints[i] + 0, 1.0));
+		c(2 * i + 0) = constraintValues[i](0);
+
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * globalConstraints[i] + 1, 1.0));
+		c(2 * i + 1) = constraintValues[i](1);
+	}
+
+	/* Putting the constraints into action with LAPLACIAN CONSTRAINTS */
+	Eigen::SparseMatrix<double> LapVFields = /*MF2Dinv **/ SF2DAsym;
+
+	//int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		const int gC = 2 * globalConstraints[i];
+		for (int k = gC; k <= (gC + 1); k++)
+		{
+			for (Eigen::SparseMatrix<double>::InnerIterator it(LapVFields, k); it; ++it)
+			{
+				//const double mInv = 2 / doubleArea(floor(it.row() / 2));
+				CTriplet.push_back(Eigen::Triplet<double>(2*numConstraints+2*i+(k - gC), it.row(), it.value()));
+			}
+		}
+		c(2*numConstraints+2*i, 0) = 0;
+		c(2*numConstraints+2*i+ 1, 0) = 0;
+	}
+
+	C.resize(4 * globalConstraints.size(), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+}
+
 void VectorFields::resetInteractiveConstraints()
 {
 	userVisualConstraints.clear();
@@ -2027,6 +2084,8 @@ void VectorFields::constructBasis()
 	Basis.resize(BasisTemp.rows(), BasisTemp.cols());
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
 
+	/* Set-UP Laplace Matrix */
+	Eigen::SparseMatrix<double> LapForBasis = MF2Dinv * SF2DAsym;
 
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 8;
@@ -2094,7 +2153,7 @@ void VectorFields::constructBasis()
 				//localField.constructLocalConstraints();
 				//localField.constructLocalConstraints(C1Triplet, C2Triplet);
 				//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF2Ring, SF2D, C1Triplet, C2Triplet);
-				localField.constructLocalConstraintsWithLaplacian(doubleArea, SF2D, C1Triplet, C2Triplet);
+				localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
 				t2 = chrono::high_resolution_clock::now();
 				durations[4] += t2 - t1;
 

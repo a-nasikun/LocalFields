@@ -117,6 +117,7 @@ public:
 	void constructSpecifiedHardConstraints();
 	void constructRandomHardConstraints();
 	void constructInteractiveConstraints();
+	void constructInteractiveConstraintsWithLaplacian();
 	void resetInteractiveConstraints();
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
@@ -224,6 +225,7 @@ public:
 	void visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer);
 	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);	
 	void visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer);
+	void visualizeAreaOfLaplaceConstraint(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);

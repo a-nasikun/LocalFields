@@ -488,64 +488,8 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 		viewer.data().add_edges(f, f + h2*lengthScale/HEAD_RATIO, color);
 	}
 	 
-	viewer.selected_data_index = 0; 
-	
+	viewer.selected_data_index = 0; 	
 
-	/* 3D ARROW -> FAILED */
-	//Eigen::RowVector3d y(0.0, 1.0, 0.0);
-	//cout << "Trying to add the arrow \n";
-	//for (int i = 0; i < globalConstraints.size(); i++)
-	//{
-	//	/* Computing rotation matrix */
-	//	Eigen::RowVector3d g,n, cross;
-	//	Eigen::Matrix3d RotMat;
-	//	g = ((A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2) * c.block(2 * i, 0, 2, 1)).transpose());
-	//	g.normalize();
-	//	//n = g.cross(y);
-	//	n = (NF.row(globalConstraints[i]));
-	//	n.normalize();
-	//	double angle = acos(y.dot(g));
-	//	cross = g.cross(y);
-	//	if (n.dot(cross)<0)
-	//	{
-	//		angle = -angle; 
-	//	}
-	//	cout << i << "__y: " << y << endl;
-	//	cout << "__g: " << g << endl;
-	//	cout << "__n: " << n << endl;
-	//	cout << "__cross(y,g): " << cross << endl;
-	//	cout << "__angle " << angle * 180.0/M_PI << endl;
-	//
-	//	double cosA = cos(angle);
-	//	double sinA = sin(angle);
-	//
-	//	RotMat(0, 0) = cross(0)*cross(0)*(1.0 - cosA) + cosA;
-	//	RotMat(0, 1) = cross(0)*cross(1)*(1.0 - cosA) - cross(2)*sinA;
-	//	RotMat(0, 2) = cross(0)*cross(2)*(1.0 - cosA) + cross(1)*sinA;
-	//	RotMat(1, 0) = cross(0)*cross(1)*(1.0 - cosA) + cross(2)*sinA;
-	//	RotMat(1, 1) = cross(1)*cross(1)*(1.0 - cosA) + cosA;
-	//	RotMat(1, 2) = cross(1)*cross(2)*(1.0 - cosA) - cross(0)*sinA;
-	//	RotMat(2, 0) = cross(0)*cross(2)*(1.0 - cosA) - cross(1)*sinA; 
-	//	RotMat(2, 1) = cross(1)*cross(2)*(1.0 - cosA) - cross(0)*sinA;
-	//	RotMat(2, 2) = cross(2)*cross(2)*(1.0 - cosA) + cosA; 
-	//
-	//
-	//	Eigen::MatrixXd VArrowNew(VArrow.rows(), VArrow.cols());
-	//	for (int j = 0; j < VArrow.rows(); j++)
-	//	{
-	//		VArrowNew.row(j) = (RotMat*(VArrow.row(j)).transpose()).transpose();
-	//	}
-	//	
-	//	VArrowNew = VArrowNew*(ARRAW_RATIO*avgEdgeLength) + FC.row(globalConstraints[i]).replicate(VArrow.rows(), 1);
-	//	
-	//	//VArrowNew *= (ARRAW_RATIO*avgEdgeLength); 
-	//	 
-	//	viewer.append_mesh();
-	//	viewer.data().set_mesh(VArrowNew, FArrow);
-	//	viewer.data().set_colors(Eigen::RowVector3d(1.0, 0.0, 0.0));
-	//	viewer.data().show_lines = false; 
-	//	viewer.selected_data_index = 0; 
-	//}
 }
 
 void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1128,4 +1072,15 @@ void VectorFields::visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer)
 	Eigen::MatrixXd FColor;
 	igl::jet(distColor, false, FColor);
 	viewer.data().set_colors(FColor);
+}
+
+
+void VectorFields::visualizeAreaOfLaplaceConstraint(igl::opengl::glfw::Viewer &viewer)
+{
+	for (int k = 0; k < C.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(C, k); it; ++it) {
+			viewer.data().add_points(FC.row(floor(it.col()/2)), Eigen::RowVector3d(0.1, 0.1, 0.4));
+			
+		}
+	}
 }

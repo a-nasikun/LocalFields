@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	/* MODEL FOR TESTING, LARGE ONES */
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(5000);
+	vectorFields.selectFaceToDraw(1000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -99,9 +99,9 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
@@ -393,13 +393,15 @@ int main(int argc, char *argv[])
 				/* UPdating the mesh information */
 				viewer.data().clear();
 				viewer.data().set_mesh(V, F);
-				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				//vectorFields.setupGlobalProblem();			
-				//vectorFields.visualizeApproximatedFields(viewer);
-				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.setAndSolveUserSystem();
-				vectorFields.visualizeApproxResult(viewer);
+				cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				vectorFields.setupGlobalProblem();			
+				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualizeAreaOfLaplaceConstraint(viewer);
+				//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				//vectorFields.setAndSolveUserSystem();
+				//vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
 
 				ChosenFaces.clear();
 				//cout << "Hello there\n";

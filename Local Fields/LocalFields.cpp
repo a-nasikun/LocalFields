@@ -565,14 +565,15 @@ void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& 
 		for (Eigen::SparseMatrix<double>::InnerIterator it(SF2D, k); it; ++it) 
 		{	
 			int rowB = GlobToLocMap[floor(it.row()/2)];
+			//double mInv = 1.0 / doubleArea(floor(it.row() / 2));
 			if (rowB > 0)
 			{
 				CTriplet.push_back(Eigen::Triplet<double>(counter + (k-2*sampleID), rowB, it.value()));
 			}
 		}
 	}
-	cLoc(2 * counter, 0) = 0;  cLoc(2 * counter + 1, 0) = 0;
-	cLoc(2 * counter, 1) = 0; cLoc(2 * counter + 1, 1) = 0;
+	cLoc(2 * counter, 0) = 0; cLoc(2 * counter + 1, 0) = 0;		// first contraint, i.e. on the first basis
+	cLoc(2 * counter, 1) = 0; cLoc(2 * counter + 1, 1) = 0;		// second constraint, i.e. on the second basis
 	counter++;
 
 
@@ -583,6 +584,9 @@ void LocalFields::constructLocalConstraintsWithLaplacian(const Eigen::VectorXd& 
 		cLoc(2 * counter, 1) = 0.0; cLoc(2 * counter + 1, 1) = 0.0;
 		counter++;
 	}
+
+
+	/* Setting up the size of the [selection] constraint matrix */
 	CLoc.resize(4 + 2 * Boundary.size(), BLoc.cols());
 	CLoc.setFromTriplets(CTriplet.begin(), CTriplet.end());
 
