@@ -2072,7 +2072,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(2.5, 2) + pow(2.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2101,10 +2101,10 @@ void VectorFields::constructBasis()
 	int id, tid, ntids, ipts, istart, iproc;
 
 
-#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+//#pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
-		iproc = omp_get_num_procs();
-		//iproc = 1; 
+		//iproc = omp_get_num_procs();
+		iproc = 1; 
 		tid = omp_get_thread_num();
 		ntids = omp_get_num_threads();
 		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
@@ -2147,35 +2147,35 @@ void VectorFields::constructBasis()
 				t1 = chrono::high_resolution_clock::now();
 				//localField.constructMatrixBLocal(B2D);
 				//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-				localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
+				///localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
 				t2 = chrono::high_resolution_clock::now();
 				durations[3] += t2 - t1;
 
 				t1 = chrono::high_resolution_clock::now();
 				//localField.constructLocalConstraints();
-				localField.constructLocalConstraints(C1Triplet, C2Triplet);
+				//localField.constructLocalConstraints(C1Triplet, C2Triplet);
 				//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF2Ring, SF2D, C1Triplet, C2Triplet);
-				//localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
+				///localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
 				t2 = chrono::high_resolution_clock::now();
 				durations[4] += t2 - t1;
 
 				t1 = chrono::high_resolution_clock::now();
-			localField.setupRHSLocalProblemMapped();
+			///localField.setupRHSLocalProblemMapped();
 				t2 = chrono::high_resolution_clock::now();
 				durations[5] += t2 - t1;
 
 				t1 = chrono::high_resolution_clock::now();
 				//localField.setupLHSLocalProblemMapped();
-			localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
+			///localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
 				t2 = chrono::high_resolution_clock::now();
 				durations[6] += t2 - t1;
 
 				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
 
 			t1 = chrono::high_resolution_clock::now();
-			//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
-			localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
+			///localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[7] += t2 - t1;
 			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 

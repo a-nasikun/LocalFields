@@ -301,7 +301,9 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 		viewer.data().add_edges(c, e, color);
 		viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
 		viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
-	}	
+	}
+
+	
 }
 
 void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color)
