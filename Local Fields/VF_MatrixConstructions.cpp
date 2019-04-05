@@ -743,7 +743,7 @@ void VectorFields::constructStiffnessMatrices()
 	printf("Conform Div=%dx%d, non-Conforming Curl=%dx%d\n", LapDiv3D_Conform.rows(), LapDiv3D_Conform.cols(), LapCurl3D_NonConform.rows(), LapCurl3D_NonConform.cols());
 	SF = LapCurl3D_NonConform + LapDiv3D_Conform;	
 	Lap3D = MF3Dinv * SF;
-	WriteSparseMatrixToMatlab(Lap3D, "Hello");
+	//WriteSparseMatrixToMatlab(Lap3D, "Hello");
 
 	constructStiffnessMatrixSF2DAsym(LapCurl3D_NonConform, LapDiv3D_Conform);
 

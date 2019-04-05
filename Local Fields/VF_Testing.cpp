@@ -481,9 +481,9 @@ void VectorFields::printDataForVTK()
 
 void VectorFields::writeEigenFieldsForVTK()
 {
-	for (int id = 0; id < 20; id++)
+	for (int id = 0; id < 1; id++)
 	{
-		string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Genus5_36K_EigFields_face_ref_"+ to_string(id+1) +".vtk";
+		string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Torus_4k_EigFields_face_ref_"+ to_string(id+1) +".vtk";
 		
 		ofstream file(filename);
 		if (file.is_open())
@@ -518,10 +518,11 @@ void VectorFields::writeEigenFieldsForVTK()
 
 			/* FACE-base DATA */
 			file << "CELL_DATA " << F.rows() << "\n";
-			file << "VECTORS EigenField_" << id+1<< " double\n";
+			file << "VECTORS EigenField_" << id+1 << " double\n";
 			for (int i = 0; i < F.rows(); i++)
 			{
 				file << scale*eig3D(3 * i + 0) << " " << scale*eig3D(3 * i + 1) << " " << scale*eig3D(3 * i + 2) << "\n";
+				cout << "face=" << i << ": " << scale*eig3D(3 * i + 0) << " " << scale*eig3D(3 * i + 1) << " " << scale*eig3D(3 * i + 2) << "\n";
 			}
 
 			/* POINT-base DATA */

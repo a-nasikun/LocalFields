@@ -2099,20 +2099,21 @@ void VectorFields::constructBasis()
 	}
 
 	int id, tid, ntids, ipts, istart, iproc;
-
-
-//#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+		
+	omp_set_num_threads(1);
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
 		//iproc = 1; 
 		tid = omp_get_thread_num();
 		ntids = omp_get_num_threads();
+		//ntids = 2; 
 		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
 		istart = tid * ipts;
 		if (tid == ntids - 1) ipts = Sample.size() - istart;
 		if (ipts <= 0) ipts = 0;
 
-		printf("ID=%d, start=%d, to end=%d, num els=%d\n", tid, istart, istart + ipts, ipts);
+		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
 
 		Eigen::VectorXd				D(F.rows());
 		for (int i = 0; i < F.rows(); i++) {
@@ -2186,41 +2187,41 @@ void VectorFields::constructBasis()
 			//printf("Dijkstra of id=%d\n", id);
 			//localField.measureXF(doubleArea, J);
 
-			//if (id == 0)
-			//{
-			//	SubDomain = localField.SubDomain;
-			//	Boundary = localField.Boundary;
-			//	patchDijkstraDist = localField.dijksFaceDistMapped;
-			//}
-			//
-			//// To get local elements for visualizing subdomain
-			//if (id == 0) {
-			//	localSystem.resize(F.rows());
-			//	for (int fid = 0; fid < F.rows(); fid++) {
-			//		localSystem(fid) = 0.0;
-			//	}
-			//	for (int fid : localField.SubDomain) {
-			//		localSystem(fid) = 0.3;
-			//	}
-			//
-			//	for (int fid : localField.Boundary) {
-			//		localSystem(fid) = 0.7;
-			//	}
-			//
-			//	localSystem(localField.sampleID) = 1.0;
-			//
-			//	
-			//}
-			//
-			///* Localized eigenproblems */
-			//if (id == 15)
-			//{
-			//	//Eigen::SparseMatrix<double> MTempStiff;
-			//	//localField.obtainLocalMatrixPatch2D(SF2D, MTempStiff);
-			//	//visualizeSparseMatrixInMatlab(MTempStiff);
-			//	//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
-			//	//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
-			//}
+			if (id == 0)
+			{
+				SubDomain = localField.SubDomain;
+				Boundary = localField.Boundary;
+				//patchDijkstraDist = localField.dijksFaceDistMapped;
+			}
+			
+			// To get local elements for visualizing subdomain
+			if (id == 0) {
+				localSystem.resize(F.rows());
+				for (int fid = 0; fid < F.rows(); fid++) {
+					localSystem(fid) = 0.0;
+				}
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
+			
+				for (int fid : localField.Boundary) {
+					localSystem(fid) = 0.7;
+				}
+			
+				localSystem(localField.sampleID) = 1.0;
+			
+				
+			}
+			
+			/* Localized eigenproblems */
+			if (id == 15)
+			{
+				//Eigen::SparseMatrix<double> MTempStiff;
+				//localField.obtainLocalMatrixPatch2D(SF2D, MTempStiff);
+				//visualizeSparseMatrixInMatlab(MTempStiff);
+				//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+				//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+			}
 
 		}
 	}
@@ -2238,9 +2239,9 @@ void VectorFields::constructBasis()
 	cout << "....Partition of unity of the basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	//Basis = BasisTemp; 
+	Basis = BasisTemp; 
 	//normalizeBasis();
-	normalizeBasisAbs();
+	//normalizeBasisAbs();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -2565,7 +2566,7 @@ void VectorFields::normalizeBasisAbs()
 	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
 			double newValue = it.value() / normSum(it.row()/2, it.col()%2);
-			newValue *= (2.0);
+			// newValue *= (2.0);
 			// To have the basis with norm 2.0
 			BNTriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), newValue));
 			BasisSumN(it.row(), it.col() % 2) += newValue;
