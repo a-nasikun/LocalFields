@@ -79,6 +79,10 @@ void ReadChristopherStiffnessMatrix(const string &filename, Eigen::SparseMatrix<
 double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M);
 double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv);
 
+void writeEigenSparseMatrixToBinary(Eigen::SparseMatrix<double> &m, const std::string &filename);
+void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseMatrix<double> &m);
+
+
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
 

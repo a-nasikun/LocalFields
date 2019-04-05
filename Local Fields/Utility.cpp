@@ -128,7 +128,8 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 
 	// WORKSTATION
 	//engEvalString(ep, "save('E:/Local Programming/Localized Bases for Vector Fields/LocalFields_build/ForChristopher/Armadillo/Basis','Basis');");
-	engEvalString(ep, "save('D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Torus60k_Christopher','MF');");
+	string saveFile = "save('" + filename +"','MF');";
+	engEvalString(ep, saveFile.c_str());
 
 }
 
@@ -370,6 +371,74 @@ double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseM
 		}
 	}
 	MInv.setFromTriplets(MTriplet.begin(), MTriplet.end());
+}
+
+// Write matrix to file
+void writeEigenSparseMatrixToBinary(Eigen::SparseMatrix<double> &m, const std::string &filename)
+{
+	printf("Tries to write matrix\n");
+	int matSize = m.nonZeros();
+	m.makeCompressed();
+
+	fstream writeFile;
+	writeFile.open(filename, ios::binary | ios::out);
+
+	if (writeFile.is_open())
+	{
+		int rows, cols, nnzs, outS, innS;
+		rows = m.rows();
+		cols = m.cols();
+		nnzs = m.nonZeros();
+		outS = m.outerSize();
+		innS = m.innerSize();
+
+		writeFile.write((const char *)&(rows), sizeof(int));
+		writeFile.write((const char *)&(cols), sizeof(int));
+		writeFile.write((const char *)&(nnzs), sizeof(int));
+		writeFile.write((const char *)&(outS), sizeof(int));
+		writeFile.write((const char *)&(innS), sizeof(int));
+
+		writeFile.write((const char*)(m.valuePtr()), sizeof(double)*m.nonZeros());
+		writeFile.write((const char*)(m.outerIndexPtr()), sizeof(int)*m.outerSize());
+		writeFile.write((const char*)(m.innerIndexPtr()), sizeof(int)*m.nonZeros());
+
+		printf("Writing is over\n");
+		writeFile.close();
+	}
+	printf("File is closed\n");
+}
+
+// Read matrix from file
+void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseMatrix<double> &m)
+{
+	//m.resize(0, 0);
+
+	printf("Tries to read file \n");
+	fstream readFile;
+	readFile.open(filename, ios::binary | ios::in);
+	if (readFile.is_open())
+	{
+		int rows, cols, nnzs, outS, innS;
+		readFile.read((char*)&rows, sizeof(int));
+		readFile.read((char*)&cols, sizeof(int));
+		readFile.read((char*)&nnzs, sizeof(int));
+		readFile.read((char*)&outS, sizeof(int));
+		readFile.read((char*)&innS, sizeof(int));
+
+		m.resize(rows, cols);
+		m.makeCompressed();
+		m.resizeNonZeros(nnzs);
+
+		readFile.read((char*)(m.valuePtr()), sizeof(double)*nnzs);
+		readFile.read((char*)(m.outerIndexPtr()), sizeof(int)*outS);
+		readFile.read((char*)(m.innerIndexPtr()), sizeof(int)*nnzs);
+
+		printf("Reading is over\n");
+
+		m.finalize();
+		readFile.close();
+	}
+	printf("File is closed\n");
 }
 
 //template<typename Scalar>
