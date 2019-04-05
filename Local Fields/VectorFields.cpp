@@ -2100,7 +2100,7 @@ void VectorFields::constructBasis()
 
 	int id, tid, ntids, ipts, istart, iproc;
 		
-	omp_set_num_threads(4);
+	omp_set_num_threads(1);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -2840,7 +2840,7 @@ void VectorFields::obtainUserVectorFields()
 	cout << "Hello there \n" << endl; 
 }
 
-void VectorFields::computeEigenFields(const int &numEigs)
+void VectorFields::computeEigenFields(const int &numEigs, const string& filename)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -2849,7 +2849,7 @@ void VectorFields::computeEigenFields(const int &numEigs)
 	cout << "> Computing reference eigenproblem (in Matlab)... ";
 
 	//computeEigenMatlab(SF2DAsym, MF2D, eigFieldFull2D, eigValuesFull);
-	computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
+	computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
@@ -2865,7 +2865,7 @@ void VectorFields::retrieveEigenFields()
 	ReadVectorFromMatlab(eigValuesFull, "hello");
 }
 
-void VectorFields::computeApproxEigenFields(const int &numEigs)
+void VectorFields::computeApproxEigenFields(const int &numEigs, const string& filename)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -2885,7 +2885,7 @@ void VectorFields::computeApproxEigenFields(const int &numEigs)
 	t1 = chrono::high_resolution_clock::now();
 	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, "hello");
+	computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
 	//WriteSparseMatrixToMatlab(Basis, "hello");

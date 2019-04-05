@@ -432,7 +432,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		//cout << "MATLAB STARTS. OH YEAH!!!" << endl;
 	}
 
-	cout << "Status => " << matlabStatus << endl; 
+	//cout << "Status => " << matlabStatus << endl; 
 
 	// Compute Eigenvalue in Matlab
 	int NUM_EIGEN = numEigs;
@@ -448,8 +448,12 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	if (numEigs > 5)
 	{
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot
-		engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigFields_Ref','EigVec');");
-		engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigValues_Ref','EigVal');");
+		string refFile = "save('"+filename +"_eigFields','EigVec');";
+		string approxFile = "save('" + filename + "_eigValues','EigVal');";
+		engEvalString(ep, refFile.c_str());
+		engEvalString(ep, approxFile.c_str());
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigFields_Ref','EigVec');");
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigValues_Ref','EigVal');");
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect','EigVec');");
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal','EigVal');");
 	}
@@ -477,9 +481,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	mxDestroyArray(eigVecResult);
 	mxDestroyArray(nEigsBuff);
 
-	//engClose(ep);
-	
-
+	engClose(ep);
 
 /*
 	eigVal = nullptr; 

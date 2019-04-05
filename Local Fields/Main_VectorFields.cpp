@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 100;
+int numSample = 1000;
 int eigToShow2 = 0;
 int eigsToCompute = 50; 
 
@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -104,8 +105,8 @@ int main(int argc, char *argv[])
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_200dim";
-	//vectorFields.storeBasis(filename_basis);
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_Full_2000dim";
+	vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
@@ -117,9 +118,11 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	vectorFields.computeEigenFields(eigsToCompute);
+	string filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Full_1000";
+	vectorFields.computeEigenFields(eigsToCompute, filename_refField);
+	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Approx_1000";
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute);
+	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);
