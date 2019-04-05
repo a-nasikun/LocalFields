@@ -2100,7 +2100,7 @@ void VectorFields::constructBasis()
 
 	int id, tid, ntids, ipts, istart, iproc;
 		
-	//omp_set_num_threads(4);
+	omp_set_num_threads(4);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();

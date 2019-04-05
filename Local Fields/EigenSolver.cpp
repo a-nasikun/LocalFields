@@ -477,7 +477,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	mxDestroyArray(eigVecResult);
 	mxDestroyArray(nEigsBuff);
 
-	engClose(ep);
+	//engClose(ep);
 	
 
 
