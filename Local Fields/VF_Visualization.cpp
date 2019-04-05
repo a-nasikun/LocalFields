@@ -385,14 +385,14 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 		color2 = Eigen::RowVector3d(0.8, 0.8, 0.4);
 	}
 
-	if (id >= 2 * Sample.size()) {
-		bId = 2 * Sample.size() - 1;
-	}
+	//if (id >= 2 * Sample.size()) {
+	//	bId = 2 * Sample.size() - 1;
+	//}
 
 	
 
-	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
-	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+	//Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
+	//viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
 
 	//if (id < 2)
 	//{
@@ -747,8 +747,8 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 	Eigen::RowVector3d blue(0.1, 0.0, 0.9);
 
 	/* Visualizing the fields*/
-	//visualize2Dfields(viewer, eigfields, blue, 3, true);
-	visualize2Dfields(viewer, eigfields, purple, 3, false);
+	visualize2Dfields(viewer, eigfields, blue, 1, true);
+	//visualize2Dfields(viewer, eigfields, purple, 3, false);
 }
 
 void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i)

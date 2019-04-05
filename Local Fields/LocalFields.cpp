@@ -1142,15 +1142,7 @@ void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatr
 	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc, MF2DRed, SF2DRed;
 	Eigen::VectorXd eigValsLoc;
 	Eigen::MatrixXd EigVectLoc, eigTemp;
-	MF2DLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());	
-	vector<Eigen::Triplet<double>> MFTriplet;
-	MFTriplet.reserve(2 * LocalElements.size());
-
-	for (int i = 0; i < 2 * LocalElements.size(); i++)
-	{
-		MFTriplet.push_back(Eigen::Triplet<double>(i, i, 1));
-	}
-	//MF2DLoc.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
+	MF2DLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());		
 
 	obtainLocalMatrixPatch2D(MF2D, MF2DLoc);
 	obtainLocalMatrixPatch2D(SF2D, SF2DLoc);

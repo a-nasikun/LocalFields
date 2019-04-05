@@ -420,14 +420,19 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	}
 
 	// Start Matlab Engine
+	int *matlabStatus;
 	ep = engOpen(NULL);
 	if (!(ep = engOpen(""))) {
+	//ep = engOpenSingleUse(NULL, NULL, matlabStatus);
+	//if (!(ep = engOpenSingleUse(NULL, NULL, matlabStatus))) {
 		fprintf(stderr, "\nCan't start MATLAB engine\n");
 		cout << "CANNOT START MATLAB " << endl;
 	}
 	else {
 		//cout << "MATLAB STARTS. OH YEAH!!!" << endl;
 	}
+
+	cout << "Status => " << matlabStatus << endl; 
 
 	// Compute Eigenvalue in Matlab
 	int NUM_EIGEN = numEigs;
@@ -440,15 +445,17 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	if(numEigs>2)
+	if (numEigs > 5)
+	{
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot
+		engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigFields_Ref','EigVec');");
+		engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigValues_Ref','EigVal');");
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect','EigVec');");
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal','EigVal');");
+	}
 	t4 = chrono::high_resolution_clock::now();
 
-	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_LDEigVect_1000samples','EigVec');");
-	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_LDEigVal_1000samples','EigVal');");
-	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect','EigVec');");
-	//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal','EigVal');");
-
+	
 	result = engGetVariable(ep, "EigVal");
 	eigVal = (double*)malloc(NUM_EIGEN * sizeof(double));
 	memcpy((void *)eigVal, (void *)mxGetPr(result), NUM_EIGEN * sizeof(double));
@@ -463,4 +470,26 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	t2 = chrono::high_resolution_clock::now();
 	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
 	ts2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
+
+	mxDestroyArray(MM);
+	mxDestroyArray(MS);
+	mxDestroyArray(result);
+	mxDestroyArray(eigVecResult);
+	mxDestroyArray(nEigsBuff);
+
+	engClose(ep);
+	
+
+
+/*
+	eigVal = nullptr; 
+	eigVal = nullptr; 
+	eigVec = nullptr; 
+	srs    = nullptr;
+	irs    = nullptr;
+	jcs    = nullptr;
+	srm    = nullptr;
+	irm    = nullptr;
+	jcm    = nullptr;	
+*/
 }

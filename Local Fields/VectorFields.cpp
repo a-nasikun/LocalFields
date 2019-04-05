@@ -2072,7 +2072,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(2.5, 2) + pow(1.5, 2));
+	double	coef = sqrt(pow(1.5, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2100,7 +2100,7 @@ void VectorFields::constructBasis()
 
 	int id, tid, ntids, ipts, istart, iproc;
 		
-	omp_set_num_threads(1);
+	//omp_set_num_threads(4);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -2173,7 +2173,7 @@ void VectorFields::constructBasis()
 				t2 = chrono::high_resolution_clock::now();
 				durations[6] += t2 - t1;
 
-				localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
+				//localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
 
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
@@ -2181,11 +2181,7 @@ void VectorFields::constructBasis()
 			///localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[7] += t2 - t1;
-			//cout << "System " << id << " ( " << XfLoc.rows() << ") is solved." << endl; 
-			//printf("System %d (%d) is solved.\n", id, XfLoc.rows());
 
-			//printf("Dijkstra of id=%d\n", id);
-			//localField.measureXF(doubleArea, J);
 
 			if (id == 0)
 			{
@@ -2214,7 +2210,7 @@ void VectorFields::constructBasis()
 			}
 			
 			/* Localized eigenproblems */
-			if (id == 15)
+			//if (id == 15)
 			{
 				//Eigen::SparseMatrix<double> MTempStiff;
 				//localField.obtainLocalMatrixPatch2D(SF2D, MTempStiff);
@@ -2591,6 +2587,20 @@ void VectorFields::normalizeBasisAbs()
 	//	if (k % 2 == 1) continue; 
 	//}
 }
+
+void VectorFields::storeBasis(const string& filename)
+{
+	writeEigenSparseMatrixToBinary(Basis, filename);
+}
+
+void VectorFields::retrieveBasis(const string& filename)
+{
+	readEigenSparseMatrixFromBinary(filename, Basis);
+	printf("Basis size=%dx%d\n", Basis.rows(), Basis.cols());
+	cout << Basis.block(0, 0, 100, 15) << endl;
+}
+
+
 void VectorFields::setAndSolveUserSystem()
 {
 	// Declare function-scoped variables
@@ -3349,6 +3359,72 @@ void VectorFields::readMesh(const string &meshFile)
 	// Printing Mesh-related information
 	printf("....V=%dx%d\n", V.rows(), V.cols());
 	printf("....F=%dx%d\n", F.rows(), F.cols());
+}
+
+void VectorFields::scaleMesh()
+{
+	Eigen::RowVectorXd minV(V.rows(), 3);
+	Eigen::RowVectorXd maxV(V.rows(), 3);
+	Eigen::RowVector3d length;
+	Eigen::MatrixXd MatSubs(V.rows(), V.cols());
+	Eigen::MatrixXd MatAdd(V.rows(), V.cols());
+	double scaleFactor;
+
+	/* Get the min and max coefficients */
+	for (int i = 0; i < V.cols(); i++)
+	{
+		minV(i) = V.col(i).minCoeff();
+		maxV(i) = V.col(i).maxCoeff();
+		length(i) = maxV(i) - minV(i);
+	}
+
+	/* Creating the substraction matrices */
+	for (int i = 0; i < V.rows(); i++)
+	{
+		MatSubs.row(i) = minV;
+	}
+
+	scaleFactor = length.maxCoeff();
+	cout << "BEFORE Scaling\n";
+	cout << "Max coeff \n" << maxV << endl;
+	cout << "Min coeff \n" << minV << endl;
+	cout << "Scale factor: " << scaleFactor << endl; 	
+	
+
+	/* Translate to the Origin */
+	V = V - MatSubs;
+
+	/* Scale w.r.t the longest axis */
+	V = V * (1.0/scaleFactor);
+
+
+	for (int i = 0; i < V.cols(); i++)
+	{
+		maxV(i) = V.col(i).maxCoeff();
+	}
+
+	/* Creating the Addition matrices */
+	for (int i = 0; i < V.rows(); i++)
+	{
+		MatAdd.row(i) = 0.5*maxV;
+	}
+
+	/* Translate s.t. the center is in the Origin */
+	V = V - MatAdd;
+
+
+	for (int i = 0; i < V.cols(); i++)
+	{
+		minV(i) = V.col(i).minCoeff();
+		maxV(i) = V.col(i).maxCoeff();
+		length(i) = maxV(i) - minV(i);
+	}
+	scaleFactor = length.maxCoeff();
+
+	cout << "AFTER Scaling\n";
+	cout << "Max coeff \n" << maxV << endl;
+	cout << "Min coeff \n" << minV << endl;
+	cout << "Scale factor: " << scaleFactor << endl;
 }
 
 void VectorFields::readArrowMesh(const string &meshFile)
