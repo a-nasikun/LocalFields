@@ -747,7 +747,7 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 	Eigen::RowVector3d blue(0.1, 0.0, 0.9);
 
 	/* Visualizing the fields*/
-	visualize2Dfields(viewer, eigfields, blue, 1, true);
+	visualize2Dfields(viewer, eigfields, blue, 3, true);
 	//visualize2Dfields(viewer, eigfields, purple, 3, false);
 }
 
@@ -779,8 +779,8 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	Eigen::RowVector3d purple(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0);
 	Eigen::RowVector3d red(0.9, 0.1, 0.1);	
 	
-	visualize2Dfields(viewer, eigfields, red, 3, false);
-	//visualize2Dfields(viewer, eigfields, red, 3, true);
+	//visualize2Dfields(viewer, eigfields, red, 3, false);
+	visualize2Dfields(viewer, eigfields, red, 3, true);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

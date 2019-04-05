@@ -2072,7 +2072,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.5, 2) + pow(1.5, 2));
+	double	coef = sqrt(pow(2, 2) + pow(2, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2597,7 +2597,6 @@ void VectorFields::retrieveBasis(const string& filename)
 {
 	readEigenSparseMatrixFromBinary(filename, Basis);
 	printf("Basis size=%dx%d\n", Basis.rows(), Basis.cols());
-	cout << Basis.block(0, 0, 100, 15) << endl;
 }
 
 
