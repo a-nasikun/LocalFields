@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Fertility/Fertility.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Fertility/Fertility.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(5000);
+	vectorFields.selectFaceToDraw(10000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	vectorFields.constructGradient3D();
 	vectorFields.constructStiffnessMatrices();
 	//vectorFields.loadStiffnessMatrices();
-	vectorFields.constructMatrixB();
+	//vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
 
@@ -103,11 +103,11 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_Full_2000dim";
-	vectorFields.storeBasis(filename_basis);
+	//vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
@@ -119,11 +119,11 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	//string filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Fertility_Full_1000";
-	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);
-	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Fertility_Approx_1000";
+	string filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kiten_Full_500";
+	vectorFields.computeEigenFields(eigsToCompute, filename_refField);
+	//string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Fertility_Approx_1000";
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
+	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);

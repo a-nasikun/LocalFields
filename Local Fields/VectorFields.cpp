@@ -2891,7 +2891,7 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
+	cout << "____Computing the eigenproblem in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::retrieveApproxEigenFields() 
@@ -3358,6 +3358,11 @@ void VectorFields::readMesh(const string &meshFile)
 	// Printing Mesh-related information
 	printf("....V=%dx%d\n", V.rows(), V.cols());
 	printf("....F=%dx%d\n", F.rows(), F.cols());
+
+	igl::edges(F, E);
+	const int genus = (2 - V.rows() + E.rows() - F.rows()) / 2;
+	printf("This model is of genus %d\n", genus);
+
 }
 
 void VectorFields::scaleMesh()
@@ -3384,10 +3389,10 @@ void VectorFields::scaleMesh()
 	}
 
 	scaleFactor = length.maxCoeff();
-	cout << "BEFORE Scaling\n";
-	cout << "Max coeff \n" << maxV << endl;
-	cout << "Min coeff \n" << minV << endl;
-	cout << "Scale factor: " << scaleFactor << endl; 	
+	//cout << "BEFORE Scaling\n";
+	//cout << "Max coeff \n" << maxV << endl;
+	//cout << "Min coeff \n" << minV << endl;
+	//cout << "Scale factor: " << scaleFactor << endl; 	
 	
 
 	/* Translate to the Origin */
@@ -3420,10 +3425,10 @@ void VectorFields::scaleMesh()
 	}
 	scaleFactor = length.maxCoeff();
 
-	cout << "AFTER Scaling\n";
-	cout << "Max coeff \n" << maxV << endl;
-	cout << "Min coeff \n" << minV << endl;
-	cout << "Scale factor: " << scaleFactor << endl;
+	//cout << "AFTER Scaling\n";
+	//cout << "Max coeff \n" << maxV << endl;
+	//cout << "Min coeff \n" << minV << endl;
+	//cout << "Scale factor: " << scaleFactor << endl;
 }
 
 void VectorFields::readArrowMesh(const string &meshFile)
