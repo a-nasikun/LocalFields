@@ -740,9 +740,9 @@ void VectorFields::constructStiffnessMatrices()
 	/* Checking Laplacian *
 	*  Compared to Christopher's Matrix */
 	//constructStiffnessMatrixDivPart3D_Implicit(LapDiv3DAsym);
-	printf("Conform Div=%dx%d, non-Conforming Curl=%dx%d\n", LapDiv3D_Conform.rows(), LapDiv3D_Conform.cols(), LapCurl3D_NonConform.rows(), LapCurl3D_NonConform.cols());
-	SF = LapCurl3D_NonConform + LapDiv3D_Conform;	
-	Lap3D = MF3Dinv * SF;
+	//printf("Conform Div=%dx%d, non-Conforming Curl=%dx%d\n", LapDiv3D_Conform.rows(), LapDiv3D_Conform.cols(), LapCurl3D_NonConform.rows(), LapCurl3D_NonConform.cols());
+	//SF = LapCurl3D_NonConform + LapDiv3D_Conform;	
+	//Lap3D = MF3Dinv * SF;
 	//WriteSparseMatrixToMatlab(Lap3D, "Hello");
 
 	constructStiffnessMatrixSF2DAsym(LapCurl3D_NonConform, LapDiv3D_Conform);
@@ -924,7 +924,7 @@ void VectorFields::constructStiffnessMatrixCurlPart3D_NonConform(Eigen::SparseMa
 				Eigen::Matrix3d		block = (-3.0 / area) * edge * edge.transpose();
 
 				/* For testing only*/
-				if (i == 0) cout << "****First block: \n" << block << endl; 
+				//if (i == 0) cout << "****First block: \n" << block << endl; 
 
 				// ITS BLOCK
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * neigh + 0, block(0, 0)));	// row 1

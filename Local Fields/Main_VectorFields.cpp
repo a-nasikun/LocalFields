@@ -6,7 +6,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
-int eigsToCompute = 3; 
+int eigsToCompute = 500; 
 
 int main(int argc, char *argv[])
 {
@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Fertility/Fertility.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(5000);
+	vectorFields.selectFaceToDraw(10000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 	vectorFields.constructGradient3D();
 	vectorFields.constructStiffnessMatrices();
 	//vectorFields.loadStiffnessMatrices();
-	//vectorFields.constructMatrixB();
+	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
 
@@ -102,11 +102,11 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Armadillo_2000dim";
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000dim_33sup_asym";
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();	
-	//vectorFields.storeBasis(filename_basis);
+	vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
@@ -118,9 +118,9 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	string    filename_refField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_2_Full";
-	string filename_approxField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_2_Approx";
-	vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
+	string    filename_refField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Full";
+	string filename_approxField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Approx_2000dim_33sup";
+	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields();
 	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
@@ -224,7 +224,8 @@ int main(int argc, char *argv[])
 			break;
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
+			vectorFields.visualizeUserConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;
@@ -401,15 +402,15 @@ int main(int argc, char *argv[])
 				/* UPdating the mesh information */
 				viewer.data().clear();
 				viewer.data().set_mesh(V, F);
-				cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				vectorFields.setupGlobalProblem();			
-				vectorFields.visualizeApproximatedFields(viewer);
-				vectorFields.visualizeGlobalConstraints(viewer);
-				vectorFields.visualizeAreaOfLaplaceConstraint(viewer);
-				//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				//vectorFields.setAndSolveUserSystem();
-				//vectorFields.visualizeApproxResult(viewer);
+				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				//vectorFields.setupGlobalProblem();			
+				//vectorFields.visualizeApproximatedFields(viewer);
 				//vectorFields.visualizeGlobalConstraints(viewer);
+				//vectorFields.visualizeAreaOfLaplaceConstraint(viewer);
+				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				vectorFields.setAndSolveUserSystem();
+				vectorFields.visualizeApproxResult(viewer);
+				vectorFields.visualizeUserConstraints(viewer);
 
 				ChosenFaces.clear();
 				//cout << "Hello there\n";

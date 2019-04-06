@@ -133,7 +133,7 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
 
-	visualize2Dfields(viewer, Xf, color, 1.0, false);
+	visualize2Dfields(viewer, Xf, color, 2.0, false);
 	//visualize2Dfields(viewer, Xf, color, 2.0, true);
 }
 
@@ -428,11 +428,10 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	Eigen::RowVector3d color;	
 	color = Eigen::RowVector3d(0.9, 0.1, 0.1);
 
-	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl; 
-	//visualize2DfieldsNormalized(viewer, XFullDim, color, 5000);
-	//visualize2DfieldsScaled(viewer, XFullDim, color, 5);
-	visualize2Dfields(viewer, XFullDim, color, 2.5, false);
-	cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
+	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
+	visualize2Dfields(viewer, XFullDim, color, 2, false);
+	//visualize2Dfields(viewer, XFullDim, color, 2, true);
+	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 
 void VectorFields::visualizeUserConstraints(igl::opengl::glfw::Viewer &viewer)

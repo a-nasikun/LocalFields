@@ -19,8 +19,8 @@ void VectorFields::constructConstraints()
 	//constructSpecifiedHardConstraints();
 	//constructRandomHardConstraints();
 	//constructSoftConstraints();
-	//constructInteractiveConstraints();
-	constructInteractiveConstraintsWithLaplacian();
+	constructInteractiveConstraints();
+	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
 	//constructHardConstraintsWithSingularities();
@@ -2072,7 +2072,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(2.5, 2) + pow(2.5, 2));
+	double	coef = sqrt(pow(2.0, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2596,7 +2596,10 @@ void VectorFields::storeBasis(const string& filename)
 void VectorFields::retrieveBasis(const string& filename)
 {
 	readEigenSparseMatrixFromBinary(filename, Basis);
-	printf("Basis size=%dx%d\n", Basis.rows(), Basis.cols());
+
+	//BasisTemp = Basis; 
+	//normalizeBasisAbs();
+	printf("Basis size=%dx%d (nnz=%.4f)\n", Basis.rows(), Basis.cols(), (double)Basis.nonZeros()/(double)Basis.rows());
 }
 
 
@@ -2903,14 +2906,24 @@ void VectorFields::retrieveApproxEigenFields()
 
 void VectorFields::measureApproxAccuracyL2Norm()
 {
+	/* Normalizing the fields on each patch */
+	Eigen::Vector2d xfRef2, xfApp2;
+	for (int i = 0; i < F.rows(); i++)
+	{
+		xfRef2 = Xf.block(2 * i, 0, 2, 1); xfRef2.normalize();
+		Xf.block(2 * i, 0, 2, 1) = xfRef2;
+		xfApp2 = XFullDim.block(2 * i, 0, 2, 1); xfApp2.normalize();
+		XFullDim.block(2 * i, 0, 2, 1) = xfApp2;
+	}
+
 	Eigen::VectorXd diffV = Xf - XFullDim;
 	double xf = Xf.transpose() * MF2D * Xf;
 	double diff = diffV.transpose() * MF2D * diffV;
 	const double L2norm = sqrt(diff / xf);
 
-	printf("Diff 0 = %.10f (%.4f / %.4f) \n", L2norm, diff, xf); 	
+	printf("L2norm 0 = %.10f (%.4f / %.4f) \n", L2norm, diff, xf); 	
 	printf("Max Error = %.3f \n", diffV.maxCoeff() / xf);
-	printf("MSE = %.3f \n", (diffV.sum()/diffV.size()) / xf);
+	//printf("MSE = %.3f \n", (diffV.sum()/diffV.size()) / xf);
 }
 
 void VectorFields::measureDirichletEnergy()

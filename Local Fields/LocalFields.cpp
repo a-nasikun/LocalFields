@@ -1153,6 +1153,7 @@ void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatr
 
 	/* Getting the eigenfields*/
 	computeEigenMatlab(SF2DRed, MF2DRed, 2, eigTemp, eigValsLoc, "hello");
+	//cusolverDnHandle_t	cusolverH;
 	//computeEigenGPU(SF2DRed, MF2DRed, eigTemp, eigValsLoc);
 	//cout << "ID=" << id << ", eig vals=\n" << eigValsLoc << endl; 
 	EigVectLoc = SelectorA.transpose() * eigTemp;
