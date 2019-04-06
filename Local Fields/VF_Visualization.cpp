@@ -747,11 +747,11 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 	Eigen::RowVector3d blue(0.1, 0.0, 0.9);
 
 	/* Visualizing the fields*/
-	visualize2Dfields(viewer, eigfields, blue, 3, true);
-	//visualize2Dfields(viewer, eigfields, purple, 3, false);
+	//visualize2Dfields(viewer, eigfields, blue, 3, true);
+	visualize2Dfields(viewer, eigfields, purple, 3, false);
 }
 
-void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i)
+void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i, int iRef)
 {
 	Eigen::VectorXd eigfields = Basis*eigFieldReduced2D.col(i);
 	double l2norm = eigfields.transpose()*MF2D*eigfields;
@@ -761,12 +761,12 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	/* Inverse the sign to match the reference */
 	if (eigFieldFull2D.size() > 0)
 	{
-		if ((eigfields.transpose()*MF2D*eigFieldFull2D.col(i)) < 0) eigfields *= -1; 
+		if ((eigfields.transpose()*MF2D*eigFieldFull2D.col(iRef)) < 0) eigfields *= -1; 
 
 		/* Computing the L2norm error */	
-		Eigen::VectorXd diff = eigFieldFull2D.col(i) - eigfields;
+		Eigen::VectorXd diff = eigFieldFull2D.col(iRef) - eigfields;
 		double norm1 = diff.transpose()*MF2D*diff;
-		double norm2 = eigFieldFull2D.col(i).transpose()*MF2D*eigFieldFull2D.col(i);
+		double norm2 = eigFieldFull2D.col(iRef).transpose()*MF2D*eigFieldFull2D.col(iRef);
 		l2norm = sqrt(norm1 / norm2);
 		printf("L2 norm of %d approx is: %.5f\n", i, l2norm);
 	}
@@ -779,8 +779,8 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	Eigen::RowVector3d purple(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0);
 	Eigen::RowVector3d red(0.9, 0.1, 0.1);	
 	
-	//visualize2Dfields(viewer, eigfields, red, 3, false);
-	visualize2Dfields(viewer, eigfields, red, 3, true);
+	visualize2Dfields(viewer, eigfields, red, 3, false);
+	//visualize2Dfields(viewer, eigfields, red, 3, true);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

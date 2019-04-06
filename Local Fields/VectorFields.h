@@ -214,7 +214,7 @@ public:
 	//void visualizeNeighboringRings(igl::opengl::glfw::Viewer &viewer);
 	void visualizeDijkstra(igl::opengl::glfw::Viewer &viewer);
 	void visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i);
-	void visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i);
+	void visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i, int iRef);
 	void visualizeArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID);
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);

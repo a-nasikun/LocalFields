@@ -751,6 +751,12 @@ void VectorFields::constructStiffnessMatrices()
 	duration = t2 - t1;
 	cout << "..in total of" << duration.count() << " seconds" << endl;
 
+	/* Store matrix to matlab*/
+	//string  file_massmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Mass";
+	//string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Stiff";
+	//WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix);
+	//WriteSparseMatrixToMatlab(MF2D, file_massmatrix);
+
 }
 
 void VectorFields::loadStiffnessMatrices()

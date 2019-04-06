@@ -2072,7 +2072,7 @@ void VectorFields::constructBasis()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(2, 2) + pow(2, 2));
+	double	coef = sqrt(pow(2.5, 2) + pow(2.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2896,7 +2896,7 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 
 void VectorFields::retrieveApproxEigenFields() 
 {
-	ReadSparseMatrixFromMatlab(Basis, "Hello");
+	//ReadSparseMatrixFromMatlab(Basis, "Hello");
 	ReadDenseMatrixFromMatlab(eigFieldReduced2D, "Hello");
 	ReadVectorFromMatlab(eigValuesReduced, "hello");
 }

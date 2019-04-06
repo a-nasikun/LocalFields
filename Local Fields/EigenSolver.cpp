@@ -445,13 +445,16 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	if (numEigs > 5)
+	if (numEigs > 2)
 	{
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot
 		string refFile = "save('"+filename +"_eigFields','EigVec');";
 		string approxFile = "save('" + filename + "_eigValues','EigVal');";
-		engEvalString(ep, refFile.c_str());
-		engEvalString(ep, approxFile.c_str());
+		//engEvalString(ep, refFile.c_str());
+		//engEvalString(ep, approxFile.c_str());
+		
+		
+		
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigFields_Ref','EigVec');");
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigValues_Ref','EigVal');");
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect','EigVec');");
