@@ -274,7 +274,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 {	
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 1.0;
+	const double EDGE_RATIO = 0.1;
 
 	/*Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);

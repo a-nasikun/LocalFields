@@ -1147,6 +1147,11 @@ void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatr
 	obtainLocalMatrixPatch2D(MF2D, MF2DLoc);
 	obtainLocalMatrixPatch2D(SF2D, SF2DLoc);
 
+	if (id == 0)
+	{
+		visualizeSparseMatrixInMatlab(MF2DLoc);
+	}
+
 	/* Reduced matrices */
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
