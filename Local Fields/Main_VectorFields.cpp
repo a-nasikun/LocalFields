@@ -11,7 +11,7 @@ int eigsToCompute = 500;
 int main(int argc, char *argv[])
 {
 	/* TEST MATLAB DATA C++ */
-	evalSurfaceGraph();
+	//evalSurfaceGraph();
 
 	bool selectFace = false;
 	Eigen::MatrixXd C;
@@ -87,30 +87,30 @@ int main(int argc, char *argv[])
 	viewer.data().show_lines = false; 
 	viewer.selected_data_index = 0; 
 
-	/////* MATRIX CONSTRUCTIONS */
-	////vectorFields.constructMassMatrices();
-	////vectorFields.constructRotationMatrix();
-	////vectorFields.constructMappingMatrix();
-	////
-	/////* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	////vectorFields.constructGradient3D();
-	////vectorFields.constructStiffnessMatrices();
-	//////vectorFields.loadStiffnessMatrices();
-	////vectorFields.constructMatrixB();
-	//////vectorFields.constructConstraints();
-	//////vectorFields.checkB2DStructure();
-	////
-	/////* ====================== GLOBAL PROBLEM ====================*/
-	//////cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//////vectorFields.setupGlobalProblem();
-	////
-	/////* ====================== LOCAL ELEMENTS ====================*/
-	//////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000dim_33sup_asym";
-	//////cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	////vectorFields.constructSamples(numSample);
-	////vectorFields.constructBasis();	
+	/* MATRIX CONSTRUCTIONS */
+	vectorFields.constructMassMatrices();
+	vectorFields.constructRotationMatrix();
+	vectorFields.constructMappingMatrix();
+	
+	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
+	vectorFields.constructGradient3D();
+	vectorFields.constructStiffnessMatrices();
+	//vectorFields.loadStiffnessMatrices();
+	vectorFields.constructMatrixB();
+	//vectorFields.constructConstraints();
+	//vectorFields.checkB2DStructure();
+	
+	/* ====================== GLOBAL PROBLEM ====================*/
+	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//vectorFields.setupGlobalProblem();
+	
+	/* ====================== LOCAL ELEMENTS ====================*/
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Armadillo_2000dim_34sup_asym";
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);
-	//vectorFields.retrieveBasis(filename_basis);
+	vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
@@ -139,12 +139,13 @@ int main(int argc, char *argv[])
 	//double error; 
 	//vectorFields.testBasis_NoRegularizer(error);
 	//vectorFields.testBasis_WithRegularizer();
-	//vectorFields.projectionTest();
+	vectorFields.projectionTest();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualizeApproximatedFields(viewer);	
-	//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
-	//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+	vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
+	vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
+	
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.measureDirichletEnergy();
 
@@ -203,7 +204,7 @@ int main(int argc, char *argv[])
 
 
 	/* FOR GENERATING IMAGES on PAPER */
-	vectorFields.visualizeSubdomain(viewer);
+	//vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
 	//vectorFields.visualizeSamples(viewer);
 
@@ -219,6 +220,15 @@ int main(int argc, char *argv[])
 
 		switch (key)
 		{
+		case '-':
+			vectorFields.projectionTest();
+			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+			break;
+		case '`':
+			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);		
+			vectorFields.visualizeGlobalConstraints(viewer); 
+			break;
+
 		case '1':
 			//vectorFields.visualizeSubdomain(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			

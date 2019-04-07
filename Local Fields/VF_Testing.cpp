@@ -156,6 +156,8 @@ void VectorFields::testBasis_WithRegularizer(double &error)
 	double length1 = wRef.transpose()*MF2D*wRef;
 	double length2 = wApp.transpose()*MF2D*wApp;
 	cout << "[LENGTH] => Ref=" << length1 << ", Approx:" << length2 << endl;
+
+	wb = wApp;
 }
 
 void VectorFields::testBasis_WithRegularizer()
@@ -241,8 +243,8 @@ void VectorFields::projectionTest()
 		setupGlobalProblem();
 
 		/* Projection to the subspace */
-		testBasis_NoRegularizer(errors(i));
-		//testBasis_WithRegularizer(errors(i));
+		//testBasis_NoRegularizer(errors(i));
+		testBasis_WithRegularizer(errors(i));
 		//testBasis_WithRegularizer();
 
 		t2 = chrono::high_resolution_clock::now();

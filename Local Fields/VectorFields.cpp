@@ -17,9 +17,9 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	//constructRandomHardConstraints();
+	constructRandomHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();
+	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
@@ -126,9 +126,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 		constraints.insert(maxIndex);
 		curPoint = maxIndex;
 	} while (constraints.size() < numConstraints);
-
 	
-
 	int counter1 = 0;
 	for (int i : constraints) {
 		globalConstraints[counter1++] = i;
