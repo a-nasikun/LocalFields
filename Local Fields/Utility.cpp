@@ -448,3 +448,9 @@ void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M)
 	Eigen::SparseMatrix<double> K;
 }
 
+void evalSurfaceGraph() {
+	using namespace matlab::engine;
+
+	// Start MATLAB engine synchronously
+	std::unique_ptr<MATLABEngine> matlabPtr = startMATLAB();
+}

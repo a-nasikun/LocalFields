@@ -10,6 +10,9 @@ int eigsToCompute = 500;
 
 int main(int argc, char *argv[])
 {
+	/* TEST MATLAB DATA C++ */
+	evalSurfaceGraph();
+
 	bool selectFace = false;
 	Eigen::MatrixXd C;
 
@@ -84,28 +87,28 @@ int main(int argc, char *argv[])
 	viewer.data().show_lines = false; 
 	viewer.selected_data_index = 0; 
 
-	/* MATRIX CONSTRUCTIONS */
-	vectorFields.constructMassMatrices();
-	vectorFields.constructRotationMatrix();
-	vectorFields.constructMappingMatrix();
-	
-	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	vectorFields.constructGradient3D();
-	vectorFields.constructStiffnessMatrices();
-	//vectorFields.loadStiffnessMatrices();
-	vectorFields.constructMatrixB();
-	//vectorFields.constructConstraints();
-	//vectorFields.checkB2DStructure();
-
-	/* ====================== GLOBAL PROBLEM ====================*/
-	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
-	
-	/* ====================== LOCAL ELEMENTS ====================*/
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000dim_33sup_asym";
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();	
+	/////* MATRIX CONSTRUCTIONS */
+	////vectorFields.constructMassMatrices();
+	////vectorFields.constructRotationMatrix();
+	////vectorFields.constructMappingMatrix();
+	////
+	/////* =========== Test on PROBLEM SOLVING-related functionalities ================*/
+	////vectorFields.constructGradient3D();
+	////vectorFields.constructStiffnessMatrices();
+	//////vectorFields.loadStiffnessMatrices();
+	////vectorFields.constructMatrixB();
+	//////vectorFields.constructConstraints();
+	//////vectorFields.checkB2DStructure();
+	////
+	/////* ====================== GLOBAL PROBLEM ====================*/
+	//////cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//////vectorFields.setupGlobalProblem();
+	////
+	/////* ====================== LOCAL ELEMENTS ====================*/
+	//////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000dim_33sup_asym";
+	//////cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	////vectorFields.constructSamples(numSample);
+	////vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();

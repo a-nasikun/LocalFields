@@ -87,5 +87,11 @@ void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseM
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
 
 
+//#include "MatlabDataArray.hpp"
+//#include "MatlabEngine.hpp"
+//#include <iostream>
+
+void evalSurfaceGraph();
+
 #endif // !UTILITY_H
 
