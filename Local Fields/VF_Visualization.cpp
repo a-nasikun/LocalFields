@@ -274,7 +274,7 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 {	
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 0.1;
+	const double EDGE_RATIO = 0.075;
 
 	/*Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -813,21 +813,46 @@ void VectorFields::visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::VectorXd dom(F.rows());
-	for (int i = 0; i < F.rows(); i++) dom(i) = 0.0;
-
-	for (std::set<int>::iterator it = SubDomain.begin(); it != SubDomain.end(); ++it) {
-		dom(*it) = 0.3;
-		if (*it == Sample[0]) dom(*it) = 1.0;
-	}
-
-	for (std::set<int>::iterator it = Boundary.begin(); it != Boundary.end(); ++it) {
-		dom(*it) = 0.7;
-	}
+	/* Color map => JET */
+	//Eigen::VectorXd dom(F.rows());
+	//for (int i = 0; i < F.rows(); i++) dom(i) = 0.0;
+	//
+	//for (std::set<int>::iterator it = SubDomain.begin(); it != SubDomain.end(); ++it) {
+	//	dom(*it) = 0.3;
+	//	if (*it == Sample[0]) dom(*it) = 1.0;
+	//}
+	//
+	//for (std::set<int>::iterator it = Boundary.begin(); it != Boundary.end(); ++it) {
+	//	dom(*it) = 0.7;
+	//}
 
 
 	Eigen::MatrixXd vColor;
-	igl::jet(dom, true, vColor);
+	//igl::jet(dom, true, vColor);
+	//igl::jet(localSystem, false, vColor);
+
+	/* My Own */
+	vColor.resize(F.rows(), 3);
+	// 0:background => eeeeee; 0.3:selected region; 0.7:boundary
+	for (int i = 0; i < F.rows(); i++)
+	{
+		if (localSystem(i) < 0.1)
+		{
+			vColor.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+		}
+		else if (localSystem(i) > 0.6)
+		{
+			vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
+		}
+		else
+		{
+			//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
+			//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
+			vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);
+			
+		}
+	}
+
 	viewer.data().set_colors(vColor);
 }
 

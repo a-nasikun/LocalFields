@@ -2096,6 +2096,13 @@ void VectorFields::constructBasis()
 		//cout << "Init dur " << i<< " = " << durations[i].count() << " seconds" << endl;
 	}
 
+	/* Default color for the domain selected */
+	localSystem.resize(F.rows());
+	for (int fid = 0; fid < F.rows(); fid++) {
+		//localSystem(fid) = 1-0.3725;
+		localSystem(fid) = 0;
+	}
+
 	int id, tid, ntids, ipts, istart, iproc;
 		
 	omp_set_num_threads(1);
@@ -2106,8 +2113,8 @@ void VectorFields::constructBasis()
 		tid = omp_get_thread_num();
 		ntids = omp_get_num_threads();
 		//ntids = 2; 
-		//ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
-		ipts = (int)ceil(1.00*(double)ntids / (double)ntids);
+		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		//ipts = (int)ceil(1.00*(double)ntids / (double)ntids);
 		istart = tid * ipts;
 		//if (tid == ntids - 1) ipts = Sample.size() - istart;
 		if (ipts <= 0) ipts = 0;
@@ -2124,7 +2131,8 @@ void VectorFields::constructBasis()
 		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
 
 		// Computing the values of each element
-		for (id = istart; id < (istart + ipts); id++) {
+		//for (id = istart; id < (istart + ipts); id++) {
+		for (id = istart; id < (istart + ipts) && id < 50; id++) {		
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
@@ -2190,11 +2198,9 @@ void VectorFields::constructBasis()
 			}
 			
 			// To get local elements for visualizing subdomain
-			if (id == 0) {
-				localSystem.resize(F.rows());
-				for (int fid = 0; fid < F.rows(); fid++) {
-					localSystem(fid) = 0.0;
-				}
+			if (id == 0 || id == 46) {
+				cout << "Getting element of ID " << id << endl; 
+				
 				for (int fid : localField.SubDomain) {
 					localSystem(fid) = 0.3;
 				}
@@ -2203,7 +2209,7 @@ void VectorFields::constructBasis()
 					localSystem(fid) = 0.7;
 				}
 			
-				localSystem(localField.sampleID) = 1.0;
+				//localSystem(localField.sampleID) = 1.0;
 			
 				
 			}

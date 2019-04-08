@@ -3,7 +3,7 @@
 
 #include "TestSolver.h"
 
-int eigToShow = 0, basisId = 0, selectedVertex;
+int eigToShow = 0, basisId = 46*2, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
@@ -105,12 +105,12 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Armadillo_2000dim_34sup_asym";
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();	
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Armadillo_2000dim_34sup_asym2";
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);
-	vectorFields.retrieveBasis(filename_basis);
+	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
@@ -139,11 +139,11 @@ int main(int argc, char *argv[])
 	//double error; 
 	//vectorFields.testBasis_NoRegularizer(error);
 	//vectorFields.testBasis_WithRegularizer();
-	vectorFields.projectionTest();
+	//vectorFields.projectionTest();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualizeApproximatedFields(viewer);	
-	vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
-	vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+	//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
+	//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
 	
 	//vectorFields.visualizeGlobalConstraints(viewer);
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
 
 
 	/* FOR GENERATING IMAGES on PAPER */
-	//vectorFields.visualizeSubdomain(viewer);
+	vectorFields.visualizeSubdomain(viewer);
 	bool evenSpaceField = true; 
 	//vectorFields.visualizeSamples(viewer);
 
@@ -225,10 +225,10 @@ int main(int argc, char *argv[])
 			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 			break;
 		case '`':
-			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);		
-			vectorFields.visualizeGlobalConstraints(viewer); 
+			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);		
+			//vectorFields.visualizeGlobalConstraints(viewer); 
+			vectorFields.visualizeSubdomain(viewer);
 			break;
-
 		case '1':
 			//vectorFields.visualizeSubdomain(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.5f; 
+	viewer.data().line_width = 2.5f; 
 
 	return viewer.launch();
 }
