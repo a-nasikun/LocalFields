@@ -150,8 +150,12 @@ public:
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
 	void farthestPointSampling();
-	void constructBasis();	
-	void constructBasis_GradOfLocalFunction();
+	void constructBasis();
+	void constructBasis_LocalEigenProblem();
+	void constructBasis_OptProblem();
+	void constructBasis_LocalEigenProblem10();
+	void constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions);
+	void constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions);
 	void constructBasisEigenVects();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
 	void normalizeBasis();

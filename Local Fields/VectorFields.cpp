@@ -2064,6 +2064,18 @@ void VectorFields::farthestPointSampling()
 
 void VectorFields::constructBasis()
 {
+	// Select the types of basis construction
+	Eigen::SparseMatrix<double> BasisFunctions;
+
+	//constructBasis_LocalEigenProblem();
+	//constructBasis_OptProblem();
+	//constructBasis_LocalEigenProblem10();
+	//constructBasis_GradOfLocalFunction(BasisFunctions);
+	constructBasis_EigenPatch(BasisFunctions);
+}
+
+void VectorFields::constructBasis_LocalEigenProblem()
+{
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
@@ -2071,7 +2083,7 @@ void VectorFields::constructBasis()
 	cout << "> Constructing Basis...\n";
 
 	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
-	double distRatio = coef * sqrt((double)V.rows() / (double) Sample.size());
+	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
 	try {
@@ -2104,7 +2116,7 @@ void VectorFields::constructBasis()
 	}
 
 	int id, tid, ntids, ipts, istart, iproc;
-		
+
 	omp_set_num_threads(1);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
@@ -2132,7 +2144,7 @@ void VectorFields::constructBasis()
 
 		// Computing the values of each element
 		//for (id = istart; id < (istart + ipts); id++) {
-		for (id = istart; id < (istart + ipts) && id < 50; id++) {		
+		for (id = istart; id < (istart + ipts) && id < 50; id++) {
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
@@ -2151,36 +2163,36 @@ void VectorFields::constructBasis()
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalElements(F);
 
-				t2 = chrono::high_resolution_clock::now();
-				durations[2] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[2] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
-				//localField.constructMatrixBLocal(B2D);
-				//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-				///localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
-				t2 = chrono::high_resolution_clock::now();
-				durations[3] += t2 - t1;
+			t1 = chrono::high_resolution_clock::now();
+			//localField.constructMatrixBLocal(B2D);
+			//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
+			///localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
+			t2 = chrono::high_resolution_clock::now();
+			durations[3] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
-				//localField.constructLocalConstraints();
-				//localField.constructLocalConstraints(C1Triplet, C2Triplet);
-				//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF2Ring, SF2D, C1Triplet, C2Triplet);
-				///localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
-				t2 = chrono::high_resolution_clock::now();
-				durations[4] += t2 - t1;
+			t1 = chrono::high_resolution_clock::now();
+			//localField.constructLocalConstraints();
+			//localField.constructLocalConstraints(C1Triplet, C2Triplet);
+			//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF2Ring, SF2D, C1Triplet, C2Triplet);
+			///localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
+			t2 = chrono::high_resolution_clock::now();
+			durations[4] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
+			t1 = chrono::high_resolution_clock::now();
 			///localField.setupRHSLocalProblemMapped();
-				t2 = chrono::high_resolution_clock::now();
-				durations[5] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[5] += t2 - t1;
 
-				t1 = chrono::high_resolution_clock::now();
-				//localField.setupLHSLocalProblemMapped();
+			t1 = chrono::high_resolution_clock::now();
+			//localField.setupLHSLocalProblemMapped();
 			///localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
-				t2 = chrono::high_resolution_clock::now();
-				durations[6] += t2 - t1;
+			t2 = chrono::high_resolution_clock::now();
+			durations[6] += t2 - t1;
 
-				//localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
+			//localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
 
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
@@ -2196,24 +2208,24 @@ void VectorFields::constructBasis()
 				Boundary = localField.Boundary;
 				//patchDijkstraDist = localField.dijksFaceDistMapped;
 			}
-			
+
 			// To get local elements for visualizing subdomain
 			if (id == 0 || id == 46) {
-				cout << "Getting element of ID " << id << endl; 
-				
+				cout << "Getting element of ID " << id << endl;
+
 				for (int fid : localField.SubDomain) {
 					localSystem(fid) = 0.3;
 				}
-			
+
 				for (int fid : localField.Boundary) {
 					localSystem(fid) = 0.7;
 				}
-			
+
 				//localSystem(localField.sampleID) = 1.0;
-			
-				
+
+
 			}
-			
+
 			/* Localized eigenproblems */
 			//if (id == 15)
 			{
@@ -2240,7 +2252,7 @@ void VectorFields::constructBasis()
 	cout << "....Partition of unity of the basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	Basis = BasisTemp; 
+	Basis = BasisTemp;
 	//normalizeBasis();
 	//normalizeBasisAbs();
 
@@ -2253,8 +2265,8 @@ void VectorFields::constructBasis()
 	cout << "..in Total of " << duration.count() << " seconds" << endl;
 
 	//for (int i = 0; i < NUM_PROCESS; i++) {
-		//printf("Process %d takes %.8f seconds.\n", i, durations[i].count());
-		//cout << "BasisTemp matrix is normalized in " << duration.count() << " seconds" << endl;
+	//printf("Process %d takes %.8f seconds.\n", i, durations[i].count());
+	//cout << "BasisTemp matrix is normalized in " << duration.count() << " seconds" << endl;
 	//}
 
 	// Information about the process timing
@@ -2272,14 +2284,226 @@ void VectorFields::constructBasis()
 	printf("> Basis Structure information \n");
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
 	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
-
 }
 
-void VectorFields::constructBasis_GradOfLocalFunction()
+void VectorFields::constructBasis_OptProblem()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Constructing Basis...\n";
+
+	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
+
+	// Setup sizes of each element to construct basis
+	try {
+		BasisTemp.resize(2 * F.rows(), 2 * Sample.size());
+	}
+	catch (string &msg) {
+		cout << "Cannot allocate memory for basis.." << endl;
+	}
+
+	Basis.resize(BasisTemp.rows(), BasisTemp.cols());
+	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
+
+	/* Set-UP Laplace Matrix */
+	Eigen::SparseMatrix<double> LapForBasis = MF2Dinv * SF2DAsym;
+
+	cout << "....Constructing and solving local systems...";
+	const int NUM_PROCESS = 8;
+	durations.resize(NUM_PROCESS);
+
+	for (int i = 0; i < NUM_PROCESS; i++) {
+		durations[i] = t1 - t1;
+		//cout << "Init dur " << i<< " = " << durations[i].count() << " seconds" << endl;
+	}
+
+	/* Default color for the domain selected */
+	localSystem.resize(F.rows());
+	for (int fid = 0; fid < F.rows(); fid++) {
+		//localSystem(fid) = 1-0.3725;
+		localSystem(fid) = 0;
+	}
+
+	int id, tid, ntids, ipts, istart, iproc;
+
+	omp_set_num_threads(1);
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+	{
+		iproc = omp_get_num_procs();
+		//iproc = 1; 
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		//ntids = 2; 
+		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		//ipts = (int)ceil(1.00*(double)ntids / (double)ntids);
+		istart = tid * ipts;
+		//if (tid == ntids - 1) ipts = Sample.size() - istart;
+		if (ipts <= 0) ipts = 0;
+
+		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
+
+		Eigen::VectorXd				D(F.rows());
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
+
+		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
+
+		// Computing the values of each element
+		//for (id = istart; id < (istart + ipts); id++) {
+		for (id = istart; id < (istart + ipts) && id < 50; id++) {
+			if (id >= Sample.size()) break;
+
+			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
+
+			LocalFields localField(id);
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			t2 = chrono::high_resolution_clock::now();
+			durations[0] += t2 - t1;
+
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			t2 = chrono::high_resolution_clock::now();
+			durations[1] += t2 - t1;
+
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructLocalElements(F);
+
+			t2 = chrono::high_resolution_clock::now();
+			durations[2] += t2 - t1;
+
+			t1 = chrono::high_resolution_clock::now();
+			//localField.constructMatrixBLocal(B2D);
+			//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
+			///localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
+			t2 = chrono::high_resolution_clock::now();
+			durations[3] += t2 - t1;
+
+			t1 = chrono::high_resolution_clock::now();
+			//localField.constructLocalConstraints();
+			//localField.constructLocalConstraints(C1Triplet, C2Triplet);
+			//localField.constructLocalConstraintsWithLaplacian(doubleArea, AdjMF2Ring, SF2D, C1Triplet, C2Triplet);
+			///localField.constructLocalConstraintsWithLaplacian(doubleArea, LapForBasis, C1Triplet, C2Triplet);
+			t2 = chrono::high_resolution_clock::now();
+			durations[4] += t2 - t1;
+
+			t1 = chrono::high_resolution_clock::now();
+			///localField.setupRHSLocalProblemMapped();
+			t2 = chrono::high_resolution_clock::now();
+			durations[5] += t2 - t1;
+
+			t1 = chrono::high_resolution_clock::now();
+			//localField.setupLHSLocalProblemMapped();
+			///localField.setupLHSLocalProblemMapped(BTriplet, C1Triplet, C2Triplet);
+			t2 = chrono::high_resolution_clock::now();
+			durations[6] += t2 - t1;
+
+			//localField.computeDijkstraFaceDistance(V, F, FC, AdjMF3N);
+
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
+			///localField.solveLocalSystemMappedLDLT(UiTriplet[id]);
+			t2 = chrono::high_resolution_clock::now();
+			durations[7] += t2 - t1;
+
+
+			if (id == 0)
+			{
+				SubDomain = localField.SubDomain;
+				Boundary = localField.Boundary;
+				//patchDijkstraDist = localField.dijksFaceDistMapped;
+			}
+
+			// To get local elements for visualizing subdomain
+			if (id == 0 || id == 46) {
+				cout << "Getting element of ID " << id << endl;
+
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
+
+				for (int fid : localField.Boundary) {
+					localSystem(fid) = 0.7;
+				}
+
+				//localSystem(localField.sampleID) = 1.0;
+
+
+			}
+
+			/* Localized eigenproblems */
+			//if (id == 15)
+			{
+				//Eigen::SparseMatrix<double> MTempStiff;
+				//localField.obtainLocalMatrixPatch2D(SF2D, MTempStiff);
+				//visualizeSparseMatrixInMatlab(MTempStiff);
+				//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+				//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+			}
+
+		}
+	}
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+
+	cout << "....Gathering local elements as basis matrix... ";
+	t1 = chrono::high_resolution_clock::now();
+	gatherBasisElements(UiTriplet);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+	cout << "....Partition of unity of the basis matrix... ";
+	t1 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	Basis = BasisTemp;
+	//normalizeBasis();
+	//normalizeBasisAbs();
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "..in Total of " << duration.count() << " seconds" << endl;
+
+	//for (int i = 0; i < NUM_PROCESS; i++) {
+	//printf("Process %d takes %.8f seconds.\n", i, durations[i].count());
+	//cout << "BasisTemp matrix is normalized in " << duration.count() << " seconds" << endl;
+	//}
+
+	// Information about the process timing
+	printf("> Basis Timing information \n");
+	printf("....[0] Constructing internal elements: %.8f seconds.\n", durations[0].count());
+	printf("....[1] Constructing boundary: %.8f seconds.\n", durations[1].count());
+	printf("....[2] Constructing local subdomains: %.8f seconds.\n", durations[2].count());
+	printf("....[3] Constructing matrix B local: %.8f seconds.\n", durations[3].count());
+	printf("....[4] Constructing local constraints: %.8f seconds.\n", durations[4].count());
+	printf("....[5] Constructing RHS (mapped): %.8f seconds.\n", durations[5].count());
+	printf("....[6] Constructing LHS (mapped): %.8f seconds.\n", durations[6].count());
+	printf("....[7] Solving local systems (mapped, Pardiso LDLT): %.8f seconds.\n", durations[7].count());
+
+	// Information about Basis
+	printf("> Basis Structure information \n");
+	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
+	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
+}
+
+
+void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions)
 {
 	/* Obtaining matrix from old data */
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
-	Eigen::SparseMatrix<double> BasisFunctions, BasisGrad, BasisCoGrad;
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
+	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
 	Eigen::MatrixXd BasisTemp;
 	//ReadSparseMatrixFromMatlab(BasisFunctions, filename);
 	ReadDenseMatrixFromMatlab(BasisTemp, filename);
@@ -2287,7 +2511,7 @@ void VectorFields::constructBasis_GradOfLocalFunction()
 
 	/* Storing the data as sparse matrix */
 	vector<Eigen::Triplet<double>> ATriplet;
-	ATriplet.reserve(40*BasisTemp.rows());
+	ATriplet.reserve(40 * BasisTemp.rows());
 	for (int j = 0; j < basCols; j++)
 	{
 		for (int i = 0; i < BasisTemp.rows(); i++)
@@ -2333,6 +2557,86 @@ void VectorFields::constructBasis_GradOfLocalFunction()
 	printf("Size of the BASIS function=%dx%d; ", Basis.rows(), Basis.cols());
 	printf("__with %d nonzeros (%.5f nnz per row\n", Basis.nonZeros(), (double)Basis.nonZeros() / (double)Basis.rows());
 }
+
+void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions)
+{
+	/* Check the basis function*/
+	if (BasisFunctions.cols() < 1)
+	{
+		constructBasis_GradOfLocalFunction(BasisFunctions);
+	}
+
+	/* Check if we have eigenfunctions already */
+	if (eigFieldFull2D.cols() < 1)
+	{
+		computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
+	}
+
+	/* Setting up the matrices */
+	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(2 * BasisFunctions.nonZeros());
+	//Basis.resize()
+
+	/* Get the mapping matrix */
+	vector<set<int>> VFMap(V.rows());
+	for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < F.cols(); j++)
+		{
+			VFMap[F(i, j)].insert(i);
+		}
+	}
+
+	/* Showing the result of mapping*/
+	//for (int i = 0; i < 100; i++)
+	//{
+	//	printf("V[%d] :", i);
+	//	for (int j : VFMap[i])
+	//	{
+	//		printf("%d |", j);
+	//	}
+	//	printf("\n");
+	//}
+
+	for (int i = 0; i < BasisFunctions.outerSize(); i++) {
+		/* Throwing out values at each vertex to be at every face */
+		vector<set<double>> BasisWeight(F.rows());
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisFunctions, i); it; ++it) {
+			for (int j : VFMap[it.row()])
+			{
+				BasisWeight[j].insert(it.value());
+			}
+		}
+		
+		/*Setting the weight on each face * eigenVectors on each face */
+		for (int j = 0; j < F.rows(); j++)
+		{
+			if (BasisWeight[j].size() < 3)continue;
+
+			double sum = 0;
+			for (double k : BasisWeight[j])
+			{
+				sum += k;
+			}
+			double weight = sum / 3.0; 
+
+			BTriplet.push_back(Eigen::Triplet<double>(2 * j + 0, 2 * i + 0, weight * eigFieldFull2D(2 * j + 0, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * j + 1, 2 * i + 0, weight * eigFieldFull2D(2 * j + 1, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * j + 0, 2 * i + 1, weight * eigFieldFull2D(2 * j + 0, 1)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * j + 1, 2 * i + 1, weight * eigFieldFull2D(2 * j + 1, 1)));
+		}
+	}
+
+	Basis.resize(0, 0);
+	Basis.resize(2 * F.rows(), 2 * BasisFunctions.cols());
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+}
+
+void VectorFields::constructBasis_LocalEigenProblem10()
+{
+
+}
+
 
 void VectorFields::constructBasisEigenVects()
 {
