@@ -151,6 +151,7 @@ public:
 	void constructSamples(const int &n);
 	void farthestPointSampling();
 	void constructBasis();	
+	void constructBasis_GradOfLocalFunction();
 	void constructBasisEigenVects();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
 	void normalizeBasis();

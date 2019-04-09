@@ -429,8 +429,8 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	color = Eigen::RowVector3d(0.9, 0.1, 0.1);
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
-	visualize2Dfields(viewer, XFullDim, color, 2, false);
-	//visualize2Dfields(viewer, XFullDim, color, 2, true);
+	//visualize2Dfields(viewer, XFullDim, color, 2, false);
+	visualize2Dfields(viewer, XFullDim, color, 2, true);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 

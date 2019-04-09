@@ -17,9 +17,9 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
+	//constructRandomHardConstraints();
 	//constructSoftConstraints();
-	//constructInteractiveConstraints();
+	constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
@@ -2273,6 +2273,65 @@ void VectorFields::constructBasis()
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
 	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
 
+}
+
+void VectorFields::constructBasis_GradOfLocalFunction()
+{
+	/* Obtaining matrix from old data */
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
+	Eigen::SparseMatrix<double> BasisFunctions, BasisGrad, BasisCoGrad;
+	Eigen::MatrixXd BasisTemp;
+	//ReadSparseMatrixFromMatlab(BasisFunctions, filename);
+	ReadDenseMatrixFromMatlab(BasisTemp, filename);
+	const int basCols = min((int)BasisTemp.cols(), 1000);
+
+	/* Storing the data as sparse matrix */
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(40*BasisTemp.rows());
+	for (int j = 0; j < basCols; j++)
+	{
+		for (int i = 0; i < BasisTemp.rows(); i++)
+		{
+			if (BasisTemp(i, j) > 0.0000000001)
+			{
+				ATriplet.push_back(Eigen::Triplet<double>(i, j, -BasisTemp(i, j)));
+			}
+		}
+	}
+
+	BasisFunctions.resize(BasisTemp.rows(), basCols);
+	BasisFunctions.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	printf("Size of the basis function=%dx%d; ", BasisFunctions.rows(), BasisFunctions.cols());
+	printf("__with %d nonzeros (%.5f nnz per row\n", BasisFunctions.nonZeros(), (double)BasisFunctions.nonZeros() / (double)BasisFunctions.rows());
+
+	/* Computing the graident and co-gradient of the basis functions */
+	BasisGrad = A.transpose() * GF3D * BasisFunctions;
+	BasisCoGrad = A.transpose() * J3D * GF3D * BasisFunctions;
+	printf("Grad =%dx%d\n", BasisGrad.rows(), BasisGrad.cols());
+	printf("Grad =%dx%d\n", BasisCoGrad.rows(), BasisCoGrad.cols());
+
+	/* Storing them as new basis */
+	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(BasisGrad.nonZeros() + BasisCoGrad.nonZeros());
+
+	/* Getting the elements of the Gradient part */
+	for (int i = 0; i < BasisGrad.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisGrad, i); it; ++it) {
+			BTriplet.push_back(Eigen::Triplet<double>(it.row(), 2 * it.col(), it.value()));
+		}
+	}
+
+	/* Getting the elements of the Co-Gradient part */
+	for (int i = 0; i < BasisCoGrad.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisCoGrad, i); it; ++it) {
+			BTriplet.push_back(Eigen::Triplet<double>(it.row(), 2 * it.col() + 1, it.value()));
+		}
+	}
+
+	Basis.resize(BasisGrad.rows(), BasisGrad.cols() + BasisCoGrad.cols());
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	printf("Size of the BASIS function=%dx%d; ", Basis.rows(), Basis.cols());
+	printf("__with %d nonzeros (%.5f nnz per row\n", Basis.nonZeros(), (double)Basis.nonZeros() / (double)Basis.rows());
 }
 
 void VectorFields::constructBasisEigenVects()
