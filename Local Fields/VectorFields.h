@@ -157,9 +157,9 @@ public:
 	void constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions);
 	void constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions);
 	void constructBasisEigenVects();
-	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
+	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
 	void normalizeBasis();
-	void normalizeBasisAbs();
+	void normalizeBasisAbs(const int& stride);
 	void storeBasis(const string& filename);
 	void retrieveBasis(const string& filename);
 

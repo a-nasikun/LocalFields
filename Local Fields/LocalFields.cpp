@@ -330,6 +330,7 @@ void LocalFields::obtainLocalMatrixPatch2D(const Eigen::SparseMatrix<double>& MG
 	//cout << "[DONE!] Setting up local patch matrix\n";
 }
 
+/* Naive way, getting all values on the patch, then discarding the 0 elements/entries */
 void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D)
 {
 	
@@ -369,41 +370,46 @@ void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D)
 
 }
 
-void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet)
+/* Look at the 1-ring elements -> correspond to the Laplace matrix neighbor */
+void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring)
 {
-	//cout << "Trying to get B2D for id " << id << endl; 
-	obtainLocalMatrixPatch2D(B2D, BLoc);
 	//======================== BLoc from B2D =========================
-	//BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
-	//
-	////vector<Eigen::Triplet<double>> BTriplet;
-	////BTriplet.reserve(100 * BLoc.rows());
-	//BTriplet.reserve(20 * 2 * LocalElements.size());
-	//
-	//for (int i = 0; i < LocalElements.size(); i++) {
-	//	int li = LocalElements[i];
-	//	// Get the DIAGONAL Elements from B2D Matrix
-	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, B2D.coeff(2 * li + 0, 2 * li + 0)));
-	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, B2D.coeff(2 * li + 0, 2 * li + 1)));
-	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, B2D.coeff(2 * li + 1, 2 * li + 0)));
-	//	BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, B2D.coeff(2 * li + 1, 2 * li + 1)));
-	//
-	//	// Get the NEIGHBORING elements
-	//	//for (int j = 0; j < AdjMF3N.cols(); j++) {
-	//	for(int j:AdjMF2Ring[LocalElements[i]]){
-	//		const int neigh = j;
-	//		if (GlobToLocMap[neigh] >= 0) {
-	//			int neighLoc = GlobToLocMap[neigh];
-	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, B2D.coeff(2 * li + 0, 2 * neigh + 0)));
-	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, B2D.coeff(2 * li + 0, 2 * neigh + 1)));
-	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, B2D.coeff(2 * li + 1, 2 * neigh + 0)));
-	//			BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, B2D.coeff(2 * li + 1, 2 * neigh + 1)));
-	//		}
-	//	}
-	//}
-	//BLoc.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	BLoc.resize(2 * LocalElements.size(), 2 * LocalElements.size());
+	
+	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(20 * 2 * LocalElements.size());
+	
+	for (int i = 0; i < LocalElements.size(); i++) {
+		int li = LocalElements[i];
+		// Get the DIAGONAL Elements from B2D Matrix
+		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, B2D.coeff(2 * li + 0, 2 * li + 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, B2D.coeff(2 * li + 0, 2 * li + 1)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, B2D.coeff(2 * li + 1, 2 * li + 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, B2D.coeff(2 * li + 1, 2 * li + 1)));
+	
+		// Get the NEIGHBORING elements
+		for(int j:AdjMF2Ring[LocalElements[i]]){
+			const int neigh = j;
+			if (GlobToLocMap[neigh] >= 0) {
+				int neighLoc = GlobToLocMap[neigh];
+				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 0, B2D.coeff(2 * li + 0, 2 * neigh + 0)));
+				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * neighLoc + 1, B2D.coeff(2 * li + 0, 2 * neigh + 1)));
+				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 0, B2D.coeff(2 * li + 1, 2 * neigh + 0)));
+				BTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * neighLoc + 1, B2D.coeff(2 * li + 1, 2 * neigh + 1)));
+			}
+		}
+	}
+	BLoc.setFromTriplets(BTriplet.begin(), BTriplet.end());
 }
 
+/* Perhaps a bit smarter construction, visiting the non-zeros only 
+*  currenlty work for symmetric matrix only */
+void LocalFields::constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet)
+{
+	obtainLocalMatrixPatch2D(B2D, BLoc);	
+}
+
+/* Direct insertion, slow as h*ll */
 void LocalFields::constructMatrixBLocalDirectInsert(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring)
 {
 	//======================== BLoc from B2D =========================
@@ -1136,7 +1142,7 @@ void LocalFields:: constructLocalEigenProblem(const Eigen::SparseMatrix<double>&
 //	}	
 //}
 
-void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
+void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
 {
 	cout << "[" << id << "] Constructing local eigen problem\n ";
 	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc, MF2DRed, SF2DRed;
@@ -1157,7 +1163,7 @@ void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatr
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
 
 	/* Getting the eigenfields*/
-	computeEigenMatlab(SF2DRed, MF2DRed, 2, eigTemp, eigValsLoc, "hello");
+	computeEigenMatlab(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 	//cusolverDnHandle_t	cusolverH;
 	//computeEigenGPU(SF2DRed, MF2DRed, eigTemp, eigValsLoc);
 	//cout << "ID=" << id << ", eig vals=\n" << eigValsLoc << endl; 
@@ -1167,12 +1173,18 @@ void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatr
 	for (int i = 0; i < InnerElements.size(); i++)
 	{
 		// First column ==> First basis (2 elements per-local frame)
-		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 0, EigVectLoc(2 * i + 0, 0)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 0, EigVectLoc(2 * i + 1, 0)));
+		for (int j = 0; j < NUM_EIG; j++)
+		{
+			BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, NUM_EIG * id + j, EigVectLoc(2 * i + 0, j)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
+		}
+
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 0, NUM_EIG * id + 0, EigVectLoc(2 * i + 0, 0)));
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 1, NUM_EIG * id + 0, EigVectLoc(2 * i + 1, 0)));
 
 		// Second column ==> Second basis (2 elements per-local frame)
-		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 1, EigVectLoc(2 * i + 0, 1)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 1, EigVectLoc(2 * i + 1, 1)));
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 0, NUM_EIG * id + 1, EigVectLoc(2 * i + 0, 1)));
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 1, NUM_EIG * id + 1, EigVectLoc(2 * i + 1, 1)));
 	}
 }
 
@@ -1250,47 +1262,49 @@ void LocalFields::solveLocalSystemMappedLDLT(vector<Eigen::Triplet<double>> &BTr
 	XfLoc.col(1) = -x.block(0, 0, BLoc.rows(), 1) + vEstimateLoc;
 
 	/* Scale the vector fields accordingly */
-	Eigen::MatrixXd XfLScaled(XfLoc.rows(), XfLoc.cols());
-	Eigen::Vector2d vTemp;
-	for (int i = 0; i < LocalElements.size(); i++)
+	if (false)
 	{
-		if (scalingFactor(i) < 1e-8)
+		Eigen::MatrixXd XfLScaled(XfLoc.rows(), XfLoc.cols());
+		Eigen::Vector2d vTemp;
+		for (int i = 0; i < LocalElements.size(); i++)
 		{
-			/* The boundary elements */
-			XfLScaled(2 * i + 0, 0) = 0;
-			XfLScaled(2 * i + 1, 0) = 0;
-			XfLScaled(2 * i + 0, 1) = 0;
-			XfLScaled(2 * i + 1, 1) = 0;
+			if (scalingFactor(i) < 1e-8)
+			{
+				/* The boundary elements */
+				XfLScaled(2 * i + 0, 0) = 0;
+				XfLScaled(2 * i + 1, 0) = 0;
+				XfLScaled(2 * i + 0, 1) = 0;
+				XfLScaled(2 * i + 1, 1) = 0;
+			}
+			else
+			{
+				/* First components */
+				vTemp = XfLoc.block(2 * i, 0, 2, 1);
+				vTemp.normalize();
+				XfLScaled.block(2 * i, 0, 2, 1) = scalingFactor(i)*vTemp;
+
+				/* Second components */
+				vTemp = XfLoc.block(2 * i, 1, 2, 1);
+				vTemp.normalize();
+				XfLScaled.block(2 * i, 1, 2, 1) = scalingFactor(i)*vTemp;
+			}
 		}
-		else
-		{
-			/* First components */
-			vTemp = XfLoc.block(2 * i, 0, 2, 1);
-			vTemp.normalize();
-			XfLScaled.block(2 * i, 0, 2, 1) = scalingFactor(i)*vTemp;
 
-			/* Second components */
-			vTemp = XfLoc.block(2 * i, 1, 2, 1);
-			vTemp.normalize();
-			XfLScaled.block(2 * i, 1, 2, 1) = scalingFactor(i)*vTemp;
+		/* With Scaling
+		for (int i = 0; i < LocalElements.size(); i++) {
+			// FIRST Option => Construct the BASIS first, then NORMALIZE it.
+			// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
+			// Let's do the FIRST option first, my gut feeling tells me this is a better opion..^^
+			// First column ==> First basis (2 elements per-local frame)
+			BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 0, XfLScaled(2 * i + 0, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 0, XfLScaled(2 * i + 1, 0)));
+
+			// Second column ==> Second basis (2 elements per-local frame)
+			BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 1, XfLScaled(2 * i + 0, 1)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 1, XfLScaled(2 * i + 1, 1)));
 		}
+		*/
 	}
-
-	/* With Scaling
-	for (int i = 0; i < LocalElements.size(); i++) {
-		// FIRST Option => Construct the BASIS first, then NORMALIZE it.
-		// SECOND Option => NORMALIZE the element for each vector then Construct the BASIS first..
-		// Let's do the FIRST option first, my gut feeling tells me this is a better opion..^^
-		// First column ==> First basis (2 elements per-local frame)
-		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 0, XfLScaled(2 * i + 0, 0)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 0, XfLScaled(2 * i + 1, 0)));
-
-		// Second column ==> Second basis (2 elements per-local frame)
-		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 0, 2 * id + 1, XfLScaled(2 * i + 0, 1)));
-		BTriplet.push_back(Eigen::Triplet<double>(2 * LocalElements[i] + 1, 2 * id + 1, XfLScaled(2 * i + 1, 1)));
-	}
-	*/ 
-
 
 	/* No Scaling */
 	for (int i = 0; i < LocalElements.size(); i++) {
