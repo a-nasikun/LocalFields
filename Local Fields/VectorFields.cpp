@@ -2068,10 +2068,10 @@ void VectorFields::constructBasis()
 	Eigen::SparseMatrix<double> BasisFunctions;
 
 	//constructBasis_LocalEigenProblem();
-	//constructBasis_LocalEigenProblem10();
+	constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
-	constructBasis_EigenPatch(BasisFunctions);
+	//constructBasis_EigenPatch(BasisFunctions);
 }
 
 void VectorFields::constructBasis_LocalEigenProblem()
@@ -2143,15 +2143,16 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
 
 		// Computing the values of each element
-		//for (id = istart; id < (istart + ipts); id++) {
-		for (id = istart; id < (istart + ipts) && id < 50; id++) {
+		for (id = istart; id < (istart + ipts); id++) {
+		//for (id = istart; id < (istart + ipts) && id < 10; id++) {
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
 
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -2315,7 +2316,8 @@ void VectorFields::constructBasis_OptProblem()
 
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -2331,8 +2333,8 @@ void VectorFields::constructBasis_OptProblem()
 
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructMatrixBLocal(B2D);
-			//localField.constructMatrixBLocal(B2D, AdjMF2Ring);
-			localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
+			localField.constructMatrixBLocal(B2D, AdjMF2Ring);
+			//localField.constructMatrixBLocal(B2D, AdjMF2Ring, BTriplet);			
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
 
@@ -2428,31 +2430,39 @@ void VectorFields::constructBasis_OptProblem()
 
 void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions)
 {
-	/* Obtaining matrix from old data */
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000";
 	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
 	Eigen::MatrixXd BasisTemp;
-	//ReadSparseMatrixFromMatlab(BasisFunctions, filename);
-	ReadDenseMatrixFromMatlab(BasisTemp, filename);
-	const int basCols = min((int)BasisTemp.cols(), 1000);
+	
 
-	/* Storing the data as sparse matrix */
-	vector<Eigen::Triplet<double>> ATriplet;
-	ATriplet.reserve(40 * BasisTemp.rows());
-	for (int j = 0; j < basCols; j++)
-	{
-		for (int i = 0; i < BasisTemp.rows(); i++)
+	/* Obtaining matrix from old data */
+	if (false) {			/* MATLAB DATA*/
+	//ReadSparseMatrixFromMatlab(BasisFunctions, filename);
+		ReadDenseMatrixFromMatlab(BasisTemp, filename);
+		int basCols = min((int)BasisTemp.cols(), 1000);
+
+		/* Storing the data as sparse matrix */
+		vector<Eigen::Triplet<double>> ATriplet;
+		ATriplet.reserve(40 * BasisTemp.rows());
+		for (int j = 0; j < basCols; j++)
 		{
-			if (BasisTemp(i, j) > 0.0000000001)
+			for (int i = 0; i < BasisTemp.rows(); i++)
 			{
-				ATriplet.push_back(Eigen::Triplet<double>(i, j, -BasisTemp(i, j)));
+				if (BasisTemp(i, j) > 0.0000000001)
+				{
+					ATriplet.push_back(Eigen::Triplet<double>(i, j, -BasisTemp(i, j)));
+				}
 			}
 		}
+		BasisFunctions.resize(BasisTemp.rows(), basCols);	
+		BasisFunctions.setFromTriplets(ATriplet.begin(), ATriplet.end());
 	}
-
-	BasisFunctions.resize(BasisTemp.rows(), basCols);
-	BasisFunctions.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	else 
+	{
+		readEigenSparseMatrixFromBinary(filename, BasisFunctions);
+	}
 	printf("Size of the basis function=%dx%d; ", BasisFunctions.rows(), BasisFunctions.cols());
 	printf("__with %d nonzeros (%.5f nnz per row) \n", BasisFunctions.nonZeros(), (double)BasisFunctions.nonZeros() / (double)BasisFunctions.rows());
 
@@ -2484,6 +2494,8 @@ void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
 	printf("Size of the BASIS function=%dx%d; ", Basis.rows(), Basis.cols());
 	printf("__with %d nonzeros (%.5f nnz per row\n", Basis.nonZeros(), (double)Basis.nonZeros() / (double)Basis.rows());
+
+	//normalizeBasisAbs(2);
 }
 
 void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions)
@@ -2497,7 +2509,9 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	/* Check if we have eigenfunctions already */
 	if (eigFieldFull2D.cols() < 1)
 	{
-		computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
+		//computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
+		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_2_eigenfields_Ref.mat";
+		ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
 	}
 
 	/* Setting up the matrices */
@@ -2575,7 +2589,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "> Constructing Basis...\n";
 
 	const int EIG_NUM = 10; 
-	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(0.5, 2) + pow(0.7, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2635,15 +2649,16 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * EIG_NUM * 10.0 * F.rows());
 
 		// Computing the values of each element
-		//for (id = istart; id < (istart + ipts); id++) {
-		for (id = istart; id < (istart + ipts) && id < 10; id++) {
+		for (id = istart; id < (istart + ipts); id++) {
+		//for (id = istart; id < (istart + ipts) && id < 10; id++) {
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
 
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 

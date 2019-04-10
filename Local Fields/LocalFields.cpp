@@ -108,6 +108,58 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	} while (distFromCenter < maxDist);
 }
 
+void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const vector<set<int>>& AdjMF2Ring, const double& distRatio)
+{
+	int center = sampleID;
+	this->sampleID = sampleID;
+
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
+	Eigen::VectorXd D(F.rows());
+	const double maxDist = distRatio * avgEdgeLength;
+
+	// Computing distance for initial sample points S
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+	}
+
+	D(center) = 0.0f;
+	VertexPair vp{ center,D(center) };
+	DistPQueue.push(vp);
+	SubDomain.insert(center);
+
+	double distFromCenter = numeric_limits<double>::infinity();
+
+	// For other vertices in mesh
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		//auto const& elem = AdjMF3N_temp[vp1.vId];
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		//for (auto it = 0; it != F.cols(); ++it) {
+		for(int neigh:AdjMF2Ring[elem])
+		{
+			/* Regular Dikjstra */
+			//const int neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
+			double dist = (c2 - c1).norm();
+			double tempDist = distFromCenter + dist;
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+				SubDomain.insert(neigh);
+			}
+		}
+	} while (distFromCenter < maxDist);
+}
+
 void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring)
 {
 	// Obtaining the OUTER-most ELEMENTS

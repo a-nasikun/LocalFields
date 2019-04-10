@@ -4,9 +4,9 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 1000;
+int numSample = 200;
 int eigToShow2 = 0;
-int eigsToCompute = 5; 
+int eigsToCompute = 500; 
 
 int main(int argc, char *argv[])
 {
@@ -105,14 +105,14 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_GradNCoGrad";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
+	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();	
-	//vectorFields.storeBasis(filename_basis);
+	vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
-	//vectorFields.setupReducedBiLaplacian();
+	vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -121,11 +121,11 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	string    filename_refField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Full";
-	string filename_approxField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Approx_2000dim_33sup";
+	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Full";
+	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Approx_eigFields10_2000dim_30sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields();
-	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
+	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);
