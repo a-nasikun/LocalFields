@@ -2042,8 +2042,8 @@ void VectorFields::farthestPointSampling()
 	}
 
 	srand(time(NULL));
-	Sample[0] = rand() % F.rows();
-	//Sample[0] = 0;
+	//Sample[0] = rand() % F.rows();
+	Sample[0] = 0;
 	//Sample[0] = 70267; // Arma 43k
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
@@ -2068,10 +2068,10 @@ void VectorFields::constructBasis()
 	Eigen::SparseMatrix<double> BasisFunctions;
 
 	//constructBasis_LocalEigenProblem();
-	constructBasis_LocalEigenProblem10();
+	//constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
-	//constructBasis_EigenPatch(BasisFunctions);
+	constructBasis_EigenPatch(BasisFunctions);
 }
 
 void VectorFields::constructBasis_LocalEigenProblem()
@@ -2143,8 +2143,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
 
 		// Computing the values of each element
-		for (id = istart; id < (istart + ipts); id++) {
-		//for (id = istart; id < (istart + ipts) && id < 50; id++) {
+		//for (id = istart; id < (istart + ipts); id++) {
+		for (id = istart; id < (istart + ipts) && id < 50; id++) {
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
@@ -2216,7 +2216,6 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t1 = chrono::high_resolution_clock::now();
 	gatherBasisElements(UiTriplet,2);
 	Basis = BasisTemp;
-	//normalizeBasis();
 	//normalizeBasisAbs();
 
 	t2 = chrono::high_resolution_clock::now();
@@ -2430,7 +2429,8 @@ void VectorFields::constructBasis_OptProblem()
 void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions)
 {
 	/* Obtaining matrix from old data */
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
 	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
 	Eigen::MatrixXd BasisTemp;
 	//ReadSparseMatrixFromMatlab(BasisFunctions, filename);
@@ -2454,13 +2454,13 @@ void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double
 	BasisFunctions.resize(BasisTemp.rows(), basCols);
 	BasisFunctions.setFromTriplets(ATriplet.begin(), ATriplet.end());
 	printf("Size of the basis function=%dx%d; ", BasisFunctions.rows(), BasisFunctions.cols());
-	printf("__with %d nonzeros (%.5f nnz per row\n", BasisFunctions.nonZeros(), (double)BasisFunctions.nonZeros() / (double)BasisFunctions.rows());
+	printf("__with %d nonzeros (%.5f nnz per row) \n", BasisFunctions.nonZeros(), (double)BasisFunctions.nonZeros() / (double)BasisFunctions.rows());
 
 	/* Computing the graident and co-gradient of the basis functions */
 	BasisGrad = A.transpose() * GF3D * BasisFunctions;
 	BasisCoGrad = A.transpose() * J3D * GF3D * BasisFunctions;
 	printf("Grad =%dx%d\n", BasisGrad.rows(), BasisGrad.cols());
-	printf("Grad =%dx%d\n", BasisCoGrad.rows(), BasisCoGrad.cols());
+	printf("Co-Grad =%dx%d\n", BasisCoGrad.rows(), BasisCoGrad.cols());
 
 	/* Storing them as new basis */
 	vector<Eigen::Triplet<double>> BTriplet;
@@ -2526,7 +2526,8 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	//	printf("\n");
 	//}
 
-	for (int i = 0; i < BasisFunctions.outerSize(); i++) {
+	for (int i = 0; i < BasisFunctions.outerSize(); i++) 
+	{
 		/* Throwing out values at each vertex to be at every face */
 		vector<set<double>> BasisWeight(F.rows());
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisFunctions, i); it; ++it) {
@@ -2547,6 +2548,11 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 				sum += k;
 			}
 			double weight = sum / 3.0; 
+
+			//if (i == 0)
+			//{
+			//	printf("Weight of face %d = %.5f, eVect=[%.3f;%.3f] => [%.3f;%.3f]\n", j, weight, eigFieldFull2D(2 * j + 0, 0), eigFieldFull2D(2 * j + 0, 1), weight*eigFieldFull2D(2 * j + 0, 0), weight*eigFieldFull2D(2 * j + 0, 1));
+			//}
 
 			BTriplet.push_back(Eigen::Triplet<double>(2 * j + 0, 2 * i + 0, weight * eigFieldFull2D(2 * j + 0, 0)));
 			BTriplet.push_back(Eigen::Triplet<double>(2 * j + 1, 2 * i + 0, weight * eigFieldFull2D(2 * j + 1, 0)));
@@ -2629,8 +2635,8 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * EIG_NUM * 10.0 * F.rows());
 
 		// Computing the values of each element
-		for (id = istart; id < (istart + ipts); id++) {
-			//for (id = istart; id < (istart + ipts) && id < 50; id++) {
+		//for (id = istart; id < (istart + ipts); id++) {
+		for (id = istart; id < (istart + ipts) && id < 10; id++) {
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
@@ -2689,7 +2695,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	gatherBasisElements(UiTriplet, EIG_NUM);
 	Basis = BasisTemp;
 	//normalizeBasis();
-	normalizeBasisAbs(EIG_NUM);
+	//normalizeBasisAbs(EIG_NUM);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
