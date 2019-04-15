@@ -243,8 +243,8 @@ void VectorFields::projectionTest()
 		setupGlobalProblem();
 
 		/* Projection to the subspace */
-		//testBasis_NoRegularizer(errors(i));
-		testBasis_WithRegularizer(errors(i));
+		testBasis_NoRegularizer(errors(i));
+		//testBasis_WithRegularizer(errors(i));
 		//testBasis_WithRegularizer();
 
 		t2 = chrono::high_resolution_clock::now();

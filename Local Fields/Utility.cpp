@@ -375,6 +375,40 @@ double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseM
 	MInv.setFromTriplets(MTriplet.begin(), MTriplet.end());
 }
 
+void WriteSTDVectorToTxtFile(const vector<int>& vector, const string& filename)
+{
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Write file to text \n";
+		for (int i = 0; i < vector.size(); i++)
+		{
+			myfile << vector[i] << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+}
+
+void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector) 
+{
+	vector.reserve(100);
+
+	string line;
+	ifstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		while (getline(myfile, line))
+		{
+			cout << "Inserting " << line << " to vector \n";
+			vector.push_back(stoi(line));
+		}
+		myfile.close();
+	}
+
+	else cout << "Unable to open file";
+}
+
 // Write matrix to file
 void writeEigenSparseMatrixToBinary(Eigen::SparseMatrix<double> &m, const std::string &filename)
 {

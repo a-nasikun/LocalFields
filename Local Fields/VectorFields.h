@@ -185,6 +185,8 @@ public:
 	void projectionTest();
 	void measureU1andJU0();
 	void measureL2NormEigVectors();
+	void vectorFieldsDesignTest();
+	void vectorFieldsDesignTest_Normalized();
 
 	// APPLICATIONS ON REDUCED BASIS
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);

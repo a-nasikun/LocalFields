@@ -4,7 +4,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 200;
+int numSample = 1000;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
 
@@ -105,14 +105,14 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_40sup";
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	vectorFields.constructSamples(numSample);
 	vectorFields.constructBasis();	
 	vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
-	vectorFields.setupReducedBiLaplacian();
+	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
 	//vectorFields.measureApproxAccuracyL2Norm();
 	//vectorFields.measureDirichletEnergy();
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Approx_eigFields10_2000dim_30sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
+	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);
@@ -134,18 +134,24 @@ int main(int argc, char *argv[])
 	//vectorFields.writeEigenFieldsForVTK();
 
 	/* ====================== TESTING BASIS ====================*/
+	/* _____ Projection Test ___________________________________*/
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//double error; 
 	//vectorFields.testBasis_NoRegularizer(error);
 	//vectorFields.testBasis_WithRegularizer();
-	//vectorFields.projectionTest();
+	///vectorFields.projectionTest();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualizeApproximatedFields(viewer);	
 	//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
 	//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
-	
+
+	/* _____ Vector fields design test __________________________*/
+	vectorFields.vectorFieldsDesignTest();
+	//vectorFields.vectorFieldsDesignTest_Normalized();
+
+
 	//vectorFields.visualizeGlobalConstraints(viewer);
 	//vectorFields.measureDirichletEnergy();
 
@@ -221,12 +227,12 @@ int main(int argc, char *argv[])
 		switch (key)
 		{
 		case '-':
-			vectorFields.projectionTest();
-			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+			//vectorFields.projectionTest();
+			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
+			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);	
+			vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
-		case '`':
-			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);		
-			//vectorFields.visualizeGlobalConstraints(viewer); 
+		case '`':			
 			vectorFields.visualizeSubdomain(viewer);
 			break;
 		case '1':

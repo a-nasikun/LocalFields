@@ -17,9 +17,9 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	//constructRandomHardConstraints();
+	constructRandomHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();
+	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
@@ -180,25 +180,39 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 20;
-	set<int> constraints;
-	globalConstraints.resize(numConstraints);
+	const bool readFromFile = true; 
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_25.txt";;
 
-	/* Random number generator */
-	std::random_device rd;								// Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
-	std::uniform_int_distribution<> dis(0, F.rows()-1); // From 0 to F.rows()-1
-	
-	/* Creating random constraints */
-	do {
-		int constraintFace = dis(gen);
-		constraints.insert(constraintFace);
-	} while (constraints.size() < numConstraints);
-	
-	int counter1 = 0;
-	for (int i : constraints) {
-		globalConstraints[counter1++] = i;
+	if (readFromFile)
+	{
+		LoadSTDVectorFromTxtFile(filename, globalConstraints);
+	} 
+	else
+	{
+		const int numConstraints = 25;
+		set<int> constraints;
+		globalConstraints.resize(numConstraints);
+
+		/* Random number generator */
+		std::random_device rd;								// Will be used to obtain a seed for the random number engine
+		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
+		std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+
+															  /* Creating random constraints */
+		do {
+			int constraintFace = dis(gen);
+			constraints.insert(constraintFace);
+		} while (constraints.size() < numConstraints);
+
+		int counter1 = 0;
+		for (int i : constraints) {
+			globalConstraints[counter1++] = i;
+		}
+
+		WriteSTDVectorToTxtFile(globalConstraints, filename);
 	}
+
+	
 	
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
@@ -1717,7 +1731,7 @@ void VectorFields::setupGlobalProblem()
 	//Eigen::VectorXd					vEst;
 	double lambda = 0.4; 
 	
-	constructConstraints();
+	//constructConstraints();
 	setupRHSGlobalProblemMapped(g, h, vEst, b);
 	setupLHSGlobalProblemMapped(A_LHS);
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
@@ -2067,8 +2081,8 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	//constructBasis_LocalEigenProblem();
-	constructBasis_LocalEigenProblem10();
+	constructBasis_LocalEigenProblem();
+	//constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
@@ -2082,7 +2096,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double	coef = sqrt(pow(1.3, 2) + pow(2.1, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -3105,7 +3119,7 @@ void VectorFields::getUserConstraints()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Obtaining user constraints ";
 
-	constructConstraints();
+	//constructConstraints();
 
 	userConstraints = globalConstraints; 
 	CBar			= C * Basis;
@@ -3417,6 +3431,82 @@ void VectorFields::measureL2NormEigVectors()
 		double l2norm = sqrt(norm1 / norm2);
 		printf("Norm of %d diff is %.10f \n", i, l2norm);
 	}
+}
+
+void VectorFields::vectorFieldsDesignTest()
+{
+	const int NUM_TESTS = 1;
+	Eigen::VectorXd l2norm_error(NUM_TESTS);
+
+	for (int i = 0; i < NUM_TESTS; i++)
+	{	
+		/* Setting up the constraints */
+		constructConstraints();
+
+		/* Solving the full resolution (incl the constraints) */
+		setupGlobalProblem();
+
+		/* Solving the reduced system*/
+		setupReducedBiLaplacian();
+		setAndSolveUserSystem();
+			
+
+		/* Computing L2-norm error*/
+		Eigen::VectorXd diffV = Xf - XFullDim;
+		double xf = Xf.transpose() * MF2D * Xf;
+		double diff = diffV.transpose() * MF2D * diffV;
+		const double L2norm = sqrt(diff / xf);
+		l2norm_error(i) = L2norm;
+		cout << "Error " << i << " = " << L2norm << endl;
+	}
+	cout << "ERRORS: \n" << l2norm_error << endl; 
+}
+
+void VectorFields::vectorFieldsDesignTest_Normalized()
+{
+	const int NUM_TESTS = 1;
+	Eigen::VectorXd l2norm_error(NUM_TESTS);
+
+	for (int i = 0; i < NUM_TESTS; i++)
+	{
+		/* Setting up the constraints */
+		constructConstraints();
+
+		/* Solving the full resolution (incl the constraints) */
+		setupGlobalProblem();
+
+		/* Solving the reduced system*/
+		setupReducedBiLaplacian();
+		setAndSolveUserSystem();
+
+		/* 'Normalize' each component of the vector fields */
+		Eigen::VectorXd VFieldsRef(2*F.rows()), VFieldsApp(2*F.rows());
+		Eigen::Vector2d vf2Ref, vf2App;
+
+		for (int i = 0; i < F.rows(); i++)
+		{
+			/* Normalize the full res vector fields */
+			vf2Ref = Xf.block(2 * i, 0, 2, 1);
+			VFieldsRef.block(2 * i, 0, 2, 1) = vf2Ref.normalized();
+
+			/* Normalize the approximated vectorfields */
+			vf2App = XFullDim.block(2 * i, 0, 2, 1);
+			VFieldsApp.block(2 * i, 0, 2, 1) = vf2App.normalized();
+		}
+
+		/* old values = new values */
+		Xf = VFieldsRef;
+		XFullDim = VFieldsApp;
+
+		/* Computing L2-norm error*/
+		Eigen::VectorXd diffV = Xf - XFullDim;
+		double xf = Xf.transpose() * /*MF2D **/ Xf;
+		double diff = diffV.transpose() * /*MF2D **/ diffV;
+		const double L2norm = sqrt(diff / xf);
+		l2norm_error(i) = L2norm;
+		cout << "Error " << i << " = " << L2norm << endl;
+	}
+	cout << "ERRORS: \n" << l2norm_error << endl;
 }
 
 /* ====================== APPLICATIONS ON REDUCED SYSTEM ============================*/
