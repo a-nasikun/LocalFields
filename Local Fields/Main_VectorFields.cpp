@@ -1,4 +1,5 @@
 #include "VectorFields.h"
+#include "NRoSyFields.h"
 #include <igl/unproject_onto_mesh.h>
 
 #include "TestSolver.h"
@@ -6,7 +7,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
-int eigsToCompute = 500; 
+int eigsToCompute = 2; 
 
 int main(int argc, char *argv[])
 {
@@ -34,10 +35,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -105,11 +106,11 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_40sup";
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();	
-	vectorFields.storeBasis(filename_basis);
+	///string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_40sup";
+	///cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	///vectorFields.constructSamples(numSample);
+	///vectorFields.constructBasis();	
+	///vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
 
 	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Full";
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_Approx_eigFields10_2000dim_30sup";
-	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
+	vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields();
 	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
 
 	/* _____ Vector fields design test __________________________*/
-	vectorFields.vectorFieldsDesignTest();
+	///vectorFields.vectorFieldsDesignTest();
 	//vectorFields.vectorFieldsDesignTest_Normalized();
 
 
@@ -217,6 +218,13 @@ int main(int argc, char *argv[])
 	/* Variables for faces of face selection */
 	vector<int> ChosenFaces;
 	Eigen::RowVector3d constraintDir;
+
+	/* ====================== N-RoSy Fields  ====================*/
+	NRoSyFields nRoSyFields;
+	nRoSyFields.readMesh(V, F);
+	nRoSyFields.constructNRoSyFields(6, vectorFields.eigFieldFull2D);
+	nRoSyFields.convertRepVectorsToNRoSy(vectorFields.eigFieldFull2D.col(0));
+	nRoSyFields.visualizeNRoSyFields(viewer);
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{

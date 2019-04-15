@@ -572,7 +572,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	{
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
 		string approxFile = "save('" + filename + "_eigFields','EigVec','EigVal');";		
-		engEvalString(ep, approxFile.c_str());
+		//engEvalString(ep, approxFile.c_str());
 		
 		
 		
