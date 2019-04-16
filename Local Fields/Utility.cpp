@@ -139,8 +139,8 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 	Engine *ep;
 	mxArray *eigValM, *eigVecM;		// for Matlab
 	double	*eigValE, *eigVecE;		// for Eigen
-	const int NUM_EIGEN = 4;
-	const int NUM_ROWS = 510276;
+	const int NUM_EIGEN = 2;
+	const int NUM_ROWS = 104544;
 	const int NUM_BLOCKS = 1;
 
 	M.resize(NUM_ROWS, NUM_BLOCKS*NUM_EIGEN);
@@ -162,7 +162,7 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 	// First 2 blocks
 	cout << "Retrieving the Matrix" << endl;
 	//engEvalString(ep, "REVec = EigVec;");
-	eigVecM = engGetVariable(ep, "EVect_4");
+	eigVecM = engGetVariable(ep, "EigVec");
 	//eigVecM = engGetVariable(ep, "BasisFull");
 	eigVecE = (double*)malloc(NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
 	memcpy((void *)eigVecE, (void *)mxGetPr(eigVecM), NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));

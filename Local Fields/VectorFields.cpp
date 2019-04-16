@@ -181,7 +181,8 @@ void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
 	const bool readFromFile = true; 
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_25.txt";;
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_25.txt";;
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	if (readFromFile)
 	{
@@ -2081,11 +2082,11 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	constructBasis_LocalEigenProblem();
+	//constructBasis_LocalEigenProblem();
 	//constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
-	//constructBasis_EigenPatch(BasisFunctions);
+	constructBasis_EigenPatch(BasisFunctions);
 }
 
 void VectorFields::constructBasis_LocalEigenProblem()
@@ -2096,7 +2097,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.3, 2) + pow(2.1, 2));
+	double	coef = sqrt(pow(1.5, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2446,7 +2447,7 @@ void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double
 {
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000";
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Cube_Round_Basis_1000.txt";
 	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
 	Eigen::MatrixXd BasisTemp;
 	
@@ -2523,9 +2524,9 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	/* Check if we have eigenfunctions already */
 	if (eigFieldFull2D.cols() < 1)
 	{
-		//computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
-		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_2_eigenfields_Ref.mat";
-		ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
+		computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
+		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_2_Full_eigFields.mat";
+		//ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
 	}
 
 	/* Setting up the matrices */
@@ -2591,7 +2592,7 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 
 	Basis.resize(0, 0);
 	Basis.resize(2 * F.rows(), 2 * BasisFunctions.cols());
-	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());	
 }
 
 void VectorFields::constructBasis_LocalEigenProblem10()
@@ -3345,6 +3346,9 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 	cout << "____Computing reduced system... ";
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 	Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
+
+
+
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
