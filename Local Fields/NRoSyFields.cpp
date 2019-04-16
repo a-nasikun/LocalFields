@@ -229,12 +229,33 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& vectorFields)
 		v.normalize();
 		double angle;
 		if(v(1)<0)
-			theta(i) = 2*M_PI - acos(b.dot(v)); // / (double)NRoSy;
+			theta(i) = 2*M_PI - acos(b.dot(v)) / (double)NRoSy;
 		else 
-			theta(i) = acos(b.dot(v)); // / (double)NRoSy;
+			theta(i) = acos(b.dot(v)) / (double)NRoSy;
 	}
 }
 
+void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
+{
+	theta.resize(F.rows());
+	magnitude.resize(F.rows());
+
+	/* Temp variables */
+	Eigen::Vector2d v, b(1, 0);
+
+	for (int i = 0; i < F.rows(); i++)
+	{
+		v = vectorFields.block(2 * i, 0, 2, 1);
+
+		magnitude(i) = v.norm();
+		v.normalize();
+		double angle;
+		if (v(1)<0)
+			theta(i) = 2 * M_PI - acos(b.dot(v));
+		else
+			theta(i) = acos(b.dot(v));
+	}
+}
 
 /* Visualizing the NRoSyFields */
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer)
@@ -270,10 +291,25 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer)
 			TempFields.block(2 * j, 0, 2, 1) = magnitude(j) * RotM * b; 
 		}
 
-		visualize2Dfields(viewer, TempFields, color.row(i), 0.3, false);
+		visualize2Dfields(viewer, TempFields, color.row(i), 0.2, false);
 	}
 }
 
+void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::Vector2d b(1, 0);	
+	Eigen::RowVector3d color (117.0/255.0, 107.0/255.0, 177.0/255.0);
+	Eigen::VectorXd TempFields(2 * F.rows());
+
+	/* Construct rotation matrix*/
+	for (int j = 0; j < F.rows(); j++)
+	{
+		double angle = NRoSy * theta(j);
+		TempFields(2 * j)		= magnitude(j)*cos(angle);
+		TempFields(2 * j + 1)   = magnitude(j)*sin(angle);		
+	}
+	visualize2Dfields(viewer, TempFields, color, 0.4, false);	
+}
 
 void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
 {

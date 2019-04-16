@@ -26,9 +26,11 @@ public:
 	/* Rep. Vectors and N-RoSy Fields interface */
 	void convertNRoSyToRepVectors(Eigen::VectorXd& vectorFields);
 	void convertRepVectorsToNRoSy(const Eigen::VectorXd& vectorFields);
+	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);
 
 	/* Visualizing the NRoSyFields */
 	void visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 
 private:
