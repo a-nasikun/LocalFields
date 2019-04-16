@@ -15,8 +15,6 @@
 /* [EIGEN] */
 #include <Eigen/SparseCore>
 
-
-
 /* [MATLAB] */
 #include <MatlabDataArray.hpp>
 #include <MatlabEngine.hpp>

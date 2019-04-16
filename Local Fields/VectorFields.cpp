@@ -213,7 +213,7 @@ void VectorFields::constructRandomHardConstraints()
 	}
 
 	
-	
+	cout << "Setting up matrix C\n";
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
@@ -3448,8 +3448,7 @@ void VectorFields::vectorFieldsDesignTest()
 
 		/* Solving the reduced system*/
 		setupReducedBiLaplacian();
-		setAndSolveUserSystem();
-			
+		setAndSolveUserSystem();			
 
 		/* Computing L2-norm error*/
 		Eigen::VectorXd diffV = Xf - XFullDim;
@@ -3458,6 +3457,15 @@ void VectorFields::vectorFieldsDesignTest()
 		const double L2norm = sqrt(diff / xf);
 		l2norm_error(i) = L2norm;
 		cout << "Error " << i << " = " << L2norm << endl;
+
+		/* Computing the energy */
+		double refHarmEnergy   = Xf.transpose()       * MF2D * SF2D * Xf; 
+		double appHarmEnergy   = XFullDim.transpose() * MF2D * SF2D * XFullDim;
+		double refBiHarmEnergy = Xf.transpose()       * MF2D * B2D * Xf;
+		double appBiHarmEnergy = XFullDim.transpose() * MF2D * B2D * XFullDim;
+
+		cout << ">> [REF] Energy: Harm=" << refHarmEnergy << ", Biharmonic=" << refBiHarmEnergy << endl;
+		cout << ">> [APP] Energy: Harm=" << appHarmEnergy << ", Biharmonic=" << appBiHarmEnergy << endl;
 	}
 	cout << "ERRORS: \n" << l2norm_error << endl; 
 }

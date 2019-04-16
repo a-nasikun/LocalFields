@@ -400,7 +400,7 @@ void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector)
 	{
 		while (getline(myfile, line))
 		{
-			cout << "Inserting " << line << " to vector \n";
+			//cout << "Inserting " << line << " to vector \n";
 			vector.push_back(stoi(line));
 		}
 		myfile.close();
