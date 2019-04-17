@@ -274,9 +274,9 @@ void VectorFields::visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, co
 {	
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
-	const double EDGE_RATIO = 0.075;			// for the eigenfields of local patch
+	//const double EDGE_RATIO = 0.075;			// for the eigenfields of local patch
 	//const double EDGE_RATIO = 0.125;			// for patch of the eigenfields patch
-	//const double EDGE_RATIO = 2;
+	const double EDGE_RATIO = 2;
 
 	/*Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -748,8 +748,8 @@ void VectorFields::visualizeEigenfields(igl::opengl::glfw::Viewer &viewer, int i
 	Eigen::RowVector3d blue(0.1, 0.0, 0.9);
 
 	/* Visualizing the fields*/
-	//visualize2Dfields(viewer, eigfields, blue, 3, true);
-	visualize2Dfields(viewer, eigfields, purple, 3, false);
+	visualize2Dfields(viewer, eigfields, blue, 2, true);
+	//visualize2Dfields(viewer, eigfields, purple, 3, false);
 }
 
 void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer, int i, int iRef)
@@ -780,8 +780,8 @@ void VectorFields::visualizeApproxEigenfields(igl::opengl::glfw::Viewer &viewer,
 	Eigen::RowVector3d purple(136.0 / 255.0, 86.0 / 255.0, 167.0 / 255.0);
 	Eigen::RowVector3d red(0.9, 0.1, 0.1);	
 	
-	visualize2Dfields(viewer, eigfields, red, 2, false);
-	//visualize2Dfields(viewer, eigfields, red, 3, true);
+	//visualize2Dfields(viewer, eigfields, red, 2, false);
+	visualize2Dfields(viewer, eigfields, red, 2, true);
 }
 
 void VectorFields::visualizeArbField(igl::opengl::glfw::Viewer &viewer)

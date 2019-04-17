@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 
 	/* ========================= PRE-PROCESS ==============================*/
@@ -108,11 +108,11 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Cube_Round_2000_EigenPatch_40sup";
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();	
-	vectorFields.storeBasis(filename_basis);
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Cube_Sharp_2000_EigPatch_40sup";
+	///cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	///vectorFields.constructSamples(numSample);
+	///vectorFields.constructBasis();	
+	///vectorFields.storeBasis(filename_basis);
 	//vectorFields.retrieveBasis(filename_basis);
 	//vectorFields.constructBasisEigenVects();
 	//vectorFields.setupReducedBiLaplacian();
@@ -124,11 +124,11 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_2_Full";
-	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_500_Approx_EigenPatch_2000dim_40sup";
+	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Sharp_500_Ref_eigFields";
+	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Sharp_500_Approx_EigPatch_2000dim_40sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
-	//vectorFields.retrieveEigenFields();
-	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
+	//vectorFields.retrieveEigenFields(filename_refField);
+	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);

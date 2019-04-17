@@ -145,7 +145,7 @@ public:
 	// APPLICATIONS ON GLOBAL SYSTEM
 	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 	void computeEigenFields(const int &numEigs, const string& filename );
-	void retrieveEigenFields();
+	void retrieveEigenFields(const string& filename);
 
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);

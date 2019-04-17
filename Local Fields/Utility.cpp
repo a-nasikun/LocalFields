@@ -139,7 +139,7 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 	Engine *ep;
 	mxArray *eigValM, *eigVecM;		// for Matlab
 	double	*eigValE, *eigVecE;		// for Eigen
-	const int NUM_EIGEN = 2;
+	const int NUM_EIGEN = 500;
 	const int NUM_ROWS = 104544;
 	const int NUM_BLOCKS = 1;
 
@@ -156,7 +156,7 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 	}
 	
 	cout << "Loading Matrix" << endl;
-	string location = "load('" + filename + "');";
+	string location = "load('" + filename + ".mat');";
 	engEvalString(ep, location.c_str());
 	
 	// First 2 blocks
@@ -205,7 +205,9 @@ void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename)
 	}
 
 	cout << "Loading Matrix" << endl;
-	engEvalString(ep, "load('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_REigVal.mat');");
+	string location = "load('" + filename + ".mat');";
+	engEvalString(ep, location.c_str());
+	//engEvalString(ep, "load('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_REigVal.mat');");
 
 	// Get the EIGENVALUES from Matlab => C++
 	cout << "Retrieving the eigenvalues" << endl;

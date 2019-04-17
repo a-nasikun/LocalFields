@@ -2447,7 +2447,7 @@ void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double
 {
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Cube_Round_Basis_1000.txt";
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Cube_Sharp_Basis_1000.txt";
 	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
 	Eigen::MatrixXd BasisTemp;
 	
@@ -3329,10 +3329,10 @@ void VectorFields::computeEigenFields(const int &numEigs, const string& filename
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::retrieveEigenFields()
+void VectorFields::retrieveEigenFields(const string& filename)
 {
-	ReadDenseMatrixFromMatlab(eigFieldFull2D, "Hello");
-	ReadVectorFromMatlab(eigValuesFull, "hello");
+	ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
+	ReadVectorFromMatlab(eigValuesFull, filename);
 }
 
 void VectorFields::computeApproxEigenFields(const int &numEigs, const string& filename)
