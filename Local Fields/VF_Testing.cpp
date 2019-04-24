@@ -84,9 +84,9 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	//Eigen::VectorXd wb;
 	wb.resize(U.rows());
 
-	for (int i = 0; i < U.rows(); i++) {
-		wb(i) = 0.0;
-	}
+	//for (int i = 0; i < U.rows(); i++) {
+	//	wb(i) = 0.0;
+	//}
 
 	cout << "____Getting total SUM(wi*bi) \n";
 	//for (int i = 0; i < w.rows(); i++) {
@@ -104,7 +104,17 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 
 	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl; 
 
-	//cout << "Weight: \n" << w << endl; 
+	/* Measuring the energy */
+	double energy1 = v.transpose()*B2D*v;
+	double energy2 = wb.transpose()*B2D*wb;
+	cout << "Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
+
+	/* Measuring the 'length' of each vector */
+	double length1 = v.transpose()*SF2D*v;
+	double length2 = wb.transpose()*SF2D*wb;
+	cout << "biharmonic Energy => Ref=" << length1 << ", Approx:" << length2 << endl;
+	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;

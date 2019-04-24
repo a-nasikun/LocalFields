@@ -17,8 +17,8 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
-	//constructSoftConstraints();
+	//constructRandomHardConstraints();
+	constructSoftConstraints();
 	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
@@ -1732,7 +1732,7 @@ void VectorFields::setupGlobalProblem()
 	//Eigen::VectorXd					vEst;
 	double lambda = 0.4; 
 	
-	//constructConstraints();
+	constructConstraints();
 	setupRHSGlobalProblemMapped(g, h, vEst, b);
 	setupLHSGlobalProblemMapped(A_LHS);
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
@@ -3463,13 +3463,15 @@ void VectorFields::vectorFieldsDesignTest()
 		cout << "Error " << i << " = " << L2norm << endl;
 
 		/* Computing the energy */
-		double refHarmEnergy   = Xf.transpose()       * MF2D * SF2D * Xf; 
-		double appHarmEnergy   = XFullDim.transpose() * MF2D * SF2D * XFullDim;
-		double refBiHarmEnergy = Xf.transpose()       * MF2D * B2D * Xf;
-		double appBiHarmEnergy = XFullDim.transpose() * MF2D * B2D * XFullDim;
+		double refHarmEnergy   = Xf.transpose()       * SF2D * Xf; 
+		double appHarmEnergy   = XFullDim.transpose() * SF2D * XFullDim;
+		double refBiHarmEnergy = Xf.transpose()       * B2D * Xf;
+		double appBiHarmEnergy = XFullDim.transpose() * B2D * XFullDim;
 
-		cout << ">> [REF] Energy: Harm=" << refHarmEnergy << ", Biharmonic=" << refBiHarmEnergy << endl;
+		cout << ">> [REF] Energy: Harm=" << refHarmEnergy << ", Biharmonic=" << refBiHarmEnergy << endl;		
 		cout << ">> [APP] Energy: Harm=" << appHarmEnergy << ", Biharmonic=" << appBiHarmEnergy << endl;
+		cout << "         Relative Harm-energy =" << abs(refHarmEnergy - appHarmEnergy) / refHarmEnergy << endl;
+		cout << "         Relative Biharm-energy =" << abs(refBiHarmEnergy - appBiHarmEnergy) / refBiHarmEnergy << endl;
 	}
 	cout << "ERRORS: \n" << l2norm_error << endl; 
 }
