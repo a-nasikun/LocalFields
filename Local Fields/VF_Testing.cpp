@@ -84,14 +84,7 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	//Eigen::VectorXd wb;
 	wb.resize(U.rows());
 
-	//for (int i = 0; i < U.rows(); i++) {
-	//	wb(i) = 0.0;
-	//}
-
 	cout << "____Getting total SUM(wi*bi) \n";
-	//for (int i = 0; i < w.rows(); i++) {
-	//	wb += w(i)*U.col(i);
-	//}
 	wb = U*w; 
 
 	// Compare their L2-Norm
@@ -111,9 +104,9 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
 
 	/* Measuring the 'length' of each vector */
-	double length1 = v.transpose()*SF2D*v;
-	double length2 = wb.transpose()*SF2D*wb;
-	cout << "biharmonic Energy => Ref=" << length1 << ", Approx:" << length2 << endl;
+	energy1 = v.transpose()*SF2D*v;
+	energy2 = wb.transpose()*SF2D*wb;
+	cout << "Biharmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	t2 = chrono::high_resolution_clock::now();
@@ -125,7 +118,7 @@ void VectorFields::testBasis_WithRegularizer(double &error)
 {
 	/* SETUP FOR REFERENCE SYSTEM */
 	Eigen::VectorXd vIn = Xf;
-	const double lambda = 0.02;
+	const double lambda = 0.002;
 	Eigen::SparseMatrix<double> ARef = MF2D + lambda*B2D;
 	Eigen::VectorXd				bRef = MF2D*vIn; 
 	Eigen::VectorXd				wRef;
@@ -161,11 +154,14 @@ void VectorFields::testBasis_WithRegularizer(double &error)
 	double energy1 = wRef.transpose()*B2D*wRef;
 	double energy2 = wApp.transpose()*B2D*wApp;
 	cout << "ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl; 
+	cout << "\t\t Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
+	cout << "Reference => L2norm " << wRef.transpose()*MF2D*wRef << "\t, Smoothness:" << lambda*wRef.transpose()*B2D*wRef << endl;
+	cout << "Approx.   => L2norm " << wApp.transpose()*MF2D*wApp << "\t, Smoothness:" << lambda*wApp.transpose()*B2D*wApp << endl;
 
 	/* Measuring the 'length' of each vector */
 	double length1 = wRef.transpose()*MF2D*wRef;
 	double length2 = wApp.transpose()*MF2D*wApp;
-	cout << "[LENGTH] => Ref=" << length1 << ", Approx:" << length2 << endl;
+	cout << "[LENGTH] => Ref=" << length1 << ", \t\t\t Approx:" << length2 << endl;
 
 	wb = wApp;
 }
@@ -254,7 +250,7 @@ void VectorFields::projectionTest()
 
 		/* Projection to the subspace */
 		testBasis_NoRegularizer(errors(i));
-		//testBasis_WithRegularizer(errors(i));
+		testBasis_WithRegularizer(errors(i));
 		//testBasis_WithRegularizer();
 
 		t2 = chrono::high_resolution_clock::now();

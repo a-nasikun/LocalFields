@@ -17,8 +17,8 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	//constructRandomHardConstraints();
-	constructSoftConstraints();
+	constructRandomHardConstraints();
+	//constructSoftConstraints();
 	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
@@ -181,8 +181,8 @@ void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
 	const bool readFromFile = true; 
-	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_25.txt";;
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_25.txt";;
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	if (readFromFile)
 	{

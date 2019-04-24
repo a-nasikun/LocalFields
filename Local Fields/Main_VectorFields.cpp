@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_40sup";
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup";
 	///cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	///vectorFields.constructSamples(numSample);
 	///vectorFields.constructBasis();	
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	//vectorFields.visualize2Dfields(viewer, vectorFields.projApprox, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
 
 	/* _____ Vector fields design test __________________________*/
-	vectorFields.vectorFieldsDesignTest();
+	//vectorFields.vectorFieldsDesignTest();
 	//vectorFields.vectorFieldsDesignTest_Normalized();
 
 
@@ -195,8 +195,8 @@ int main(int argc, char *argv[])
 	//vectorFields.testEdgesAddition(viewer);
 	//vectorFields.visualizePatchDijkstra(viewer);
 	
-	vectorFields.visualizeCurveConstraints(viewer);
-	vectorFields.visualizeSoftConstraints(viewer);
+	///vectorFields.visualizeCurveConstraints(viewer);
+	///vectorFields.visualizeSoftConstraints(viewer);
 	
 
 	/* MEASURE ACCURACY */
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
 		case '-':
 			//vectorFields.projectionTest();
 			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
-			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);	
+			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, false);	
 			vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
 		case '`':			
