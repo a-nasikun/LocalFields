@@ -114,22 +114,22 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::testBasis_WithRegularizer(double &error)
+void VectorFields::testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& MReg, double &error)
 {
 
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Testing basis 2D of arbitrary field without regularizer...\n";
+	cout << "> Testing basis 2D of arbitrary field WITH regularizer...\n";
 
-	// Construct matrices for Test
+	// Construct matrices for Test	
 	cout << "__[APPROXIMATION]....\n";
-	const double				lambda = 100 * MF2D.coeffRef(0,0) / B2D.coeffRef(0,0); 
+	const double				lambda = 1000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = XFullDim;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
-	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*B2D) * U;
+	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*MReg) * U;
 
 	cout << "____Solving linear system variables (with lambda=" << lambda << ")\n";
 	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
@@ -147,7 +147,7 @@ void VectorFields::testBasis_WithRegularizer(double &error)
 	
 	cout << "__[REFERENCE]....\n";
 	a = MF2D*v;
-	B = MF2D + lambda*B2D; 
+	B = MF2D + lambda*MReg; 
 	Eigen::VectorXd  wRef;
 	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver2(B);
 	wRef = sparseSolver2.solve(a);
@@ -166,8 +166,15 @@ void VectorFields::testBasis_WithRegularizer(double &error)
 	/* Measuring the energy */
 	double energy1 = wRef.transpose()*B2D*wRef;
 	double energy2 = wb.transpose()*B2D*wb;
-	cout << "Biharmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*B2D*v << endl;
+	cout << "BIHARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*B2D*v << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
+	/* Measuring the energy */
+	energy1 = wRef.transpose()*SF2D*wRef;
+	energy2 = wb.transpose()*SF2D*wb;
+	cout << "HARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*SF2D*v << endl;
+	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
 
 	/* Measuring the 'length' of each vector */
 	double length1 = wRef.transpose()*MF2D*wRef;
@@ -201,7 +208,8 @@ void VectorFields::projectionTest()
 		//setupGlobalProblem();
 		//testBasis_NoRegularizer(errors(i));
 
-		testBasis_WithRegularizer(errors(i));
+		//testBasis_WithRegularizer(B2D, errors(i));
+		testBasis_WithRegularizer(SF2D, errors(i));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;

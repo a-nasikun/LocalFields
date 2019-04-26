@@ -180,7 +180,7 @@ public:
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
 	void testBasis_NoRegularizer(double &error);
-	void testBasis_WithRegularizer(double &error);
+	void testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& MReg, double &error);
 	void projectionTest();
 	void measureU1andJU0();
 	void measureL2NormEigVectors();
