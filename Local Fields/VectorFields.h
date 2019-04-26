@@ -181,7 +181,6 @@ public:
 	void measureDirichletEnergy();
 	void testBasis_NoRegularizer(double &error);
 	void testBasis_WithRegularizer(double &error);
-	void testBasis_WithRegularizer();
 	void projectionTest();
 	void measureU1andJU0();
 	void measureL2NormEigVectors();
@@ -213,6 +212,7 @@ public:
 	void checkB2DStructure();
 	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
 	void testEnergyOfLocalPatch(igl::opengl::glfw::Viewer &viewer);
+	
 	
 	// VISUALIZATION of TESTING
 	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);

@@ -3120,7 +3120,7 @@ void VectorFields::getUserConstraints()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Obtaining user constraints ";
 
-	//constructConstraints();
+	constructConstraints();
 
 	userConstraints = globalConstraints; 
 	CBar			= C * Basis;

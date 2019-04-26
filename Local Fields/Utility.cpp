@@ -394,7 +394,7 @@ void WriteSTDVectorToTxtFile(const vector<int>& vector, const string& filename)
 
 void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector) 
 {
-	vector.reserve(100);
+	vector.reserve(100000);
 
 	string line;
 	ifstream myfile(filename.c_str());
@@ -407,6 +407,56 @@ void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector)
 		}
 		myfile.close();
 	}
+
+	else cout << "Unable to open file";
+}
+
+void WriteEigenVectorToTxtFile(const Eigen::VectorXd& vector, const string& filename)
+{
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Write file to text \n";
+		for (int i = 0; i < vector.size(); i++)
+		{
+			myfile << vector(i) << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+}
+
+void LoadEigenVectorFromTxtFile(const string& filename, Eigen::VectorXd& vector)
+{
+	std::vector<double> v2;
+	v2.reserve(500000);
+
+	string line;
+	ifstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		while (getline(myfile, line))
+		{
+			//cout << "Inserting " << line << " to vector \n";
+			v2.push_back(stod(line));
+		}
+		myfile.close();
+		v2.shrink_to_fit();
+		//printf("std:vector size=%d\n", (int)v2.size());
+		//for (int i = 0; i < 10; i++) printf("%.4f\n", v2[i]);
+
+		vector.resize(v2.size());
+		//cout << "Getting the elements from vector\n";
+		vector = Eigen::Map<Eigen::VectorXd>(v2.data(), (int)v2.size());
+		//printf("eigen::vector size=%d\n", vector.rows());
+		//cout << vector.block(0, 0, 10, 1) << endl; 
+		//for (int k=0; k<v2.size(); k++)
+		//{
+		//	vector(k) = v2[k];
+		//}
+	}
+
+
 
 	else cout << "Unable to open file";
 }

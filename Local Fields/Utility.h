@@ -78,6 +78,9 @@ double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<d
 double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv);
 void WriteSTDVectorToTxtFile(const vector<int>& vector, const string& filename);
 void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector);
+void WriteEigenVectorToTxtFile(const Eigen::VectorXd& vector, const string& filename);
+void LoadEigenVectorFromTxtFile(const string& filename, Eigen::VectorXd&);
+
 
 void writeEigenSparseMatrixToBinary(Eigen::SparseMatrix<double> &m, const std::string &filename);
 void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseMatrix<double> &m);

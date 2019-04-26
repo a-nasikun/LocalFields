@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(10000);
+	vectorFields.selectFaceToDraw(20000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -108,17 +108,17 @@ int main(int argc, char *argv[])
 	//vectorFields.setupGlobalProblem();
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup";
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
+	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_XFields_Grad.txt";
 	///cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	///vectorFields.constructSamples(numSample);
 	///vectorFields.constructBasis();	
 	///vectorFields.storeBasis(filename_basis);
-	vectorFields.retrieveBasis(filename_basis);
-	//vectorFields.constructBasisEigenVects();
+	vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem();
-	//vectorFields.measureApproxAccuracyL2Norm();
-	//vectorFields.measureDirichletEnergy();
+	///WriteEigenVectorToTxtFile(vectorFields.XFullDim, filename_vfields);
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.XFullDim);
 
 	//vectorFields.writeBasisToFile();
 	//vectorFields.writeField3DToFile();
@@ -141,8 +141,6 @@ int main(int argc, char *argv[])
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//double error; 
-	//vectorFields.testBasis_NoRegularizer(error);
-	//vectorFields.testBasis_WithRegularizer();
 	vectorFields.projectionTest();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualizeApproximatedFields(viewer);	
@@ -240,11 +238,12 @@ int main(int argc, char *argv[])
 		case '-':
 			//vectorFields.projectionTest();
 			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
-			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, false);	
-			vectorFields.visualizeGlobalConstraints(viewer); 	
+			vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 4.0, false);	
+			//vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
 		case '`':			
-			vectorFields.visualizeSubdomain(viewer);
+			//vectorFields.visualizeSubdomain(viewer);
+			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 4.0, false);
 			break;
 		case '1':
 			//vectorFields.visualizeSubdomain(viewer);
@@ -255,7 +254,7 @@ int main(int argc, char *argv[])
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer);
-			vectorFields.visualizeUserConstraints(viewer);
+			//vectorFields.visualizeUserConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;

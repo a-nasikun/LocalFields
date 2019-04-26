@@ -116,78 +116,24 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 
 void VectorFields::testBasis_WithRegularizer(double &error)
 {
-	/* SETUP FOR REFERENCE SYSTEM */
-	Eigen::VectorXd vIn = Xf;
-	const double lambda = 0.002;
-	Eigen::SparseMatrix<double> ARef = MF2D + lambda*B2D;
-	Eigen::VectorXd				bRef = MF2D*vIn; 
-	Eigen::VectorXd				wRef;
 
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> solverRef(ARef); 
-	wRef = solverRef.solve(bRef);
-	projRef = wRef; 
-
-	/* SETUP FOR THE APPROXIMATION */
-	Eigen::SparseMatrix<double> AApp = Basis.transpose() * ARef * Basis;
-	Eigen::VectorXd				bApp = Basis.transpose() * bRef; 
-	Eigen::VectorXd				q, wApp;
-
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> solverApp(AApp);
-	q = solverApp.solve(bApp);
-	wApp = Basis*q; 
-	projApprox = wApp;
-
-	/* MEASURING ERROR/DIFFERENCE */
-	cout << "Test some elements: \n";
-	for (int i = 0; i < min(10, (int) wApp.rows()); i++)
-	{
-		cout << "Ref: " << wRef(i) << "\t\t\t Approx.: " << wApp(i) << endl; 
-	}
-
-	Eigen::VectorXd diff = wRef - wApp;
-	double norm1 = diff.transpose()*MF2D*diff;
-	double norm2 = wRef.transpose()*MF2D*wRef;
-	error = sqrt(norm1 / norm2);
-	cout << "ERROR: " << error << endl; 
-
-	/* Measuring the energy */
-	double energy1 = wRef.transpose()*B2D*wRef;
-	double energy2 = wApp.transpose()*B2D*wApp;
-	cout << "ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl; 
-	cout << "\t\t Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
-	cout << "Reference => L2norm " << wRef.transpose()*MF2D*wRef << "\t, Smoothness:" << lambda*wRef.transpose()*B2D*wRef << endl;
-	cout << "Approx.   => L2norm " << wApp.transpose()*MF2D*wApp << "\t, Smoothness:" << lambda*wApp.transpose()*B2D*wApp << endl;
-
-	/* Measuring the 'length' of each vector */
-	double length1 = wRef.transpose()*MF2D*wRef;
-	double length2 = wApp.transpose()*MF2D*wApp;
-	cout << "[LENGTH] => Ref=" << length1 << ", \t\t\t Approx:" << length2 << endl;
-
-	wb = wApp;
-}
-
-void VectorFields::testBasis_WithRegularizer()
-{
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Testing basis 2D of arbitrary field (with regularizer)...\n";
+	cout << "> Testing basis 2D of arbitrary field without regularizer...\n";
 
 	// Construct matrices for Test
-	cout << "____Assigning variables\n";
+	cout << "__[APPROXIMATION]....\n";
+	const double				lambda = 100 * MF2D.coeffRef(0,0) / B2D.coeffRef(0,0); 
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
-	Eigen::VectorXd				v = Xf; 
-	//Eigen::VectorXd				v = arbField2D;
-	Eigen::VectorXd				a = (U.transpose()*MF2D*v).transpose();
-	//Eigen::SparseMatrix<double> B1 = U.transpose() * MF2D * U;
-	//Eigen::SparseMatrix<double> B2 = U.transpose() * SF2D * MF2D * U;
-	const double lambda = 0.005; 
-	//Eigen::SparseMatrix<double> B = B1 + lambda*B2;
-	Eigen::SparseMatrix<double> B = U.transpose()*(MF2D+lambda*B2D)*U;
+	Eigen::VectorXd				v = XFullDim;
+	Eigen::VectorXd				a = U.transpose()*MF2D*v;
+	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*B2D) * U;
 
-	cout << "____Solving linear system variables\n";
-	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	cout << "____Solving linear system variables (with lambda=" << lambda << ")\n";
+	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+
 	Eigen::VectorXd w = sparseSolver.solve(a);
 
 	if (sparseSolver.info() != Eigen::Success) {
@@ -197,38 +143,41 @@ void VectorFields::testBasis_WithRegularizer()
 		cout << sparseSolver.info() << endl;
 		return;
 	}
+	wb = U*w;
+	
+	cout << "__[REFERENCE]....\n";
+	a = MF2D*v;
+	B = MF2D + lambda*B2D; 
+	Eigen::VectorXd  wRef;
+	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver2(B);
+	wRef = sparseSolver2.solve(a);
+	projRef = wRef;
 
-	//Eigen::VectorXd wb;
-	wb.resize(U.rows());
-
-	for (int i = 0; i < U.rows(); i++) {
-		wb(i) = 0.0;
-	}
-
-	cout << "____Getting total SUM(wi*bi) \n";
-	//for (int i = 0; i < w.rows(); i++) {
-	//	wb += w(i)*U.col(i);
-	//}
-	wb = U*w; 
 
 	// Compare their L2-Norm
 	cout << "____Computing L2-norm \n";
-	Eigen::VectorXd diff = v - wb;
+	Eigen::VectorXd diff = wRef - wb;
 	double norm1 = diff.transpose()*MF2D*diff;
-	double norm2 = v.transpose()*MF2D*v;
+	double norm2 = wRef.transpose()*MF2D*wRef;
 	double normL2 = sqrt(norm1 / norm2);
+	error = normL2;
+	cout << "The L-2 Norm is << " << normL2  << endl;
 
-	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl;
+	/* Measuring the energy */
+	double energy1 = wRef.transpose()*B2D*wRef;
+	double energy2 = wb.transpose()*B2D*wb;
+	cout << "Biharmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*B2D*v << endl;
+	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
-	double energyInput = v.transpose()*B2D*v; 
-	double energyOutput = wb.transpose()*B2D*v;
-	cout << "Energy: Input= " << energyInput << ", \t\t Output= " << energyOutput << endl; 
-
-	//cout << "Weight: \n" << w << endl; 
+	/* Measuring the 'length' of each vector */
+	double length1 = wRef.transpose()*MF2D*wRef;
+	double length2 = wb.transpose()*MF2D*wb;
+	cout << "Length => Ref=" << length1 << ", Approx:" << length2 << ", initial: " << v.transpose()*MF2D*v << endl;
+	cout << "Relative length: " << length2 / length1 * 100.0 << "%" <<  endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
-	cout << "in " << duration.count() << " seconds." << endl;
+	cout << "in " << duration.count() << " seconds." << endl;	
 }
 
 void VectorFields::projectionTest()
@@ -245,13 +194,14 @@ void VectorFields::projectionTest()
 	{
 		t1 = chrono::high_resolution_clock::now();
 
-		/* Reference results */
-		setupGlobalProblem();
+		
 
 		/* Projection to the subspace */
-		testBasis_NoRegularizer(errors(i));
+		/* Reference results */
+		//setupGlobalProblem();
+		//testBasis_NoRegularizer(errors(i));
+
 		testBasis_WithRegularizer(errors(i));
-		//testBasis_WithRegularizer();
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
