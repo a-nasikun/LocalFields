@@ -104,8 +104,12 @@ int main(int argc, char *argv[])
 	//vectorFields.checkB2DStructure();
 	
 	/* ====================== GLOBAL PROBLEM ====================*/
-	//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	//vectorFields.setupGlobalProblem();
+	cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	Eigen::Vector3d lambda;
+	lambda(0) = 0.3; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	lambda(1) = 0.0003; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+	lambda(2) = 0.4;
+	vectorFields.setupGlobalProblem(lambda);
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup";
@@ -115,15 +119,15 @@ int main(int argc, char *argv[])
 	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
 
 	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_XFields_Grad.txt";
-	///cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	///vectorFields.constructSamples(numSample);
 	///vectorFields.constructBasis();	
 	///vectorFields.storeBasis(filename_basis);
 	vectorFields.retrieveBasis(filename_basis);	
-	//vectorFields.setupReducedBiLaplacian();
-	//vectorFields.setAndSolveUserSystem();
+	vectorFields.setupReducedBiLaplacian();
+	vectorFields.setAndSolveUserSystem(lambda);
 	///WriteEigenVectorToTxtFile(vectorFields.XFullDim, filename_vfields);
-	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.XFullDim);
+	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.XFullDim);
 
 	//vectorFields.writeBasisToFile();
 	//vectorFields.writeField3DToFile();
@@ -146,7 +150,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//double error; 
-	vectorFields.projectionTest();
+	///vectorFields.projectionTest();
 	//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);
 	//vectorFields.visualizeApproximatedFields(viewer);	
 	//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 2.0, true);
@@ -198,12 +202,13 @@ int main(int argc, char *argv[])
 	//vectorFields.testEdgesAddition(viewer);
 	//vectorFields.visualizePatchDijkstra(viewer);
 	
-	///vectorFields.visualizeCurveConstraints(viewer);
-	///vectorFields.visualizeSoftConstraints(viewer);
+	/* SOFT CONSTRAINTS */
+	//vectorFields.visualizeCurveConstraints(viewer);
+	vectorFields.visualizeSoftConstraints(viewer);
 	
 
 	/* MEASURE ACCURACY */
-	//vectorFields.measureApproxAccuracyL2Norm();
+	vectorFields.measureApproxAccuracyL2Norm();
 
 	/* TEST SOLVERS */
 	//testLAPACKEdsysv();
@@ -238,6 +243,12 @@ int main(int argc, char *argv[])
 		srand(time(NULL));
 		selectedVertex = rand() % V.rows();
 
+		/* For selecting faces */
+		double xMouse;
+		double yMouse;
+		int fid;
+		Eigen::Vector3f bc;
+
 		switch (key)
 		{
 		case '-':
@@ -258,8 +269,8 @@ int main(int argc, char *argv[])
 			break;
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
-			//vectorFields.visualizeUserConstraints(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
+			vectorFields.visualizeUserConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;
@@ -324,22 +335,35 @@ int main(int argc, char *argv[])
 		//case 'B':
 		//	vectorFields.visualizeLocalSubdomain(viewer);
 		//	break;
-		//case 'x':
-		//case 'X':
-			//C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			//selectFace = !selectFace;
-			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+		case 'n':
+		case 'N':
+			//selectFace = true; 
+			xMouse = viewer.current_mouse_x;
+			yMouse = viewer.core.viewport(3) - viewer.current_mouse_y;
+			
+			//if (selectFace) {
+				if (igl::unproject_onto_mesh(Eigen::Vector2f(xMouse, yMouse), viewer.core.view /** viewer.core.model*/,
+					viewer.core.proj, viewer.core.viewport, V, F, selectedFace, bc))
+				{
+					// paint hit red
+					printf("Selected face is %d \n", selectedFace);
+					C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+					C.row(selectedFace) << 1, 0, 0;
+					viewer.data().set_colors(C);					
+					//viewer.data().add_points(vectorFields.FC.row(selectedFace), Eigen::RowVector3d(0.0, 0.1, 0.0));
 
-			//cout << "Select face: " << selectFace << endl; 
-			//if (selectFace) cout << "Face is selected" << endl; 
-			//selectedFace = rand() % F.rows();
-			//cout << "Face: " << selectedFace << endl;
-		case 'x':
-		case 'X':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			selectFace = !selectFace;			
-			//vectorFields.visualizeRandomFace(viewer, selectedFace);
-			break;
+					return true;
+				}
+			//}
+			break; 
+
+		/* Case x to activate for user inputted constraints */	
+		///case 'x':
+		///case 'X':
+		///	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+		///	selectFace = !selectFace;			
+		///	//vectorFields.visualizeRandomFace(viewer, selectedFace);
+		///	break;
 		case 'c':
 		case 'C':
 			printf("Computing smoothing on Reduced basis\n");
@@ -365,7 +389,7 @@ int main(int argc, char *argv[])
 		case 'r':
 		case 'R':
 			cout << "\n========================= GLOBAL PROBLEM =============================\n";
-			vectorFields.setupGlobalProblem();
+			vectorFields.setupGlobalProblem(lambda);
 			vectorFields.visualizeApproximatedFields(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
@@ -376,7 +400,7 @@ int main(int argc, char *argv[])
 			//vectorFields.setupGlobalProblem();			
 			//vectorFields.visualizeApproximatedFields(viewer);
 			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-			vectorFields.setAndSolveUserSystem();
+			vectorFields.setAndSolveUserSystem(lambda);
 			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			break; 
@@ -397,7 +421,7 @@ int main(int argc, char *argv[])
 
 	
 	viewer.callback_mouse_move =
-		[&V, &F, &C, &selectFace, &ChosenFaces, &constraintDir, &vectorFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
+		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
 		int fid;
 		Eigen::Vector3f bc;
@@ -418,7 +442,7 @@ int main(int argc, char *argv[])
 				{
 					viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
 				}
-
+	
 				return true;
 			}
 		}
@@ -432,20 +456,20 @@ int main(int argc, char *argv[])
 				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
-
+	
 				/* UPdating the mesh information */
 				viewer.data().clear();
 				viewer.data().set_mesh(V, F);
 				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				//vectorFields.setupGlobalProblem();			
+				//vectorFields.setupGlobalProblem(lambda);			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//vectorFields.visualizeAreaOfLaplaceConstraint(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.setAndSolveUserSystem();
+				vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
 				vectorFields.visualizeUserConstraints(viewer);
-
+	
 				ChosenFaces.clear();
 				//cout << "Hello there\n";
 			}

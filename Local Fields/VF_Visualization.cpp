@@ -132,6 +132,7 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//viewer.data().clear();
 	//viewer.data().set_mesh(V, F);
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
+	//Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.9, 0.0);
 
 	visualize2Dfields(viewer, Xf, color, 2.0, false);
 	//visualize2Dfields(viewer, Xf, color, 2.0, true);
@@ -438,8 +439,8 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
-	visualize2Dfields(viewer, XFullDim, colorInput, 4, false);
-	//visualize2Dfields(viewer, XFullDim, color, 2, false);
+	//visualize2Dfields(viewer, XFullDim, colorInput, 4, false);
+	visualize2Dfields(viewer, XFullDim, color, 2, false);
 	//visualize2Dfields(viewer, XFullDim, color, 2, true);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
@@ -1020,7 +1021,7 @@ void VectorFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 5.0;
-	const double EDGE_RATIO = 1.0;
+	const double EDGE_RATIO = 2.0;
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);

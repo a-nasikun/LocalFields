@@ -110,7 +110,7 @@ public:
 	void constructMappingMatrix();
 	void constructMatrixB();
 
-	void setupGlobalProblem();
+	void setupGlobalProblem(const Eigen::Vector3d& lambda);
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
@@ -129,8 +129,8 @@ public:
 	void projectCurvesToFrame();
 	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);
-	void setupRHSGlobalProblemSoftConstraints(const double& lambda, Eigen::VectorXd& b);
-	void setupLHSGlobalProblemSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHS);
+	void setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b);
+	void setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS);
 	void solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 	void solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 	void solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
@@ -164,13 +164,13 @@ public:
 	void retrieveBasis(const string& filename);
 
 	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
-	void setAndSolveUserSystem();
+	void setAndSolveUserSystem(const Eigen::Vector3d& lambda);
 	void setupReducedBiLaplacian();
 	void getUserConstraints();
 	void setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar);
-	void setupRHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::VectorXd& bBar);
-	void setupLHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
+	void setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& bBar);
+	void setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void mapSolutionToFullRes();

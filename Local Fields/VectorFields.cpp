@@ -17,8 +17,8 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
-	//constructSoftConstraints();
+	//constructRandomHardConstraints();
+	constructSoftConstraints();
 	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
@@ -964,30 +964,64 @@ void VectorFields::constructSoftConstraints()
 	//	curvesConstraints[i] = aCurve; 
 	//}
 
-	/* Manual set-up for Armadillo */
+	
 	int constCounter = 0;
-	// Head
-	constructCurvesAsConstraints(68818,6278, aCurve);
+	/* Manual set-up for Chinese Dragon */
+	// Face
+	constructCurvesAsConstraints(152474, 51474, aCurve);
 	curvesConstraints[constCounter++] = aCurve;
-	// Stomach
-	constructCurvesAsConstraints(56965, 41616, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Leg/Foot (R then L)
-	constructCurvesAsConstraints(28590, 16119, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	constructCurvesAsConstraints(25037, 571, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Arm/Hand
-	constructCurvesAsConstraints(55454, 6877, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	constructCurvesAsConstraints(49059, 36423, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
+
 	// Back
-	constructCurvesAsConstraints(68331, 72522, aCurve);
+	constructCurvesAsConstraints(44109, 68907, aCurve);
 	curvesConstraints[constCounter++] = aCurve;
-	// Tail
-	constructCurvesAsConstraints(24056, 1075, aCurve);
+
+	// body - bottom
+	constructCurvesAsConstraints(13471, 195817, aCurve);
 	curvesConstraints[constCounter++] = aCurve;
+
+	// body - right
+	constructCurvesAsConstraints(123036, 247143, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// body - left
+	constructCurvesAsConstraints(234815, 232296, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// front_right_leg
+	constructCurvesAsConstraints(75468, 7716, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// front_left_leg
+	constructCurvesAsConstraints(231495, 77171, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// tail
+	constructCurvesAsConstraints(230301, 113500, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	/* Manual set-up for Armadillo */
+	///// Head
+	///constructCurvesAsConstraints(68818,6278, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Stomach
+	///constructCurvesAsConstraints(56965, 41616, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Leg/Foot (R then L)
+	///constructCurvesAsConstraints(28590, 16119, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///constructCurvesAsConstraints(25037, 571, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Arm/Hand
+	///constructCurvesAsConstraints(55454, 6877, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///constructCurvesAsConstraints(49059, 36423, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Back
+	///constructCurvesAsConstraints(68331, 72522, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Tail
+	///constructCurvesAsConstraints(24056, 1075, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
 
 	/* Project elements to local frame */
 	projectCurvesToFrame();
@@ -1725,22 +1759,26 @@ void VectorFields::projectCurvesToFrame()
 //	//printf("Cp=%dx%d\n", C.rows(), C.cols());	
 //}
 //
-void VectorFields::setupGlobalProblem()
+void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 {	
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
 	//Eigen::VectorXd					vEst;
-	double lambda = 0.4; 
+	//double lambda2 = 0.4; 
+	//Eigen::Vector3d lambda;
+	//lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	//lambda(1) = 0.1; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+	//lambda(2) = 0.4;											// on the constraint
 	
 	constructConstraints();
-	setupRHSGlobalProblemMapped(g, h, vEst, b);
-	setupLHSGlobalProblemMapped(A_LHS);
-	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	//setupRHSGlobalProblemMapped(g, h, vEst, b);
+	//setupLHSGlobalProblemMapped(A_LHS);
+	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 	//solveGlobalSystemMappedLU_GPU();
 
-	//setupRHSGlobalProblemSoftConstraints(lambda, b);
-	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	setupRHSGlobalProblemSoftConstraints(lambda, b);
+	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 }
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
@@ -1801,7 +1839,7 @@ void VectorFields::setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LH
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::setupRHSGlobalProblemSoftConstraints(const double& lambda, Eigen::VectorXd& b)
+void VectorFields::setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -1809,14 +1847,14 @@ void VectorFields::setupRHSGlobalProblemSoftConstraints(const double& lambda, Ei
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Setting up the RHS of the system... ";
 
-	b = lambda * C.transpose() * c;
+	b = lambda(2) * C.transpose() * c;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void VectorFields::setupLHSGlobalProblemSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHS)
+void VectorFields::setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -1825,7 +1863,7 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const double& lambda, Ei
 	cout << "> Setting up the LHS of the system... ";
 
 	//A_LHS = SF2D + lambda*(C.transpose()*C);
-	A_LHS = SF2D + lambda*C.transpose()*C;
+	A_LHS = lambda(0)*SF2D + lambda(1)*B2D + lambda(2)*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -3071,21 +3109,25 @@ void VectorFields::retrieveBasis(const string& filename)
 }
 
 
-void VectorFields::setAndSolveUserSystem()
+void VectorFields::setAndSolveUserSystem(const Eigen::Vector3d& lambda)
 {
 	// Declare function-scoped variables
 	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
 	Eigen::SparseMatrix<double>		A_LHSBar;
-	const double lambda = 0.4; 
+	//const double lambda2 = 0.4; 
+	//Eigen::Vector3d lambda;
+	//lambda(0) = 1.0;  // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	//lambda(1) = 0.1; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+	//lambda(2) = 0.4;											// on the constraint
 
 	//setupReducedBiLaplacian();
 	getUserConstraints();
-	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	setupLHSUserProblemMapped(A_LHSBar);
-	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
-	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	//setupLHSUserProblemMapped(A_LHSBar);
+	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -3192,7 +3234,7 @@ void VectorFields::setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSB
 	printf("....Local LHS = %dx%d\n", A_LHSBar.rows(), A_LHSBar.cols());
 }
 
-void VectorFields::setupRHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::VectorXd& bBar)
+void VectorFields::setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& bBar)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -3200,14 +3242,14 @@ void VectorFields::setupRHSUserProblemMappedSoftConstraints(const double& lambda
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing RHS (mapped)...";
 
-	bBar = lambda*CBar.transpose() * cBar; 
+	bBar = lambda(2)*CBar.transpose() * cBar; 
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::setupLHSUserProblemMappedSoftConstraints(const double& lambda, Eigen::SparseMatrix<double>& A_LHSBar)
+void VectorFields::setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -3216,8 +3258,9 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const double& lambda
 	cout << "> Constructing LHS (mapped)...";
 
 	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
+	Eigen::SparseMatrix<double> B2DBar = Basis.transpose() * B2D * Basis;
 	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
-	A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar;
+	A_LHSBar = lambda(0)*SF2DBar +  lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3378,22 +3421,35 @@ void VectorFields::retrieveApproxEigenFields()
 void VectorFields::measureApproxAccuracyL2Norm()
 {
 	/* Normalizing the fields on each patch */
-	Eigen::Vector2d xfRef2, xfApp2;
-	for (int i = 0; i < F.rows(); i++)
-	{
-		xfRef2 = Xf.block(2 * i, 0, 2, 1); xfRef2.normalize();
-		Xf.block(2 * i, 0, 2, 1) = xfRef2;
-		xfApp2 = XFullDim.block(2 * i, 0, 2, 1); xfApp2.normalize();
-		XFullDim.block(2 * i, 0, 2, 1) = xfApp2;
-	}
+	//Eigen::Vector2d xfRef2, xfApp2;
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	xfRef2 = Xf.block(2 * i, 0, 2, 1); xfRef2.normalize();
+	//	Xf.block(2 * i, 0, 2, 1) = xfRef2;
+	//	xfApp2 = XFullDim.block(2 * i, 0, 2, 1); xfApp2.normalize();
+	//	XFullDim.block(2 * i, 0, 2, 1) = xfApp2;
+	//}
 
 	Eigen::VectorXd diffV = Xf - XFullDim;
 	double xf = Xf.transpose() * MF2D * Xf;
 	double diff = diffV.transpose() * MF2D * diffV;
 	const double L2norm = sqrt(diff / xf);
 
-	printf("L2norm 0 = %.10f (%.4f / %.4f) \n", L2norm, diff, xf); 	
+	printf("L2norm 0 = %.10f (%.10f / %.10f) \n", L2norm, diff, xf); 	
 	printf("Max Error = %.3f \n", diffV.maxCoeff() / xf);
+
+	/* Computing the energy */
+	double refHarmEnergy = Xf.transpose()       * SF2D * Xf;
+	double appHarmEnergy = XFullDim.transpose() * SF2D * XFullDim;
+	double refBiHarmEnergy = Xf.transpose()       * B2D * Xf;
+	double appBiHarmEnergy = XFullDim.transpose() * B2D * XFullDim;
+
+	cout << ">> [REF] Energy: Harm=" << refHarmEnergy << ", Biharmonic=" << refBiHarmEnergy << endl;
+	cout << ">> [APP] Energy: Harm=" << appHarmEnergy << ", Biharmonic=" << appBiHarmEnergy << endl;
+	cout << "         Relative Harm-energy =" << abs(refHarmEnergy - appHarmEnergy) / refHarmEnergy << endl;
+	cout << "         Relative Biharm-energy =" << abs(refBiHarmEnergy - appBiHarmEnergy) / refBiHarmEnergy << endl;
+
+
 	//printf("MSE = %.3f \n", (diffV.sum()/diffV.size()) / xf);
 }
 
@@ -3448,11 +3504,15 @@ void VectorFields::vectorFieldsDesignTest()
 		constructConstraints();
 
 		/* Solving the full resolution (incl the constraints) */
-		setupGlobalProblem();
+		Eigen::Vector3d lambda;
+		lambda(0) = 1.0; 	// on harmonic energy
+		lambda(1) = 0.1; 	// on bi-harmonic energy
+		lambda(2) = 0.4;
+		setupGlobalProblem(lambda);
 
 		/* Solving the reduced system*/
 		setupReducedBiLaplacian();
-		setAndSolveUserSystem();			
+		setAndSolveUserSystem(lambda);			
 
 		/* Computing L2-norm error*/
 		Eigen::VectorXd diffV = Xf - XFullDim;
@@ -3487,11 +3547,15 @@ void VectorFields::vectorFieldsDesignTest_Normalized()
 		constructConstraints();
 
 		/* Solving the full resolution (incl the constraints) */
-		setupGlobalProblem();
+		Eigen::Vector3d lambda;
+		lambda(0) = 1.0; 	// on harmonic energy
+		lambda(1) = 0.1; 	// on bi-harmonic energy
+		lambda(2) = 0.4;
+		setupGlobalProblem(lambda);
 
 		/* Solving the reduced system*/
 		setupReducedBiLaplacian();
-		setAndSolveUserSystem();
+		setAndSolveUserSystem(lambda);
 
 		/* 'Normalize' each component of the vector fields */
 		Eigen::VectorXd VFieldsRef(2*F.rows()), VFieldsApp(2*F.rows());
