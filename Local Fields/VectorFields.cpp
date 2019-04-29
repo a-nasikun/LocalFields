@@ -1862,8 +1862,11 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& l
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Setting up the LHS of the system... ";
 
-	//A_LHS = SF2D + lambda*(C.transpose()*C);
+	//const double lambda_1 = 10000 / B2D.coeff(0, 0);
+
+	
 	A_LHS = lambda(0)*SF2D + lambda(1)*B2D + lambda(2)*C.transpose()*C;
+	//A_LHS = lambda(0)*SF2D + lambda_1*B2D + lambda(2)*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -3260,7 +3263,13 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3
 	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
 	Eigen::SparseMatrix<double> B2DBar = Basis.transpose() * B2D * Basis;
 	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+
+
+	//const double lambda_1 = 10000 / B2D.coeff(0, 0);
+	cout << "lambda_1 " << lambda(1) << endl;
+
 	A_LHSBar = lambda(0)*SF2DBar +  lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
+	//A_LHSBar = lambda(0)*SF2DBar + lambda_1*B2DBar + lambda(2)*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;

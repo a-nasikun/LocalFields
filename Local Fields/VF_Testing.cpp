@@ -125,7 +125,7 @@ void VectorFields::testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& 
 
 	// Construct matrices for Test	
 	cout << "__[APPROXIMATION]....\n";
-	const double				lambda = 1000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
+	const double				lambda = 10000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = XFullDim;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
@@ -208,8 +208,8 @@ void VectorFields::projectionTest()
 		//setupGlobalProblem();
 		//testBasis_NoRegularizer(errors(i));
 
-		//testBasis_WithRegularizer(B2D, errors(i));
-		testBasis_WithRegularizer(SF2D, errors(i));
+		testBasis_WithRegularizer(B2D, errors(i));
+		//testBasis_WithRegularizer(SF2D, errors(i));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
