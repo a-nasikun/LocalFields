@@ -205,10 +205,10 @@ void VectorFields::projectionTest()
 
 		/* Projection to the subspace */
 		/* Reference results */
-		//setupGlobalProblem();
-		//testBasis_NoRegularizer(errors(i));
+		setupGlobalProblem(Eigen::Vector3d(1,1,1));
+		testBasis_NoRegularizer(errors(i));
 
-		testBasis_WithRegularizer(B2D, errors(i));
+		//testBasis_WithRegularizer(B2D, errors(i));
 		//testBasis_WithRegularizer(SF2D, errors(i));
 
 		t2 = chrono::high_resolution_clock::now();

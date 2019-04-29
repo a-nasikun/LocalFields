@@ -17,8 +17,8 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	//constructRandomHardConstraints();
-	constructSoftConstraints();
+	constructRandomHardConstraints();
+	//constructSoftConstraints();
 	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
@@ -1763,12 +1763,6 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 {	
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
-	//Eigen::VectorXd					vEst;
-	//double lambda2 = 0.4; 
-	//Eigen::Vector3d lambda;
-	//lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
-	//lambda(1) = 0.1; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
-	//lambda(2) = 0.4;											// on the constraint
 	
 	constructConstraints();
 	//setupRHSGlobalProblemMapped(g, h, vEst, b);
@@ -2123,9 +2117,9 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	constructBasis_LocalEigenProblem();
+	//constructBasis_LocalEigenProblem();
 	//constructBasis_LocalEigenProblem10();
-	//constructBasis_OptProblem();
+	constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
 }
