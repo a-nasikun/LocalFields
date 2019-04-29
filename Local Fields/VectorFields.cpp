@@ -3128,6 +3128,7 @@ void VectorFields::setAndSolveUserSystem(const Eigen::Vector3d& lambda)
 	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
 	//setupLHSUserProblemMapped(A_LHSBar);
 	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	
 	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
 	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
 	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);

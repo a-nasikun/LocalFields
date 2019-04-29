@@ -106,17 +106,17 @@ int main(int argc, char *argv[])
 	/* ====================== GLOBAL PROBLEM ====================*/
 	cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	Eigen::Vector3d lambda;
-	lambda(0) = 1; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 0.4;
 	vectorFields.setupGlobalProblem(lambda);
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup";
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_25sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
 
 	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_XFields_Grad.txt";
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
@@ -259,7 +259,8 @@ int main(int argc, char *argv[])
 			break;
 		case '`':			
 			//vectorFields.visualizeSubdomain(viewer);
-			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 4.0, false);
+			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 4.0, false);
+			vectorFields.visualizeSoftConstraints(viewer);
 			break;
 		case '1':
 			//vectorFields.visualizeSubdomain(viewer);
@@ -270,7 +271,6 @@ int main(int argc, char *argv[])
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
-			vectorFields.visualizeUserConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 			break;
