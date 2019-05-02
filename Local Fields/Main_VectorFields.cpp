@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructGradient3D();
-	//vectorFields.constructStiffnessMatrices();
-	vectorFields.loadStiffnessMatrices();
+	vectorFields.constructStiffnessMatrices();
+	///vectorFields.loadStiffnessMatrices();
 	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	///vectorFields.constructSamples(numSample);
 	///vectorFields.constructBasis();	
 	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	vectorFields.retrieveBasis(filename_basis);	
+	//vectorFields.retrieveBasis(filename_basis);	
 	///vectorFields.setupReducedBiLaplacian();
 	///vectorFields.setAndSolveUserSystem(lambda);
 	///WriteEigenVectorToTxtFile(vectorFields.XFullDim, filename_vfields);

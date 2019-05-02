@@ -103,6 +103,8 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 	VFNeighbors.clear();
 	VFNeighbors.shrink_to_fit();
 
+
+
 	// MOVING THE ADJACENCY it to matrix format
 	AdjMF3N.resize(F.rows(), F.cols());
 	for (int i = 0; i < F.rows(); i++) {
@@ -129,6 +131,8 @@ void VectorFields::constructFaceAdjacency3NMatrix()
 	// Save memory by free-ing space occupied by EdgePairList (temp data structure)
 	EdgePairsList.clear();
 	EdgePairsList.shrink_to_fit();
+
+	printf("Size of EdgePairMatrix = %dx%d (F=%dx%d)\n", EdgePairMatrix.rows(), EdgePairMatrix.cols(), F.rows(), F.cols());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -753,7 +757,7 @@ void VectorFields::constructStiffnessMatrices()
 
 	/* Store matrix to matlab*/
 	//string  file_massmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Mass";
-	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym";
+	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym";
 	WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix);
 	//WriteSparseMatrixToMatlab(MF2D, file_massmatrix);
 
@@ -768,7 +772,7 @@ void VectorFields::loadStiffnessMatrices()
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
-	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
+	string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
 	//string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
 	string file_MVerts	= folder + "M_Verts.txt";
 	string file_MEdges	= folder + "M_Edges.txt";
@@ -821,8 +825,14 @@ void VectorFields::loadStiffnessMatrices()
 	SF2DAsym = A.transpose() * SF3DAsym * A; 
 
 	//WriteSparseMatrixToMatlab(MF3Dinv*SF3DAsym, "Hello");
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym_FromChristopher";
-	WriteSparseMatrixToMatlab(SF2D, filename);
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym_FromChristopher";
+	//WriteSparseMatrixToMatlab(SF2D, filename);
+
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Christopher";
+	WriteSparseMatrixToMatlab(MFields*JMat*GStar*MEdgesInv*GStar.transpose()*JMat*MFields  , filename + "_Curl_NonConform");
+	WriteSparseMatrixToMatlab(MFields*GStar*MEdgesInv*GStar.transpose()*MFields, filename + "_Div_NonConform");
+	WriteSparseMatrixToMatlab(MFields*JMat*G*MVertsInv*G.transpose()*JMat*MFields, filename + "_Curl_Conform");
+	WriteSparseMatrixToMatlab(MFields*G*MVertsInv*G.transpose()*MFields, filename + "_Div_Conform");
 }
 
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)
@@ -898,6 +908,12 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 	//t2 = chrono::high_resolution_clock::now();
 	//duration = t2 - t1;
 	//cout << "in " << duration.count() << " seconds" << endl;
+
+	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Nasikun";
+	WriteSparseMatrixToMatlab(LapCurl3D_NonConform, file_stiffmatrix+"_Curl_NonConform");
+	WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform");
+	WriteSparseMatrixToMatlab(LapCurl3D_Conform, file_stiffmatrix + "_Curl_Conform");
+	WriteSparseMatrixToMatlab(LapDiv3D_Conform, file_stiffmatrix + "_Div_Conform");
 }
 
 void VectorFields::constructStiffnessMatrixCurlPart3D_Conform(Eigen::SparseMatrix<double>& LapCurl3D_Conform)
@@ -1049,8 +1065,8 @@ void VectorFields::constructStiffnessMatrixDivPart3D_NonConform(Eigen::SparseMat
 				Eigen::RowVector3d	n = (n1 + n2) / 2.0; n.normalize();
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 				Eigen::Vector3d		edge1, edge2; 
-				edge1 = n.cross(edge);
-				edge2 = n.cross(edge);
+				edge1 = n1.cross(edge);
+				edge2 = n1.cross(edge);
 				//edge.normalize();
 				Eigen::Matrix3d		block = (-3.0 / area) * edge1 * edge2.transpose();
 
