@@ -133,15 +133,15 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 
 }
 
-void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
+void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const int& nRows, const int& nCols, const int& nBlocks = 1)
 {
 	using namespace matlab::engine;
 	Engine *ep;
 	mxArray *eigValM, *eigVecM;		// for Matlab
 	double	*eigValE, *eigVecE;		// for Eigen
-	const int NUM_EIGEN = 500;
-	const int NUM_ROWS = 104544;
-	const int NUM_BLOCKS = 1;
+	const int NUM_EIGEN = nCols;
+	const int NUM_ROWS = nRows;
+	const int NUM_BLOCKS = nBlocks;
 
 	M.resize(NUM_ROWS, NUM_BLOCKS*NUM_EIGEN);
 
@@ -176,6 +176,11 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 	
 	engEvalString(ep, "clear;");
 	engClose(ep);
+}
+
+void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
+{
+	ReadDenseMatrixFromMatlab(M, filename, 500, 172946);
 }
 
 void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& filename)
@@ -448,6 +453,7 @@ void LoadEigenVectorFromTxtFile(const string& filename, Eigen::VectorXd& vector)
 		vector.resize(v2.size());
 		//cout << "Getting the elements from vector\n";
 		vector = Eigen::Map<Eigen::VectorXd>(v2.data(), (int)v2.size());
+		//vector = 5 * vector; 
 		//printf("eigen::vector size=%d\n", vector.rows());
 		//cout << vector.block(0, 0, 10, 1) << endl; 
 		//for (int k=0; k<v2.size(); k++)
@@ -456,7 +462,7 @@ void LoadEigenVectorFromTxtFile(const string& filename, Eigen::VectorXd& vector)
 		//}
 	}
 
-
+	 
 
 	else cout << "Unable to open file";
 }

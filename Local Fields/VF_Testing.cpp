@@ -19,8 +19,8 @@ void VectorFields::constructArbitraryField()
 
 	// Position based arbitrary scalar field
 	for (int i = 0; i < V.rows(); i++) {
-		//arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
-		arbField(i) = V(i, 1);// *V(i, 1) *  V(i, 2);
+		arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
+		//arbField(i) = V(i, 2);
 	}
 
 	t2 = chrono::high_resolution_clock::now();
@@ -100,13 +100,13 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	/* Measuring the energy */
 	double energy1 = v.transpose()*B2D*v;
 	double energy2 = wb.transpose()*B2D*wb;
-	cout << "Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
 
 	/* Measuring the 'length' of each vector */
 	energy1 = v.transpose()*SF2D*v;
 	energy2 = wb.transpose()*SF2D*wb;
-	cout << "Biharmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	t2 = chrono::high_resolution_clock::now();
@@ -125,14 +125,18 @@ void VectorFields::testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& 
 
 	// Construct matrices for Test	
 	cout << "__[APPROXIMATION]....\n";
-	const double				lambda = 10000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
+	//const double				lambda = 10000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
+
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = XFullDim;
+	const double				inputEnergy = v.transpose()*MReg*v; 
+	const double				lambda = 50000/inputEnergy;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
 	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*MReg) * U;
 
 	cout << "____Solving linear system variables (with lambda=" << lambda << ")\n";
 	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	
 
 	Eigen::VectorXd w = sparseSolver.solve(a);
 
@@ -189,6 +193,7 @@ void VectorFields::testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& 
 
 void VectorFields::projectionTest()
 {
+	cout << "PROJECTION TEST! \n";
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;	
@@ -196,6 +201,8 @@ void VectorFields::projectionTest()
 
 	const int NUM_TEST = 1;
 	Eigen::VectorXd errors(NUM_TEST);
+
+	//Xf = XFullDim; 
 
 	for (int i = 0; i < NUM_TEST; i++)
 	{
@@ -205,10 +212,10 @@ void VectorFields::projectionTest()
 
 		/* Projection to the subspace */
 		/* Reference results */
-		setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		testBasis_NoRegularizer(errors(i));
+		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
+		//testBasis_NoRegularizer(errors(i));
 
-		//testBasis_WithRegularizer(B2D, errors(i));
+		testBasis_WithRegularizer(B2D, errors(i));
 		//testBasis_WithRegularizer(SF2D, errors(i));
 
 		t2 = chrono::high_resolution_clock::now();

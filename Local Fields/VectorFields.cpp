@@ -95,7 +95,7 @@ void VectorFields::constructRingConstraints()
 void VectorFields::constructSpecifiedHardConstraints()
 {
 	// Define the constraints
-	const int numConstraints = 20;
+	const int numConstraints = 4;
 	set<int> constraints;
 	//vector<int> globalConstraints(numConstraints);
 	globalConstraints.resize(numConstraints);
@@ -156,19 +156,11 @@ void VectorFields::constructSpecifiedHardConstraints()
 		cRand.normalize();
 
 		//const double alpha = M_PI / 2.0; 
-		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, cos(alpha)));
-		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, -sin(alpha)));
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
-		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * counterPart + 0, 1.0));
-		//c(2 * counter + 0, 0) = 1.0;
 		c(counter, 0) = cRand(0);
 		counter++;
 
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
-		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, sin(alpha)));
-		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, cos(alpha)));
-		//c(2 * counter + 1, 0) = 1.0;
-		//CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * counterPart + 1, 1.0));
 		c(counter, 0) = cRand(1);
 		counter++;
 	}
@@ -180,8 +172,8 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = true; 
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_25.txt";;
+	const bool readFromFile = false; 
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_5.txt";;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	if (readFromFile)
@@ -190,7 +182,7 @@ void VectorFields::constructRandomHardConstraints()
 	} 
 	else
 	{
-		const int numConstraints = 25;
+		const int numConstraints = 5;
 		set<int> constraints;
 		globalConstraints.resize(numConstraints);
 
@@ -1765,14 +1757,16 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	Eigen::SparseMatrix<double>		A_LHS;
 	
 	constructConstraints();
-	//setupRHSGlobalProblemMapped(g, h, vEst, b);
-	//setupLHSGlobalProblemMapped(A_LHS);
-	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	setupRHSGlobalProblemMapped(g, h, vEst, b);
+	setupLHSGlobalProblemMapped(A_LHS);
+	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+
+	XFullDim = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
-	setupRHSGlobalProblemSoftConstraints(lambda, b);
-	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	//setupRHSGlobalProblemSoftConstraints(lambda, b);
+	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 }
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
@@ -1902,7 +1896,6 @@ void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::Spa
 	Xf = -x.block(0, 0, B2D.rows(), 1) + vEst;
 
 	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());	
-
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
