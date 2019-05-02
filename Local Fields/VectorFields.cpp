@@ -173,7 +173,7 @@ void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
 	const bool readFromFile = false; 
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_5.txt";;
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Arma_Rand_5.txt";;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	if (readFromFile)
@@ -1761,7 +1761,7 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	setupLHSGlobalProblemMapped(A_LHS);
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 
-	XFullDim = Xf; 
+	//XFullDim = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
 	//setupRHSGlobalProblemSoftConstraints(lambda, b);

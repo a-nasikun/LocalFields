@@ -5,7 +5,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 1000;
+int numSample = 250;
 int eigToShow2 = 0;
 int eigsToCompute = 4; 
 
@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.selectFaceToDraw(10000);
+	vectorFields.selectFaceToDraw(5000);
 	
 	vectorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup";	
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_500_OptAlg_30sup";	
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_25sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
@@ -125,17 +125,17 @@ int main(int argc, char *argv[])
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_6.txt";	//random constraint
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_arbFields_xyz-axis.txt";
-	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();	
-	//vectorFields.storeBasis(filename_basis);
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	///vectorFields.constructSamples(numSample);
+	///vectorFields.constructBasis();	
+	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
 	vectorFields.retrieveBasis(filename_basis);	
 	///vectorFields.setupReducedBiLaplacian();
 	///vectorFields.setAndSolveUserSystem(lambda);
 	///WriteEigenVectorToTxtFile(vectorFields.XFullDim, filename_vfields);
-	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.XFullDim);
+	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.XFullDim);
 
-	//vectorFields.writeBasisToFile();
+	//vectorFields.writeBasisToFile();		// to Matlab, matlab-based
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
@@ -263,7 +263,8 @@ int main(int argc, char *argv[])
 			break;
 		case '`':			
 			//vectorFields.visualizeSubdomain(viewer);
-			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 3.0, false);
+			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 3.0, false);
+			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 3.0, false);
 			//vectorFields.visualizeSoftConstraints(viewer);
 			break;
 		case '1':

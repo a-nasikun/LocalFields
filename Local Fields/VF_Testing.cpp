@@ -50,21 +50,20 @@ void VectorFields::constructArbitraryField2D()
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 }
-
-void VectorFields::testBasis_NoRegularizer(double &error)
+void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::VectorXd& inputFields, double &error)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Testing basis 2D of arbitrary field without regularizer...\n";
+	cout << "> [Testing basis 2D of arbitrary field without regularizer...]\n";
 
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
-	Eigen::VectorXd				v = Xf; 
+	Eigen::VectorXd				v = inputFields; 
 	//Eigen::VectorXd				v =  arbField2D;
-	Eigen::VectorXd				a = (v.transpose()*MF2D*U).transpose();
+	Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
 	Eigen::SparseMatrix<double> B = U.transpose() * MF2D * U;
 
 	cout << "____Solving linear system variables\n";
@@ -95,26 +94,87 @@ void VectorFields::testBasis_NoRegularizer(double &error)
 	double normL2 = sqrt(norm1 / norm2); 
 	error = normL2; 
 
-	cout << "The L-2 Norm is << " << normL2 << ".\n" << endl; 
+	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
 
 	/* Measuring the energy */
 	double energy1 = v.transpose()*B2D*v;
 	double energy2 = wb.transpose()*B2D*wb;
-	cout << "Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
-	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
+	cout << "____Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
 
 	/* Measuring the 'length' of each vector */
 	energy1 = v.transpose()*SF2D*v;
 	energy2 = wb.transpose()*SF2D*wb;
-	cout << "Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
-	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+	cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& MReg, double &error)
+void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, double &error)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> [Testing EIGENBASIS without regularizer...]\n";
+
+	// Construct matrices for Test
+	cout << "____Assigning variables\n";
+	Eigen::MatrixXd U = Basis;// BasisTemp;
+	Eigen::VectorXd				v = inputFields;
+	//Eigen::VectorXd				v =  arbField2D;
+	Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
+	Eigen::MatrixXd				B = U.transpose() * MF2D * U;
+
+	cout << "____Solving linear system variables\n";
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	//Eigen::PardisoLLT<Eigen::MatrixXd> sparseSolver(B);
+	
+
+	Eigen::VectorXd w = B.ldlt().solve(a);
+
+	//if (sparseSolver.info() != Eigen::Success) {
+	//	cout << "Cannot solve the linear system. " << endl;
+	//	if (sparseSolver.info() == Eigen::NumericalIssue)
+	//		cout << "NUMERICAL ISSUE. " << endl;
+	//	cout << sparseSolver.info() << endl;
+	//	return;
+	//}
+	
+	cout << "____Getting total SUM(wi*bi) \n";
+	wbEigen = U*w;
+
+	// Compare their L2-Norm
+	cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = v - wbEigen;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = v.transpose()*MF2D*v;
+	double normL2 = sqrt(norm1 / norm2);
+	error = normL2;
+
+	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
+
+	/* Measuring the energy */
+	double energy1 = v.transpose()*B2D*v;
+	double energy2 = wbEigen.transpose()*B2D*wbEigen;
+	cout << "____Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
+	/* Measuring the 'length' of each vector */
+	energy1 = v.transpose()*SF2D*v;
+	energy2 = wbEigen.transpose()*SF2D*wbEigen;
+	cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error)
 {
 
 	// For Timing
@@ -128,7 +188,7 @@ void VectorFields::testBasis_WithRegularizer(const Eigen::SparseMatrix<double>& 
 	//const double				lambda = 10000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
 
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
-	Eigen::VectorXd				v = XFullDim;
+	Eigen::VectorXd				v = inputFields;
 	const double				inputEnergy = v.transpose()*MReg*v; 
 	const double				lambda = 50000/inputEnergy;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
@@ -200,30 +260,36 @@ void VectorFields::projectionTest()
 
 
 	const int NUM_TEST = 1;
-	Eigen::VectorXd errors(NUM_TEST);
+	Eigen::VectorXd errors1(NUM_TEST), errors2(NUM_TEST);
+
+	/* Loading eigen basis for Armadillo */
+	Eigen::MatrixXd EigenBasis;
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_500_eigenfields_Ref";
+	ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 500);
 
 	//Xf = XFullDim; 
 
 	for (int i = 0; i < NUM_TEST; i++)
 	{
 		t1 = chrono::high_resolution_clock::now();
-
 		
-
 		/* Projection to the subspace */
 		/* Reference results */
-		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		//testBasis_NoRegularizer(errors(i));
+		setupGlobalProblem(Eigen::Vector3d(1,1,1));
+		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
-		testBasis_WithRegularizer(B2D, errors(i));
-		//testBasis_WithRegularizer(SF2D, errors(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, XFullDim, B2D, errors(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, XFullDim, SF2D, errors(i));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
-		printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors(i), duration.count());		
+		//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
+		printf("[%d] run => [My Basis] Error=%.10f\n", i, errors1(i));
+		printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", i, errors2(i), duration.count());
 	}
 
-	cout << "ERRORS: \n" <<  errors << endl; 
+	cout << "ERRORS: \n" <<  errors1 << endl << "ERRORS2 \n" << errors2 << endl; 
 }
 
 void VectorFields::testMappingMatrix()

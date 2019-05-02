@@ -133,7 +133,7 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 
 }
 
-void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const int& nRows, const int& nCols, const int& nBlocks = 1)
+void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const int& nRows, const int& nCols, const int& nBlocks)
 {
 	using namespace matlab::engine;
 	Engine *ep;
@@ -162,7 +162,8 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 	// First 2 blocks
 	cout << "Retrieving the Matrix" << endl;
 	//engEvalString(ep, "REVec = EigVec;");
-	eigVecM = engGetVariable(ep, "EigVec");
+	eigVecM = engGetVariable(ep, "EVect");
+	//eigVecM = engGetVariable(ep, "EigVec");
 	//eigVecM = engGetVariable(ep, "BasisFull");
 	eigVecE = (double*)malloc(NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
 	memcpy((void *)eigVecE, (void *)mxGetPr(eigVecM), NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
