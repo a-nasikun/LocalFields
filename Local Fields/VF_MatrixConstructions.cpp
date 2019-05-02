@@ -732,9 +732,9 @@ void VectorFields::constructStiffnessMatrices()
 	constructStiffnessMatrixSF3D(LapCurl3D_Conform, LapDiv3D_Conform, LapCurl3D_NonConform, LapDiv3D_NonConform);
 
 	/* Switch to which configuration used */
-	///constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_NonConform, LapDiv2D_NonConform);
+	constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_NonConform, LapDiv2D_NonConform);
 	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_Conform, LapDiv2D_Conform);	
-	constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_Conform, LapDiv2D_Conform);
+	///constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_Conform, LapDiv2D_Conform);
 	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_NonConform, LapDiv2D_NonConform);
 
 	/* Checking Laplacian *
@@ -753,8 +753,8 @@ void VectorFields::constructStiffnessMatrices()
 
 	/* Store matrix to matlab*/
 	//string  file_massmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Mass";
-	//string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Stiff";
-	//WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix);
+	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym";
+	WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix);
 	//WriteSparseMatrixToMatlab(MF2D, file_massmatrix);
 
 }
@@ -768,7 +768,7 @@ void VectorFields::loadStiffnessMatrices()
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
-	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Genus2_60k/";
+	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
 	//string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
 	string file_MVerts	= folder + "M_Verts.txt";
 	string file_MEdges	= folder + "M_Edges.txt";
@@ -820,7 +820,9 @@ void VectorFields::loadStiffnessMatrices()
 	SF2D = A.transpose() * SF3D * A;	
 	SF2DAsym = A.transpose() * SF3DAsym * A; 
 
-	WriteSparseMatrixToMatlab(MF3Dinv*SF3DAsym, "Hello");
+	//WriteSparseMatrixToMatlab(MF3Dinv*SF3DAsym, "Hello");
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym_FromChristopher";
+	WriteSparseMatrixToMatlab(SF2D, filename);
 }
 
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)

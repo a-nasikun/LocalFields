@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
 	
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructGradient3D();
-	vectorFields.constructStiffnessMatrices();
-	//vectorFields.loadStiffnessMatrices();
+	//vectorFields.constructStiffnessMatrices();
+	vectorFields.loadStiffnessMatrices();
 	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//double error; 
-	vectorFields.projectionTest();
+	///vectorFields.projectionTest();
 
 
 
