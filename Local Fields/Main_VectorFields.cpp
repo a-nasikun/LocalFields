@@ -126,10 +126,10 @@ int main(int argc, char *argv[])
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_6.txt";	//random constraint
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_arbFields_xyz-axis.txt";
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	///vectorFields.constructSamples(numSample);
-	///vectorFields.constructBasis();	
-	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	//vectorFields.retrieveBasis(filename_basis);	
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();	
+	vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	///vectorFields.retrieveBasis(filename_basis);	
 	///vectorFields.setupReducedBiLaplacian();
 	///vectorFields.setAndSolveUserSystem(lambda);
 	///WriteEigenVectorToTxtFile(vectorFields.XFullDim, filename_vfields);
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//double error; 
-	///vectorFields.projectionTest();
+	vectorFields.projectionTest();
 
 
 

@@ -2553,7 +2553,7 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	if (eigFieldFull2D.cols() < 1)
 	{
 		computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
-		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_2_Full_eigFields.mat";
+		string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_2_Full_eigFields.mat";
 		//ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
 	}
 

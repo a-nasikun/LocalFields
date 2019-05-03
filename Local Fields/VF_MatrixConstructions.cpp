@@ -757,8 +757,8 @@ void VectorFields::constructStiffnessMatrices()
 
 	/* Store matrix to matlab*/
 	//string  file_massmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Mass";
-	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym";
-	WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix);
+	///string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym";
+	///WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix);
 	//WriteSparseMatrixToMatlab(MF2D, file_massmatrix);
 
 }
@@ -772,7 +772,7 @@ void VectorFields::loadStiffnessMatrices()
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
-	string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
+	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
 	//string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
 	string file_MVerts	= folder + "M_Verts.txt";
 	string file_MEdges	= folder + "M_Edges.txt";
@@ -828,7 +828,7 @@ void VectorFields::loadStiffnessMatrices()
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym_FromChristopher";
 	//WriteSparseMatrixToMatlab(SF2D, filename);
 
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Christopher";
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Christopher";
 	WriteSparseMatrixToMatlab(MFields*JMat*GStar*MEdgesInv*GStar.transpose()*JMat*MFields  , filename + "_Curl_NonConform");
 	WriteSparseMatrixToMatlab(MFields*GStar*MEdgesInv*GStar.transpose()*MFields, filename + "_Div_NonConform");
 	WriteSparseMatrixToMatlab(MFields*JMat*G*MVertsInv*G.transpose()*JMat*MFields, filename + "_Curl_Conform");
@@ -896,24 +896,17 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
 		constructStiffnessMatrixDivPart3D_Conform(LapDiv3D_Conform);
-		constructStiffnessMatrixDivPart3D_NonConform(LapDiv3D_NonConform);
+		//constructStiffnessMatrixDivPart3D_NonConform(LapDiv3D_NonConform);
+		constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D_NonConform, LapDiv3D_NonConform);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
-
-
-	//t1 = chrono::high_resolution_clock::now();
-	//cout << "....Divergent Part - Curl Part ";
-	//	//SF3D = LapDiv3D + LapCurl3D;
-	//t2 = chrono::high_resolution_clock::now();
-	//duration = t2 - t1;
-	//cout << "in " << duration.count() << " seconds" << endl;
-
-	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Nasikun";
-	WriteSparseMatrixToMatlab(LapCurl3D_NonConform, file_stiffmatrix+"_Curl_NonConform");
-	WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform");
-	WriteSparseMatrixToMatlab(LapCurl3D_Conform, file_stiffmatrix + "_Curl_Conform");
-	WriteSparseMatrixToMatlab(LapDiv3D_Conform, file_stiffmatrix + "_Div_Conform");
+		
+	///string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Nasikun";
+	///WriteSparseMatrixToMatlab(LapCurl3D_NonConform, file_stiffmatrix+"_Curl_NonConform");
+	///WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform");
+	///WriteSparseMatrixToMatlab(LapCurl3D_Conform, file_stiffmatrix + "_Curl_Conform");
+	///WriteSparseMatrixToMatlab(LapDiv3D_Conform, file_stiffmatrix + "_Div_Conform");
 }
 
 void VectorFields::constructStiffnessMatrixCurlPart3D_Conform(Eigen::SparseMatrix<double>& LapCurl3D_Conform)
