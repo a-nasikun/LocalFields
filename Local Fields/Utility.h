@@ -82,9 +82,32 @@ void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector);
 void WriteEigenVectorToTxtFile(const Eigen::VectorXd& vector, const string& filename);
 void LoadEigenVectorFromTxtFile(const string& filename, Eigen::VectorXd&);
 
-
 void writeEigenSparseMatrixToBinary(Eigen::SparseMatrix<double> &m, const std::string &filename);
 void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseMatrix<double> &m);
+void writeEigenDenseMatrixToBinary(Eigen::MatrixXd M, const std::string &filename);
+void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd M);
+
+namespace Eigen {
+	template<class Matrix>
+	void write_binary(const char* filename, const Matrix& matrix) {
+		std::ofstream out(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+		typename Matrix::Index rows = matrix.rows(), cols = matrix.cols();
+		out.write((char*)(&rows), sizeof(typename Matrix::Index));
+		out.write((char*)(&cols), sizeof(typename Matrix::Index));
+		out.write((char*)matrix.data(), rows*cols * sizeof(typename Matrix::Scalar));
+		out.close();
+	}
+	template<class Matrix>
+	void read_binary(const char* filename, Matrix& matrix) {
+		std::ifstream in(filename, std::ios::in | std::ios::binary);
+		typename Matrix::Index rows = 0, cols = 0;
+		in.read((char*)(&rows), sizeof(typename Matrix::Index));
+		in.read((char*)(&cols), sizeof(typename Matrix::Index));
+		matrix.resize(rows, cols);
+		in.read((char *)matrix.data(), rows*cols * sizeof(typename Matrix::Scalar));
+		in.close();
+	}
+} // Eigen::
 
 
 //template<typename Scalar>

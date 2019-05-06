@@ -161,12 +161,15 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 	engEvalString(ep, location.c_str());
 	
 	// First 2 blocks
-	cout << "Retrieving the Matrix" << endl;
+	cout << "Retrieving the Matrix of " << nRows <<" rows, and " << nCols << "columns. " << endl; 
 	//engEvalString(ep, "REVec = EigVec;");
 	eigVecM = engGetVariable(ep, "EVect");
+		cout << "Variable obtained from matlab \n";
 	//eigVecM = engGetVariable(ep, "EigVec");
 	//eigVecM = engGetVariable(ep, "BasisFull");
+		cout << "Allocating memory in C++.\n ";
 	eigVecE = (double*)malloc(NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
+		cout << "Copying data to C++ data \n";
 	memcpy((void *)eigVecE, (void *)mxGetPr(eigVecM), NUM_ROWS * NUM_BLOCKS*NUM_EIGEN * sizeof(double));
 
 	cout << "Converting the Matrix to Eigen format" << endl;
@@ -535,6 +538,27 @@ void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseM
 		readFile.close();
 	}
 	printf("File is closed\n");
+}
+
+void writeEigenDenseMatrixToBinary(Eigen::MatrixXd M, const std::string &filename)
+{
+	std::ofstream out(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+	int rows = M.rows(), cols = M.cols();
+	out.write((char*)(&rows), sizeof(int));
+	out.write((char*)(&cols), sizeof(int));
+	out.write((char*)M.data(), rows*cols * sizeof(typename double));
+	out.close();
+}
+
+void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd M)
+{
+	std::ifstream in(filename, std::ios::in | std::ios::binary);
+	int rows = 0, cols = 0;
+	in.read((char*)(&rows), sizeof(int));
+	in.read((char*)(&cols), sizeof(int));
+	M.resize(rows, cols);
+	in.read((char *)M.data(), rows*cols * sizeof(double));
+	in.close();
 }
 
 //template<typename Scalar>
