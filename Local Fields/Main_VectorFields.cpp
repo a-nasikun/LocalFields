@@ -5,7 +5,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 250;
+int numSample = 1000;
 int eigToShow2 = 0;
 int eigsToCompute = 4; 
 
@@ -115,37 +115,44 @@ int main(int argc, char *argv[])
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_500_OptAlg_30sup";	
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_25sup";
+	///string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
 
-	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_4_Ref_eigFields_0.txt";
+	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_6.txt";	//random constraint
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
+	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_arbFields_xyz-axis.txt";
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();	
-	vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	///vectorFields.retrieveBasis(filename_basis);	
+	///vectorFields.constructSamples(numSample);
+	///vectorFields.constructBasis();	
+	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	vectorFields.retrieveBasis(filename_basis);	
 	///vectorFields.setupReducedBiLaplacian();
 	///vectorFields.setAndSolveUserSystem(lambda);
-	///WriteEigenVectorToTxtFile(vectorFields.XFullDim, filename_vfields);
-	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.XFullDim);
+	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 
 	//vectorFields.writeBasisToFile();		// to Matlab, matlab-based
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	string    filename_refField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_4_Ref_eigFields";
-	string filename_approxField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_4_Approx_OptAlg_2000dim_30sup";
+	string    filename_refField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
+	string filename_approxField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Approx_OptAlg_2000dim_30sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields(filename_refField);
 	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
+	// Store the eigenfields as vector fields
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields";
+	///WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(0), filename_vfields+"_0.txt");
+	///WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(1), filename_vfields+"_1.txt");
+	///WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(2), filename_vfields+"_2.txt");
+	///WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(3), filename_vfields+"_3.txt");
 
 	//vectorFields.testEnergyOfLocalPatch(viewer);
 

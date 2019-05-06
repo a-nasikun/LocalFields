@@ -573,7 +573,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
 		string approxFile = "save('" + filename + "_eigFields','EigVec','EigVal');";		
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
-		cout << "Saving the eigne prblem\n";
+		cout << "Saving the eigen prblem\n";
 		engEvalString(ep, approxFile.c_str());
 		
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_500_Approx_Eigenpatch_2000dim_40sup','EigVec', 'EigVal');");

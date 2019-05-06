@@ -172,17 +172,18 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = false; 
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Arma_Rand_5.txt";;
+	const bool readFromFile = true; 
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	if (readFromFile)
 	{
+		cout << "____Loading constraints from file \n";
 		LoadSTDVectorFromTxtFile(filename, globalConstraints);
 	} 
 	else
 	{
-		const int numConstraints = 5;
+		const int numConstraints = 20;
 		set<int> constraints;
 		globalConstraints.resize(numConstraints);
 
@@ -1761,7 +1762,7 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	setupLHSGlobalProblemMapped(A_LHS);
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 
-	//XFullDim = Xf; 
+	arbField2D = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
 	//setupRHSGlobalProblemSoftConstraints(lambda, b);
@@ -2110,9 +2111,9 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	//constructBasis_LocalEigenProblem();
+	constructBasis_LocalEigenProblem();
 	//constructBasis_LocalEigenProblem10();
-	constructBasis_OptProblem();
+	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
 }
