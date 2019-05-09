@@ -121,11 +121,11 @@ int main(int argc, char *argv[])
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
 
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
+	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
 	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
-	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_arbFields_xyz-axis.txt";
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	///vectorFields.constructSamples(numSample);
 	///vectorFields.constructBasis();	
@@ -161,8 +161,10 @@ int main(int argc, char *argv[])
 
 	/* ====================== TESTING BASIS ====================*/
 	/* _____ Projection Test ___________________________________*/
-	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
+	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+	///vectorFields.constructArbitraryField();
+	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	vectorFields.projectionTest();
 

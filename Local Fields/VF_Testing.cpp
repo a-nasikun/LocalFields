@@ -19,8 +19,8 @@ void VectorFields::constructArbitraryField()
 
 	// Position based arbitrary scalar field
 	for (int i = 0; i < V.rows(); i++) {
-		arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
-		//arbField(i) = V(i, 2);
+		//arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
+		arbField(i) = V(i, 1);
 	}
 
 	t2 = chrono::high_resolution_clock::now();
@@ -190,7 +190,8 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = inputFields;
 	const double				inputEnergy = v.transpose()*MReg*v; 
-	const double				lambda = 50000/inputEnergy;
+	const double				lambda = 0.1/inputEnergy;
+	//const double				lambda = 0.5;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
 	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*MReg) * U;
 
@@ -251,6 +252,73 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	cout << "in " << duration.count() << " seconds." << endl;	
 }
 
+void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error)
+{
+
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Testing basis 2D of arbitrary field WITH regularizer...\n";
+
+	// Construct matrices for Test	
+	cout << "__[APPROXIMATION]....\n";
+	//const double				lambda = 10000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
+
+	Eigen::MatrixXd				U = Basis;
+	Eigen::VectorXd				v = inputFields;
+	const double				inputEnergy = v.transpose()*MReg*v;
+	const double				lambda = 0.1/inputEnergy;
+	//const double				lambda = 0.5;
+	Eigen::VectorXd				a = U.transpose()*MF2D*v;
+	Eigen::MatrixXd				B = U.transpose() * (MF2D + lambda*MReg) * U;
+
+	cout << "____Solving linear system variables (with lambda=" << lambda << ")\n";
+	Eigen::VectorXd w = B.ldlt().solve(a);	
+	wbEigen = U*w;
+
+	cout << "__[REFERENCE]....\n";
+	a = MF2D*v;
+	Eigen::SparseMatrix<double> BRef = MF2D + lambda*MReg;
+	Eigen::VectorXd  wRef;
+	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver2(BRef);
+	wRef = sparseSolver2.solve(a);
+	projRef = wRef;
+
+
+	// Compare their L2-Norm
+	cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = wRef - wbEigen;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = wRef.transpose()*MF2D*wRef;
+	double normL2 = sqrt(norm1 / norm2);
+	error = normL2;
+	cout << "The L-2 Norm is << " << normL2 << endl;
+
+	/* Measuring the energy */
+	double energy1 = wRef.transpose()*B2D*wRef;
+	double energy2 = wbEigen.transpose()*B2D*wbEigen;
+	cout << "BIHARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*B2D*v << endl;
+	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
+	/* Measuring the energy */
+	energy1 = wRef.transpose()*SF2D*wRef;
+	energy2 = wbEigen.transpose()*SF2D*wbEigen;
+	cout << "HARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*SF2D*v << endl;
+	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
+
+	/* Measuring the 'length' of each vector */
+	double length1 = wRef.transpose()*MF2D*wRef;
+	double length2 = wbEigen.transpose()*MF2D*wbEigen;
+	cout << "Length => Ref=" << length1 << ", Approx:" << length2 << ", initial: " << v.transpose()*MF2D*v << endl;
+	cout << "Relative length: " << length2 / length1 * 100.0 << "%" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
 void VectorFields::projectionTest()
 {
 	cout << "PROJECTION TEST! \n";
@@ -276,11 +344,12 @@ void VectorFields::projectionTest()
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
-		testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
+		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
-		//testProjection_MyBasis_WithRegularizer(Basis, XFullDim, B2D, errors(i));
-		//testProjection_MyBasis_WithRegularizer(Basis, XFullDim, SF2D, errors(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2D, errors2(i));
+		testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2D, errors1(i));
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, Xf, SF2D, errors2(i));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;

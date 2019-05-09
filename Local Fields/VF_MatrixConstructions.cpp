@@ -736,9 +736,9 @@ void VectorFields::constructStiffnessMatrices()
 	constructStiffnessMatrixSF3D(LapCurl3D_Conform, LapDiv3D_Conform, LapCurl3D_NonConform, LapDiv3D_NonConform);
 
 	/* Switch to which configuration used */
-	///constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_NonConform, LapDiv2D_NonConform);
+	constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_NonConform, LapDiv2D_NonConform);
 	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_Conform, LapDiv2D_Conform);	
-	constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_Conform, LapDiv2D_Conform);
+	///constructStiffnessMatrixSF2D(LapCurl3D_NonConform, LapCurl2D_NonConform, LapDiv3D_Conform, LapDiv2D_Conform);
 	//constructStiffnessMatrixSF2D(LapCurl3D_Conform, LapCurl2D_Conform, LapDiv3D_NonConform, LapDiv2D_NonConform);
 
 	/* Checking Laplacian *
