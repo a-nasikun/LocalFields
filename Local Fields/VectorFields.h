@@ -102,6 +102,8 @@ public:
 	void rearrangeGradient3D();
 	void rearrangeGradient3D(Eigen::SparseMatrix<double>& Grad3D);
 	void constructGradient2D();
+	void constructGradientStar3D();
+	void constructGradientStar2D();
 	void computeDivergent3D();
 	void computeDivergent2D();
 	void computeCurl3D();
@@ -276,7 +278,7 @@ protected:
 	Eigen::MatrixXi					F, FArrow, E, AdjMF3N, EdgePairMatrix;
 	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		SF2DAsym;
-	Eigen::SparseMatrix<double>		GF3D, GF2D, Div3D, Div2D, Curl3D, Curl2D, A, AT2R, J, J3D;
+	Eigen::SparseMatrix<double>		GF3D, GF2D, GFStar3D, GFStar2D, Div3D, Div2D, Curl3D, Curl2D, A, AT2R, J, J3D;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
 	Eigen::VectorXd					doubleArea;
 	vector<set<int>>				AdjMV, AdjMF2Ring, NeighRing;

@@ -93,19 +93,20 @@ int main(int argc, char *argv[])
 	viewer.selected_data_index = 0; 
 	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
 
-	//////* MATRIX CONSTRUCTIONS */
-	/////vectorFields.constructMassMatrices();
-	/////vectorFields.constructRotationMatrix();
-	/////vectorFields.constructMappingMatrix();
-	/////
-	//////* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	/////vectorFields.constructGradient3D();
-	/////vectorFields.constructStiffnessMatrices();
-	////////vectorFields.loadStiffnessMatrices();
-	/////vectorFields.constructMatrixB();
-	///////vectorFields.constructConstraints();
-	///////vectorFields.checkB2DStructure();
-	/////
+	/* MATRIX CONSTRUCTIONS */
+	vectorFields.constructMassMatrices();
+	vectorFields.constructRotationMatrix();
+	vectorFields.constructMappingMatrix();
+	
+	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
+	vectorFields.constructGradient3D();
+	vectorFields.constructGradientStar3D();
+	vectorFields.constructStiffnessMatrices();
+	///vectorFields.loadStiffnessMatrices();
+	vectorFields.constructMatrixB();
+	//vectorFields.constructConstraints();
+	//vectorFields.checkB2DStructure();
+	
 	//////* ====================== GLOBAL PROBLEM ====================*/
 	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	Eigen::Vector3d lambda;

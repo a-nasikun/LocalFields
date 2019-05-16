@@ -1205,6 +1205,51 @@ void VectorFields::constructGradient2D()
 	//visualizeSparseMatrixInMatlab(GF2D);
 }
 
+void VectorFields::constructGradientStar3D()
+{
+	GFStar3D.resize(3 * F.rows(), E.rows());
+	vector<Eigen::Triplet<double>> GTriplet;
+	GTriplet.reserve(3 * F.rows()*3*3);
+
+	for (int i = 0; i < F.rows(); i++) {
+		int edge1 = FE(i, 0);
+		int edge2 = FE(i, 1);
+		int edge3 = FE(i, 2);
+		Eigen::RowVector3d me1 = (V.row(E(edge1, 0)) + V.row(E(edge1, 1))) / 2.0;
+		Eigen::RowVector3d me2 = (V.row(E(edge2, 0)) + V.row(E(edge2, 1))) / 2.0;
+		Eigen::RowVector3d me3 = (V.row(E(edge3, 0)) + V.row(E(edge3, 1))) / 2.0;
+
+		Eigen::RowVector3d mv1 = me3 - me2;
+		Eigen::RowVector3d mv2 = me1 - me3; 
+		Eigen::RowVector3d mv3 = me2 - me1; 
+
+		Eigen::Vector3d e1 = me2 - me1;
+		Eigen::Vector3d e2 = me3 - me1;
+
+		double area = 0.5 * (e1.cross(e2)).norm();
+
+		Eigen::RowVector3d mc1 = NF.row(i).cross(mv1);
+		Eigen::RowVector3d mc2 = NF.row(i).cross(mv2);
+		Eigen::RowVector3d mc3 = NF.row(i).cross(mv3);
+
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, edge1, mc1(0)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, edge1, mc1(1)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, edge1, mc1(2)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, edge2, mc2(0)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, edge2, mc2(1)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, edge2, mc2(2)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, edge3, mc3(0)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, edge3, mc3(1)));
+		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, edge3, mc3(2)));
+	}
+	GFStar3D.setFromTriplets(GTriplet.begin(), GTriplet.end());
+}
+
+void VectorFields::constructGradientStar2D()
+{
+	GFStar2D = A.transpose()*GFStar3D;
+}
+
 void VectorFields::computeDivergent3D()
 {
 	Div3D = -MVinv*(GF3D.transpose()*MF3D);
