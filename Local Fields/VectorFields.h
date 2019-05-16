@@ -64,6 +64,8 @@ public:
 	void constructVFNeighborsFull();
 	void constructVFAdjacency();
 	void testAdjacency();
+	void constructEVList();
+	void constructEFList();
 
 	// SETTING UP MATRICES
 	void constructGlobalMatrices();
@@ -281,6 +283,8 @@ protected:
 	vector<set<VtoFPair>>			VFNeighbors, VFNeighFull;
 	vector<set<Edge_VPair>>			EdgePairsList;
 	vector<set<FacePair>>			AdjMF3N_temp;
+	vector<set<int>>				VENeighbors;
+	Eigen::MatrixXi					FE;
 	double							avgEdgeLength;
 	vector<int>						FaceToDraw;
 

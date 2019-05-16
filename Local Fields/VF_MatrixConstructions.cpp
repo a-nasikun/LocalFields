@@ -500,6 +500,66 @@ void VectorFields::testAdjacency()
 	}
 }
 
+// For every vertex V, find where it belongs in edge E
+void VectorFields::constructEVList()
+{
+	VENeighbors.resize(V.rows());
+
+	for (int i = 0; i < E.rows(); i++) {
+		VENeighbors[E(i, 0)].emplace(i);
+		VENeighbors[E(i, 1)].emplace(i);
+
+		//if (i < 100)
+		if(E(i,0)==0 || E(i,1)==0)
+			printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
+	}
+}
+
+void VectorFields::constructEFList()
+{
+	cout << "Constructing F-E lists\n";
+	FE.resize(F.rows(), 3);
+
+	for (int ijk = 0; ijk < F.rows(); ijk++) {
+		//printf("Test of F=%d: ", ijk);
+		for (int i = 0; i < F.cols(); i++) {
+			int ii = F(ijk, i);
+			int in = F(ijk, (i + 1) % (int)F.cols());
+			int ip;
+			if (i < 1)
+				ip = 2;
+			else 
+				ip = (i - 1) % (int)F.cols();
+
+			//for (set<int>::iterator it = VENeighbors[ii].begin(); it != VENeighbors[ii].end(); ++it)
+			//{
+			//	int edge = 
+			//}
+
+			/* Loop over all edges having element F(i,j) */
+			//printf("V=%d", ii);
+			for (set<int>::iterator ij = VENeighbors[ii].begin(); ij != VENeighbors[ii].end(); ++ij) {
+				int edge = *ij;
+				//printf("_Edge=%d", edge);
+				if ((ii == E(edge, 0) && in == E(edge, 1)) || (ii == E(edge, 1) && in == E(edge, 0)))
+				{
+					FE(ijk, ip) = edge;
+				}
+			}
+		}
+		//printf("\n");
+	}
+
+	/* For test */
+	int ft = 0;
+	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+
+}
+
 //void VectorFields::constructVFNeighborsFull()
 //{
 //	// For Timing
@@ -867,6 +927,15 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	cout << "CURL\n"; 
+	cout << LapCurl2D.block(0, 0, 30, 20) << endl << endl; 
+
+	cout << "DIV\n";
+	cout << LapDiv2D.block(0, 0, 30, 20) << endl << endl;
+
+	cout << "DIRICHLET\n";
+	cout << SF2D.block(0, 0, 30, 20) << endl << endl;
 }
 
 

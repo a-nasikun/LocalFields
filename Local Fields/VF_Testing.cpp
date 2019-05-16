@@ -333,7 +333,7 @@ void VectorFields::projectionTest()
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
 	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref";
-	ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
+	//ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
 
 	Xf = arbField2D; 
 
@@ -344,11 +344,11 @@ void VectorFields::projectionTest()
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2D, errors2(i));
-		testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2D, errors1(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2D, errors1(i));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, Xf, SF2D, errors2(i));
 
 		t2 = chrono::high_resolution_clock::now();

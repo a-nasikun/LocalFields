@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	//ReadChristopherStiffnessMatrix("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Models/hodgeLaplace.txt", ChrisSparseMat);
 	//WriteSparseMatrixToMatlab(ChrisSparseMat, "hello");
 	//vectorFields.readArrowMesh("../LocalFields/Models/arrow.obj");
-	//vectorFields.computeEdges();
+	vectorFields.computeEdges();
 	vectorFields.computeAverageEdgeLength();
 	vectorFields.computeFaceCenter();
 	vectorFields.computeFaceNormal();
@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
 	//vectorFields.testAdjacency();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
+	vectorFields.constructEVList();
+	vectorFields.constructEFList();
 	vectorFields.selectFaceToDraw(5000);
 	
 	vectorFields.getVF(V, F);
@@ -89,52 +91,53 @@ int main(int argc, char *argv[])
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false; 
 	viewer.selected_data_index = 0; 
+	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
 
-	/* MATRIX CONSTRUCTIONS */
-	vectorFields.constructMassMatrices();
-	vectorFields.constructRotationMatrix();
-	vectorFields.constructMappingMatrix();
-	
-	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	vectorFields.constructGradient3D();
-	vectorFields.constructStiffnessMatrices();
-	///vectorFields.loadStiffnessMatrices();
-	vectorFields.constructMatrixB();
-	//vectorFields.constructConstraints();
-	//vectorFields.checkB2DStructure();
-	
-	/* ====================== GLOBAL PROBLEM ====================*/
-	///cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	//////* MATRIX CONSTRUCTIONS */
+	/////vectorFields.constructMassMatrices();
+	/////vectorFields.constructRotationMatrix();
+	/////vectorFields.constructMappingMatrix();
+	/////
+	//////* =========== Test on PROBLEM SOLVING-related functionalities ================*/
+	/////vectorFields.constructGradient3D();
+	/////vectorFields.constructStiffnessMatrices();
+	////////vectorFields.loadStiffnessMatrices();
+	/////vectorFields.constructMatrixB();
+	///////vectorFields.constructConstraints();
+	///////vectorFields.checkB2DStructure();
+	/////
+	//////* ====================== GLOBAL PROBLEM ====================*/
+	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	Eigen::Vector3d lambda;
 	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 0.4;
-	//vectorFields.setupGlobalProblem(lambda);
-	
-	/* ====================== LOCAL ELEMENTS ====================*/
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
-
-	///string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
-
-	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
-	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
-	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
-	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	///vectorFields.constructSamples(numSample);
-	///vectorFields.constructBasis();	
-	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	vectorFields.retrieveBasis(filename_basis);	
-	///vectorFields.setupReducedBiLaplacian();
-	///vectorFields.setAndSolveUserSystem(lambda);
-	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	///////vectorFields.setupGlobalProblem(lambda);
+	/////
+	//////* ====================== LOCAL ELEMENTS ====================*/
+	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
+	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
+	/////
+	////////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
+	/////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
+	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
+	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
+	/////
+	/////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
+	////////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
+	////////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
+	////////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+	///////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
+	/////cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	////////vectorFields.constructSamples(numSample);
+	////////vectorFields.constructBasis();	
+	////////vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	/////vectorFields.retrieveBasis(filename_basis);	
+	////////vectorFields.setupReducedBiLaplacian();
+	////////vectorFields.setAndSolveUserSystem(lambda);
+	////////WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+	/////LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 
 	//vectorFields.writeBasisToFile();		// to Matlab, matlab-based
 	//vectorFields.writeField3DToFile();
@@ -166,7 +169,7 @@ int main(int argc, char *argv[])
 	///vectorFields.constructArbitraryField();
 	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
-	vectorFields.projectionTest();
+	///vectorFields.projectionTest();
 
 
 
