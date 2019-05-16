@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -101,7 +101,8 @@ int main(int argc, char *argv[])
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructGradient3D();
 	vectorFields.constructGradientStar3D();
-	vectorFields.constructStiffnessMatrices();
+	///vectorFields.constructStiffnessMatrices();
+	vectorFields.constructStiffnessMatrices_Implicit();
 	///vectorFields.loadStiffnessMatrices();
 	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
@@ -138,7 +139,9 @@ int main(int argc, char *argv[])
 	///vectorFields.setupReducedBiLaplacian();
 	///vectorFields.setAndSolveUserSystem(lambda);
 	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	
+	/* Testing Gradient */
 	vectorFields.constructArbitraryField();
 	vectorFields.testGradients();
 	vectorFields.visualizeGradientFields(viewer);
@@ -174,7 +177,7 @@ int main(int argc, char *argv[])
 	///vectorFields.constructArbitraryField();
 	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
-	///vectorFields.projectionTest();
+	vectorFields.projectionTest();
 
 
 

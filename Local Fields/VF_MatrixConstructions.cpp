@@ -519,6 +519,10 @@ void VectorFields::constructEFList()
 {
 	cout << "Constructing F-E lists\n";
 	FE.resize(F.rows(), 3);
+	EF.resize(E.rows(), 2);
+
+	vector<set<int>> EFlist;
+	EFlist.resize(E.rows());
 
 	for (int ijk = 0; ijk < F.rows(); ijk++) {
 		//printf("Test of F=%d: ", ijk);
@@ -544,19 +548,33 @@ void VectorFields::constructEFList()
 				if ((ii == E(edge, 0) && in == E(edge, 1)) || (ii == E(edge, 1) && in == E(edge, 0)))
 				{
 					FE(ijk, ip) = edge;
+					EFlist[edge].emplace(ijk);
 				}
 			}
 		}
 		//printf("\n");
 	}
 
+	for (int i = 0; i < E.rows(); i++) {
+		int counter = 0;
+		for (set<int>::iterator ij = EFlist[i].begin(); ij != EFlist[i].end(); ++ij) 
+		{
+			EF(i, counter) = *ij;
+			counter++;
+		}
+	}
+
+
+
 	/* For test */
-	int ft = 0;
+	int ft = 264;
 	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
 	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
 	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
 	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
 	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+
+	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0),0), EF(FE(ft, 0),1));
 
 }
 
@@ -619,6 +637,7 @@ void VectorFields::constructMassMatrices()
 	// Face-based Mass Matrices
 	constructMassMatrixMF2D();
 	constructMassMatrixMF2Dinv();
+	constructMassMatrixMStarAndInv();
 	constructMassMatrixMF3D();
 	constructMassMatrixMF3Dinv();
 
@@ -726,6 +745,27 @@ void VectorFields::constructMassMatrixMF2Dinv()
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void VectorFields::constructMassMatrixMStarAndInv()
+{
+	cout << "....Constructing mass matrix (edge-base)... \n";
+	MStar.resize(E.rows(), E.rows());
+	MStarInv.resize(E.rows(), E.rows());
+	vector<Eigen::Triplet<double>> MTriplet, MITriplet;
+	MTriplet.reserve(E.rows());
+	MITriplet.reserve(E.rows());
+
+	for (int i = 0; i < E.rows(); i++) {
+		double area1 = doubleArea(EF(i, 0)) / 2.0;
+		double area2 = doubleArea(EF(i, 1)) / 2.0;
+		double area = (area1 + area2) / 3.0;
+		MTriplet.push_back(Eigen::Triplet<double>(i, i, area));
+		MITriplet.push_back(Eigen::Triplet<double>(i, i, 1.0/area));
+	}
+	MStar.setFromTriplets(MTriplet.begin(), MTriplet.end());
+	MStarInv.setFromTriplets(MITriplet.begin(), MITriplet.end());
+	cout << "....Constructing mass matrix (edge-base) DONE \n";
+}
+
 void VectorFields::constructMassMatrixMF3D()
 {
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -821,6 +861,17 @@ void VectorFields::constructStiffnessMatrices()
 	///WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix);
 	//WriteSparseMatrixToMatlab(MF2D, file_massmatrix);
 
+}
+void VectorFields::constructStiffnessMatrices_Implicit()
+{
+	printf("> Computing stiffness matrix/Dirichlet Energy \n");
+	/* ALL VARIANT OF DIRICHLET ENERGY */
+	// Proper - Asymmetry - Conforming Divergent and Non-conforming Curl (Vertex-Edge)
+	//SF3D = MF3D * (GF3D*MVinv*GF3D.transpose() - J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D) *MF3D;
+	// Symmetry - Non-Conforming Divergent and Non-conforming Curl (Edge-Edge)
+	SF3D = MF3D * (GFStar3D*MStarInv*GFStar3D.transpose() - J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D) *MF3D;
+	SF2D = A.transpose()*SF3D*A;
+	printf("> Computing stiffness matrix/Dirichlet Energy DONE\n");
 }
 
 void VectorFields::loadStiffnessMatrices()

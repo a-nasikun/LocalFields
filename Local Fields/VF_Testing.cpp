@@ -803,7 +803,7 @@ void VectorFields::testGradients()
 	double l2norm = diff.transpose()*MF3D*diff;
 	double ref = gV3D.transpose()*MF3D*gV3D;
 	l2norm = l2norm / ref;
-	printf("The l2norm diff is %.10f\n", l2norm);
+	printf(">>>The l2norm diff is %.10f\n", l2norm);
 
 	//cout << "grad Vertex \n " << gV3D.block(0, 0, 30, 1) << endl; 
 	//cout << "grad Edge \n " << gE3D.block(0, 0, 30, 1) << endl;

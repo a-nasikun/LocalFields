@@ -74,9 +74,11 @@ public:
 	void constructMassMatrixMVinv();
 	void constructMassMatrixMF2D();
 	void constructMassMatrixMF2Dinv();
+	void constructMassMatrixMStarAndInv();
 	void constructMassMatrixMF3D();
 	void constructMassMatrixMF3Dinv();
 	void constructStiffnessMatrices();
+	void constructStiffnessMatrices_Implicit();
 	void loadStiffnessMatrices();
 	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D);
 	void constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
@@ -278,7 +280,7 @@ protected:
 	//Eigen::MatrixXd					V, FC, NF;
 	Eigen::MatrixXd					V, NF, VArrow;
 	Eigen::MatrixXi					F, FArrow, E, AdjMF3N, EdgePairMatrix;
-	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
+	Eigen::SparseMatrix<double>		MV, MVinv, MF2D, MF2Dinv, MStar, MStarInv, MF3D, MF3Dinv, SF2D, SF3D, B2D;
 	Eigen::SparseMatrix<double>		SF2DAsym;
 	Eigen::SparseMatrix<double>		GF3D, GF2D, GFStar3D, GFStar2D, Div3D, Div2D, Curl3D, Curl2D, A, AT2R, J, J3D;
 	Eigen::SparseMatrix<bool>		VFAdjacency;
@@ -288,7 +290,7 @@ protected:
 	vector<set<Edge_VPair>>			EdgePairsList;
 	vector<set<FacePair>>			AdjMF3N_temp;
 	vector<set<int>>				VENeighbors;
-	Eigen::MatrixXi					FE;
+	Eigen::MatrixXi					FE, EF;
 	double							avgEdgeLength;
 	vector<int>						FaceToDraw;
 

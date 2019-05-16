@@ -1130,7 +1130,7 @@ void VectorFields::VectorFields::visualizeGradientFields(igl::opengl::glfw::View
 	Eigen::VectorXd gV2d = A.transpose()*gV3D;
 	Eigen::VectorXd gE2d = A.transpose()*gE3D;
 
-	visualize2Dfields(viewer, gV2d, Eigen::RowVector3d(1.0, 0.0, 0.1), 0.2, true);
-	visualize2Dfields(viewer, gE2d, Eigen::RowVector3d(0.0, 0.0, 1.0), 0.2, true);
+	visualize2Dfields(viewer, gV2d, Eigen::RowVector3d(1.0, 0.0, 0.1), 2, false);
+	visualize2Dfields(viewer, gE2d, Eigen::RowVector3d(0.0, 0.0, 1.0), 2, false);
 }
 
