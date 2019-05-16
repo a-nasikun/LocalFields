@@ -928,7 +928,7 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
-	cout << "CURL\n"; 
+	/*cout << "CURL\n"; 
 	cout << LapCurl2D.block(0, 0, 30, 20) << endl << endl; 
 
 	cout << "DIV\n";
@@ -936,6 +936,7 @@ void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Lap
 
 	cout << "DIRICHLET\n";
 	cout << SF2D.block(0, 0, 30, 20) << endl << endl;
+	*/
 }
 
 
@@ -1219,19 +1220,21 @@ void VectorFields::constructGradientStar3D()
 		Eigen::RowVector3d me2 = (V.row(E(edge2, 0)) + V.row(E(edge2, 1))) / 2.0;
 		Eigen::RowVector3d me3 = (V.row(E(edge3, 0)) + V.row(E(edge3, 1))) / 2.0;
 
-		Eigen::RowVector3d mv1 = me3 - me2;
-		Eigen::RowVector3d mv2 = me1 - me3; 
-		Eigen::RowVector3d mv3 = me2 - me1; 
+		Eigen::Vector3d mv1 = (me3 - me2);
+		Eigen::Vector3d mv2 = (me1 - me3); 
+		Eigen::Vector3d mv3 = (me2 - me1); 
 
-		Eigen::Vector3d e1 = me2 - me1;
-		Eigen::Vector3d e2 = me3 - me1;
+		Eigen::Vector3d e1 = (me2 - me1);
+		Eigen::Vector3d e2 = (me3 - me1);
 
-		double area = 0.5 * (e1.cross(e2)).norm();
+		double area = 0.5 * ((e1.cross(e2)).norm());
 
-		Eigen::RowVector3d mc1 = NF.row(i).cross(mv1);
-		Eigen::RowVector3d mc2 = NF.row(i).cross(mv2);
-		Eigen::RowVector3d mc3 = NF.row(i).cross(mv3);
+		Eigen::Vector3d n = NF.row(i);
 
+		Eigen::Vector3d mc1 = (0.5/area) * n.cross(mv1);
+		Eigen::Vector3d mc2 = (0.5/area) * n.cross(mv2);
+		Eigen::Vector3d mc3 = (0.5/area) * n.cross(mv3);
+		
 		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, edge1, mc1(0)));
 		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, edge1, mc1(1)));
 		GTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, edge1, mc1(2)));

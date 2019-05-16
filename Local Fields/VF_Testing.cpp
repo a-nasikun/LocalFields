@@ -783,3 +783,31 @@ void VectorFields::testEnergyOfLocalPatch(igl::opengl::glfw::Viewer &viewer)
 	double totalEnergy = eigFieldFull2D.col(0).transpose() * SF2D * eigFieldFull2D.col(0);
 	printf("Total Energy = %.5f\n", totalEnergy);
 }
+
+void VectorFields::testGradients()
+{
+	//arbField = A*arbField2D;
+
+	arbFieldE3D.resize(E.rows());
+	for (int i = 0; i < E.rows(); i++) {
+		double v1 = arbField(E(i, 0));
+		double v2 = arbField(E(i, 1));
+		double v = 0.5*(v1 + v2);
+		arbFieldE3D(i) = v; 
+	}
+
+	Eigen::VectorXd gV3D = GF3D*arbField;
+	Eigen::VectorXd gE3D = GFStar3D*arbFieldE3D;
+
+	Eigen::VectorXd diff = gV3D - gE3D;
+	double l2norm = diff.transpose()*MF3D*diff;
+	double ref = gV3D.transpose()*MF3D*gV3D;
+	l2norm = l2norm / ref;
+	printf("The l2norm diff is %.10f\n", l2norm);
+
+	//cout << "grad Vertex \n " << gV3D.block(0, 0, 30, 1) << endl; 
+	//cout << "grad Edge \n " << gE3D.block(0, 0, 30, 1) << endl;
+
+
+
+}

@@ -218,6 +218,7 @@ public:
 	void checkB2DStructure();
 	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
 	void testEnergyOfLocalPatch(igl::opengl::glfw::Viewer &viewer);
+	void testGradients();
 	
 	
 	// VISUALIZATION of TESTING
@@ -242,6 +243,7 @@ public:
 	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);	
 	void visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer);
 	void visualizeAreaOfLaplaceConstraint(igl::opengl::glfw::Viewer &viewer);
+void VectorFields::visualizeGradientFields(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);
@@ -328,7 +330,7 @@ public:
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints;
 	Eigen::VectorXd					XLowDim, XFullDim;
 	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb, wbEigen, projRef, projApprox;
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, arbFieldE3D, arbFieldE2D, wb, wbEigen, projRef, projApprox;
 	Eigen::VectorXd					sampleDistance, patchDijkstraDist;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 	Eigen::MatrixXd					FC;

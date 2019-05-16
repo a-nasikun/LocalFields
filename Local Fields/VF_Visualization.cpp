@@ -1121,3 +1121,16 @@ void VectorFields::visualizeAreaOfLaplaceConstraint(igl::opengl::glfw::Viewer &v
 		}
 	}
 }
+
+void VectorFields::VectorFields::visualizeGradientFields(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::VectorXd gV3D = GF3D*arbField;
+	Eigen::VectorXd gE3D = GFStar3D*arbFieldE3D;
+
+	Eigen::VectorXd gV2d = A.transpose()*gV3D;
+	Eigen::VectorXd gE2d = A.transpose()*gE3D;
+
+	visualize2Dfields(viewer, gV2d, Eigen::RowVector3d(1.0, 0.0, 0.1), 0.2, true);
+	visualize2Dfields(viewer, gE2d, Eigen::RowVector3d(0.0, 0.0, 1.0), 0.2, true);
+}
+

@@ -113,32 +113,36 @@ int main(int argc, char *argv[])
 	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 0.4;
-	///////vectorFields.setupGlobalProblem(lambda);
-	/////
-	//////* ====================== LOCAL ELEMENTS ====================*/
-	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
-	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
-	/////
-	////////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
-	/////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
-	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
-	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
-	///////string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
-	/////
-	/////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
-	////////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
-	////////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
-	////////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
-	///////string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	/////cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	////////vectorFields.constructSamples(numSample);
-	////////vectorFields.constructBasis();	
-	////////vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	/////vectorFields.retrieveBasis(filename_basis);	
-	////////vectorFields.setupReducedBiLaplacian();
-	////////vectorFields.setAndSolveUserSystem(lambda);
-	////////WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	/////LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	//vectorFields.setupGlobalProblem(lambda);
+	
+	/* ====================== LOCAL ELEMENTS ====================*/
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
+	
+	///string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
+	
+	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
+	///string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	///vectorFields.constructSamples(numSample);
+	///vectorFields.constructBasis();	
+	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	vectorFields.retrieveBasis(filename_basis);	
+	///vectorFields.setupReducedBiLaplacian();
+	///vectorFields.setAndSolveUserSystem(lambda);
+	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	vectorFields.constructArbitraryField();
+	vectorFields.testGradients();
+	vectorFields.visualizeGradientFields(viewer);
+
 
 	//vectorFields.writeBasisToFile();		// to Matlab, matlab-based
 	//vectorFields.writeField3DToFile();
