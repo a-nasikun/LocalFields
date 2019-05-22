@@ -652,6 +652,13 @@ void VectorFields::constructMassMatrices()
 	//printf("____MF3D=%dx%d \n", MF3D.rows(), MF3D.cols());
 	//cout << "MV \n" << MV.block(0, 0, 30, 30) << endl;
 	//cout << "MF2D \n" << MF2D.block(0, 0, 30, 30) << endl;
+	
+	///WriteSparseMatrixToMatlab(MV, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_MV");
+	///WriteSparseMatrixToMatlab(MF3D, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_MF3D");
+	Eigen::SparseMatrix<double> SV, LV;
+	igl::cotmatrix(V, F, SV);
+	LV = MVinv * SV;
+	WriteSparseMatrixToMatlab(LV, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_L");
 }
 
 void VectorFields::constructMassMatrixMV()
@@ -1249,6 +1256,7 @@ void VectorFields::constructGradient3D()
 	rearrangeGradient3D();
 	//visualizeSparseMatrixInMatlab(GF3D);
 	//cout << GF3D.block(0, 0, 7, GF3D.cols()) << endl;
+	///WriteSparseMatrixToMatlab(GF3D, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_Grad");
 }
 
 void VectorFields::constructGradient2D()
