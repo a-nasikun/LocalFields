@@ -655,10 +655,10 @@ void VectorFields::constructMassMatrices()
 	
 	///WriteSparseMatrixToMatlab(MV, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_MV");
 	///WriteSparseMatrixToMatlab(MF3D, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_MF3D");
-	Eigen::SparseMatrix<double> SV, LV;
-	igl::cotmatrix(V, F, SV);
-	LV = MVinv * SV;
-	WriteSparseMatrixToMatlab(LV, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_L");
+	//Eigen::SparseMatrix<double> SV, LV;
+	//igl::cotmatrix(V, F, SV);
+	//LV = MVinv * SV;
+	//WriteSparseMatrixToMatlab(LV, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma2525_L");
 }
 
 void VectorFields::constructMassMatrixMV()

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
@@ -136,17 +136,25 @@ int main(int argc, char *argv[])
 	///vectorFields.constructSamples(numSample);
 	///vectorFields.constructBasis();	
 	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	vectorFields.retrieveBasis(filename_basis);	
+	///vectorFields.retrieveBasis(filename_basis);	
 	///vectorFields.setupReducedBiLaplacian();
 	///vectorFields.setAndSolveUserSystem(lambda);
 	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	
 	/* Testing Gradient */
 	///vectorFields.constructArbitraryField();
 	///vectorFields.testGradients();
 	///vectorFields.visualizeGradientFields(viewer);
 
+	/* Testing Rotation Matrix */
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	vectorFields.constructArbitraryField();
+	vectorFields.testRotation();
+	vectorFields.visualizeRotationTests(viewer);
+
+	/* Testing mass matrix*/
+	vectorFields.testMassMatrix();
 
 	//vectorFields.writeBasisToFile();		// to Matlab, matlab-based
 	//vectorFields.writeField3DToFile();

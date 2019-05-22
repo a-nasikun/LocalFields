@@ -807,7 +807,69 @@ void VectorFields::testGradients()
 
 	//cout << "grad Vertex \n " << gV3D.block(0, 0, 30, 1) << endl; 
 	//cout << "grad Edge \n " << gE3D.block(0, 0, 30, 1) << endl;
+}
+
+void VectorFields::testRotation() {
+	cout << "Testing the rotation matrix\n";
+	//printf("J3D=%dx%d, arbField=%d\n", J3D.rows(), J3D.cols(), arbField.size());
+	//Eigen::VectorXd v = GF3D * arbField;
+	Eigen::VectorXd v = A * arbField2D;
+
+	// Dot prodduct
+	Eigen::VectorXd Jv = J3D * v;
+	double dotProd = Jv.dot(v);
+	printf("The dot product of Jv with v is %.8f\n", dotProd);
+
+	Jv = J3D*Jv;
+	double vTemp = (Jv + v).transpose()*MF3D*(Jv + v);
+	printf("J(Jv)+v is %.8f\n", vTemp);
+
+	Jv = J3D * J3D * Jv;
+	Eigen::VectorXd diff = Jv - v;
+	vTemp = diff.transpose()*MF3D*diff;
+	printf("J*J*J*J*v - v is %.8f\n", vTemp);
+
+	cout << "Local-coordinate Case \n";
+	v = arbField2D;
+
+	// Dot prodduct
+	Jv = J * v;
+	dotProd = Jv.dot(v);
+	printf("The dot product of Jv with v is %.8f\n", dotProd);
+
+	Jv = J*Jv;
+	vTemp = (Jv + v).transpose()*MF2D*(Jv + v);
+	printf("J(Jv)+v is %.8f\n", vTemp);
+
+	Jv = J * J * Jv;
+	diff = Jv - v;
+	vTemp = diff.transpose()*MF2D*diff;
+	printf("J*J*J*J*v - v is %.8f\n", vTemp);
 
 
+}
 
+void VectorFields::testMassMatrix()
+{
+	cout << "Test Mass matrix \n";
+	double refArea = 0.0;
+	for (int i = 0; i < F.rows(); i++)
+	{
+		refArea += doubleArea(i) / 2.0; 
+	}
+	printf("The area of the surface is %.10f\n", refArea);
+
+	// Identity matrix
+	Eigen::VectorXd IdV(V.rows()); IdV.setConstant(1.0);
+	Eigen::VectorXd IdE(E.rows()); IdE.setConstant(1.0);
+	Eigen::VectorXd IdF(3*F.rows()); IdF.setConstant(1.0);
+
+	double vArea = IdV.transpose()*MV*IdV;
+	printf("Area [VERTEX] = %.10f\n", vArea);
+	printf("Dim: MF3D=%dx%d, IdF=%d\n", MF3D.rows(), MF3D.cols(), IdF.size());
+	double fArea = IdF.transpose()*MF3D*IdF;
+	printf("Area [FACE  ] = %.10f\n", fArea);
+	printf("Dim: MStar=%dx%d, IdE=%d\n", MStar.rows(), MStar.cols(), IdE.size());
+	double eArea = IdE.transpose()*MStar*IdE;
+	printf("Area [EDGE  ] = %.10f\n", eArea);
 }

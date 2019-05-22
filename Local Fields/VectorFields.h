@@ -221,6 +221,8 @@ public:
 	void testEdgesAddition(igl::opengl::glfw::Viewer &viewer);
 	void testEnergyOfLocalPatch(igl::opengl::glfw::Viewer &viewer);
 	void testGradients();
+	void testRotation();
+	void testMassMatrix();
 	
 	
 	// VISUALIZATION of TESTING
@@ -245,7 +247,8 @@ public:
 	void visualize1FieldOnCenter(igl::opengl::glfw::Viewer &viewer, const bool& even);	
 	void visualizePatchDijkstra(igl::opengl::glfw::Viewer &viewer);
 	void visualizeAreaOfLaplaceConstraint(igl::opengl::glfw::Viewer &viewer);
-void VectorFields::visualizeGradientFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeGradientFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeRotationTests(igl::opengl::glfw::Viewer &viewer);
 
 	// VISUALIZATION of IMPORTANT ELEMENTS
 	void selectFaceToDraw(const int& numFaces);

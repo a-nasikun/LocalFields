@@ -1122,7 +1122,7 @@ void VectorFields::visualizeAreaOfLaplaceConstraint(igl::opengl::glfw::Viewer &v
 	}
 }
 
-void VectorFields::VectorFields::visualizeGradientFields(igl::opengl::glfw::Viewer &viewer)
+void VectorFields::visualizeGradientFields(igl::opengl::glfw::Viewer &viewer)
 {
 	Eigen::VectorXd gV3D = GF3D*arbField;
 	Eigen::VectorXd gE3D = GFStar3D*arbFieldE3D;
@@ -1134,3 +1134,22 @@ void VectorFields::VectorFields::visualizeGradientFields(igl::opengl::glfw::View
 	visualize2Dfields(viewer, gE2d, Eigen::RowVector3d(0.0, 0.0, 1.0), 2, false);
 }
 
+void VectorFields::visualizeRotationTests(igl::opengl::glfw::Viewer &viewer) {
+	//Eigen::VectorXd v = GF3D * arbField;
+	Eigen::VectorXd v = A * arbField2D;
+	Eigen::VectorXd v2D = A.transpose()*v;
+	visualize2Dfields(viewer, v2D, Eigen::RowVector3d(0.0f, 0.0f, 0.0f),2.0, false);
+
+
+	Eigen::VectorXd Jv = J3D * v;
+	Eigen::VectorXd Jv2D = A.transpose()*Jv;
+	visualize2Dfields(viewer, Jv2D, Eigen::RowVector3d(1.0f, 0.0f, 0.0f), 2.0, false);
+
+	Eigen::VectorXd JJv = J3D*Jv;
+	Eigen::VectorXd JJv2D = A.transpose()*JJv;
+	visualize2Dfields(viewer, JJv2D, Eigen::RowVector3d(0.0f, 0.0f, 1.0f), 2.0, false);
+
+	Eigen::VectorXd JJJJv = J3D * J3D * JJv;
+	Eigen::VectorXd JJJJv2D = A.transpose()*JJJJv;
+	visualize2Dfields(viewer, JJJJv2D, Eigen::RowVector3d(1.0f, 0.0f, 1.0f), 1.0, false);
+}
