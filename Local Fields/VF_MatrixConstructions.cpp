@@ -868,6 +868,14 @@ void VectorFields::constructStiffnessMatrices()
 	///WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix);
 	//WriteSparseMatrixToMatlab(MF2D, file_massmatrix);
 
+
+	
+
+	//Eigen::SparseMatrix<double> JLCJ = J3D * LapCurl3D_NonConform * J3D;
+
+	//WriteSparseMatrixToMatlab(LapDiv3D_NonConform, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/LapD");
+	//WriteSparseMatrixToMatlab(JLCJ, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/JLapCJ");
+
 }
 void VectorFields::constructStiffnessMatrices_Implicit()
 {
@@ -879,6 +887,10 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	SF3D = MF3D * (GFStar3D*MStarInv*GFStar3D.transpose() - J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D) *MF3D;
 	SF2D = A.transpose()*SF3D*A;
 	printf("> Computing stiffness matrix/Dirichlet Energy DONE\n");
+
+	Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
+	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
+	WriteSparseMatrixToMatlab(LapDiv3D, file_stiffmatrix + "_Div_NonConform_Implicit");
 }
 
 void VectorFields::loadStiffnessMatrices()
@@ -946,11 +958,11 @@ void VectorFields::loadStiffnessMatrices()
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym_FromChristopher";
 	//WriteSparseMatrixToMatlab(SF2D, filename);
 
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Christopher";
-	WriteSparseMatrixToMatlab(MFields*JMat*GStar*MEdgesInv*GStar.transpose()*JMat*MFields  , filename + "_Curl_NonConform");
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Chris";
+	//WriteSparseMatrixToMatlab(MFields*JMat*GStar*MEdgesInv*GStar.transpose()*JMat*MFields  , filename + "_Curl_NonConform");
 	WriteSparseMatrixToMatlab(MFields*GStar*MEdgesInv*GStar.transpose()*MFields, filename + "_Div_NonConform");
-	WriteSparseMatrixToMatlab(MFields*JMat*G*MVertsInv*G.transpose()*JMat*MFields, filename + "_Curl_Conform");
-	WriteSparseMatrixToMatlab(MFields*G*MVertsInv*G.transpose()*MFields, filename + "_Div_Conform");
+	//WriteSparseMatrixToMatlab(MFields*JMat*G*MVertsInv*G.transpose()*JMat*MFields, filename + "_Curl_Conform");
+	//WriteSparseMatrixToMatlab(MFields*G*MVertsInv*G.transpose()*MFields, filename + "_Div_Conform");
 }
 
 void VectorFields::constructStiffnessMatrixSF2D(Eigen::SparseMatrix<double>& Matrix3D, Eigen::SparseMatrix<double>& Matrix2D)
@@ -1024,15 +1036,15 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 	t1 = chrono::high_resolution_clock::now();
 	cout << "....Constructing Stiffness Matrix (3D) Divergent part ";
 		constructStiffnessMatrixDivPart3D_Conform(LapDiv3D_Conform);
-		//constructStiffnessMatrixDivPart3D_NonConform(LapDiv3D_NonConform);
-		constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D_NonConform, LapDiv3D_NonConform);
+		constructStiffnessMatrixDivPart3D_NonConform(LapDiv3D_NonConform);
+		///constructStiffnessMatrixDivPart3DFromCurl3D(LapCurl3D_NonConform, LapDiv3D_NonConform);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 		
-	///string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Nasikun";
+	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
 	///WriteSparseMatrixToMatlab(LapCurl3D_NonConform, file_stiffmatrix+"_Curl_NonConform");
-	///WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform");
+	WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform_Exp_diffNorm");
 	///WriteSparseMatrixToMatlab(LapCurl3D_Conform, file_stiffmatrix + "_Curl_Conform");
 	///WriteSparseMatrixToMatlab(LapDiv3D_Conform, file_stiffmatrix + "_Div_Conform");
 }
@@ -1179,17 +1191,17 @@ void VectorFields::constructStiffnessMatrixDivPart3D_NonConform(Eigen::SparseMat
 		for (int j = 0; j < F.cols(); j++) {
 			int				neigh = AdjMF3N(i, j);
 
-			if (neigh > i) {
+			//if (neigh > i) {
 				double				area2 = doubleArea(neigh)/2.0;
 				double				area = area1 + area2;
 				Eigen::RowVector3d	n2 = NF.row(neigh);
-				Eigen::RowVector3d	n = (n1 + n2) / 2.0; n.normalize();
+				//Eigen::RowVector3d	n = (n1 + n2) / 2.0; n.normalize();
 				Eigen::Vector3d		edge = V.row(EdgePairMatrix(i, 2 * j + 1)) - V.row(EdgePairMatrix(i, 2 * j));
 				Eigen::Vector3d		edge1, edge2; 
 				edge1 = n1.cross(edge);
-				edge2 = n1.cross(edge);
+				edge2 = n2.cross(edge);
 				//edge.normalize();
-				Eigen::Matrix3d		block = (-3.0 / area) * edge1 * edge2.transpose();
+				Eigen::Matrix3d		block = (3.0 / area) * edge1 * edge2.transpose();
 
 
 
@@ -1215,29 +1227,29 @@ void VectorFields::constructStiffnessMatrixDivPart3D_NonConform(Eigen::SparseMat
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 1, -block(2, 1)));
 				LTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, -block(2, 2)));
 
-				// THE BLOCK that's the Transpose of this BLOCK
-				block.transposeInPlace();
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 0, block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 1, block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 2, block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 0, block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 1, block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 2, block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 0, block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 1, block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
-
-				// THE TRANSPOSE BLOCK ==> DIAGONAL
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, -block(0, 0)));	// row 1
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, -block(0, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, -block(0, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, -block(1, 0)));	// row 2
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, -block(1, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, -block(1, 2)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, -block(2, 0)));	// row 3
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, -block(2, 1)));
-				LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, -block(2, 2)));
-			}
+				///// THE BLOCK that's the Transpose of this BLOCK
+				///block.transposeInPlace();
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 0, block(0, 0)));	// row 1
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 1, block(0, 1)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * i + 2, block(0, 2)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 0, block(1, 0)));	// row 2
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 1, block(1, 1)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * i + 2, block(1, 2)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 0, block(2, 0)));	// row 3
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 1, block(2, 1)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * i + 2, block(2, 2)));
+				///
+				///// THE TRANSPOSE BLOCK ==> DIAGONAL
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 0, -block(0, 0)));	// row 1
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 1, -block(0, 1)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 0, 3 * neigh + 2, -block(0, 2)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 0, -block(1, 0)));	// row 2
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 1, -block(1, 1)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 1, 3 * neigh + 2, -block(1, 2)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 0, -block(2, 0)));	// row 3
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 1, -block(2, 1)));
+				///LTriplet.push_back(Eigen::Triplet<double>(3 * neigh + 2, 3 * neigh + 2, -block(2, 2)));
+			//}
 		}
 	}
 	LapDiv3D_NonConform.setFromTriplets(LTriplet.begin(), LTriplet.end());

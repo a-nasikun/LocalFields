@@ -103,8 +103,16 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
 
 	/* Measuring the 'length' of each vector */
+	cout << "ENERGY SYM \n";
 	energy1 = v.transpose()*SF2D*v;
 	energy2 = wb.transpose()*SF2D*wb;
+	cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+
+	/* Measuring the 'length' of each vector */
+	cout << "ENERGY ASYM \n";
+	energy1 = v.transpose()*SF2DAsym*v;
+	energy2 = wb.transpose()*SF2DAsym*wb;
 	cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
@@ -810,7 +818,32 @@ void VectorFields::testGradients()
 }
 
 void VectorFields::testRotation() {
-	cout << "Testing the rotation matrix\n";
+	cout << "[ Testing the rotation matrix ]\n";
+	cout << "[ 1 TEST ]\n";
+	Eigen::VectorXd v = A * arbField2D;
+	Eigen::VectorXd ajv = A.transpose()*J3D * v;
+	Eigen::VectorXd jav = J*A.transpose()*v;
+
+	Eigen::VectorXd diff = ajv - jav;
+	double diff1 = diff.transpose() * MF2D * diff;
+	double diff2 = jav.transpose() * MF2D * jav;
+	double l2norm = sqrt(diff1 / diff2);
+	printf("The difference of AT*J3D*v-J*AT is %.20f\n", l2norm);
+	cout << "The difference of AT*J3D*v-J*AT is " << l2norm << endl;
+
+	cout << "[ 2 TEST ]\n";
+	Eigen::VectorXd v1 = arbField2D;
+	jav = J3D * A * v1;
+	ajv = A * J * v1; 
+	diff = ajv - jav;
+	diff1 = diff.transpose() * MF3D * diff;
+	diff2 = jav.transpose() * MF3D * jav;
+	l2norm = sqrt(diff1 / diff2);
+	printf("The difference of AT*J3D*v-J*AT is %.20f\n", l2norm);
+	cout << "The difference of AT*J3D*v-J*AT is " << l2norm << endl;
+
+
+	/*
 	//printf("J3D=%dx%d, arbField=%d\n", J3D.rows(), J3D.cols(), arbField.size());
 	//Eigen::VectorXd v = GF3D * arbField;
 	Eigen::VectorXd v = A * arbField2D;
@@ -845,6 +878,7 @@ void VectorFields::testRotation() {
 	diff = Jv - v;
 	vTemp = diff.transpose()*MF2D*diff;
 	printf("J*J*J*J*v - v is %.8f\n", vTemp);
+	*/
 
 
 }
@@ -872,4 +906,41 @@ void VectorFields::testMassMatrix()
 	printf("Dim: MStar=%dx%d, IdE=%d\n", MStar.rows(), MStar.cols(), IdE.size());
 	double eArea = IdE.transpose()*MStar*IdE;
 	printf("Area [EDGE  ] = %.10f\n", eArea);
+}
+
+void VectorFields::projectionMatrixTest()
+{
+	Eigen::SparseMatrix<double> Id(A.cols(), A.cols());
+	Id.setIdentity();
+
+	Eigen::SparseMatrix<double> AAT = A * A.transpose();
+	Eigen::SparseMatrix<double> ATA = A.transpose()*A;
+
+	WriteSparseMatrixToMatlab(AAT, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/AAT");
+	WriteSparseMatrixToMatlab(ATA, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/ATA");
+
+}
+
+void VectorFields::testCurlAndDiv()
+{
+	Eigen::SparseMatrix<double> Curl = MStarInv*GFStar3D.transpose()*J3D*MF3D;
+	Eigen::SparseMatrix<double> Div = -MStarInv*GFStar3D.transpose()*MF3D;
+
+	Curl = Curl * A;
+	Div = Div * A;
+	Eigen::SparseMatrix<double> DivJ = Div*J;
+
+	//WriteSparseMatrixToMatlab(Curl, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Curl");
+	//WriteSparseMatrixToMatlab(DivJ, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/DivJ");
+
+	Eigen::SparseMatrix<double> LapC = -MF3D * J3D * GFStar3D*MStarInv*GFStar3D.transpose()*J3D*MF3D;
+	Eigen::SparseMatrix<double> LapD = MF3D * GFStar3D * MStarInv * GFStar3D.transpose()*MF3D;
+
+	//LapC = A.transpose() * LapC * A;
+	//LapD = A.transpose() * LapD * A;	
+
+	Eigen::SparseMatrix<double> JLCJ = J * LapC * J;
+
+	//WriteSparseMatrixToMatlab(LapD, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/LapD");
+	//WriteSparseMatrixToMatlab(JLCJ, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/JLapCJ");
 }

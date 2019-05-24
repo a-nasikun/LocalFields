@@ -223,6 +223,8 @@ public:
 	void testGradients();
 	void testRotation();
 	void testMassMatrix();
+	void projectionMatrixTest();
+	void testCurlAndDiv();
 	
 	
 	// VISUALIZATION of TESTING
