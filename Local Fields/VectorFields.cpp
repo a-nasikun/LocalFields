@@ -2111,9 +2111,9 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	constructBasis_LocalEigenProblem();
+	//constructBasis_LocalEigenProblem();
 	//constructBasis_LocalEigenProblem10();
-	//constructBasis_OptProblem();
+	constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
 }

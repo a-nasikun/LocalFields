@@ -884,13 +884,27 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	// Proper - Asymmetry - Conforming Divergent and Non-conforming Curl (Vertex-Edge)
 	//SF3D = MF3D * (GF3D*MVinv*GF3D.transpose() - J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D) *MF3D;
 	// Symmetry - Non-Conforming Divergent and Non-conforming Curl (Edge-Edge)
-	SF3D = MF3D * (GFStar3D*MStarInv*GFStar3D.transpose() - J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D) *MF3D;
+	Eigen::SparseMatrix<double> LapCurl_NonConform;		// edge-based
+	Eigen::SparseMatrix<double> LapDiv_NonConform;		// edge-based
+	Eigen::SparseMatrix<double> LapCurl_Conform;		// vertex-based
+	Eigen::SparseMatrix<double> LapDiv_Conform;			// vertex-based
+
+	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D *MF3D;
+	LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
+	LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
+	LapDiv_Conform = MF3D * GF3D * MVinv * GF3D.transpose() * MF3D;
+
+	SF3D = LapDiv_NonConform + LapCurl_NonConform;
 	SF2D = A.transpose()*SF3D*A;
+	SF2DAsym = A.transpose()*(LapDiv_Conform + LapCurl_NonConform)*A;
+
 	printf("> Computing stiffness matrix/Dirichlet Energy DONE\n");
 
-	Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
-	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
-	WriteSparseMatrixToMatlab(LapDiv3D, file_stiffmatrix + "_Div_NonConform_Implicit");
+
+
+	//Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
+	//string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
+	//WriteSparseMatrixToMatlab(LapDiv3D, file_stiffmatrix + "_Div_NonConform_Implicit");
 }
 
 void VectorFields::loadStiffnessMatrices()

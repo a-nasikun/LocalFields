@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructGradient3D();
 	vectorFields.constructGradientStar3D();
-	vectorFields.constructStiffnessMatrices();
-	///vectorFields.constructStiffnessMatrices_Implicit();
+	///vectorFields.constructStiffnessMatrices();
+	vectorFields.constructStiffnessMatrices_Implicit();
 	///vectorFields.loadStiffnessMatrices();
 	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
@@ -133,8 +133,8 @@ int main(int argc, char *argv[])
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
 	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();	
+	vectorFields.constructSamples(numSample);
+	vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
 	///vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.setupReducedBiLaplacian();
