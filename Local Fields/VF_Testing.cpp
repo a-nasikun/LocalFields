@@ -14,14 +14,14 @@ void VectorFields::constructArbitraryField()
 	arbField.resize(V.rows());
 		
 	// Dijstra-based Arbitrary Field
-	//int pID = *(NeighRing[0].begin());
-	//computeDijkstraDistanceVertex(pID, arbField);
+	//computeDijkstraDistanceVertex(0, arbField);
 
 	// Position based arbitrary scalar field
 	for (int i = 0; i < V.rows(); i++) {
-		//arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
-		arbField(i) = V(i, 1);
+		arbField(i) = V(i, 0) *  V(i, 1) *  V(i, 2);
+		//arbField(i) = V(i, 1);
 	}
+
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -44,7 +44,7 @@ void VectorFields::constructArbitraryField2D()
 	printf("Size of grad3d [2]: %dx%d\n", Grad3D.rows(), Grad3D.cols());
 	Grad2D = A.transpose()*Grad3D; 
 	printf("Grad3d [2]: %dx%d || arbFields: %d. \n", Grad2D.rows(), Grad2D.cols(), arbField.rows());
-	arbField2D = Grad2D * arbField;
+	arbField2D = 10.0*Grad2D * arbField;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -96,9 +96,9 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 
 	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
 
-	/* Measuring the energy */
-	double energy1 = v.transpose()*B2D*v;
-	double energy2 = wb.transpose()*B2D*wb;
+	/* Measuring the energy */	
+	double energy1 = v.transpose()*B2DAsym*v;
+	double energy2 = wb.transpose()*B2DAsym*wb;
 	cout << "____Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
 
@@ -166,14 +166,14 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
 
 	/* Measuring the energy */
-	double energy1 = v.transpose()*B2D*v;
-	double energy2 = wbEigen.transpose()*B2D*wbEigen;
+	double energy1 = v.transpose()*B2DAsym*v;
+	double energy2 = wbEigen.transpose()*B2DAsym*wbEigen;
 	cout << "____Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	/* Measuring the 'length' of each vector */
-	energy1 = v.transpose()*SF2D*v;
-	energy2 = wbEigen.transpose()*SF2D*wbEigen;
+	energy1 = v.transpose()*SF2DAsym*v;
+	energy2 = wbEigen.transpose()*SF2DAsym*wbEigen;
 	cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
 	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
@@ -340,8 +340,8 @@ void VectorFields::projectionTest()
 
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref";
-	//ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref";
+	ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
 
 	Xf = arbField2D; 
 
@@ -352,8 +352,8 @@ void VectorFields::projectionTest()
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
-		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
+		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2D, errors2(i));
 		//testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2D, errors1(i));
@@ -363,7 +363,7 @@ void VectorFields::projectionTest()
 		duration = t2 - t1;
 		//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
 		printf("[%d] run => [My Basis] Error=%.10f\n", i, errors1(i));
-		printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
+		//printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
 	}
 
 	cout << "ERRORS: \n" <<  errors1 << endl << "ERRORS2 \n" << errors2 << endl; 
@@ -599,7 +599,7 @@ void VectorFields::writeEigenFieldsForVTK()
 {
 	for (int id = 0; id < 1; id++)
 	{
-		string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Torus_4k_EigFields_face_ref_"+ to_string(id+1) +".vtk";
+		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/VTK and ParaView/Test Data/Torus_4k_EigFields_face_ref_"+ to_string(id+1) +".vtk";
 		
 		ofstream file(filename);
 		if (file.is_open())
@@ -916,8 +916,8 @@ void VectorFields::projectionMatrixTest()
 	Eigen::SparseMatrix<double> AAT = A * A.transpose();
 	Eigen::SparseMatrix<double> ATA = A.transpose()*A;
 
-	WriteSparseMatrixToMatlab(AAT, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/AAT");
-	WriteSparseMatrixToMatlab(ATA, "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/ATA");
+	WriteSparseMatrixToMatlab(AAT, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/AAT");
+	WriteSparseMatrixToMatlab(ATA, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/ATA");
 
 }
 

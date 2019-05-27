@@ -901,10 +901,9 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	printf("> Computing stiffness matrix/Dirichlet Energy DONE\n");
 
 
-
 	//Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
-	//string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
-	//WriteSparseMatrixToMatlab(LapDiv3D, file_stiffmatrix + "_Div_NonConform_Implicit");
+	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
+	///WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix + "_Stiffness_Asym");
 }
 
 void VectorFields::loadStiffnessMatrices()
@@ -916,7 +915,7 @@ void VectorFields::loadStiffnessMatrices()
 	printf("> Loading matrices from Christopher's JavaView\n");
 
 	/* File locations */
-	string folder = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
+	string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Arma_43k/";
 	//string folder = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Matrices/Torus_73k/";
 	string file_MVerts	= folder + "M_Verts.txt";
 	string file_MEdges	= folder + "M_Edges.txt";
@@ -972,9 +971,9 @@ void VectorFields::loadStiffnessMatrices()
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Stiff_Sym_FromChristopher";
 	//WriteSparseMatrixToMatlab(SF2D, filename);
 
-	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Chris";
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_Chris";
 	//WriteSparseMatrixToMatlab(MFields*JMat*GStar*MEdgesInv*GStar.transpose()*JMat*MFields  , filename + "_Curl_NonConform");
-	WriteSparseMatrixToMatlab(MFields*GStar*MEdgesInv*GStar.transpose()*MFields, filename + "_Div_NonConform");
+	///WriteSparseMatrixToMatlab(MFields*GStar*MEdgesInv*GStar.transpose()*MFields, filename + "_Div_NonConform");
 	//WriteSparseMatrixToMatlab(MFields*JMat*G*MVertsInv*G.transpose()*JMat*MFields, filename + "_Curl_Conform");
 	//WriteSparseMatrixToMatlab(MFields*G*MVertsInv*G.transpose()*MFields, filename + "_Div_Conform");
 }
@@ -1056,11 +1055,11 @@ void VectorFields::constructStiffnessMatrixSF3D(Eigen::SparseMatrix<double>& Lap
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 		
-	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
-	///WriteSparseMatrixToMatlab(LapCurl3D_NonConform, file_stiffmatrix+"_Curl_NonConform");
-	WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform_Exp_diffNorm");
-	///WriteSparseMatrixToMatlab(LapCurl3D_Conform, file_stiffmatrix + "_Curl_Conform");
-	///WriteSparseMatrixToMatlab(LapDiv3D_Conform, file_stiffmatrix + "_Div_Conform");
+	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
+	//WriteSparseMatrixToMatlab(LapCurl3D_NonConform, file_stiffmatrix+"_Curl_NonConform");
+	///WriteSparseMatrixToMatlab(LapDiv3D_NonConform, file_stiffmatrix + "_Div_NonConform_Exp_diffNorm");
+	//WriteSparseMatrixToMatlab(LapCurl3D_Conform, file_stiffmatrix + "_Curl_Conform");
+	//WriteSparseMatrixToMatlab(LapDiv3D_Conform, file_stiffmatrix + "_Div_Conform");
 }
 
 void VectorFields::constructStiffnessMatrixCurlPart3D_Conform(Eigen::SparseMatrix<double>& LapCurl3D_Conform)
@@ -1505,6 +1504,7 @@ void VectorFields::constructMatrixB()
 	cout << "> Constructing Bi-Laplacian Matrix B... ";
 	t1 = chrono::high_resolution_clock::now();
 	B2D = SF2D * MF2Dinv * SF2D;
+	B2DAsym = SF2DAsym * MF2Dinv * SF2DAsym;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;

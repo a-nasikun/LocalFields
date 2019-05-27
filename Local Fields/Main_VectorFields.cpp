@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructVFNeighborsFull();
 	//vectorFields.constructVFAdjacency();
 	//vectorFields.testAdjacency();
+	vectorFields.constructVertexAdjacencyMatrix();
 	vectorFields.constructFaceAdjacency3NMatrix();
 	vectorFields.constructFaceAdjacency2RingMatrix();
 	vectorFields.constructEVList();
@@ -121,22 +122,23 @@ int main(int argc, char *argv[])
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 	
-	///string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
 	
-	string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_xyz-axis.txt";
+	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vectorFields.constructSamples(numSample);
-	vectorFields.constructBasis();	
-	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	///vectorFields.retrieveBasis(filename_basis);	
+	///vectorFields.constructSamples(numSample);
+	///vectorFields.constructBasis();	
+	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
@@ -148,9 +150,9 @@ int main(int argc, char *argv[])
 	//vectorFields.visualizeGradientFields(viewer);
 
 	/* Testing Rotation Matrix */
-	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//vectorFields.constructArbitraryField();
-	///vectorFields.testRotation();
+	//vectorFields.testRotation();
 	//vectorFields.visualizeRotationTests(viewer);
 
 	//vectorFields.projectionMatrixTest();
@@ -163,15 +165,15 @@ int main(int argc, char *argv[])
 	//vectorFields.writeField3DToFile();
 	//vectorFields.measureL2NormEigVectors();
 
-	string    filename_refField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
-	string filename_approxField = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Approx_OptAlg_2000dim_30sup";
+	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
+	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Approx_OptAlg_2000dim_30sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields(filename_refField);
 	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	// Store the eigenfields as vector fields
-	//string filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields";
 	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(0), filename_vfields+"_0.txt");
 	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(1), filename_vfields+"_1.txt");
 	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(2), filename_vfields+"_2.txt");
@@ -184,12 +186,12 @@ int main(int argc, char *argv[])
 
 	/* ====================== TESTING BASIS ====================*/
 	/* _____ Projection Test ___________________________________*/
+	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	//vectorFields.constructArbitraryField();
-	///LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
-	//vectorFields.projectionTest();
+	vectorFields.projectionTest();
 
 
 
