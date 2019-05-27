@@ -94,43 +94,58 @@ void VectorFields::constructRingConstraints()
 
 void VectorFields::constructSpecifiedHardConstraints()
 {
-	// Define the constraints
-	const int numConstraints = 4;
-	set<int> constraints;
-	//vector<int> globalConstraints(numConstraints);
-	globalConstraints.resize(numConstraints);
-	Eigen::VectorXd D;
-	D.resize(F.rows());
+	const bool readFromFile = false;
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Arma_Farthest_20.txt";;
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
-	// Initialize the value of D
-	for (int i = 0; i < F.rows(); i++) {
-		D(i) = numeric_limits<double>::infinity();
+	if (readFromFile)
+	{
+		cout << "____Loading constraints from file \n";
+		LoadSTDVectorFromTxtFile(filename, globalConstraints);
 	}
+	else {
 
-	/* Random number generator */
-	std::random_device rd;								// Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
-	std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+		// Define the constraints
+		const int numConstraints = 4;
+		set<int> constraints;
+		//vector<int> globalConstraints(numConstraints);
+		globalConstraints.resize(numConstraints);
+		Eigen::VectorXd D;
+		D.resize(F.rows());
 
-	srand(time(NULL));
-	//int curPoint = rand() % F.rows();
-	//int curPoint = 0; 
-	int curPoint = dis(gen);
-	constraints.insert(curPoint);
+		// Initialize the value of D
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
 
-	// Creating constraints using farthest point sampling
-	do {
-		Eigen::VectorXi::Index maxIndex;
-		computeDijkstraDistanceFaceForSampling(curPoint, D);
-		D.maxCoeff(&maxIndex);
-		constraints.insert(maxIndex);
-		curPoint = maxIndex;
-	} while (constraints.size() < numConstraints);
-	
-	int counter1 = 0;
-	for (int i : constraints) {
-		globalConstraints[counter1++] = i;
+		/* Random number generator */
+		std::random_device rd;								// Will be used to obtain a seed for the random number engine
+		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
+		std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+
+		srand(time(NULL));
+		//int curPoint = rand() % F.rows();
+		int curPoint = 0; 
+		//int curPoint = dis(gen);
+		constraints.insert(curPoint);
+
+		// Creating constraints using farthest point sampling
+		do {
+			Eigen::VectorXi::Index maxIndex;
+			computeDijkstraDistanceFaceForSampling(curPoint, D);
+			D.maxCoeff(&maxIndex);
+			constraints.insert(maxIndex);
+			curPoint = maxIndex;
+		} while (constraints.size() < numConstraints);
+
+		int counter1 = 0;
+		for (int i : constraints) {
+			globalConstraints[counter1++] = i;
+		}
+
+		WriteSTDVectorToTxtFile(globalConstraints, filename);
 	}
+	//////////////////////
 		
 	// For testing only
 	//computeDijkstraDistanceFaceForSampling(curPoint, D);
@@ -1756,7 +1771,10 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 {	
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
-	
+	Eigen::SparseMatrix<double>		tempB2D = B2D;
+	B2D = B2DAsym;
+
+
 	constructConstraints();
 	setupRHSGlobalProblemMapped(g, h, vEst, b);
 	setupLHSGlobalProblemMapped(A_LHS);
@@ -1768,6 +1786,8 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	//setupRHSGlobalProblemSoftConstraints(lambda, b);
 	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
 	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+
+	B2D = tempB2D;
 }
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)

@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 0.4;
-	//vectorFields.setupGlobalProblem(lambda);
+	vectorFields.setupGlobalProblem(lambda);
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
@@ -131,8 +131,9 @@ int main(int argc, char *argv[])
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
+	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_farConst_Asym_1.txt";	//fartheset point
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_xyz-axis.txt";
-	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	///vectorFields.constructSamples(numSample);
@@ -188,8 +189,8 @@ int main(int argc, char *argv[])
 	/* _____ Projection Test ___________________________________*/
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
-	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	vectorFields.projectionTest();
 
@@ -305,7 +306,7 @@ int main(int argc, char *argv[])
 			//vectorFields.visualizeSubdomain(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
 			vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
 			vectorFields.visualizeApproxResult(viewer);
