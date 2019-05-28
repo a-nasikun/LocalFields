@@ -163,7 +163,8 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 	// First 2 blocks
 	cout << "Retrieving the Matrix of " << nRows <<" rows, and " << nCols << "columns. " << endl; 
 	//engEvalString(ep, "REVec = EigVec;");
-	eigVecM = engGetVariable(ep, "EVect");
+	eigVecM = engGetVariable(ep, "EigVect");
+	//eigVecM = engGetVariable(ep, "BasisFull");
 		cout << "Variable obtained from matlab \n";
 	//eigVecM = engGetVariable(ep, "EigVec");
 	//eigVecM = engGetVariable(ep, "BasisFull");
@@ -185,7 +186,8 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 
 void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)
 {
-	ReadDenseMatrixFromMatlab(M, filename, 500, 172946);
+	//ReadDenseMatrixFromMatlab(M, filename, 500, 172946);
+	ReadDenseMatrixFromMatlab(M, filename, 1000, 43243);
 }
 
 void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& filename)

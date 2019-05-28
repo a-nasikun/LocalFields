@@ -8,6 +8,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
 int eigsToCompute = 4; 
+int vfSaveId = 0;
 
 int main(int argc, char *argv[])
 {
@@ -116,14 +117,18 @@ int main(int argc, char *argv[])
 	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 0.4;
-	vectorFields.setupGlobalProblem(lambda);
+	//vectorFields.setupGlobalProblem(lambda);
 	
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 	
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";	
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_eigFields10_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigPatch_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_Grad_30sup";
+
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
@@ -131,19 +136,27 @@ int main(int argc, char *argv[])
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
-	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_farConst_Asym_1.txt";	//fartheset point
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_farConst_Asym_1.txt";	//fartheset point
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_xyz-axis.txt";
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_0 (from center).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_1 (going left).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_2 (going down).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_3 (center and down).txt";
+	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_4 (around_52).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_5 (from right arm_35).txt";
+
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	///vectorFields.constructSamples(numSample);
-	///vectorFields.constructBasis();	
-	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vectorFields.constructSamples(numSample);
+	//vectorFields.constructBasis();	
+	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
 	vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	
 	/* Testing Gradient */
 	//vectorFields.constructArbitraryField();
@@ -189,7 +202,7 @@ int main(int argc, char *argv[])
 	/* _____ Projection Test ___________________________________*/
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
-	WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	vectorFields.projectionTest();
@@ -287,6 +300,7 @@ int main(int argc, char *argv[])
 		double yMouse;
 		int fid;
 		Eigen::Vector3f bc;
+		
 
 		switch (key)
 		{
@@ -309,7 +323,8 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
-			vectorFields.visualizeApproxResult(viewer);
+			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
+			///vectorFields.visualizeApproxResult(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
@@ -398,12 +413,12 @@ int main(int argc, char *argv[])
 			break; 
 
 		/* Case x to activate for user inputted constraints */	
-		///case 'x':
-		///case 'X':
-		///	C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-		///	selectFace = !selectFace;			
-		///	//vectorFields.visualizeRandomFace(viewer, selectedFace);
-		///	break;
+		case 'x':
+		case 'X':
+			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+			selectFace = !selectFace;			
+			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			break;
 		case 'c':
 		case 'C':
 			printf("Computing smoothing on Reduced basis\n");
@@ -433,6 +448,12 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeApproximatedFields(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
 			break;
+		case 's':
+		case 'S':
+			filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_" + std::to_string(vfSaveId) + ".txt";
+			vfSaveId++;
+			WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+			break;
 		case ' ':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
@@ -443,6 +464,7 @@ int main(int argc, char *argv[])
 			vectorFields.setAndSolveUserSystem(lambda);
 			vectorFields.visualizeApproxResult(viewer);
 			vectorFields.visualizeGlobalConstraints(viewer);
+			
 			break; 
 		case 'Z':
 		case 'z':
@@ -505,10 +527,10 @@ int main(int argc, char *argv[])
 				//vectorFields.visualizeApproximatedFields(viewer);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//vectorFields.visualizeAreaOfLaplaceConstraint(viewer);
-				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.setAndSolveUserSystem(lambda);
-				vectorFields.visualizeApproxResult(viewer);
-				vectorFields.visualizeUserConstraints(viewer);
+				///cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				///vectorFields.setAndSolveUserSystem(lambda);
+				///vectorFields.visualizeApproxResult(viewer);
+				///vectorFields.visualizeUserConstraints(viewer);
 	
 				ChosenFaces.clear();
 				//cout << "Hello there\n";

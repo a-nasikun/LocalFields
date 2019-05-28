@@ -67,8 +67,8 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	Eigen::SparseMatrix<double> B = U.transpose() * MF2D * U;
 
 	cout << "____Solving linear system variables\n";
-	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
-	Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	//Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
 
 	Eigen::VectorXd w = sparseSolver.solve(a);
 
@@ -103,11 +103,11 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl; 
 
 	/* Measuring the 'length' of each vector */
-	cout << "ENERGY SYM \n";
-	energy1 = v.transpose()*SF2D*v;
-	energy2 = wb.transpose()*SF2D*wb;
-	cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
-	cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
+	//cout << "ENERGY SYM \n";
+	//energy1 = v.transpose()*SF2D*v;
+	//energy2 = wb.transpose()*SF2D*wb;
+	//cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
+	//cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	/* Measuring the 'length' of each vector */
 	cout << "ENERGY ASYM \n";
@@ -198,7 +198,7 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = inputFields;
 	const double				inputEnergy = v.transpose()*MReg*v; 
-	const double				lambda = 0.1/inputEnergy;
+	const double				lambda = 2/inputEnergy;
 	//const double				lambda = 0.5;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
 	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*MReg) * U;
@@ -237,14 +237,14 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	cout << "The L-2 Norm is << " << normL2  << endl;
 
 	/* Measuring the energy */
-	double energy1 = wRef.transpose()*B2D*wRef;
-	double energy2 = wb.transpose()*B2D*wb;
+	double energy1 = wRef.transpose()*B2DAsym*wRef;
+	double energy2 = wb.transpose()*B2DAsym*wb;
 	cout << "BIHARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*B2D*v << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	/* Measuring the energy */
-	energy1 = wRef.transpose()*SF2D*wRef;
-	energy2 = wb.transpose()*SF2D*wb;
+	energy1 = wRef.transpose()*SF2DAsym*wRef;
+	energy2 = wb.transpose()*SF2DAsym*wb;
 	cout << "HARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*SF2D*v << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
@@ -276,7 +276,7 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	Eigen::MatrixXd				U = Basis;
 	Eigen::VectorXd				v = inputFields;
 	const double				inputEnergy = v.transpose()*MReg*v;
-	const double				lambda = 0.1/inputEnergy;
+	const double				lambda = 2/inputEnergy;
 	//const double				lambda = 0.5;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
 	Eigen::MatrixXd				B = U.transpose() * (MF2D + lambda*MReg) * U;
@@ -304,14 +304,14 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	cout << "The L-2 Norm is << " << normL2 << endl;
 
 	/* Measuring the energy */
-	double energy1 = wRef.transpose()*B2D*wRef;
-	double energy2 = wbEigen.transpose()*B2D*wbEigen;
+	double energy1 = wRef.transpose()*B2DAsym*wRef;
+	double energy2 = wbEigen.transpose()*B2DAsym*wbEigen;
 	cout << "BIHARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*B2D*v << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
 	/* Measuring the energy */
-	energy1 = wRef.transpose()*SF2D*wRef;
-	energy2 = wbEigen.transpose()*SF2D*wbEigen;
+	energy1 = wRef.transpose()*SF2DAsym*wRef;
+	energy2 = wbEigen.transpose()*SF2DAsym*wbEigen;
 	cout << "HARMONIC ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << ",initial: " << v.transpose()*SF2D*v << endl;
 	cout << "Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
 
@@ -340,8 +340,8 @@ void VectorFields::projectionTest()
 
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref";
-	ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	//ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
 
 	Xf = arbField2D; 
 
@@ -353,17 +353,17 @@ void VectorFields::projectionTest()
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
 		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
-		testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
+		///testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
-		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2D, errors2(i));
-		//testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2D, errors1(i));
-		//testProjection_EigenBasis_WithRegularizer(EigenBasis, Xf, SF2D, errors2(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2DAsym, errors2(i));
+		testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2DAsym, errors1(i));
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, Xf, SF2DAsym, errors2(i));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
 		//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
 		printf("[%d] run => [My Basis] Error=%.10f\n", i, errors1(i));
-		//printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
+		printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
 	}
 
 	cout << "ERRORS: \n" <<  errors1 << endl << "ERRORS2 \n" << errors2 << endl; 

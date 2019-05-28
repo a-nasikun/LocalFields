@@ -17,9 +17,9 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
+	///constructRandomHardConstraints();
 	//constructSoftConstraints();
-	//constructInteractiveConstraints();
+	constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
@@ -2494,9 +2494,9 @@ void VectorFields::constructBasis_OptProblem()
 
 void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions)
 {
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Arma_Basis_1000_full.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
-	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Cube_Sharp_Basis_1000.txt";
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Cube_Sharp_Basis_1000.txt";
 	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
 	Eigen::MatrixXd BasisTemp;
 	
@@ -2573,8 +2573,8 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	/* Check if we have eigenfunctions already */
 	if (eigFieldFull2D.cols() < 1)
 	{
+		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_2_Ref_eigfields";
 		computeEigenMatlab(SF2DAsym, MF2D, 2, eigFieldFull2D, eigValuesFull, "hello");
-		string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_2_Full_eigFields.mat";
 		//ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
 	}
 
