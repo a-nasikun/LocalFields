@@ -3404,9 +3404,9 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Computing restricted eigenproblem (in Matlab)...\n ";
 
-	cout << "____Computing reduced system... ";
-	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
-	Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
+	//cout << "____Computing reduced system... ";
+	//Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
+	//Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -3415,10 +3415,35 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 	t1 = chrono::high_resolution_clock::now();
 	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
+	//computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
 	//WriteSparseMatrixToMatlab(Basis, "hello");
+
+	Eigen::MatrixXd EigenBasis;
+	string filenameBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	ReadDenseMatrixFromMatlab(EigenBasis, filenameBasis, 172964, 1000);
+	//EigenBasis = EigenBasis.block(0, 0, 172964, 500);
+	Eigen::MatrixXd MbarD = EigenBasis.transpose() * MF2D * EigenBasis;
+	Eigen::MatrixXd SFAsymbarD = EigenBasis.transpose() * SF2DAsym * EigenBasis;
+
+	vector<Eigen::Triplet<double>> MTriplet;
+	vector<Eigen::Triplet<double>> STriplet;
+	MTriplet.reserve(MbarD.rows()*MbarD.cols());
+	STriplet.reserve(SFAsymbarD.rows()*SFAsymbarD.cols());
+	for (int i = 0; i < MbarD.cols(); i++) {
+		for (int j = 0; j < MbarD.rows(); j++) {
+			MTriplet.push_back(Eigen::Triplet<double>(j,i, MbarD(j,i)));
+			STriplet.push_back(Eigen::Triplet<double>(j,i, SFAsymbarD(j, i)));
+		}
+	}
+	Eigen::SparseMatrix<double> Mbar;
+	Eigen::SparseMatrix<double> SFAsymbar;
+	Mbar.resize(MbarD.rows(),MbarD.cols());
+	SFAsymbar.resize(SFAsymbarD.rows(),SFAsymbarD.cols());
+	Mbar.setFromTriplets(MTriplet.begin(), MTriplet.end());
+	SFAsymbar.setFromTriplets(STriplet.begin(), STriplet.end());
+	computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
