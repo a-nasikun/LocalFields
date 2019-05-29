@@ -2133,8 +2133,8 @@ void VectorFields::constructBasis()
 
 	//constructBasis_LocalEigenProblem();
 	//constructBasis_LocalEigenProblem10();
-	constructBasis_OptProblem();
-	//constructBasis_GradOfLocalFunction(BasisFunctions);
+	//constructBasis_OptProblem();
+	constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
 }
 
@@ -2494,7 +2494,7 @@ void VectorFields::constructBasis_OptProblem()
 
 void VectorFields::constructBasis_GradOfLocalFunction(Eigen::SparseMatrix<double>& BasisFunctions)
 {
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Arma_Basis_1000_full.txt";
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Genus2_Basis_1000_full.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/CDragon_Basis_1000_full.mat";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/MATLAB Implementation/Data/Cube_Sharp_Basis_1000.txt";
 	Eigen::SparseMatrix<double> BasisGrad, BasisCoGrad;
@@ -3408,13 +3408,9 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 	Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 	Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
 
-
-
-
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
-
 
 	t1 = chrono::high_resolution_clock::now();
 	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
