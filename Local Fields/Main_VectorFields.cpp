@@ -172,29 +172,7 @@ int main(int argc, char *argv[])
 	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 
-	//vectorFields.visualizeBasisSum(viewer, 1);
 	
-	/* Testing Gradient */
-	//vectorFields.constructArbitraryField();
-	//vectorFields.testGradients();
-	//vectorFields.visualizeGradientFields(viewer);
-
-	/* Testing Rotation Matrix */
-	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
-	//vectorFields.constructArbitraryField();
-	//vectorFields.testRotation();
-	//vectorFields.visualizeRotationTests(viewer);
-
-	//vectorFields.projectionMatrixTest();
-	//vectorFields.testCurlAndDiv();
-
-	/* Testing mass matrix*/
-	//vectorFields.testMassMatrix();
-
-	//vectorFields.writeBasisToFile();		// to Matlab, matlab-based
-	//vectorFields.writeField3DToFile();
-	//vectorFields.measureL2NormEigVectors();
-
 	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_Approx_EigenBasis_2000dim_30sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
@@ -221,7 +199,10 @@ int main(int argc, char *argv[])
 	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
-	vectorFields.projectionTest();
+	Eigen::MatrixXd EigenBasis;
+	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	//ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
+	vectorFields.projectionTest(EigenBasis);
 
 
 

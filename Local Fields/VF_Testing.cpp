@@ -327,7 +327,7 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	cout << "in " << duration.count() << " seconds." << endl;
 }
 
-void VectorFields::projectionTest()
+void VectorFields::projectionTest(const Eigen::MatrixXd& EigenBasis)
 {
 	cout << "PROJECTION TEST! \n";
 	// For Timing
@@ -339,8 +339,8 @@ void VectorFields::projectionTest()
 	Eigen::VectorXd errors1(NUM_TEST), errors2(NUM_TEST);
 
 	/* Loading eigen basis for Armadillo */
-	Eigen::MatrixXd EigenBasis;
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	//Eigen::MatrixXd EigenBasis;
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
 	//ReadDenseMatrixFromMatlab(EigenBasis, filename, 172964, 1000);
 
 	Xf = arbField2D; 

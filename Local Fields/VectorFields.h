@@ -189,7 +189,7 @@ public:
 	void testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, double &error);
 	void testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
 	void testProjection_EigenBasis_WithRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
-	void projectionTest();
+	void projectionTest(const Eigen::MatrixXd& EigenBasis);
 	void measureU1andJU0();
 	void measureL2NormEigVectors();
 	void vectorFieldsDesignTest();
