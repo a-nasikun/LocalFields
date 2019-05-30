@@ -341,6 +341,7 @@ public:
 	Eigen::VectorXd					sampleDistance, patchDijkstraDist;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 	Eigen::MatrixXd					FC;
+	int								testID;
 private:
 	
 };

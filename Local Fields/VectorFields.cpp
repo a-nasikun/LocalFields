@@ -17,9 +17,9 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	///constructRandomHardConstraints();
+	constructRandomHardConstraints();
 	//constructSoftConstraints();
-	constructInteractiveConstraints();
+	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
@@ -188,27 +188,75 @@ void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
 	const bool readFromFile = true; 
+	bool lineNotFound = true;
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
+	/* Reading the constraints from file */
 	if (readFromFile)
 	{
-		cout << "____Loading constraints from file \n";
-		LoadSTDVectorFromTxtFile(filename, globalConstraints);
+		/* Old type of reading */
+		//cout << "____Loading constraints from file \n";
+		//LoadSTDVectorFromTxtFile(filename, globalConstraints);
+
+		/* New read: all constraints are in a single line */
+		ifstream file(resultFile);
+		string oneLine, oneWord;
+		
+		int lineNow = 0;
+		int toRead = testID;
+		vector<double> constraint;
+		constraint.reserve(100);
+		
+		if (file.is_open())
+		{
+			//getline(file, oneLine);
+			while (getline(file, oneLine) && lineNotFound)
+			{
+				if (toRead == lineNow)
+				{
+					istringstream iStream(oneLine);
+					getline(iStream, oneWord, ',');
+
+					while (oneWord != "") {
+						constraint.push_back(stod(oneWord));
+						cout << oneWord << "|";
+						getline(iStream, oneWord, ',');
+					}
+					cout << endl;
+
+					globalConstraints.resize(constraint.size());
+
+					for (int i = 0; i < constraint.size();i++) {
+						globalConstraints[i] = constraint[i];
+					}
+
+					lineNotFound = false; 
+					//return;
+				}
+
+				cout << "line =" << lineNow << endl; 
+				lineNow++;
+			}
+		}
+		file.close();
 	} 
 	else
 	{
-		const int numConstraints = 20;
-		set<int> constraints;
-		globalConstraints.resize(numConstraints);
-
 		/* Random number generator */
 		std::random_device rd;								// Will be used to obtain a seed for the random number engine
 		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
-		std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+					
+		/* Creating random constraints */
+		std::uniform_int_distribution<> disConst(10, 50); // From 0 to F.rows()-1
+		int numConstraints = disConst(gen);
+		//int numConstraints = 20;
+		set<int> constraints;
+		globalConstraints.resize(numConstraints);
 
-															  /* Creating random constraints */
 		do {
+			std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
 			int constraintFace = dis(gen);
 			constraints.insert(constraintFace);
 		} while (constraints.size() < numConstraints);
@@ -218,7 +266,20 @@ void VectorFields::constructRandomHardConstraints()
 			globalConstraints[counter1++] = i;
 		}
 
-		WriteSTDVectorToTxtFile(globalConstraints, filename);
+		bool writeToFile = true;
+
+		if (writeToFile) {
+			std::ofstream ofs;			
+			ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
+
+			for (int i : globalConstraints) {
+				ofs << i << ",";
+			}
+			ofs << "\n";																												// l2-norm
+
+			ofs.close();
+			//WriteSTDVectorToTxtFile(globalConstraints, filename);
+		}
 	}
 
 	
