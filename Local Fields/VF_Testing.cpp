@@ -198,7 +198,7 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	Eigen::VectorXd				v = inputFields;
 	const double				inputEnergy = v.transpose()*MReg*v; 
-	const double				lambda = 2/inputEnergy;
+	const double				lambda = 0.1/inputEnergy;
 	//const double				lambda = 0.5;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
 	Eigen::SparseMatrix<double> B = U.transpose() * (MF2D + lambda*MReg) * U;
@@ -276,7 +276,7 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	Eigen::MatrixXd				U = Basis;
 	Eigen::VectorXd				v = inputFields;
 	const double				inputEnergy = v.transpose()*MReg*v;
-	const double				lambda = 2/inputEnergy;
+	const double				lambda = 0.1/inputEnergy;
 	//const double				lambda = 0.5;
 	Eigen::VectorXd				a = U.transpose()*MF2D*v;
 	Eigen::MatrixXd				B = U.transpose() * (MF2D + lambda*MReg) * U;
@@ -352,11 +352,11 @@ void VectorFields::projectionTest()
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
 		///testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2DAsym, errors2(i));
-		testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2DAsym, errors1(i));
+		testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2DAsym, errors2(i));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, Xf, SF2DAsym, errors2(i));
 
 		t2 = chrono::high_resolution_clock::now();

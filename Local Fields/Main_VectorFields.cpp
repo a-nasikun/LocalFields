@@ -7,7 +7,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 1000;
 int eigToShow2 = 0;
-int eigsToCompute = 1000; 
+int eigsToCompute = 500; 
 int vfSaveId = 0;
 
 int main(int argc, char *argv[])
@@ -135,6 +135,13 @@ int main(int argc, char *argv[])
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Genus2_2000_EigPatch_30sup";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Genus2_2000_Grad_30sup";
 
+	/* For convergence */
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_500_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_1000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_5000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_10000_EigFields_35sup";
+	
 
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
@@ -151,19 +158,21 @@ int main(int argc, char *argv[])
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_1 (going left).txt";
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_2 (going down).txt";
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_3 (center and down).txt";
-	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_4 (around_52).txt";
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_5 (from right arm_35).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_4 (around_52).txt";
+	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_5 (from right arm_35).txt";
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();	
-	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	///vectorFields.retrieveBasis(filename_basis);	
+	///vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
+	vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+
+	//vectorFields.visualizeBasisSum(viewer, 1);
 	
 	/* Testing Gradient */
 	//vectorFields.constructArbitraryField();
@@ -190,7 +199,7 @@ int main(int argc, char *argv[])
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_Approx_EigenBasis_2000dim_30sup";
 	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
 	//vectorFields.retrieveEigenFields(filename_refField);
-	vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
+	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//vectorFields.retrieveApproxEigenFields();
 
 	// Store the eigenfields as vector fields
@@ -210,9 +219,9 @@ int main(int argc, char *argv[])
 	//vectorFields.constructArbitraryField();
 	//vectorFields.constructArbitraryField2D();
 	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+	LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
-	///vectorFields.projectionTest();
+	vectorFields.projectionTest();
 
 
 

@@ -2131,10 +2131,10 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	//constructBasis_LocalEigenProblem();
+	constructBasis_LocalEigenProblem();
 	//constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
-	constructBasis_GradOfLocalFunction(BasisFunctions);
+	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
 }
 
@@ -2146,6 +2146,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
+	//35 => 1.5 and 1.5
+	// 25  => 1.1 and 1.3
 	double	coef = sqrt(pow(1.5, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
@@ -2280,8 +2282,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	gatherBasisElements(UiTriplet,2);
-	Basis = BasisTemp;
-	//normalizeBasisAbs();
+	//Basis = BasisTemp;
+	normalizeBasisAbs(2);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;	
@@ -3086,7 +3088,10 @@ void VectorFields::normalizeBasisAbs(const int& stride)
 
 			double a = it.value();
 			double b = BasisTemp.coeff(it.row() + 1, it.col());
-			double norm = sqrt(a*a + b*b);
+			Eigen::Vector2d ab; 
+			ab << a, b; 
+			//double norm = sqrt(a*a + b*b);
+			double norm = ab.norm();
 			normSum(it.row() / 2, it.col() % stride) += norm;
 		}
 	}
@@ -3401,49 +3406,55 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
-	t1 = chrono::high_resolution_clock::now();
-	cout << "> Computing restricted eigenproblem (in Matlab)...\n ";
 
-	//cout << "____Computing reduced system... ";
-	//Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
-	//Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
+	bool obtainEigenBasis = false;
+	if (obtainEigenBasis)
+	{
+		Eigen::MatrixXd EigenBasis;
+		string filenameBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+		ReadDenseMatrixFromMatlab(EigenBasis, filenameBasis, 172964, 1000);
+		//EigenBasis = EigenBasis.block(0, 0, 172964, 500);
+		Eigen::MatrixXd MbarD = EigenBasis.transpose() * MF2D * EigenBasis;
+		Eigen::MatrixXd SFAsymbarD = EigenBasis.transpose() * SF2DAsym * EigenBasis;
 
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
-
-	t1 = chrono::high_resolution_clock::now();
-	//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-	//computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
-	//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
-
-	//WriteSparseMatrixToMatlab(Basis, "hello");
-
-	Eigen::MatrixXd EigenBasis;
-	string filenameBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
-	ReadDenseMatrixFromMatlab(EigenBasis, filenameBasis, 172964, 1000);
-	//EigenBasis = EigenBasis.block(0, 0, 172964, 500);
-	Eigen::MatrixXd MbarD = EigenBasis.transpose() * MF2D * EigenBasis;
-	Eigen::MatrixXd SFAsymbarD = EigenBasis.transpose() * SF2DAsym * EigenBasis;
-
-	vector<Eigen::Triplet<double>> MTriplet;
-	vector<Eigen::Triplet<double>> STriplet;
-	MTriplet.reserve(MbarD.rows()*MbarD.cols());
-	STriplet.reserve(SFAsymbarD.rows()*SFAsymbarD.cols());
-	for (int i = 0; i < MbarD.cols(); i++) {
-		for (int j = 0; j < MbarD.rows(); j++) {
-			MTriplet.push_back(Eigen::Triplet<double>(j,i, MbarD(j,i)));
-			STriplet.push_back(Eigen::Triplet<double>(j,i, SFAsymbarD(j, i)));
+		vector<Eigen::Triplet<double>> MTriplet;
+		vector<Eigen::Triplet<double>> STriplet;
+		MTriplet.reserve(MbarD.rows()*MbarD.cols());
+		STriplet.reserve(SFAsymbarD.rows()*SFAsymbarD.cols());
+		for (int i = 0; i < MbarD.cols(); i++) {
+			for (int j = 0; j < MbarD.rows(); j++) {
+				MTriplet.push_back(Eigen::Triplet<double>(j, i, MbarD(j, i)));
+				STriplet.push_back(Eigen::Triplet<double>(j, i, SFAsymbarD(j, i)));
+			}
 		}
+		Eigen::SparseMatrix<double> Mbar;
+		Eigen::SparseMatrix<double> SFAsymbar;
+		Mbar.resize(MbarD.rows(), MbarD.cols());
+		SFAsymbar.resize(SFAsymbarD.rows(), SFAsymbarD.cols());
+		Mbar.setFromTriplets(MTriplet.begin(), MTriplet.end());
+		SFAsymbar.setFromTriplets(STriplet.begin(), STriplet.end());
+		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 	}
-	Eigen::SparseMatrix<double> Mbar;
-	Eigen::SparseMatrix<double> SFAsymbar;
-	Mbar.resize(MbarD.rows(),MbarD.cols());
-	SFAsymbar.resize(SFAsymbarD.rows(),SFAsymbarD.cols());
-	Mbar.setFromTriplets(MTriplet.begin(), MTriplet.end());
-	SFAsymbar.setFromTriplets(STriplet.begin(), STriplet.end());
-	computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
+	else {		
+		t1 = chrono::high_resolution_clock::now();
+		cout << "> Computing restricted eigenproblem (in Matlab)...\n ";
+
+		cout << "____Computing reduced system... ";
+		Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
+		Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
+
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		cout << "in " << duration.count() << " seconds" << endl;
+
+		t1 = chrono::high_resolution_clock::now();
+		//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+		//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
+		//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
+
+		//WriteSparseMatrixToMatlab(Basis, "hello");
+	}
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;

@@ -421,7 +421,18 @@ void VectorFields::visualizeBasisSum(igl::opengl::glfw::Viewer &viewer, const in
 	else
 		color = Eigen::RowVector3d(0.0, 0.4, 0.9);
 
-	visualize2DfieldsScaled(viewer, BasisSum.col(id), color,1.0);
+	//BasisTemp = Basis;
+	//normalizeBasisAbs(2);
+	visualize2DfieldsScaled(viewer, BasisSumN.col(id), color, 2.0);
+	//for (int i = 0; i < (BasisSumN.rows() / 2); i++) {
+	//	Eigen::Vector2d a;
+	//	a(0) = BasisSumN(2 * i + 0);
+	//	a(1) = BasisSumN(2 * i + 1);
+	//	double b = a.norm();
+	//	if (i < 100) {
+	//		printf("pair %d has nomr of %.3f\n", i, b);
+	//	}
+	//}
 }
 
 void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
