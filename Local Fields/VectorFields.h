@@ -189,7 +189,7 @@ public:
 	void testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, double &error);
 	void testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
 	void testProjection_EigenBasis_WithRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
-	void projectionTest(const Eigen::MatrixXd& EigenBasis);
+	void projectionTest();
 	void measureU1andJU0();
 	void measureL2NormEigVectors();
 	void vectorFieldsDesignTest();
@@ -225,6 +225,7 @@ public:
 	void testMassMatrix();
 	void projectionMatrixTest();
 	void testCurlAndDiv();
+	void perturbVectorFields(Eigen::VectorXd& inputFields);
 	
 	
 	// VISUALIZATION of TESTING
@@ -337,7 +338,7 @@ public:
 	vector<vector<int>>				sharedEdgesVect, curvesConstraints;
 	Eigen::VectorXd					XLowDim, XFullDim;
 	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
-	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, arbFieldE3D, arbFieldE2D, wb, wbEigen, projRef, projApprox;
+	Eigen::VectorXd					dijkstraFace, arbField, arbField2D, arbFieldE3D, arbFieldE2D, wb, wbEigen, projRef, projApprox, pertFields;
 	Eigen::VectorXd					sampleDistance, patchDijkstraDist;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 	Eigen::MatrixXd					FC;
