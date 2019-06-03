@@ -902,8 +902,8 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 
 
 	//Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
-	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Nas";
-	///WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix + "_Stiffness_Asym");
+	string file_stiffmatrix = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten";
+	WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix + "_Stiffness_Asym");
 }
 
 void VectorFields::loadStiffnessMatrices()

@@ -190,7 +190,8 @@ void VectorFields::constructRandomHardConstraints()
 	const bool readFromFile = true; 
 	bool lineNotFound = true;
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -293,8 +294,9 @@ void VectorFields::constructRandomHardConstraints()
 
 	int counter = 0;
 	for (int i = 0; i < globalConstraints.size(); i++) {
-		cRand(0) = (double)(rand() % F.rows()) / (double) F.rows();
-		cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		//cRand(0) = (double)(rand() % F.rows()) / (double) F.rows();
+		//cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand << 1.0, 0.0;
 		cRand.normalize();
 
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
@@ -2193,7 +2195,7 @@ void VectorFields::constructBasis()
 	Eigen::SparseMatrix<double> BasisFunctions;
 
 	constructBasis_LocalEigenProblem();
-	//constructBasis_LocalEigenProblem10();
+	constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
@@ -2343,8 +2345,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	gatherBasisElements(UiTriplet,2);
-	//Basis = BasisTemp;
-	normalizeBasisAbs(2);
+	Basis = BasisTemp;
+	//normalizeBasisAbs(2);
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;	
@@ -3126,6 +3128,12 @@ void VectorFields::normalizeBasis()
 
 void VectorFields::normalizeBasisAbs(const int& stride)
 {
+	/* For testing only, will be cleared later */
+	BasisTemp = Basis;
+	Basis.resize(0, 0);
+	Basis.resize(BasisTemp.rows(), BasisTemp.cols());
+
+
 	Eigen::MatrixXd normSum(F.rows(), stride), normSumN(F.rows(), stride);
 	BasisSumN.resize(BasisTemp.rows(), stride);
 	vector<Eigen::Triplet<double>> BNTriplet;

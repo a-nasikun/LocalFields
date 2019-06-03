@@ -138,11 +138,14 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields.txt";
+
+
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_optAlg.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigFields10.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigPatch.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_grad.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_grad.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -587,7 +590,7 @@ void VectorFields::projectionTest()
 	chrono::duration<double>					duration;	
 
 
-	const int NUM_TEST = 100;
+	const int NUM_TEST = 5;
 	Eigen::VectorXd errors1(NUM_TEST), errors2(NUM_TEST);
 
 	/* Loading eigen basis for Armadillo */
@@ -612,11 +615,11 @@ void VectorFields::projectionTest()
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, Xf, B2DAsym, errors2(i));
-		testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2DAsym, errors2(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, Xf, SF2DAsym, errors2(i));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, Xf, SF2DAsym, errors2(i));
 
 		t2 = chrono::high_resolution_clock::now();
