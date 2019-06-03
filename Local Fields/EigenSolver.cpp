@@ -1,5 +1,14 @@
 #include "EigenSolver.h"
 
+#include "viennacl/scalar.hpp"
+#include "viennacl/vector.hpp"
+#include "viennacl/matrix.hpp"
+#include "viennacl/matrix_proxy.hpp"
+#include "viennacl/compressed_matrix.hpp"
+
+#include "viennacl/linalg/lanczos.hpp"
+#include "viennacl/io/matrix_market.hpp"
+
 
 /* Computing Eigenstructure in GPU */
 void computeEigenGPU(cusolverDnHandle_t& cusolverH, Eigen::SparseMatrix<double> &S_, Eigen::SparseMatrix<double> &M_, Eigen::MatrixXd &LDEigVec, Eigen::VectorXd &LDEigVal)
@@ -575,7 +584,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen prblem\n";
-		//engEvalString(ep, approxFile.c_str());
+		engEvalString(ep, approxFile.c_str());
 		
 		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_500_Approx_Eigenpatch_2000dim_40sup','EigVec', 'EigVal');");
 
@@ -621,4 +630,270 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	irm    = nullptr;
 	jcm    = nullptr;	
 */
+}
+
+void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	//printf("Size of S = %dx%d\n", S.rows(), S.cols());
+	using namespace matlab::engine;
+	//Engine *ep;
+	mxArray *MM = NULL, *MS = NULL, *result = NULL, *eigVecResult, *nEigsBuff;
+
+	/* Storing element to determine how many eigenpairs to compute*/
+	if (numEigs > M.rows())
+	{
+		cout << "ERROR! The number of the eigenpairs cannot exceed the size of input matrix(-ces)." << endl;
+		return;
+	}
+	nEigsBuff = mxCreateDoubleMatrix((mwSize)1, (mwSize)1, mxREAL);
+	double *numEigsPtr = mxGetPr(nEigsBuff);
+	*numEigsPtr = numEigs;
+
+	chrono::high_resolution_clock::time_point	t1, t2, t3, t4;
+	chrono::duration<double>					time_span, ts2;
+
+	const int NNZ_S = S.nonZeros();
+	const int NNZ_M = M.nonZeros();
+	double *eigVal, *eigVec;
+
+	// Allocate memory for S and M (sparse representation)
+	double	*srs = (double*)malloc(NNZ_S * sizeof(double));
+	mwIndex *irs = (mwIndex*)malloc(NNZ_S * sizeof(mwIndex));
+	mwIndex *jcs = (mwIndex*)malloc((S.cols() + 1) * sizeof(mwIndex));
+
+	double	*srm = (double*)malloc(NNZ_M * sizeof(double));
+	mwIndex *irm = (mwIndex*)malloc(NNZ_M * sizeof(mwIndex));
+	mwIndex *jcm = (mwIndex*)malloc((M.cols() + 1) * sizeof(mwIndex));
+
+	// Bind MM with M, and MS with S
+	MS = mxCreateSparse(S.rows(), S.cols(), NNZ_S, mxREAL);
+	srs = mxGetPr(MS);
+	irs = mxGetIr(MS);
+	jcs = mxGetJc(MS);
+
+	MM = mxCreateSparse(M.rows(), M.cols(), NNZ_M, mxREAL);
+	srm = mxGetPr(MM);
+	irm = mxGetIr(MM);
+	jcm = mxGetJc(MM);
+
+	// Setting initial variable value
+	int nnzSCounter = 0;
+	int nnzMCounter = 0;
+
+	t1 = chrono::high_resolution_clock::now();
+
+	// Getting matrix S
+	jcs[0] = nnzSCounter;
+	for (int i = 0; i < S.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(S, i); it; ++it) {
+			srs[nnzSCounter] = it.value();
+			irs[nnzSCounter] = it.row();
+			nnzSCounter++;
+		}
+		jcs[i + 1] = nnzSCounter;
+	}
+
+	// Getting matrix M
+	jcm[0] = nnzMCounter;
+	for (int i = 0; i < M.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
+			srm[nnzMCounter] = it.value();
+			irm[nnzMCounter] = it.row();
+			nnzMCounter++;
+		}
+		jcm[i + 1] = nnzMCounter;
+	}
+
+	// Start Matlab Engine
+	int *matlabStatus;
+	ep = engOpen(NULL);
+	if (!(ep = engOpen(""))) {
+		//ep = engOpenSingleUse(NULL, NULL, matlabStatus);
+		//if (!(ep = engOpenSingleUse(NULL, NULL, matlabStatus))) {
+		fprintf(stderr, "\nCan't start MATLAB engine\n");
+		cout << "CANNOT START MATLAB " << endl;
+	}
+	else {
+		cout << "The " << tid<< " MATLAB engine starts. OH YEAH!!!" << endl;
+	}
+
+	//cout << "Status => " << matlabStatus << endl; 
+
+	// Compute Eigenvalue in Matlab
+	int NUM_EIGEN = numEigs;
+
+	engPutVariable(ep, "MS", MS);
+	engPutVariable(ep, "MM", MM);
+	engPutVariable(ep, "Num", nEigsBuff);
+
+	t3 = chrono::high_resolution_clock::now();
+	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
+	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
+	engEvalString(ep, "EigVal=diag(EigVal);");
+	if (numEigs > 2)
+	{
+		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
+		string approxFile = "save('" + filename + "_eigFields','EigVec','EigVal');";
+		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
+		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
+		cout << "Saving the eigen prblem\n";
+		engEvalString(ep, approxFile.c_str());
+
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Cube_Round_500_Approx_Eigenpatch_2000dim_40sup','EigVec', 'EigVal');");
+
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigFields_Ref','EigVec');");
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_Small_5000vert_EigValues_Ref','EigVal');");
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVect','EigVec');");
+		//engEvalString(ep, "save('D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Genus2_20_REigVal','EigVal');");
+	}
+	t4 = chrono::high_resolution_clock::now();
+
+
+	result = engGetVariable(ep, "EigVal");
+	eigVal = (double*)malloc(NUM_EIGEN * sizeof(double));
+	memcpy((void *)eigVal, (void *)mxGetPr(result), NUM_EIGEN * sizeof(double));
+
+	eigVecResult = engGetVariable(ep, "EigVec");
+	eigVec = (double*)malloc(M.rows() * NUM_EIGEN * sizeof(double));
+	memcpy((void *)eigVec, (void *)mxGetPr(eigVecResult), M.rows() * NUM_EIGEN * sizeof(double));
+
+	EigVal = Eigen::Map<Eigen::VectorXd>(eigVal, NUM_EIGEN);
+	EigVec = Eigen::Map<Eigen::MatrixXd, 0, Eigen::OuterStride<>>(eigVec, M.rows(), NUM_EIGEN, Eigen::OuterStride<>(M.rows()));
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+	ts2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
+
+	mxDestroyArray(MM);
+	mxDestroyArray(MS);
+	mxDestroyArray(result);
+	mxDestroyArray(eigVecResult);
+	mxDestroyArray(nEigsBuff);
+
+	engClose(ep);
+}
+
+
+/* Computing Eigenstructure in Spectra */
+void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	/* Getting the inverse of M*/
+	vector<Eigen::Triplet<double>> MTrip;
+	MTrip.reserve(M.rows());
+	Eigen::SparseMatrix<double> Minv_(M.rows(), M.cols());
+	for (int i = 0; i < M.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
+			MTrip.push_back(Eigen::Triplet<double>(it.row(), it.col(), 1.0 / it.value()));
+		}
+	}
+	Minv_.setFromTriplets(MTrip.begin(), MTrip.end());
+
+	/* Computing the local laplace*/
+	Eigen::SparseMatrix<double> L = Minv_*S;
+
+	/* Computing the eigenvectors */
+	//Spectra::SparseGenMatProd<double> op(S);
+	Spectra::SparseSymShiftSolve<double> op(L);
+	//Spectra::SparseSymMatProd<double> op(L);
+	//Spectra::SparseCholesky<double> op(L);
+	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, numEigs, 2*numEigs, 0.0);
+	eigs.init();
+	int nconv = eigs.compute();
+	cout << "Result: " << eigs.info() << endl; 
+	if (eigs.info() == Spectra::SUCCESSFUL) {
+		EigVal = eigs.eigenvalues().real();
+		EigVec = eigs.eigenvectors().real();
+		cout << "I can compute the eigenproblem \n";
+		cout << "Eigenvalues \n " <<  EigVal << endl; 
+	}
+	else {
+		cout << "This results in a wrong system to solve\n";
+	}
+}
+
+void testViennaCL2()
+{
+	 // If you GPU does not support double precision, use `float` instead of `double`:
+     typedef double     ScalarType;
+   
+     std::vector< std::map<unsigned int, ScalarType> > host_A;
+     if (!viennacl::io::read_matrix_market_file(host_A, "D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/ViennaCL-1.7.1/examples/testdata/mat65k.mtx"))
+     {
+       std::cout << "Error reading Matrix file" << std::endl;
+	   return; // EXIT_FAILURE;
+     }
+   
+     viennacl::compressed_matrix<ScalarType> A;
+     viennacl::copy(host_A, A);
+   
+     viennacl::linalg::lanczos_tag ltag(0.75,    // Select a power of 0.75 as the tolerance for the machine precision.
+                                        10,      // Compute (approximations to) the 10 largest eigenvalues
+                                        viennacl::linalg::lanczos_tag::partial_reorthogonalization, // use partial reorthogonalization
+                                        30);   // Maximum size of the Krylov space
+   
+     std::cout << "Running Lanczos algorithm (eigenvalues only). This might take a while..." << std::endl;
+     std::vector<ScalarType> lanczos_eigenvalues = viennacl::linalg::eig(A, ltag);
+   
+     std::cout << "Running Lanczos algorithm (with eigenvectors). This might take a while..." << std::endl;
+     viennacl::matrix<ScalarType> approx_eigenvectors_A(A.size1(), ltag.num_eigenvalues());
+     lanczos_eigenvalues = viennacl::linalg::eig(A, approx_eigenvectors_A, ltag);
+   
+     for (std::size_t i = 0; i< lanczos_eigenvalues.size(); i++)
+     {
+       //std::cout << "Approx. eigenvalue " << std::setprecision(7) << lanczos_eigenvalues[i];
+		 std::cout << "Approx. eigenvalue " << lanczos_eigenvalues[i];
+   
+       // test approximated eigenvector by computing A*v:
+       viennacl::vector<ScalarType> approx_eigenvector = viennacl::column(approx_eigenvectors_A, static_cast<unsigned int>(i));
+       viennacl::vector<ScalarType> Aq = viennacl::linalg::prod(A, approx_eigenvector);
+       std::cout << " (" << viennacl::linalg::inner_prod(Aq, approx_eigenvector) << " for <Av,v> with approx. eigenvector v)" << std::endl;
+     }
+}
+
+void testViennaCL2(const Eigen::SparseMatrix<double> &S, const Eigen::SparseMatrix<double> &Minv, Eigen::MatrixXd &EigVects, Eigen::VectorXd &EigVals)
+{
+	// If you GPU does not support double precision, use `float` instead of `double`:
+	typedef double     ScalarType;
+	Eigen::SparseMatrix<double> L = Minv*S;
+
+	std::vector< std::map<unsigned int, ScalarType> > host_A(L.rows());
+	for (int i = 0; i < L.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(L, i); it; ++it) {
+			host_A[it.row()][it.col()] = it.value();
+		}
+	}
+
+
+	//if (!viennacl::io::read_matrix_market_file(host_A, "D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/ViennaCL-1.7.1/examples/testdata/mat65k.mtx"))
+	//{
+	//	std::cout << "Error reading Matrix file" << std::endl;
+	//	return; // EXIT_FAILURE;
+	//}
+
+	viennacl::compressed_matrix<ScalarType> A;
+	viennacl::copy(host_A, A);
+	//viennacl::copy(L, A);
+
+	viennacl::linalg::lanczos_tag ltag(0.75,    // Select a power of 0.75 as the tolerance for the machine precision.
+		4,      // Compute (approximations to) the 10 largest eigenvalues
+		viennacl::linalg::lanczos_tag::partial_reorthogonalization, // use partial reorthogonalization
+		30);   // Maximum size of the Krylov space
+
+	std::cout << "Running Lanczos algorithm (eigenvalues only). This might take a while..." << std::endl;
+	std::vector<ScalarType> lanczos_eigenvalues = viennacl::linalg::eig(A, ltag);
+
+	std::cout << "Running Lanczos algorithm (with eigenvectors). This might take a while..." << std::endl;
+	viennacl::matrix<ScalarType> approx_eigenvectors_A(A.size1(), ltag.num_eigenvalues());
+	lanczos_eigenvalues = viennacl::linalg::eig(A, approx_eigenvectors_A, ltag);
+
+	for (std::size_t i = 0; i< lanczos_eigenvalues.size(); i++)
+	{
+		//std::cout << "Approx. eigenvalue " << std::setprecision(7) << lanczos_eigenvalues[i];
+		std::cout << "Approx. eigenvalue " << lanczos_eigenvalues[i];
+
+		// test approximated eigenvector by computing A*v:
+		viennacl::vector<ScalarType> approx_eigenvector = viennacl::column(approx_eigenvectors_A, static_cast<unsigned int>(i));
+		viennacl::vector<ScalarType> Aq = viennacl::linalg::prod(A, approx_eigenvector);
+		std::cout << " (" << viennacl::linalg::inner_prod(Aq, approx_eigenvector) << " for <Av,v> with approx. eigenvector v)" << std::endl;
+	}
 }

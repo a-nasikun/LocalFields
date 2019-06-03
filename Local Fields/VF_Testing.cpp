@@ -1236,3 +1236,22 @@ void VectorFields::perturbVectorFields(Eigen::VectorXd& inputFields)
 		inputFields.block(2 * i, 0, 2, 1) = inputFields.block(2 * i, 0, 2, 1) + a;
 	}
 }
+
+void VectorFields::testSpectra()
+{
+	const int n = 100;
+	Eigen::SparseMatrix<double> M(n, n);
+	M.reserve(Eigen::VectorXi::Constant(n, 3));
+	for (int i = 0; i < n; i++)
+	{
+		M.insert(i, i) = 10.0;
+		if (i > 0)
+			M.insert(i - 1, i) = 3.0;
+		if (i < n - 1)
+			M.insert(i + 1, i) = 2.0;
+	}
+	Eigen::VectorXd evalues;
+	Eigen::MatrixXd evectors;
+
+	computeEigenSpectra(SF2DAsym, MF2D, 10, eigFieldFull2D, eigValuesFull, "hello");
+}

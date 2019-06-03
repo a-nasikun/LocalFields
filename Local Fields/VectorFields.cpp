@@ -187,7 +187,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = true; 
+	const bool readFromFile = false; 
 	bool lineNotFound = true;
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/randConstraints.txt";
@@ -2154,7 +2154,9 @@ void VectorFields::constructSamples(const int &n)
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 
-	cout << "> Constructing " << n << " samples in " << duration.count() << "seconds" << endl;
+	cout << "> Constructing " << n << " samples in " << duration.count() << "seconds" << endl;	
+
+	testViennaCL2(SF2DAsym, MF2Dinv, eigFieldFull2D, eigValuesFull);
 }
 
 void VectorFields::farthestPointSampling()
@@ -2195,7 +2197,7 @@ void VectorFields::constructBasis()
 	Eigen::SparseMatrix<double> BasisFunctions;
 
 	constructBasis_LocalEigenProblem();
-	constructBasis_LocalEigenProblem10();
+	//constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
@@ -2244,7 +2246,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		localSystem(fid) = 0;
 	}
 
-	int id, tid, ntids, ipts, istart, iproc;
+	int id, tid, ntids, ipts, istart, iproc;	
 
 	omp_set_num_threads(1);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
@@ -2259,8 +2261,18 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		istart = tid * ipts;
 		if (tid == ntids - 1) ipts = Sample.size() - istart;
 		if (ipts <= 0) ipts = 0;
+		
+		std::vector<Engine*> ep;
+		ep.resize(ntids);
+		for (int i = 0; i < ntids; i++) 
+		{
+			ep[i] = engOpen(NULL);
+			//void *vpDcom = NULL;
+			//int iret;
+			//ep[tid] = engOpenSingleUse(NULL, vpDcom, &iret);
+		}
 
-		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
+		//printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
 
 		Eigen::VectorXd				D(F.rows());
 		for (int i = 0; i < F.rows(); i++) {
@@ -2296,7 +2308,10 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			durations[2] += t2 - t1;			
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			//ep[tid] = engOpen(NULL);
+			//printf("Starting engine %d for element %d\n", tid, id);
+			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
@@ -2310,21 +2325,21 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			}
 
 			// To get local elements for visualizing subdomain
-			if (id == 0 || id == 46) {
-				cout << "Getting element of ID " << id << endl;
-
-				for (int fid : localField.SubDomain) {
-					localSystem(fid) = 0.3;
-				}
-
-				for (int fid : localField.Boundary) {
-					localSystem(fid) = 0.7;
-				}
-
-				//localSystem(localField.sampleID) = 1.0;
-
-
-			}
+			//if (id == 0 || id == 46) {
+			//	cout << "Getting element of ID " << id << endl;
+			//
+			//	for (int fid : localField.SubDomain) {
+			//		localSystem(fid) = 0.3;
+			//	}
+			//
+			//	for (int fid : localField.Boundary) {
+			//		localSystem(fid) = 0.7;
+			//	}
+			//
+			//	//localSystem(localField.sampleID) = 1.0;
+			//
+			//
+			//}
 
 			/* Localized eigenproblems */
 			//if (id == 15)

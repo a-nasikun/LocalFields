@@ -226,6 +226,7 @@ public:
 	void projectionMatrixTest();
 	void testCurlAndDiv();
 	void perturbVectorFields(Eigen::VectorXd& inputFields);
+	void testSpectra();
 	
 	
 	// VISUALIZATION of TESTING

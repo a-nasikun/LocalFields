@@ -24,6 +24,15 @@
 #include <time.h>
 #include <iostream>
 
+/* Fro spectra*/
+#include <GenEigsSolver.h>
+#include <SymEigsSolver.h>
+#include <SymEigsShiftSolver.h>
+#include <MatOp/SparseGenMatProd.h>
+#include <MatOp/SparseSymMatProd.h>
+#include <MatOp/SparseCholesky.h>
+#include <MatOp/SparseSymShiftSolve.h>
+
 using namespace std;
 
 /* Computing Eigenstructure in GPU */
@@ -34,8 +43,13 @@ void computeEigenGPU(Eigen::MatrixXd &S_, Eigen::MatrixXd &M_, Eigen::MatrixXd &
 /* Computing Eigenstructure in Matlab */
 void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal);
 void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
+void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
 
+/* Computing Eigenstructure in Spectra */
+void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
 
+void testViennaCL2();
+void testViennaCL2(const Eigen::SparseMatrix<double> &S, const Eigen::SparseMatrix<double> &Minv, Eigen::MatrixXd &EigVects, Eigen::VectorXd &EigVals);
 
 #endif // !EIGEN_SOLVER_H
 
