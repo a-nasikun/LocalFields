@@ -2216,9 +2216,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	//35 => 1.5 and 1.5
+	// 35 => 1.5 and 1.5
 	// 25  => 1.1 and 1.3
-	double	coef = sqrt(pow(1.2, 2) + pow(1.3, 2));
+	double	coef = sqrt(pow(1.4, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis

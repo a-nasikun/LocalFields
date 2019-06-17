@@ -764,11 +764,11 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i));
-		///testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i));
+		testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i));
 
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i));
 
@@ -781,6 +781,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 
 	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
 	{
+		/* Write the matrices to matlab:
+		** this will be in a new file, so I need to combine them with previous files (ensure that we still save the old file, by renaming it) */
 		WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
 		WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
 
@@ -806,10 +808,10 @@ void VectorFields::convergenceTest()
 	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
 	/* For the projection tests */
-	bool readDesFields = false;
-	bool readPertFields = false;
-	int idStart = 10;
-	int NUM_TEST = 1;
+	bool readDesFields = true;
+	bool readPertFields = true;
+	int idStart = 0;
+	int NUM_TEST = 11;
 
 	for (string file_ : basisFile)
 	{
