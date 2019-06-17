@@ -140,7 +140,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_500.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_1000.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_2000_test.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_5000.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_10000.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_20000.txt";
@@ -407,7 +407,7 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_500.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_1000.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_2000_test.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_5000.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_10000.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_20000.txt";
@@ -611,7 +611,9 @@ void VectorFields::projectionTest()
 	Eigen::MatrixXd PerturbedFields(2 * F.rows(), NUM_TEST);
 
 	bool useEigenBasis = false; 
-	bool readFieldsFromFile = true;
+	//bool readFieldsFromFile = true;
+	bool readDesFieldsFromFile = true;
+	bool readPertFieldsFromFile = true;
 
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
@@ -624,22 +626,15 @@ void VectorFields::projectionTest()
 	/* Fields and perturbed Fields */
 	string desFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_DesignedFields";
 	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_PerturbedFields";
-	if (readFieldsFromFile) {
+	if (readDesFieldsFromFile) {
 		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2*F.rows(), NUM_TEST);
-		ReadDenseMatrixFromMatlab(PerturbedFields, pertFieldsFile, 2 * F.rows(), NUM_TEST);
-
-		//readEigenDenseMatrixFromBinary(desFieldsFile, DesignedFields);
-		//readEigenDenseMatrixFromBinary(pertFieldsFile, PerturbedFields);
-
-		printf("Size of Des Fields %dx%d ", DesignedFields.rows(), DesignedFields.cols());
-		printf("Size of Des Fields %dx%d ", PerturbedFields.rows(), PerturbedFields.cols());
-		cout << DesignedFields.block(0,0, 20, 1) << endl;
-		cout << PerturbedFields.block(0,0, 20, 1) << endl;
 	}
-
+	if (readPertFieldsFromFile) {
+		ReadDenseMatrixFromMatlab(PerturbedFields, pertFieldsFile, 2 * F.rows(), NUM_TEST);
+	}
 	//Xf = arbField2D; 
 
-	for (int i = 0; i < NUM_TEST; i++)
+	for (int i = 10; i < 10+NUM_TEST; i++)
 	//for (int i = 37; i < 39; i++)
 	{
 		t1 = chrono::high_resolution_clock::now();
@@ -651,19 +646,19 @@ void VectorFields::projectionTest()
 		lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 		lambda(2) = 0.4;
 
-		if (readFieldsFromFile)
-		{
-			//pertFields.resize(2 * F.rows());
-			pertFields = PerturbedFields.col(i);
-			printf("Size of Des Fields %d \n ", pertFields.rows());
-
-			//Xf.resize(2 * F.rows());
-			Xf = DesignedFields.col(i);
-			printf("Size of Des Fields %d \n ", Xf.rows());
-			//cout << Xf << endl; 
-			//cout << "Xf: \n" << Xf.block(0, 0, 25, 1) << endl; 
+		// to get the number of constraints (for output purpose only)
+		if (readDesFieldsFromFile || readPertFieldsFromFile) {
+			constructRandomHardConstraints();
 		}
-		else
+		if (readDesFieldsFromFile) {
+			pertFields = PerturbedFields.col(i);
+		}
+		if(readPertFieldsFromFile){
+			Xf = DesignedFields.col(i);
+		}
+
+		/* In case none are read from files, constructs one! */
+		if(!readPertFieldsFromFile && !readDesFieldsFromFile)
 		{
 			setupGlobalProblem(lambda);
 			DesignedFields.col(i) = Xf;
@@ -690,13 +685,137 @@ void VectorFields::projectionTest()
 		printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
 	}
 
-	if (!readFieldsFromFile)
+	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
 	{
 		WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
 		WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
 	}
 
 	cout << "ERRORS: \n" <<  errors1 << endl << "ERRORS2 \n" << errors2 << endl; 
+}
+
+void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFieldsFromFile, int start, int nTests)
+{
+	cout << "PROJECTION TEST! \n";
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+
+
+	const int NUM_TEST = nTests;
+	Eigen::VectorXd errors1(NUM_TEST), errors2(NUM_TEST);
+	Eigen::MatrixXd DesignedFields(2 * F.rows(), NUM_TEST);
+	Eigen::MatrixXd PerturbedFields(2 * F.rows(), NUM_TEST);
+
+	bool useEigenBasis = false;
+
+	/* Loading eigen basis for Armadillo */
+	Eigen::MatrixXd EigenBasis;
+	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	if (useEigenBasis)
+	{
+		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 172964, 1000);
+	}
+
+	/* Fields and perturbed Fields */
+	string desFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_DesignedFields";
+	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_PerturbedFields";
+	if (readDesFieldsFromFile) {
+		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
+	}
+	if (readPertFieldsFromFile) {
+		ReadDenseMatrixFromMatlab(PerturbedFields, pertFieldsFile, 2 * F.rows(), NUM_TEST);
+	}
+	//Xf = arbField2D; 
+
+	for (int i = start; i < start + NUM_TEST; i++)
+		//for (int i = 37; i < 39; i++)
+	{
+		t1 = chrono::high_resolution_clock::now();
+		testID = i;
+
+
+		Eigen::Vector3d lambda;
+		lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+		lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+		lambda(2) = 0.4;
+
+		// to get the number of constraints (for output purpose only)
+		if (readDesFieldsFromFile || readPertFieldsFromFile) {
+			constructRandomHardConstraints();
+		}
+		if (readDesFieldsFromFile) {
+			pertFields = PerturbedFields.col(i-start);
+		}
+		if (readPertFieldsFromFile) {
+			Xf = DesignedFields.col(i-start);
+		}
+
+		/* In case none are read from files, constructs one! */
+		if (!readPertFieldsFromFile && !readDesFieldsFromFile)
+		{
+			setupGlobalProblem(lambda);
+			DesignedFields.col(i-start) = Xf;
+			Eigen::VectorXd vp_ = Xf;
+			perturbVectorFields(vp_);
+			pertFields = vp_;
+			PerturbedFields.col(i-start) = pertFields;
+		}
+		/* Projection to the subspace */
+		/* Reference results */
+		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
+		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
+
+		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i));
+		///testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i));
+
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i));
+
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
+		printf("[%d] run => [My Basis] Error=%.10f\n", i, errors1(i));
+		printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
+	}
+
+	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
+	{
+		WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
+		WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
+
+		// set to be true for the next test
+		readPertFieldsFromFile = true;
+		readDesFieldsFromFile = true;
+	}
+
+	cout << "ERRORS: \n" << errors1 << endl << "ERRORS2 \n" << errors2 << endl;
+}
+
+void VectorFields::convergenceTest()
+{
+	const int NUM_DIFF_BASIS = 6;
+	vector<std::string> basisFile;
+	basisFile.reserve(NUM_DIFF_BASIS);
+
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_500_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_1000_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_10000_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
+
+	/* For the projection tests */
+	bool readDesFields = false;
+	bool readPertFields = false;
+	int idStart = 10;
+	int NUM_TEST = 1;
+
+	for (string file_ : basisFile)
+	{
+		retrieveBasis(file_);
+		projectionTest(readDesFields, readPertFields, idStart, NUM_TEST);
+	}
 }
 
 void VectorFields::testMappingMatrix()

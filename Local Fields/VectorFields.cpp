@@ -187,7 +187,7 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = false; 
+	const bool readFromFile = true; 
 	bool lineNotFound = true;
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/randConstraints.txt";
