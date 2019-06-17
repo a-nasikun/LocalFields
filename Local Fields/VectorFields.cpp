@@ -1852,6 +1852,11 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 
 	B2D = tempB2D;
 }
+void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda, Eigen::MatrixXd& M)
+{
+	setupGlobalProblem(lambda);
+	M.col(testID) = Xf;
+}
 
 void VectorFields::setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
 {
@@ -2156,7 +2161,7 @@ void VectorFields::constructSamples(const int &n)
 
 	cout << "> Constructing " << n << " samples in " << duration.count() << "seconds" << endl;	
 
-	testViennaCL2(SF2DAsym, MF2Dinv, eigFieldFull2D, eigValuesFull);
+	///testViennaCL2(SF2DAsym, MF2Dinv, eigFieldFull2D, eigValuesFull);
 }
 
 void VectorFields::farthestPointSampling()
@@ -2213,7 +2218,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	//35 => 1.5 and 1.5
 	// 25  => 1.1 and 1.3
-	double	coef = sqrt(pow(1.5, 2) + pow(1.5, 2));
+	double	coef = sqrt(pow(1.2, 2) + pow(1.3, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2272,7 +2277,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//ep[tid] = engOpenSingleUse(NULL, vpDcom, &iret);
 		}
 
-		//printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
+		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
 
 		Eigen::VectorXd				D(F.rows());
 		for (int i = 0; i < F.rows(); i++) {

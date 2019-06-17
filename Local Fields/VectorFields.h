@@ -117,6 +117,7 @@ public:
 	void constructMatrixB();
 
 	void setupGlobalProblem(const Eigen::Vector3d& lambda);
+	void setupGlobalProblem(const Eigen::Vector3d& lambda, Eigen::MatrixXd& M);
 	void constructConstraints();
 	void construct1CentralConstraint();
 	void constructRingConstraints();
@@ -226,6 +227,7 @@ public:
 	void projectionMatrixTest();
 	void testCurlAndDiv();
 	void perturbVectorFields(Eigen::VectorXd& inputFields);
+	void perturbVectorFieldsRegular(Eigen::VectorXd& inputFields);
 	void testSpectra();
 	
 	

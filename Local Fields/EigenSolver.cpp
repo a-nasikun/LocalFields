@@ -1,13 +1,13 @@
 #include "EigenSolver.h"
 
-#include "viennacl/scalar.hpp"
-#include "viennacl/vector.hpp"
-#include "viennacl/matrix.hpp"
-#include "viennacl/matrix_proxy.hpp"
-#include "viennacl/compressed_matrix.hpp"
-
-#include "viennacl/linalg/lanczos.hpp"
-#include "viennacl/io/matrix_market.hpp"
+///#include "viennacl/scalar.hpp"
+///#include "viennacl/vector.hpp"
+///#include "viennacl/matrix.hpp"
+///#include "viennacl/matrix_proxy.hpp"
+///#include "viennacl/compressed_matrix.hpp"
+///
+///#include "viennacl/linalg/lanczos.hpp"
+///#include "viennacl/io/matrix_market.hpp"
 
 
 /* Computing Eigenstructure in GPU */
@@ -714,7 +714,7 @@ void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> 
 		cout << "CANNOT START MATLAB " << endl;
 	}
 	else {
-		cout << "The " << tid<< " MATLAB engine starts. OH YEAH!!!" << endl;
+		//cout << "The " << tid<< " MATLAB engine starts. OH YEAH!!!" << endl;
 	}
 
 	//cout << "Status => " << matlabStatus << endl; 
@@ -775,125 +775,125 @@ void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> 
 
 
 /* Computing Eigenstructure in Spectra */
-void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
-{
-	/* Getting the inverse of M*/
-	vector<Eigen::Triplet<double>> MTrip;
-	MTrip.reserve(M.rows());
-	Eigen::SparseMatrix<double> Minv_(M.rows(), M.cols());
-	for (int i = 0; i < M.outerSize(); i++) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
-			MTrip.push_back(Eigen::Triplet<double>(it.row(), it.col(), 1.0 / it.value()));
-		}
-	}
-	Minv_.setFromTriplets(MTrip.begin(), MTrip.end());
-
-	/* Computing the local laplace*/
-	Eigen::SparseMatrix<double> L = Minv_*S;
-
-	/* Computing the eigenvectors */
-	//Spectra::SparseGenMatProd<double> op(S);
-	Spectra::SparseSymShiftSolve<double> op(L);
-	//Spectra::SparseSymMatProd<double> op(L);
-	//Spectra::SparseCholesky<double> op(L);
-	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, numEigs, 2*numEigs, 0.0);
-	eigs.init();
-	int nconv = eigs.compute();
-	cout << "Result: " << eigs.info() << endl; 
-	if (eigs.info() == Spectra::SUCCESSFUL) {
-		EigVal = eigs.eigenvalues().real();
-		EigVec = eigs.eigenvectors().real();
-		cout << "I can compute the eigenproblem \n";
-		cout << "Eigenvalues \n " <<  EigVal << endl; 
-	}
-	else {
-		cout << "This results in a wrong system to solve\n";
-	}
-}
-
-void testViennaCL2()
-{
-	 // If you GPU does not support double precision, use `float` instead of `double`:
-     typedef double     ScalarType;
-   
-     std::vector< std::map<unsigned int, ScalarType> > host_A;
-     if (!viennacl::io::read_matrix_market_file(host_A, "D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/ViennaCL-1.7.1/examples/testdata/mat65k.mtx"))
-     {
-       std::cout << "Error reading Matrix file" << std::endl;
-	   return; // EXIT_FAILURE;
-     }
-   
-     viennacl::compressed_matrix<ScalarType> A;
-     viennacl::copy(host_A, A);
-   
-     viennacl::linalg::lanczos_tag ltag(0.75,    // Select a power of 0.75 as the tolerance for the machine precision.
-                                        10,      // Compute (approximations to) the 10 largest eigenvalues
-                                        viennacl::linalg::lanczos_tag::partial_reorthogonalization, // use partial reorthogonalization
-                                        30);   // Maximum size of the Krylov space
-   
-     std::cout << "Running Lanczos algorithm (eigenvalues only). This might take a while..." << std::endl;
-     std::vector<ScalarType> lanczos_eigenvalues = viennacl::linalg::eig(A, ltag);
-   
-     std::cout << "Running Lanczos algorithm (with eigenvectors). This might take a while..." << std::endl;
-     viennacl::matrix<ScalarType> approx_eigenvectors_A(A.size1(), ltag.num_eigenvalues());
-     lanczos_eigenvalues = viennacl::linalg::eig(A, approx_eigenvectors_A, ltag);
-   
-     for (std::size_t i = 0; i< lanczos_eigenvalues.size(); i++)
-     {
-       //std::cout << "Approx. eigenvalue " << std::setprecision(7) << lanczos_eigenvalues[i];
-		 std::cout << "Approx. eigenvalue " << lanczos_eigenvalues[i];
-   
-       // test approximated eigenvector by computing A*v:
-       viennacl::vector<ScalarType> approx_eigenvector = viennacl::column(approx_eigenvectors_A, static_cast<unsigned int>(i));
-       viennacl::vector<ScalarType> Aq = viennacl::linalg::prod(A, approx_eigenvector);
-       std::cout << " (" << viennacl::linalg::inner_prod(Aq, approx_eigenvector) << " for <Av,v> with approx. eigenvector v)" << std::endl;
-     }
-}
-
-void testViennaCL2(const Eigen::SparseMatrix<double> &S, const Eigen::SparseMatrix<double> &Minv, Eigen::MatrixXd &EigVects, Eigen::VectorXd &EigVals)
-{
-	// If you GPU does not support double precision, use `float` instead of `double`:
-	typedef double     ScalarType;
-	Eigen::SparseMatrix<double> L = Minv*S;
-
-	std::vector< std::map<unsigned int, ScalarType> > host_A(L.rows());
-	for (int i = 0; i < L.outerSize(); i++) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(L, i); it; ++it) {
-			host_A[it.row()][it.col()] = it.value();
-		}
-	}
-
-
-	//if (!viennacl::io::read_matrix_market_file(host_A, "D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/ViennaCL-1.7.1/examples/testdata/mat65k.mtx"))
-	//{
-	//	std::cout << "Error reading Matrix file" << std::endl;
-	//	return; // EXIT_FAILURE;
-	//}
-
-	viennacl::compressed_matrix<ScalarType> A;
-	viennacl::copy(host_A, A);
-	//viennacl::copy(L, A);
-
-	viennacl::linalg::lanczos_tag ltag(0.75,    // Select a power of 0.75 as the tolerance for the machine precision.
-		4,      // Compute (approximations to) the 10 largest eigenvalues
-		viennacl::linalg::lanczos_tag::partial_reorthogonalization, // use partial reorthogonalization
-		30);   // Maximum size of the Krylov space
-
-	std::cout << "Running Lanczos algorithm (eigenvalues only). This might take a while..." << std::endl;
-	std::vector<ScalarType> lanczos_eigenvalues = viennacl::linalg::eig(A, ltag);
-
-	std::cout << "Running Lanczos algorithm (with eigenvectors). This might take a while..." << std::endl;
-	viennacl::matrix<ScalarType> approx_eigenvectors_A(A.size1(), ltag.num_eigenvalues());
-	lanczos_eigenvalues = viennacl::linalg::eig(A, approx_eigenvectors_A, ltag);
-
-	for (std::size_t i = 0; i< lanczos_eigenvalues.size(); i++)
-	{
-		//std::cout << "Approx. eigenvalue " << std::setprecision(7) << lanczos_eigenvalues[i];
-		std::cout << "Approx. eigenvalue " << lanczos_eigenvalues[i];
-
-		// test approximated eigenvector by computing A*v:
-		viennacl::vector<ScalarType> approx_eigenvector = viennacl::column(approx_eigenvectors_A, static_cast<unsigned int>(i));
-		viennacl::vector<ScalarType> Aq = viennacl::linalg::prod(A, approx_eigenvector);
-		std::cout << " (" << viennacl::linalg::inner_prod(Aq, approx_eigenvector) << " for <Av,v> with approx. eigenvector v)" << std::endl;
-	}
-}
+//void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+//{
+//	/* Getting the inverse of M*/
+//	vector<Eigen::Triplet<double>> MTrip;
+//	MTrip.reserve(M.rows());
+//	Eigen::SparseMatrix<double> Minv_(M.rows(), M.cols());
+//	for (int i = 0; i < M.outerSize(); i++) {
+//		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
+//			MTrip.push_back(Eigen::Triplet<double>(it.row(), it.col(), 1.0 / it.value()));
+//		}
+//	}
+//	Minv_.setFromTriplets(MTrip.begin(), MTrip.end());
+//
+//	/* Computing the local laplace*/
+//	Eigen::SparseMatrix<double> L = Minv_*S;
+//
+//	/* Computing the eigenvectors */
+//	//Spectra::SparseGenMatProd<double> op(S);
+//	Spectra::SparseSymShiftSolve<double> op(L);
+//	//Spectra::SparseSymMatProd<double> op(L);
+//	//Spectra::SparseCholesky<double> op(L);
+//	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, numEigs, 2*numEigs, 0.0);
+//	eigs.init();
+//	int nconv = eigs.compute();
+//	cout << "Result: " << eigs.info() << endl; 
+//	if (eigs.info() == Spectra::SUCCESSFUL) {
+//		EigVal = eigs.eigenvalues().real();
+//		EigVec = eigs.eigenvectors().real();
+//		cout << "I can compute the eigenproblem \n";
+//		cout << "Eigenvalues \n " <<  EigVal << endl; 
+//	}
+//	else {
+//		cout << "This results in a wrong system to solve\n";
+//	}
+//}
+//
+//void testViennaCL2()
+//{
+//	 // If you GPU does not support double precision, use `float` instead of `double`:
+//     typedef double     ScalarType;
+//   
+//     std::vector< std::map<unsigned int, ScalarType> > host_A;
+//     if (!viennacl::io::read_matrix_market_file(host_A, "D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/ViennaCL-1.7.1/examples/testdata/mat65k.mtx"))
+//     {
+//       std::cout << "Error reading Matrix file" << std::endl;
+//	   return; // EXIT_FAILURE;
+//     }
+//   
+//     viennacl::compressed_matrix<ScalarType> A;
+//     viennacl::copy(host_A, A);
+//   
+//     viennacl::linalg::lanczos_tag ltag(0.75,    // Select a power of 0.75 as the tolerance for the machine precision.
+//                                        10,      // Compute (approximations to) the 10 largest eigenvalues
+//                                        viennacl::linalg::lanczos_tag::partial_reorthogonalization, // use partial reorthogonalization
+//                                        30);   // Maximum size of the Krylov space
+//   
+//     std::cout << "Running Lanczos algorithm (eigenvalues only). This might take a while..." << std::endl;
+//     std::vector<ScalarType> lanczos_eigenvalues = viennacl::linalg::eig(A, ltag);
+//   
+//     std::cout << "Running Lanczos algorithm (with eigenvectors). This might take a while..." << std::endl;
+//     viennacl::matrix<ScalarType> approx_eigenvectors_A(A.size1(), ltag.num_eigenvalues());
+//     lanczos_eigenvalues = viennacl::linalg::eig(A, approx_eigenvectors_A, ltag);
+//   
+//     for (std::size_t i = 0; i< lanczos_eigenvalues.size(); i++)
+//     {
+//       //std::cout << "Approx. eigenvalue " << std::setprecision(7) << lanczos_eigenvalues[i];
+//		 std::cout << "Approx. eigenvalue " << lanczos_eigenvalues[i];
+//   
+//       // test approximated eigenvector by computing A*v:
+//       viennacl::vector<ScalarType> approx_eigenvector = viennacl::column(approx_eigenvectors_A, static_cast<unsigned int>(i));
+//       viennacl::vector<ScalarType> Aq = viennacl::linalg::prod(A, approx_eigenvector);
+//       std::cout << " (" << viennacl::linalg::inner_prod(Aq, approx_eigenvector) << " for <Av,v> with approx. eigenvector v)" << std::endl;
+//     }
+//}
+//
+//void testViennaCL2(const Eigen::SparseMatrix<double> &S, const Eigen::SparseMatrix<double> &Minv, Eigen::MatrixXd &EigVects, Eigen::VectorXd &EigVals)
+//{
+//	// If you GPU does not support double precision, use `float` instead of `double`:
+//	typedef double     ScalarType;
+//	Eigen::SparseMatrix<double> L = Minv*S;
+//
+//	std::vector< std::map<unsigned int, ScalarType> > host_A(L.rows());
+//	for (int i = 0; i < L.outerSize(); i++) {
+//		for (Eigen::SparseMatrix<double>::InnerIterator it(L, i); it; ++it) {
+//			host_A[it.row()][it.col()] = it.value();
+//		}
+//	}
+//
+//
+//	//if (!viennacl::io::read_matrix_market_file(host_A, "D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/ViennaCL-1.7.1/examples/testdata/mat65k.mtx"))
+//	//{
+//	//	std::cout << "Error reading Matrix file" << std::endl;
+//	//	return; // EXIT_FAILURE;
+//	//}
+//
+//	viennacl::compressed_matrix<ScalarType> A;
+//	viennacl::copy(host_A, A);
+//	//viennacl::copy(L, A);
+//
+//	viennacl::linalg::lanczos_tag ltag(0.75,    // Select a power of 0.75 as the tolerance for the machine precision.
+//		4,      // Compute (approximations to) the 10 largest eigenvalues
+//		viennacl::linalg::lanczos_tag::partial_reorthogonalization, // use partial reorthogonalization
+//		30);   // Maximum size of the Krylov space
+//
+//	std::cout << "Running Lanczos algorithm (eigenvalues only). This might take a while..." << std::endl;
+//	std::vector<ScalarType> lanczos_eigenvalues = viennacl::linalg::eig(A, ltag);
+//
+//	std::cout << "Running Lanczos algorithm (with eigenvectors). This might take a while..." << std::endl;
+//	viennacl::matrix<ScalarType> approx_eigenvectors_A(A.size1(), ltag.num_eigenvalues());
+//	lanczos_eigenvalues = viennacl::linalg::eig(A, approx_eigenvectors_A, ltag);
+//
+//	for (std::size_t i = 0; i< lanczos_eigenvalues.size(); i++)
+//	{
+//		//std::cout << "Approx. eigenvalue " << std::setprecision(7) << lanczos_eigenvalues[i];
+//		std::cout << "Approx. eigenvalue " << lanczos_eigenvalues[i];
+//
+//		// test approximated eigenvector by computing A*v:
+//		viennacl::vector<ScalarType> approx_eigenvector = viennacl::column(approx_eigenvectors_A, static_cast<unsigned int>(i));
+//		viennacl::vector<ScalarType> Aq = viennacl::linalg::prod(A, approx_eigenvector);
+//		std::cout << " (" << viennacl::linalg::inner_prod(Aq, approx_eigenvector) << " for <Av,v> with approx. eigenvector v)" << std::endl;
+//	}
+//}

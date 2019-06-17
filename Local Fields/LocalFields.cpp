@@ -1242,7 +1242,7 @@ void LocalFields::constructLocalEigenProblemWithSelector(const Eigen::SparseMatr
 
 void LocalFields::constructLocalEigenProblemWithSelector(Engine*& ep, const int tid, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
 {
-	//cout << "[" << id << "] Constructing local eigen problem\n ";
+	cout << "[" << id << "] Constructing local eigen problem\n ";
 	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc, MF2DRed, SF2DRed;
 	Eigen::VectorXd eigValsLoc;
 	Eigen::MatrixXd EigVectLoc, eigTemp;

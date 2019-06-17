@@ -75,9 +75,12 @@ void WriteDenseMatrixToMatlab(const Eigen::MatrixXd& M, const string& filename)
 		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
 	}
 
-	engPutVariable(ep, "ApproxFields", MM);
-	engEvalString(ep, "ApproxFields=full(ApproxFields);");
-	engEvalString(ep, "save('F:/PROGRAMMING/Localized Vector Fields/Build/ForChristopher/ChineseDragon/ApproxFields','ApproxFields');");
+	engPutVariable(ep, "vectorFields", MM);
+	engEvalString(ep, "vectorFields=full(vectorFields);");
+	string saveFile = "save('" + filename + "','vectorFields');";
+	engEvalString(ep, saveFile.c_str());
+
+	//engEvalString(ep, "save('F:/PROGRAMMING/Localized Vector Fields/Build/ForChristopher/ChineseDragon/ApproxFields','vectorFields');");
 
 }
 
@@ -163,7 +166,8 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 	// First 2 blocks
 	cout << "Retrieving the Matrix of " << nRows <<" rows, and " << nCols << "columns. " << endl; 
 	//engEvalString(ep, "REVec = EigVec;");
-	eigVecM = engGetVariable(ep, "EigVect");
+	eigVecM = engGetVariable(ep, "vectorFields");
+	//eigVecM = engGetVariable(ep, "EigVect");
 	//eigVecM = engGetVariable(ep, "BasisFull");
 		cout << "Variable obtained from matlab \n";
 	//eigVecM = engGetVariable(ep, "EigVec");
@@ -544,7 +548,8 @@ void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseM
 
 void writeEigenDenseMatrixToBinary(Eigen::MatrixXd M, const std::string &filename)
 {
-	std::ofstream out(filename, std::ios::out | std::ios::binary | std::ios::trunc);
+	//std::ofstream out(filename, std::ios::out | std::ios:: | std::ios::trunc);
+	std::ofstream out(filename, std::ios::out | std::ios::trunc);
 	int rows = M.rows(), cols = M.cols();
 	out.write((char*)(&rows), sizeof(int));
 	out.write((char*)(&cols), sizeof(int));
@@ -554,7 +559,8 @@ void writeEigenDenseMatrixToBinary(Eigen::MatrixXd M, const std::string &filenam
 
 void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd M)
 {
-	std::ifstream in(filename, std::ios::in | std::ios::binary);
+	//std::ifstream in(filename, std::ios::in | std::ios::binary);
+	std::ifstream in(filename, std::ios::in);
 	int rows = 0, cols = 0;
 	in.read((char*)(&rows), sizeof(int));
 	in.read((char*)(&cols), sizeof(int));
