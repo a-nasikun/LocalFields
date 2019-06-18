@@ -234,7 +234,7 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis_sameStorage.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis_500.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -514,7 +514,7 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	if (writeToFile) {
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis_sameStorage.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis_500.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -657,7 +657,7 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
 		//EigenBasis = EigenBasisFull;
 		// same performance
-		EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 500);
+		EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 667);
 	}
 
 	/* Fields and perturbed Fields */
@@ -774,8 +774,8 @@ void VectorFields::compareModalBasis_SameStorage()
 	string ourBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
 
 	/* For the projection tests */
-	bool readDesFields = false;
-	bool readPertFields = false;
+	bool readDesFields = true;
+	bool readPertFields = true;
 	bool useEigenBasis = true;
 	int idStart = 0;
 	int NUM_TEST = 50;

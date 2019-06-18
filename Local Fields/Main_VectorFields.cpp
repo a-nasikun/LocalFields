@@ -547,5 +547,6 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 2.0f; 
 
-	return viewer.launch();
+	//return viewer.launch();
+	return 1;
 }
