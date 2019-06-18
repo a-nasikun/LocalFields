@@ -75,9 +75,9 @@ void WriteDenseMatrixToMatlab(const Eigen::MatrixXd& M, const string& filename)
 		cout << "MATLAB STARTS. OH YEAH!!!" << endl;
 	}
 
-	engPutVariable(ep, "vectorFields", MM);
-	engEvalString(ep, "vectorFields=full(vectorFields);");
-	string saveFile = "save('" + filename + "','vectorFields');";
+	engPutVariable(ep, "data", MM);
+	engEvalString(ep, "data=full(data);");
+	string saveFile = "save('" + filename + "','data');";
 	engEvalString(ep, saveFile.c_str());
 
 	//engEvalString(ep, "save('F:/PROGRAMMING/Localized Vector Fields/Build/ForChristopher/ChineseDragon/ApproxFields','vectorFields');");
