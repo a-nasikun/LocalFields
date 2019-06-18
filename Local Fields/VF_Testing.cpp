@@ -186,32 +186,6 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 	cout << "____Getting total SUM(wi*bi) \n";
 	wbEigen = U*w;
 
-	//// Compare their L2-Norm
-	//cout << "____Computing L2-norm \n";
-	//Eigen::VectorXd diff = v - wbEigen;
-	//double norm1 = diff.transpose()*MF2D*diff;
-	//double norm2 = v.transpose()*MF2D*v;
-	//double normL2 = sqrt(norm1 / norm2);
-	//error = normL2;
-	//
-	//cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
-	//
-	///* Measuring the energy */
-	//double energy1 = v.transpose()*B2DAsym*v;
-	//double energy2 = wbEigen.transpose()*B2DAsym*wbEigen;
-	//cout << "____Bi-Harmonic ENERGY => Ref=" << energy1 << ", Approx:" << energy2 << endl;
-	//cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
-	//
-	///* Measuring the 'length' of each vector */
-	//energy1 = v.transpose()*SF2DAsym*v;
-	//energy2 = wbEigen.transpose()*SF2DAsym*wbEigen;
-	//cout << "____Harmonic Energy => Ref=" << energy1 << ", Approx:" << energy2 << endl;
-	//cout << "____Relative energy: " << abs(energy1 - energy2) / energy1 << endl;
-	//
-	//t2 = chrono::high_resolution_clock::now();
-	//duration = t2 - t0;
-	//cout << "in " << duration.count() << " seconds." << endl;
-
 	// Compare their L2-Norm
 	cout << "____Computing L2-norm \n";
 	Eigen::VectorXd diff = v - wbEigen;
@@ -263,7 +237,9 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_modalBasis_sameStorage.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_modalBasis_samePerformance.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -581,8 +557,9 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis.txt";
-
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_sameStorage.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_samePerformance.txt";
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
 		ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
@@ -694,7 +671,7 @@ void VectorFields::projectionTest()
 	cout << "ERRORS: \n" <<  errors1 << endl << "ERRORS2 \n" << errors2 << endl; 
 }
 
-void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFieldsFromFile, int start, int nTests)
+void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFieldsFromFile, bool &useEigenBasis, int start, int nTests)
 {
 	cout << "PROJECTION TEST! \n";
 	// For Timing
@@ -707,14 +684,24 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	Eigen::MatrixXd DesignedFields(2 * F.rows(), NUM_TEST);
 	Eigen::MatrixXd PerturbedFields(2 * F.rows(), NUM_TEST);
 
-	bool useEigenBasis = false;
+	//bool useEigenBasis = false;
 
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
-	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	Eigen::MatrixXd EigenBasisFull;
+	//string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_400_eigenfields_Ref";
+
 	if (useEigenBasis)
 	{
-		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 172964, 1000);
+		cout << "Reading eigenbasis (if possible...) \n";
+		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 548392, 400);
+		// same storage
+		//EigenBasis.resize(EigenBasisFull.rows(), 40);
+		//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
+		//EigenBasis = EigenBasisFull;
+		// same performance
+		//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
 	}
 
 	/* Fields and perturbed Fields */
@@ -764,13 +751,13 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
-		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
+		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i-start));
 
-		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i));
-		testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i));
+		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
+		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
 
-		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i));
+		testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i-start));
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
@@ -801,23 +788,44 @@ void VectorFields::convergenceTest()
 	basisFile.reserve(NUM_DIFF_BASIS);
 
 	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_500_EigFields_35sup");
-	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_1000_EigFields_35sup");
-	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup");
-	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_EigFields_35sup");
-	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_10000_EigFields_35sup");
-	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_1000_EigFields_35sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_EigFields_35sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_10000_EigFields_35sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
 	/* For the projection tests */
-	bool readDesFields = true;
-	bool readPertFields = true;
-	int idStart = 0;
-	int NUM_TEST = 11;
+	bool readDesFields = false;
+	bool readPertFields = false;
+	bool useEigenBasis = false;
+	int idStart = 11;
+	int NUM_TEST = 1;
 
 	for (string file_ : basisFile)
 	{
 		retrieveBasis(file_);
-		projectionTest(readDesFields, readPertFields, idStart, NUM_TEST);
+		projectionTest(readDesFields, readPertFields, useEigenBasis, idStart, NUM_TEST);
 	}
+}
+
+void VectorFields::compareModalBasis_SamePerformance()
+{
+	
+}
+
+void VectorFields::compareModalBasis_SameStorage()
+{
+	string ourBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup";
+
+	/* For the projection tests */
+	bool readDesFields = true;
+	bool readPertFields = true;
+	bool useEigenBasis = true;
+	int idStart = 0;
+	int NUM_TEST = 1;
+
+	retrieveBasis(ourBasis);
+	projectionTest(readDesFields, readPertFields, useEigenBasis, idStart, NUM_TEST);
 }
 
 void VectorFields::testMappingMatrix()

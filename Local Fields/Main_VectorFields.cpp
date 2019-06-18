@@ -205,7 +205,8 @@ int main(int argc, char *argv[])
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	///vectorFields.projectionTest();
-	vectorFields.convergenceTest();
+	///vectorFields.convergenceTest();
+	vectorFields.compareModalBasis_SameStorage();
 	
 	/* _____ Vector fields design test __________________________*/
 	//vectorFields.vectorFieldsDesignTest();
