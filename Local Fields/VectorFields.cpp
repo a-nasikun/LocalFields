@@ -190,8 +190,8 @@ void VectorFields::constructRandomHardConstraints()
 	const bool readFromFile = true; 
 	bool lineNotFound = true;
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
-	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -2196,6 +2196,23 @@ void VectorFields::farthestPointSampling()
 	sampleDistance = D; 
 }
 
+void VectorFields::constructMultiBasis()
+{
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//vector<int> sampleSizeVect{ 25000 };
+	vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
+	numSupport = 20.0;
+	for (int sample : sampleSizeVect)
+	{
+		constructSamples(sample);
+		constructBasis();		
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		storeBasis(filename_basis);
+
+		Basis.resize(0, 0);		
+	}
+}
+
 void VectorFields::constructBasis()
 {
 	// Select the types of basis construction
@@ -2220,6 +2237,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	// 25  => 1.1 and 1.3
 	double	coef = sqrt(pow(1.4, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
+
+	
 
 	// Setup sizes of each element to construct basis
 	try {
@@ -2298,7 +2317,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, AdjMF2Ring, Sample.size(), numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 

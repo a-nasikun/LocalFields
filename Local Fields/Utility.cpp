@@ -573,7 +573,7 @@ void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M)
 {
 	M.~SparseMatrix();
-	Eigen::SparseMatrix<double> K;
+	//Eigen::SparseMatrix<double> M;
 }
 
 void evalSurfaceGraph() {

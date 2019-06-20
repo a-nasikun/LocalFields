@@ -157,6 +157,7 @@ public:
 	// LOCAL SYSTEM
 	void constructSamples(const int &n);
 	void farthestPointSampling();
+	void constructMultiBasis();
 	void constructBasis();
 	void constructBasis_LocalEigenProblem();
 	void constructBasis_OptProblem();
@@ -321,6 +322,7 @@ protected:
 	vector<int>						Sample;
 	vector<chrono::duration<double>>durations;
 	int								numSample;
+	double							numSupport; 
 
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;

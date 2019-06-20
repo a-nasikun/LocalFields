@@ -891,11 +891,10 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 
 	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D *MF3D;
 	LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
-	LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
+	//LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
 	LapDiv_Conform = MF3D * GF3D * MVinv * GF3D.transpose() * MF3D;
-
-	SF3D = LapDiv_NonConform + LapCurl_NonConform;
-	SF2D = A.transpose()*SF3D*A;
+		
+	SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
 	SF2DAsym = A.transpose()*(LapDiv_Conform + LapCurl_NonConform)*A;
 
 	printf("> Computing stiffness matrix/Dirichlet Energy DONE\n");
