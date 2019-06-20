@@ -51,7 +51,7 @@ void VectorFields::constructArbitraryField2D()
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 }
-void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::VectorXd& inputFields, double &error)
+void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& U, Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, Eigen::SparseMatrix<double>& B, Eigen::VectorXd& a, const Eigen::VectorXd& v, double &error)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -61,15 +61,13 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
-	Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
-	Eigen::VectorXd				v = inputFields; 
-	//Eigen::VectorXd				v =  arbField2D;
-	Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
-	Eigen::SparseMatrix<double> B = U.transpose() * MF2D * U;
-
-	cout << "____Solving linear system variables\n";
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
-	//Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver(B);
+	//Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
+	//Eigen::VectorXd				v = inputFields; 
+	//Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
+	//Eigen::SparseMatrix<double> B = U.transpose() * MF2D * U;
+	//
+	//cout << "____Solving linear system variables\n";
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(B);
 
 	Eigen::VectorXd w = sparseSolver.solve(a);
 
@@ -82,7 +80,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	}
 
 	//Eigen::VectorXd wb;
-	wb.resize(U.rows());
+	//wb.resize(U.rows());
 
 	cout << "____Getting total SUM(wi*bi) \n";
 	wb = U*w; 
@@ -577,7 +575,12 @@ void VectorFields::projectionTest()
 	}
 	//Xf = arbField2D; 
 
-	for (int i = 10; i < 10+NUM_TEST; i++)
+	/* Factorization of the mass matrix approx in reduced system */
+	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF2D * Basis;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver_NR(B_NR);
+
+	const int iStart = 10;
+	for (int i = iStart; i < iStart+NUM_TEST; i++)
 	//for (int i = 37; i < 39; i++)
 	{
 		t1 = chrono::high_resolution_clock::now();
@@ -613,7 +616,8 @@ void VectorFields::projectionTest()
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i));
+		Eigen::VectorXd						a_NR = (Basis.transpose()*(MF2D*Xf));
+		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i - iStart));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, Xf, errors2(i));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i));
@@ -681,6 +685,10 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	}
 	//Xf = arbField2D; 
 
+	/* Factorization of the mass matrix approx in reduced system */
+	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF2D * Basis;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver_NR(B_NR);
+
 	for (int i = start; i < start + NUM_TEST; i++)
 		//for (int i = 37; i < 39; i++)
 	{
@@ -717,7 +725,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i-start));
+		Eigen::VectorXd										a_NR = (Basis.transpose()*(MF2D*Xf));
+		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
