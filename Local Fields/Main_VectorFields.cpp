@@ -7,7 +7,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 250;
 int eigToShow2 = 0;
-int eigsToCompute = 25; 
+int eigsToCompute = 50; 
 int vfSaveId = 0;
 
 int main(int argc, char *argv[])
@@ -169,13 +169,15 @@ int main(int argc, char *argv[])
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	///vectorFields.constructMultiBasis();
+	vectorFields.constructMultiBasis();
 	//vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.normalizeBasisAbs(2);
 	//vectorFields.setupReducedBiLaplacian();
 	//vectorFields.setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
+
+	
 
 	/* Test Spectra */	
 	//vectorFields.testSpectra();
@@ -208,7 +210,7 @@ int main(int argc, char *argv[])
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	//vectorFields.projectionTest();
-	vectorFields.convergenceTest();
+	///vectorFields.convergenceTest();
 	///vectorFields.compareModalBasis_SameStorage();
 	
 	/* _____ Vector fields design test __________________________*/
