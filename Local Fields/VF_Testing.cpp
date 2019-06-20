@@ -138,7 +138,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + "_20sup.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields.txt";
@@ -316,8 +316,7 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	Eigen::VectorXd diff = wRef - wb;
 	double norm1 = diff.transpose()*MF2D*diff;
 	double norm2 = wRef.transpose()*MF2D*wRef;
-	double normL2 = sqrt(norm1 / norm2);
-	error = normL2;
+	double normL2 = sqrt(norm1 / norm2);	
 	cout << "The L-2 Norm is << " << normL2 << endl;	
 	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
 
@@ -369,6 +368,16 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	cout << "Length => Ref=" << length1 << ", Approx:" << length2 << ", initial: " << v.transpose()*MF2D*v << endl;
 	cout << "Relative length: " << length2 / length1 * 100.0 << "%" << endl;
 
+	/* Measuring the performance of target/goal */
+	cout << "Goal of the minimization \n";
+	double goal_energy_input = v.transpose() * B * v;
+	double goal_energy_ref = wRef.transpose()*B*wRef;
+	double goal_energy_app = wb.transpose()*B*wb;
+	double goal_energy_rel = abs(goal_energy_app - goal_energy_ref) / goal_energy_ref;
+	cout << "____Input goal" << goal_energy_input << endl;
+	cout << "____Goal: Ref" << goal_energy_ref << ", App:" << goal_energy_app << endl;
+	error = goal_energy_rel;
+
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
@@ -378,7 +387,8 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_20sup.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFieldsNRot_" + to_string(Basis.cols()) + "_40sup.txt";
 
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigFields.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_optAlg.txt";
@@ -389,12 +399,12 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
 		ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
-			<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << length_init << "\t"	// initial input
-			<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
-			<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t"						// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+			<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << goal_energy_input << "\t" << length_init << "\t"	// initial input
+			<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << goal_energy_ref << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+			<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t"	<< goal_energy_app << "\t"					// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
 			<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
 			<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2/length1 * 100.0 << "\t"
-			<< normL2 << "\n";																												// l2-norm
+			<< goal_energy_rel << "\t" << normL2 << "\n";																												// l2-norm
 
 		ofs.close();
 	}
@@ -707,8 +717,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		//testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i-start));
-		testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
+		testProjection_MyBasis_NoRegularizer(Basis, Xf, errors1(i-start));
+		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
 
@@ -751,10 +761,10 @@ void VectorFields::convergenceTest()
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_20000_EigFields_35sup");
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
-	vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
-	//vector<int> subspdim{ 50000 };
+	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
+	vector<int> subspdim{ 500, 1000 };
 	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(i) + "_Eigfields_20sup");
+		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(i) + "_Eigfields_40sup");
 	}
 
 	/* For the projection tests */
@@ -762,7 +772,7 @@ void VectorFields::convergenceTest()
 	bool readPertFields = true;
 	bool useEigenBasis = false;
 	int idStart = 0;
-	int NUM_TEST = 20;
+	int NUM_TEST = 5;
 
 	for (string file_ : basisFile)
 	{

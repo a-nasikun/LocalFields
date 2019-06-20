@@ -2199,15 +2199,15 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 5000, 10000, 25000 };
+	vector<int> sampleSizeVect{ 250, 1000 };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
 	{
 		constructSamples(sample);
-		constructBasis();		
-		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_EigfieldsNRot_" + to_string((int)numSupport) + "sup";
+		constructBasis();
+		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_EigfieldsNRot_" + to_string((int)numSupport) + "sup";
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 		storeBasis(filename_basis);
 
 		//Basis.resize(0, 0);		
@@ -2336,8 +2336,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
 			//printf("Starting engine %d for element %d\n", tid, id);
-			//localField.constructLocalEigenProblemWithSelector(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
-			localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();

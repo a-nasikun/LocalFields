@@ -1360,7 +1360,7 @@ void LocalFields::constructLocalEigenProblemWithSelectorRotEig(Engine*& ep, cons
 
 
 	/* Getting the eigenfields*/
-	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
+	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, 1, eigTemp, eigValsLoc, "hello");
 	//computeEigenSpectra(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 
 	//cusolverDnHandle_t	cusolverH;
@@ -1372,19 +1372,24 @@ void LocalFields::constructLocalEigenProblemWithSelectorRotEig(Engine*& ep, cons
 	for (int i = 0; i < InnerElements.size(); i++)
 	{
 		// First column ==> First basis (2 elements per-local frame)
-		for (int j = 0; j < NUM_EIG; j++)
-		{
-			if (j == 0)
-			{
-				BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, NUM_EIG * id + j, EigVectLoc(2 * i + 0, j)));
-				BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
-			}
-			else
-			{
-				BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, NUM_EIG * id + j, -EigVectLoc(2 * i + 1, j)));
-				BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 0, j)));
-			}
-		}
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 0,  EigVectLoc(2 * i + 0, 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 0,  EigVectLoc(2 * i + 1, 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * id + 1, -EigVectLoc(2 * i + 1, 0)));
+		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * id + 1,  EigVectLoc(2 * i + 0, 0)));
+
+		//for (int j = 0; j < NUM_EIG; j++)
+		//{
+		//	if (j == 0)
+		//	{
+		//		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, NUM_EIG * id + j, EigVectLoc(2 * i + 0, j)));
+		//		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
+		//	}
+		//	else
+		//	{
+		//		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, NUM_EIG * id + j, -EigVectLoc(2 * i + 1, j)));
+		//		BTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 0, j)));
+		//	}
+		//}
 	}
 }
 
