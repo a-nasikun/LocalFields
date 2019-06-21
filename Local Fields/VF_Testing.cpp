@@ -51,7 +51,7 @@ void VectorFields::constructArbitraryField2D()
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 }
-void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& U, Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, Eigen::SparseMatrix<double>& B, Eigen::VectorXd& a, const Eigen::VectorXd& v, double &error)
+void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& U, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& v, double &error)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -157,7 +157,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	}
 }
 
-void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, double &error)
+void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& U, const Eigen::LDLT<Eigen::MatrixXd>& denseSolver, const Eigen::VectorXd& a,  const Eigen::VectorXd& v, double &error)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
@@ -167,14 +167,15 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 
 	// Construct matrices for Test
 	cout << "____Assigning variables\n";
-	Eigen::MatrixXd U = Basis;// BasisTemp;
-	Eigen::VectorXd				v = inputFields;
+	//Eigen::MatrixXd U = Basis;// BasisTemp;
+	//Eigen::VectorXd				v = inputFields;
 	//Eigen::VectorXd				v =  arbField2D;
-	Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
-	Eigen::MatrixXd				B = U.transpose() * MF2D * U;
+	//Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
+	//Eigen::MatrixXd				B = U.transpose() * MF2D * U;
 
 	cout << "____Solving linear system variables\n";
-	Eigen::VectorXd w = B.ldlt().solve(a);
+	//Eigen::VectorXd w = B.ldlt().solve(a);
+	Eigen::VectorXd w = denseSolver.solve(a);
 		
 	cout << "____Getting total SUM(wi*bi) \n";
 	wbEigen = U*w;
@@ -462,7 +463,7 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	double norm1 = diff.transpose()*MF2D*diff;
 	double norm2 = wRef.transpose()*MF2D*wRef;
 	double normL2 = sqrt(norm1 / norm2);
-	error = normL2;
+	//error = normL2;
 	cout << "The L-2 Norm is << " << normL2 << endl;
 	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
 
@@ -514,6 +515,16 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	cout << "Length => Ref=" << length1 << ", Approx:" << length2 << ", initial: " << v.transpose()*MF2D*v << endl;
 	cout << "Relative length: " << length2 / length1 * 100.0 << "%" << endl;
 
+	/* Measuring the performance of target/goal */
+	cout << "Goal of the minimization \n";
+	double goal_energy_input = v.transpose() * BRef * v;
+	double goal_energy_ref = wRef.transpose()*BRef*wRef;
+	double goal_energy_app = wb.transpose()*BRef*wb;
+	double goal_energy_rel = abs(goal_energy_app - goal_energy_ref) / goal_energy_ref;
+	cout << "____Input goal" << goal_energy_input << endl;
+	cout << "____Goal: Ref" << goal_energy_ref << ", App:" << goal_energy_app << endl;
+	error = goal_energy_rel;
+
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
@@ -527,12 +538,20 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
 		ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
-			<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << length_init << "\t"	// initial input
-			<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
-			<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t"						// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+			<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << goal_energy_input << "\t" << length_init << "\t"	// initial input
+			<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << goal_energy_ref << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+			<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t" << goal_energy_app << "\t"					// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
 			<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
 			<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2 / length1 * 100.0 << "\t"
-			<< normL2 << "\n";																												// l2-norm
+			<< goal_energy_rel << "\t" << normL2 << "\n";
+
+		//ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
+		//	<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << length_init << "\t"	// initial input
+		//	<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+		//	<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t"						// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+		//	<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
+		//	<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2 / length1 * 100.0 << "\t"
+		//	<< normL2 << "\n";																												// l2-norm
 
 		ofs.close();
 	}
@@ -726,8 +745,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
 		Eigen::VectorXd										a_NR = (Basis.transpose()*(MF2D*Xf));
-		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
-		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
+		//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
+		testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
 

@@ -187,8 +187,8 @@ public:
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
-	void testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& U, Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, Eigen::SparseMatrix<double>& B, Eigen::VectorXd& a, const Eigen::VectorXd& v, double &error);
-	void testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, double &error);
+	void testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& inputFields, double &error);
+	void testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd& Basis, const Eigen::LDLT<Eigen::MatrixXd>& denseSolver, const Eigen::VectorXd& a, const Eigen::VectorXd& inputFields, double &error);
 	void testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
 	void testProjection_EigenBasis_WithRegularizer(const Eigen::MatrixXd& Basis, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
 	void projectionTest();
