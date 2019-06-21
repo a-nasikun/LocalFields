@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	//vectorFields.constructMultiBasis();
+	vectorFields.constructMultiBasis();
 	//vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.normalizeBasisAbs(2);
 	//vectorFields.setupReducedBiLaplacian();
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	//vectorFields.projectionTest();
-	vectorFields.convergenceTest();
+	///vectorFields.convergenceTest();
 	///vectorFields.compareModalBasis_SameStorage();
 	
 	/* _____ Vector fields design test __________________________*/
