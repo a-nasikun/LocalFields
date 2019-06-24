@@ -234,6 +234,7 @@ public:
 	void perturbVectorFields(Eigen::VectorXd& inputFields);
 	void perturbVectorFieldsRegular(Eigen::VectorXd& inputFields);
 	void testSpectra();
+	void testSparseMatrix();
 	
 	
 	// VISUALIZATION of TESTING

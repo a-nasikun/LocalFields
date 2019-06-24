@@ -320,7 +320,7 @@ void ReadChristopherStiffnessMatrix(const string &filename, Eigen::SparseMatrix<
 }
 
 //=======
-double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M)
+void LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M)
 {
 	ifstream file(filename);
 	string oneLine, oneWord;
@@ -378,7 +378,7 @@ double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<d
 }
 
 /* Obtain the inverse of Mass Matrix M, to get MInv*/
-double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv)
+void ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv)
 {
 	MInv.resize(M.rows(), M.cols());
 	vector<Eigen::Triplet<double>> MTriplet;

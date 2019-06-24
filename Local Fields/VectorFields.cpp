@@ -189,9 +189,9 @@ void VectorFields::constructRandomHardConstraints()
 	// Define the constraints
 	const bool readFromFile = true; 
 	bool lineNotFound = true;
-	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -2199,11 +2199,12 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 250, 1000 };
+	vector<int> sampleSizeVect{ 10000 };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
-	numSupport = 40.0;
+	numSupport = 80.0;
 	for (int sample : sampleSizeVect)
-	{
+	{	
+
 		constructSamples(sample);
 		constructBasis();
 		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_EigfieldsNRot_" + to_string((int)numSupport) + "sup";
@@ -2238,22 +2239,23 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	// 25  => 1.1 and 1.3
 	double	coef = sqrt(pow(1.4, 2) + pow(1.5, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
-
 	
-
 	// Setup sizes of each element to construct basis
 	try {
-		BasisTemp.resize(2 * F.rows(), 2 * Sample.size());
+		Basis.resize(1, 1);
+		Basis.data().clear();
+		Basis.data().squeeze();
+		Basis.resize(2 * F.rows(), 2 * Sample.size());
 	}
 	catch (string &msg) {
 		cout << "Cannot allocate memory for basis.." << endl;
 	}
 
-	Basis.resize(BasisTemp.rows(), BasisTemp.cols());
+	//Basis.resize(BasisTemp.rows(), BasisTemp.cols());
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
 
 	/* Set-UP Laplace Matrix */
-	Eigen::SparseMatrix<double> LapForBasis = MF2Dinv * SF2DAsym;
+	//Eigen::SparseMatrix<double> LapForBasis = MF2Dinv * SF2DAsym;
 
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
@@ -2291,7 +2293,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		ep.resize(ntids);
 		for (int i = 0; i < ntids; i++) 
 		{
-			ep[i] = engOpen(NULL);
+			//ep[i] = engOpen(NULL);
 			//void *vpDcom = NULL;
 			//int iret;
 			//ep[tid] = engOpenSingleUse(NULL, vpDcom, &iret);
@@ -2379,6 +2381,11 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			}
 
 		}
+
+		//for (int i = 0; i < ntids; i++)
+		//{
+		//	engClose(ep[i]);
+		//}
 	}
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -2387,7 +2394,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	gatherBasisElements(UiTriplet,2);
-	Basis = BasisTemp;
+	//Basis = BasisTemp;
 	//normalizeBasisAbs(2);
 
 	t2 = chrono::high_resolution_clock::now();
@@ -3072,16 +3079,21 @@ void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double
 		for (int k = 0; k < j; k++) {
 			tripSize += UiTriplet[k].size();
 		}
-		std::copy(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
+		//std::copy(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
+		std::move(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
 	}	
-	BasisTemp.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+
+	// empty the data
+	//BTriplet.clear();
+	//BTriplet.shrink_to_fit();
 
 	/* Computing the basis sum -> cor normalization */
-	for (int k = 0; k < BasisTemp.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
-			BasisSum(it.row(), it.col() % NUM_EIGEN) += it.value();
-		}
-	}
+	//for (int k = 0; k < BasisTemp.outerSize(); ++k) {
+	//	for (Eigen::SparseMatrix<double>::InnerIterator it(BasisTemp, k); it; ++it) {
+	//		BasisSum(it.row(), it.col() % NUM_EIGEN) += it.value();
+	//	}
+	//}
 }
 
 void VectorFields::normalizeBasis()

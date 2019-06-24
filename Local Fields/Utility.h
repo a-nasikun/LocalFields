@@ -75,8 +75,8 @@ void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& fi
 void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename);
 void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 void ReadChristopherStiffnessMatrix(const string &filename, Eigen::SparseMatrix<double> &M);
-double LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M);
-double ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv);
+void LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M);
+void ConstructInverseMassMatrix(Eigen::SparseMatrix<double> &M, Eigen::SparseMatrix<double> &MInv);
 void WriteSTDVectorToTxtFile(const vector<int>& vector, const string& filename);
 void LoadSTDVectorFromTxtFile(const string& filename, vector<int>& vector);
 void WriteEigenVectorToTxtFile(const Eigen::VectorXd& vector, const string& filename);
