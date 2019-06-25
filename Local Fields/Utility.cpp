@@ -185,7 +185,13 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 	//M.block(0, 0, NUM_ROWS, NUM_BLOCKS * NUM_EIGEN) = REigCont;
 	
 	engEvalString(ep, "clear;");
+	
 	engClose(ep);
+	//mxDestroyArray(eigValM);
+	//mxDestroyArray(eigVecM);
+	//realloc(eigVecE, 0);
+	//realloc(eigValE, 0);
+
 }
 
 void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)

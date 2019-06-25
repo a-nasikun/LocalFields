@@ -136,7 +136,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_80sup.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields.txt";
@@ -231,8 +231,8 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 	if (writeToFile) {
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis_sameStorage.txt";
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis_667.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_modalBasis_sameStorage.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -383,9 +383,9 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_80sup.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFieldsNRot_" + to_string(Basis.cols()) + "_40sup.txt";
 
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigFields.txt";
@@ -531,8 +531,8 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis_sameStorage.txt";
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_modalBasis_667.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_sameStorage.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -551,6 +551,291 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 		//	<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
 		//	<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2 / length1 * 100.0 << "\t"
 		//	<< normL2 << "\n";																												// l2-norm
+
+		ofs.close();
+	}
+}
+
+void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::MatrixXd& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver_Ref, const Eigen::SparseMatrix<double>& B_Ref, const Eigen::VectorXd& a_Ref, const Eigen::LDLT<Eigen::MatrixXd>& denseSolver_Red, const Eigen::MatrixXd& B_Red, const Eigen::VectorXd& a_Red, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Testing basis 2D of arbitrary field WITH regularizer...\n";
+
+	// Construct matrices for Test	
+	cout << "__[APPROXIMATION]....\n";
+	//const double				lambda = 10000 * MF2D.coeff(0,0) / MReg.coeff(0,0);
+
+	Eigen::VectorXd id(MF2D.rows());
+	id.setConstant(1.0);
+	double en1 = id.transpose()*MF2D*id;
+	double en2 = id.transpose()*MReg*id;
+
+	//Eigen::MatrixXd				U = Basis;
+	Eigen::VectorXd				v = inputFields;
+
+	/* Perturbed the input fields*/
+	//perturbVectorFields(v);
+	//pertFields = v;
+
+	srand(time(NULL));
+	int l1_ = testID % 5;
+	double l2_ = 25 * (l1_ + 1);
+
+	double				lambda = l2_;
+	cout << "__lamba: " << lambda << endl;
+	lambda = lambda * en1 / en2;
+
+	//Eigen::VectorXd				a = U.transpose()*MF2D*v;
+	//Eigen::MatrixXd				B = U.transpose() * (MF2D + lambda*MReg) * U;
+
+	cout << "____Solving linear system variables (with lambda=" << lambda << ")\n";
+	Eigen::VectorXd w = denseSolver_Red.solve(a_Red);
+	wbEigen = Basis*w;
+
+	cout << "__[REFERENCE]....\n";
+	//a = MF2D*v;
+	//Eigen::SparseMatrix<double> BRef = MF2D + lambda*MReg;
+	//Eigen::PardisoLLT<Eigen::SparseMatrix<double>> sparseSolver2(BRef);
+	Eigen::VectorXd  wRef;
+	wRef = sparseSolver_Ref.solve(a_Ref);
+	projRef = wRef;
+
+	// Compare their L2-Norm
+	cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = wRef - wbEigen;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = wRef.transpose()*MF2D*wRef;
+	double normL2 = sqrt(norm1 / norm2);
+	//error = normL2;
+	cout << "The L-2 Norm is << " << normL2 << endl;
+	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
+
+	/* Measuring the 'length' of each vector */
+	cout << "HARMONIC \n";
+	double harm_energy1 = wRef.transpose()*SF2DAsym*wRef;
+	double harm_energy2 = wbEigen.transpose()*SF2DAsym*wbEigen;
+	double harm_relEnergy = abs(harm_energy1 - harm_energy2) / harm_energy1;
+	cout << "____Harmonic Energy => Ref=" << harm_energy1 << ", Approx:" << harm_energy2 << endl;
+	cout << "____Relative energy: " << harm_relEnergy << endl;
+
+	/* Measuring the 'length' of each vector */
+	double harm_energy1_sym = wRef.transpose()*SF2D*wRef;
+	double harm_energy2_sym = wbEigen.transpose()*SF2D*wbEigen;
+	double harm_relEnergy_sym = abs(harm_energy1_sym - harm_energy2_sym) / harm_energy1_sym;
+	cout << "____Harmonic Energy => Ref=" << harm_energy1_sym << ", Approx:" << harm_energy2_sym << endl;
+	cout << "____Relative energy: " << harm_relEnergy_sym << endl;
+
+	/* Measuring the energy */
+	cout << "BIHARMONIC \n";
+	double biharm_energy1 = wRef.transpose()*B2DAsym*wRef;
+	double biharm_energy2 = wbEigen.transpose()*B2DAsym*wbEigen;
+	double biharm_relEnergy = abs(biharm_energy1 - biharm_energy2) / biharm_energy1;
+	cout << "____Bi-Harmonic ENERGY => Ref=" << biharm_energy1 << ", Approx:" << biharm_energy2 << endl;
+	cout << "____aRelative energy: " << biharm_relEnergy << endl;
+
+	/* Measuring the 'length' of each vector */
+	cout << "ENERGY SYM \n";
+	double biharm_energy1_sym = wRef.transpose()*B2D*wRef;
+	double biharm_energy2_sym = wbEigen.transpose()*B2D*wbEigen;
+	double biharm_relEnergy_sym = abs(biharm_energy1_sym - biharm_energy2_sym) / biharm_energy1_sym;
+	cout << "____Harmonic Energy => Ref=" << biharm_energy1_sym << ", Approx:" << biharm_energy2_sym << endl;
+	cout << "____Relative energy: " << biharm_relEnergy_sym << endl;
+
+
+	/* Measuring the 'Initial Energy' of input vector */
+	cout << "Input vector: ENERGY SYM \n";
+	double harm_energy_input = v.transpose()*SF2DAsym*v;
+	double harm_energy_input_sym = v.transpose()*SF2D*v;
+	double biharm_energy_input = v.transpose()*B2DAsym*v;
+	double biharm_energy_input_sym = v.transpose()*B2D*v;
+	cout << "____Input Harm Energy => aSym" << harm_energy_input << ", Sym:" << harm_energy_input_sym << endl;
+	cout << "____Input BiHarm Energy => aSym" << biharm_energy_input << ", Sym:" << biharm_energy_input_sym << endl;
+
+	/* Measuring the 'length' of each vector */
+	double length_init = v.transpose()*MF2D*v;
+	double length1 = wRef.transpose()*MF2D*wRef;
+	double length2 = wbEigen.transpose()*MF2D*wbEigen;
+	cout << "Length => Ref=" << length1 << ", Approx:" << length2 << ", initial: " << v.transpose()*MF2D*v << endl;
+	cout << "Relative length: " << length2 / length1 * 100.0 << "%" << endl;
+
+	/* Measuring the performance of target/goal */
+	cout << "Goal of the minimization \n";
+	double goal_energy_input = v.transpose() * B_Ref * v;
+	double goal_energy_ref = wRef.transpose()*B_Ref*wRef;
+	double goal_energy_app = wbEigen.transpose()*B_Ref*wbEigen;
+	double goal_energy_rel = abs(goal_energy_app - goal_energy_ref) / goal_energy_ref;
+	cout << "____Input goal" << goal_energy_input << endl;
+	cout << "____Goal: Ref" << goal_energy_ref << ", App:" << goal_energy_app << endl;
+	error = goal_energy_rel;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+
+	bool writeToFile = true;
+	if (writeToFile) {
+		std::ofstream ofs;
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_sameStorage.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_667.txt";
+
+		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
+
+		ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
+			<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << goal_energy_input << "\t" << length_init << "\t"	// initial input
+			<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << goal_energy_ref << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+			<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t" << goal_energy_app << "\t"					// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+			<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
+			<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2 / length1 * 100.0 << "\t"
+			<< goal_energy_rel << "\t" << normL2 << "\n";
+
+		//ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
+		//	<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << length_init << "\t"	// initial input
+		//	<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+		//	<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t"						// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+		//	<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
+		//	<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2 / length1 * 100.0 << "\t"
+		//	<< normL2 << "\n";																												// l2-norm
+
+		ofs.close();
+	}
+}
+
+void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis,  const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver_Ref, const Eigen::SparseMatrix<double>& B_Ref, const Eigen::VectorXd& a_Ref, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver_Red, const Eigen::SparseMatrix<double>& B_Red, const Eigen::VectorXd& a_Red, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Testing basis 2D of arbitrary field WITH regularizer...\n";
+
+	// Construct matrices for Test	
+	cout << "__[APPROXIMATION]....\n";
+	
+	Eigen::VectorXd id(MF2D.rows());
+	id.setConstant(1.0);
+	double en1 = id.transpose()*MF2D*id;
+	double en2 = id.transpose()*MReg*id;	
+	int l1_ = testID % 5;
+	double l2_ = 25 * (l1_ + 1);
+	double				lambda = l2_;
+	lambda = lambda * en1 / en2;
+		
+	Eigen::VectorXd				v = inputFields;	
+
+	
+	Eigen::VectorXd w = sparseSolver_Red.solve(a_Red);
+
+	if (sparseSolver_Red.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver_Red.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		cout << sparseSolver_Red.info() << endl;
+		return;
+	}
+	wb = Basis*w;
+
+	cout << "__[REFERENCE]....\n";	
+	Eigen::VectorXd  wRef;
+	wRef = sparseSolver_Ref.solve(a_Ref);
+	projRef = wRef;
+
+	// Compare their L2-Norm
+	cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = wRef - wb;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = wRef.transpose()*MF2D*wRef;
+	double normL2 = sqrt(norm1 / norm2);
+	cout << "The L-2 Norm is << " << normL2 << endl;
+	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
+
+	/* Measuring the 'length' of each vector */
+	cout << "HARMONIC \n";
+	double harm_energy1 = wRef.transpose()*SF2DAsym*wRef;
+	double harm_energy2 = wb.transpose()*SF2DAsym*wb;
+	double harm_relEnergy = abs(harm_energy1 - harm_energy2) / harm_energy1;
+	cout << "____Harmonic Energy => Ref=" << harm_energy1 << ", Approx:" << harm_energy2 << endl;
+	cout << "____Relative energy: " << harm_relEnergy << endl;
+
+	/* Measuring the 'length' of each vector */
+	double harm_energy1_sym = wRef.transpose()*SF2D*wRef;
+	double harm_energy2_sym = wb.transpose()*SF2D*wb;
+	double harm_relEnergy_sym = abs(harm_energy1_sym - harm_energy2_sym) / harm_energy1_sym;
+	cout << "____Harmonic Energy => Ref=" << harm_energy1_sym << ", Approx:" << harm_energy2_sym << endl;
+	cout << "____Relative energy: " << harm_relEnergy_sym << endl;
+
+	/* Measuring the energy */
+	cout << "BIHARMONIC \n";
+	double biharm_energy1 = wRef.transpose()*B2DAsym*wRef;
+	double biharm_energy2 = wb.transpose()*B2DAsym*wb;
+	double biharm_relEnergy = abs(biharm_energy1 - biharm_energy2) / biharm_energy1;
+	cout << "____Bi-Harmonic ENERGY => Ref=" << biharm_energy1 << ", Approx:" << biharm_energy2 << endl;
+	cout << "____aRelative energy: " << biharm_relEnergy << endl;
+
+	/* Measuring the 'length' of each vector */
+	cout << "ENERGY SYM \n";
+	double biharm_energy1_sym = wRef.transpose()*B2D*wRef;
+	double biharm_energy2_sym = wb.transpose()*B2D*wb;
+	double biharm_relEnergy_sym = abs(biharm_energy1_sym - biharm_energy2_sym) / biharm_energy1_sym;
+	cout << "____Harmonic Energy => Ref=" << biharm_energy1_sym << ", Approx:" << biharm_energy2_sym << endl;
+	cout << "____Relative energy: " << biharm_relEnergy_sym << endl;
+
+
+	/* Measuring the 'Initial Energy' of input vector */
+	cout << "Input vector: ENERGY SYM \n";
+	double harm_energy_input = v.transpose()*SF2DAsym*v;
+	double harm_energy_input_sym = v.transpose()*SF2D*v;
+	double biharm_energy_input = v.transpose()*B2DAsym*v;
+	double biharm_energy_input_sym = v.transpose()*B2D*v;
+	cout << "____Input Harm Energy => aSym" << harm_energy_input << ", Sym:" << harm_energy_input_sym << endl;
+	cout << "____Input BiHarm Energy => aSym" << biharm_energy_input << ", Sym:" << biharm_energy_input_sym << endl;
+
+	/* Measuring the 'length' of each vector */
+	double length_init = v.transpose()*MF2D*v;
+	double length1 = wRef.transpose()*MF2D*wRef;
+	double length2 = wb.transpose()*MF2D*wb;
+	cout << "Length => Ref=" << length1 << ", Approx:" << length2 << ", initial: " << v.transpose()*MF2D*v << endl;
+	cout << "Relative length: " << length2 / length1 * 100.0 << "%" << endl;
+
+	/* Measuring the performance of target/goal */
+	cout << "Goal of the minimization \n";
+	double goal_energy_input = v.transpose() * B_Ref * v;
+	double goal_energy_ref = wRef.transpose()*B_Ref*wRef;
+	double goal_energy_app = wb.transpose()*B_Ref*wb;
+	double goal_energy_rel = abs(goal_energy_app - goal_energy_ref) / goal_energy_ref;
+	cout << "____Input goal" << goal_energy_input << endl;
+	cout << "____Goal: Ref" << goal_energy_ref << ", App:" << goal_energy_app << endl;
+	error = goal_energy_rel;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+
+	bool writeToFile = true;
+	if (writeToFile) {
+		std::ofstream ofs;
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFieldsNRot_" + to_string(Basis.cols()) + "_40sup.txt";
+
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigFields.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_optAlg.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigFields10.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigPatch.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_grad.txt";
+
+		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
+
+		ofs << globalConstraints.size() << "\t" << lambda * en2 / en1 << "\t" << lambda << "\t"
+			<< harm_energy_input << "\t" << harm_energy_input_sym << "\t" << biharm_energy_input << "\t" << biharm_energy_input_sym << "\t" << goal_energy_input << "\t" << length_init << "\t"	// initial input
+			<< harm_energy1 << "\t" << harm_energy1_sym << "\t" << biharm_energy1 << "\t" << biharm_energy1_sym << "\t" << goal_energy_ref << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+			<< harm_energy2 << "\t" << harm_relEnergy << "\t" << harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t" << goal_energy_app << "\t"					// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+			<< biharm_energy2 << "\t" << biharm_relEnergy << "\t" << biharm_energy2_sym << "\t" << biharm_relEnergy_sym << "\t"				// approx (biharmAsym, biharmRelEnergyAsym, biharmSym, biharmRelEnergySym)
+			<< length_init << "\t" << length1 << "\t" << length2 << "\t" << length2 / length1 * 100.0 << "\t"
+			<< goal_energy_rel << "\t" << normL2 << "\n";																												// l2-norm
 
 		ofs.close();
 	}
@@ -676,9 +961,10 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
-	Eigen::MatrixXd EigenBasisFull;
-	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
-	//string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_400_eigenfields_Ref";
+	Eigen::MatrixXd EigenBasisFull, EigenBasis2;
+	//string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
+	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_400_eigenfields_Ref";
+	string eigBasisFile2 = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_401-667_eigenfields_Ref";
 
 	/* Factorization of the mass matrix approx in reduced system */
 	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF2D * Basis;
@@ -686,24 +972,73 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	Eigen::MatrixXd										B_MB;
 	Eigen::LDLT<Eigen::MatrixXd>						denseSolver_NR;
 
+	/* Factorization for regularizer */
+	const int NUM_SOLVER = 5; 
+	Eigen::VectorXd id(MF2D.rows());
+	id.setConstant(1.0);
+	double en1 = id.transpose()*MF2D*id;
+	double en2 = id.transpose()*SF2DAsym*id;
+	vector<Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>> sparseSolver_WR_Ref(NUM_SOLVER);
+	vector<Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>> sparseSolver_WR_Red(NUM_SOLVER);
+	vector<Eigen::LDLT<Eigen::MatrixXd>>					denseSolver_WR_Red(NUM_SOLVER);
+	vector<Eigen::SparseMatrix<double>>						BRef(NUM_SOLVER);
+	vector<Eigen::SparseMatrix<double>>						BRed_Sp (NUM_SOLVER);
+	vector<Eigen::MatrixXd>									BRed_Dn(NUM_SOLVER);
+	
+	for (int i = 0; i < NUM_SOLVER; i++)
+	{
+		double l2_ = 25 * (i + 1);
+		double	lambda = l2_ * en1 / en2;
+		//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
+		//Eigen::SparseMatrix<double> BRed = Basis.transpose()*BRef*Basis;
+
+		cout << "____[" << i << "] Factorizing the sparse matrix (M+a*S) (Ref and Red) \n";
+		BRef[i] = MF2D + lambda*SF2DAsym;
+		BRed_Sp[i] = Basis.transpose()*BRef[i]*Basis;
+		sparseSolver_WR_Ref[i].analyzePattern(BRef[i]);
+		sparseSolver_WR_Ref[i].factorize(BRef[i]);
+		sparseSolver_WR_Red[i].analyzePattern(BRed_Sp[i]);
+		sparseSolver_WR_Red[i].factorize(BRed_Sp[i]);
+	}
+
 	if (useEigenBasis)
 	{
 		cout << "Reading eigenbasis (if possible...) \n";
-		ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 172964, 1000);
+		ReadDenseMatrixFromMatlab(EigenBasis2, eigBasisFile2, 2*F.rows(), 267);
+		ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 2*F.rows(), 400);
+
 		// same storage
 		//EigenBasis.resize(EigenBasisFull.rows(), 40);
 		//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
 		//EigenBasis = EigenBasisFull;
 		// same performance
-		EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
+		cout << "Alloc. memory for eigen basis\n";
+		EigenBasis.resize(EigenBasisFull.rows(), EigenBasisFull.cols() + EigenBasis2.cols());
+		cout << "Combining to eigen basis\n";
+		EigenBasis.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols()) = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols());
+		EigenBasis.block(0, EigenBasisFull.cols(), EigenBasis2.rows(), EigenBasis2.cols()) = EigenBasis2.block(0, 0, EigenBasis2.rows(), EigenBasis2.cols());
 
 		B_MB = EigenBasis.transpose()*MF2D*EigenBasis;
+		cout << "Factorizing using eigen basis\n";
 		denseSolver_NR.compute(B_MB);
+
+		/* The one with regularizer*/
+		for (int i = 0; i < NUM_SOLVER; i++)
+		{
+			double l2_ = 25 * (i + 1);
+			double	lambda = l2_ * en1 / en2;
+			//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
+			//Eigen::MatrixXd BRed = EigenBasis.transpose()*BRef*EigenBasis;
+			BRed_Dn[i] = EigenBasis.transpose()*BRef[i] * EigenBasis;
+
+			cout << "____[" << i << "] Factorizing the dense matrix (M+a*S) (Red) \n";
+			denseSolver_WR_Red[i].compute(BRed_Dn[i]);
+		}
 	}
 
 	/* Fields and perturbed Fields */
-	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_DesignedFields";
-	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_PerturbedFields";
+	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_DesignedFields";
+	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_PerturbedFields";
 	if (readDesFieldsFromFile) {
 		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
 	}
@@ -749,15 +1084,18 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Projection to the subspace */
 		/* Reference results */
 		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
-		Eigen::VectorXd										a_NR = (Basis.transpose()*(MF2D*Xf));
-		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
-		testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
+		Eigen::VectorXd										a_Ref = MF2D*Xf;
+		Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
+		//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
+		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
+		///testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
 
-		//a_NR = (EigenBasis.transpose()*(MF2D*Xf));
+		a_NR = (EigenBasis.transpose()*(MF2D*Xf));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
+		testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
@@ -797,18 +1135,18 @@ void VectorFields::convergenceTest()
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_20000_EigFields_35sup");
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
-	vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
-	//vector<int> subspdim{ 50000 };
+	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
+	vector<int> subspdim{ 2000 };
 	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_80sup");
+		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(i) + "_Eigfields_40sup");
 	}
 
 	/* For the projection tests */
 	bool readDesFields = true;
 	bool readPertFields = true;
-	bool useEigenBasis = false;
+	bool useEigenBasis = true;
 	int idStart = 0;
-	int NUM_TEST = 20;
+	int NUM_TEST = 50;
 
 	for (string file_ : basisFile)
 	{
