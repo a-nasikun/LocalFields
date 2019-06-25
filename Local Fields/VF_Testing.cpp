@@ -1018,6 +1018,11 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		EigenBasis.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols()) = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols());
 		EigenBasis.block(0, EigenBasisFull.cols(), EigenBasis2.rows(), EigenBasis2.cols()) = EigenBasis2.block(0, 0, EigenBasis2.rows(), EigenBasis2.cols());
 
+		// Free memory manually
+		EigenBasisFull.resize(0, 0);
+		EigenBasis2.resize(0, 0);
+		
+
 		B_MB = EigenBasis.transpose()*MF2D*EigenBasis;
 		cout << "Factorizing using eigen basis\n";
 		denseSolver_NR.compute(B_MB);
@@ -1088,14 +1093,14 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
 		//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
-		///testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
+		testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
 
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
 
 		a_NR = (EigenBasis.transpose()*(MF2D*Xf));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
-		testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
@@ -1144,7 +1149,7 @@ void VectorFields::convergenceTest()
 	/* For the projection tests */
 	bool readDesFields = true;
 	bool readPertFields = true;
-	bool useEigenBasis = true;
+	bool useEigenBasis = false;
 	int idStart = 0;
 	int NUM_TEST = 50;
 
