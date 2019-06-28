@@ -136,7 +136,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Bimba_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields.txt";
@@ -231,7 +231,7 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 	if (writeToFile) {
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_modalBasis_sameStorage.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_modalBasis_sameStorage.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
@@ -383,7 +383,7 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Bimba_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFieldsNRot_" + to_string(Basis.cols()) + "_40sup.txt";
@@ -531,7 +531,7 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_sameStorage.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Bimba_L2projectionWithReg_modalBasis_sameStorage.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
@@ -678,8 +678,8 @@ void VectorFields::testProjection_EigenBasis_WithRegularizer(const Eigen::Matrix
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_sameStorage.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_667.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Bimba_L2projectionWithReg_modalBasis_sameStorage.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_modalBasis_667.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -816,7 +816,7 @@ void VectorFields::testProjection_MyBasis_WithRegularizer(const Eigen::SparseMat
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Bimba_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projectionWithReg_eigenFields" + to_string(Basis.cols()) + ".txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFields_" + to_string(Basis.cols()) + "_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projectionWithReg_eigenFieldsNRot_" + to_string(Basis.cols()) + "_40sup.txt";
@@ -951,6 +951,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
 
+	bool projTestNoReg = true;
+	bool projTestWithReg = true;
 
 	const int NUM_TEST = nTests;
 	Eigen::VectorXd errors1(NUM_TEST), errors2(NUM_TEST);
@@ -963,7 +965,7 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	Eigen::MatrixXd EigenBasis;
 	Eigen::MatrixXd EigenBasisFull, EigenBasis2;
 	//string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Armadillo_1000_eigenfields_Ref_2";
-	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_400_eigenfields_Ref";
+	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Fertility_40_eigenfields_Ref";
 	string eigBasisFile2 = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_401-667_eigenfields_Ref";
 
 	/* Factorization of the mass matrix approx in reduced system */
@@ -985,38 +987,46 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	vector<Eigen::SparseMatrix<double>>						BRed_Sp (NUM_SOLVER);
 	vector<Eigen::MatrixXd>									BRed_Dn(NUM_SOLVER);
 	
-	for (int i = 0; i < NUM_SOLVER; i++)
+	if (projTestWithReg)
 	{
-		double l2_ = 25 * (i + 1);
-		double	lambda = l2_ * en1 / en2;
-		//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
-		//Eigen::SparseMatrix<double> BRed = Basis.transpose()*BRef*Basis;
+		for (int i = 0; i < NUM_SOLVER; i++)
+		{
+			double l2_ = 25 * (i + 1);
+			double	lambda = l2_ * en1 / en2;
+			//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
+			//Eigen::SparseMatrix<double> BRed = Basis.transpose()*BRef*Basis;
 
-		cout << "____[" << i << "] Factorizing the sparse matrix (M+a*S) (Ref and Red) \n";
-		BRef[i] = MF2D + lambda*SF2DAsym;
-		BRed_Sp[i] = Basis.transpose()*BRef[i]*Basis;
-		sparseSolver_WR_Ref[i].analyzePattern(BRef[i]);
-		sparseSolver_WR_Ref[i].factorize(BRef[i]);
-		sparseSolver_WR_Red[i].analyzePattern(BRed_Sp[i]);
-		sparseSolver_WR_Red[i].factorize(BRed_Sp[i]);
+			cout << "____[" << i << "] Factorizing the sparse matrix (M+a*S) (Ref and Red) \n";
+			BRef[i] = MF2D + lambda*SF2DAsym;
+			BRed_Sp[i] = Basis.transpose()*BRef[i] * Basis;
+			sparseSolver_WR_Ref[i].analyzePattern(BRef[i]);
+			sparseSolver_WR_Ref[i].factorize(BRef[i]);
+			sparseSolver_WR_Ref[i].pardisoParameterArray()[1] = 0;
+			sparseSolver_WR_Ref[i].pardisoParameterArray()[59] = 2;
+			sparseSolver_WR_Red[i].analyzePattern(BRed_Sp[i]);
+			sparseSolver_WR_Red[i].factorize(BRed_Sp[i]);
+			sparseSolver_WR_Red[i].pardisoParameterArray()[1] = 0;
+			sparseSolver_WR_Red[i].pardisoParameterArray()[59] = 2;
+		}
 	}
 
 	if (useEigenBasis)
 	{
 		cout << "Reading eigenbasis (if possible...) \n";
-		ReadDenseMatrixFromMatlab(EigenBasis2, eigBasisFile2, 2*F.rows(), 267);
-		ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 2*F.rows(), 400);
+		//ReadDenseMatrixFromMatlab(EigenBasis2, eigBasisFile2, 2*F.rows(), 267);
+		//ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 2*F.rows(), 40);
+		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 2 * F.rows(), 40);
 
 		// same storage
 		//EigenBasis.resize(EigenBasisFull.rows(), 40);
 		//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
 		//EigenBasis = EigenBasisFull;
 		// same performance
-		cout << "Alloc. memory for eigen basis\n";
-		EigenBasis.resize(EigenBasisFull.rows(), EigenBasisFull.cols() + EigenBasis2.cols());
-		cout << "Combining to eigen basis\n";
-		EigenBasis.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols()) = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols());
-		EigenBasis.block(0, EigenBasisFull.cols(), EigenBasis2.rows(), EigenBasis2.cols()) = EigenBasis2.block(0, 0, EigenBasis2.rows(), EigenBasis2.cols());
+		//cout << "Alloc. memory for eigen basis\n";
+		//EigenBasis.resize(EigenBasisFull.rows(), EigenBasisFull.cols() + EigenBasis2.cols());
+		//cout << "Combining to eigen basis\n";
+		//EigenBasis.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols()) = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols());
+		//EigenBasis.block(0, EigenBasisFull.cols(), EigenBasis2.rows(), EigenBasis2.cols()) = EigenBasis2.block(0, 0, EigenBasis2.rows(), EigenBasis2.cols());
 
 		// Free memory manually
 		EigenBasisFull.resize(0, 0);
@@ -1028,22 +1038,24 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		denseSolver_NR.compute(B_MB);
 
 		/* The one with regularizer*/
-		for (int i = 0; i < NUM_SOLVER; i++)
+		if (projTestWithReg)
 		{
-			double l2_ = 25 * (i + 1);
-			double	lambda = l2_ * en1 / en2;
-			//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
-			//Eigen::MatrixXd BRed = EigenBasis.transpose()*BRef*EigenBasis;
-			BRed_Dn[i] = EigenBasis.transpose()*BRef[i] * EigenBasis;
+			for (int i = 0; i < NUM_SOLVER; i++)
+			{
+				double l2_ = 25 * (i + 1);
+				double	lambda = l2_ * en1 / en2;
+				//BRef[i] = MF2D + lambda*SF2DAsym;
+				BRed_Dn[i] = EigenBasis.transpose()*BRef[i] * EigenBasis;
 
-			cout << "____[" << i << "] Factorizing the dense matrix (M+a*S) (Red) \n";
-			denseSolver_WR_Red[i].compute(BRed_Dn[i]);
+				cout << "____[" << i << "] Factorizing the dense matrix (M+a*S) (Red) \n";
+				denseSolver_WR_Red[i].compute(BRed_Dn[i]);
+			}
 		}
 	}
 
 	/* Fields and perturbed Fields */
-	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_DesignedFields";
-	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_PerturbedFields";
+	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_DesignedFields";
+	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_PerturbedFields";
 	if (readDesFieldsFromFile) {
 		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
 	}
@@ -1051,8 +1063,6 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		ReadDenseMatrixFromMatlab(PerturbedFields, pertFieldsFile, 2 * F.rows(), NUM_TEST);
 	}
 	//Xf = arbField2D; 
-
-	
 
 	for (int i = start; i < start + NUM_TEST; i++)
 		//for (int i = 37; i < 39; i++)
@@ -1088,19 +1098,17 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		}
 		/* Projection to the subspace */
 		/* Reference results */
-		//setupGlobalProblem(Eigen::Vector3d(1,1,1));
 		Eigen::VectorXd										a_Ref = MF2D*Xf;
 		Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
-		//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
-		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
+		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
+		///testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
 		testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
 
-		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, B2DAsym, errors2(i-start));
-
+		
 		a_NR = (EigenBasis.transpose()*(MF2D*Xf));
-		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
+		testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
-		//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
+		testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
 
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
@@ -1143,15 +1151,15 @@ void VectorFields::convergenceTest()
 	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
 	vector<int> subspdim{ 2000 };
 	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(i) + "_Eigfields_40sup");
+		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_40sup");
 	}
 
 	/* For the projection tests */
 	bool readDesFields = true;
 	bool readPertFields = true;
-	bool useEigenBasis = false;
+	bool useEigenBasis = true;
 	int idStart = 0;
-	int NUM_TEST = 50;
+	int NUM_TEST = 20;
 
 	for (string file_ : basisFile)
 	{
@@ -1758,7 +1766,7 @@ void VectorFields::testCurlAndDiv()
 
 void VectorFields::perturbVectorFields(Eigen::VectorXd& inputFields)
 {
-	const int NUM_PERTS = 5000;
+	const int NUM_PERTS = 50000;
 	set<int> perturbedFaces;
 
 	/* Random number generator */
