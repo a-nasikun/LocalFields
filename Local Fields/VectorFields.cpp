@@ -2200,20 +2200,19 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 100 };
+	vector<int> sampleSizeVect{ 500 };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 160.0;
 	for (int sample : sampleSizeVect)
 	{	
 
 		constructSamples(sample);
-		//constructBasis();
-		loadAndConstructBasis();
-		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_EigfieldsNRot_" + to_string((int)numSupport) + "sup";
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Test_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-		storeBasis(filename_basis);
-
-		//Basis.resize(0, 0);		
+		constructBasis();
+		///loadAndConstructBasis();
+		///string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_EigfieldsNRot_" + to_string((int)numSupport) + "sup";
+		///string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		///storeBasis(filename_basis);
+		
 	}
 }
 
@@ -2236,11 +2235,6 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
-
-	// 35 => 1.5 and 1.5
-	// 25  => 1.1 and 1.3
-	double	coef = sqrt(pow(1.4, 2) + pow(1.5, 2));
-	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 	
 	// Setup sizes of each element to construct basis
 	try {
@@ -2395,8 +2389,12 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
-	//gatherBasisElements(UiTriplet,2);
-	writeBasisElementsToFile(UiTriplet, 2);
+
+	bool writeBasisCompsToFile = true;
+	if(writeBasisCompsToFile)
+		writeBasisElementsToFile(UiTriplet, 2);
+	else 		
+		gatherBasisElements(UiTriplet, 2);
 
 	//Basis = BasisTemp;
 	//normalizeBasisAbs(2);
@@ -3115,6 +3113,7 @@ void VectorFields::writeBasisElementsToFile(const vector<vector<Eigen::Triplet<d
 	}	
 	
 	ofs.close();
+	cout << "Basis written to file \n";
 }
 
 void VectorFields::loadAndConstructBasis()
