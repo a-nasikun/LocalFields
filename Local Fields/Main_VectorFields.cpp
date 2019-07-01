@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/272_bimba_clean_1Mf.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Fertility/Fertility.obj";
+	///string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Fertility/Fertility.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	///vectorFields.constructMultiBasis();
+	vectorFields.constructMultiBasis();
 	//vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.normalizeBasisAbs(2);
 	//vectorFields.setupReducedBiLaplacian();
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	//vectorFields.projectionTest();
-	vectorFields.convergenceTest();
+	///vectorFields.convergenceTest();
 	///vectorFields.compareModalBasis_SameStorage();
 	
 	/* _____ Vector fields design test __________________________*/
@@ -556,9 +556,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 2.0f; 
 
-	//return viewer.launch();
+	return viewer.launch();
 
 	/* Trick for remote desktop */
-	getchar();
-	return 1;
+	//getchar();
+	//return 1;
 }

@@ -166,6 +166,8 @@ public:
 	void constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions);
 	void constructBasisEigenVects();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
+	void loadAndConstructBasis();
+	void writeBasisElementsToFile(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
 	void normalizeBasis();
 	void normalizeBasisAbs(const int& stride);
 	void storeBasis(const string& filename);

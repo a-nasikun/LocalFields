@@ -2200,16 +2200,17 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 1000 };
+	vector<int> sampleSizeVect{ 100 };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
-	numSupport = 40.0;
+	numSupport = 160.0;
 	for (int sample : sampleSizeVect)
 	{	
 
 		constructSamples(sample);
-		constructBasis();
+		//constructBasis();
+		loadAndConstructBasis();
 		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(2 * sample) + "_EigfieldsNRot_" + to_string((int)numSupport) + "sup";
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Bimba_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Test_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 		storeBasis(filename_basis);
 
 		//Basis.resize(0, 0);		
@@ -2394,7 +2395,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
-	gatherBasisElements(UiTriplet,2);
+	//gatherBasisElements(UiTriplet,2);
+	writeBasisElementsToFile(UiTriplet, 2);
+
 	//Basis = BasisTemp;
 	//normalizeBasisAbs(2);
 
@@ -3095,6 +3098,58 @@ void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double
 	//		BasisSum(it.row(), it.col() % NUM_EIGEN) += it.value();
 	//	}
 	//}
+}
+
+void VectorFields::writeBasisElementsToFile(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN)
+{
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/BasisComponents_Fertility_"+ to_string(2* Sample.size()) + "_EigFields_160sup.txt"; 
+	
+	std::ofstream ofs;
+	ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
+
+	for (int j = 0; j < Sample.size(); j++) {
+		for (Eigen::Triplet<double> trip : UiTriplet[j])
+		{
+			ofs << trip.row() << "," << trip.col() << "," << trip.value() << "\n";
+		}
+	}	
+	
+	ofs.close();
+}
+
+void VectorFields::loadAndConstructBasis()
+{
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/BasisComponents_Fertility_" + to_string(2 * Sample.size()) + "_EigFields_160sup.txt";
+	ifstream file(resultFile);
+	string oneLine, oneWord;
+	int i = 0, j;
+	double v;
+	int counter;
+
+	vector<Eigen::Triplet<double>> MTriplet;
+	MTriplet.reserve(2*Sample.size() * 200);
+
+	if (file.is_open())
+	{
+		Basis.resize(2*F.rows(), 2*Sample.size());
+
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{			
+			istringstream iStream(oneLine);
+
+			getline(iStream, oneWord, ',');
+			int i = stoi(oneWord);
+			getline(iStream, oneWord, ',');
+			int j = stoi(oneWord);
+			getline(iStream, oneWord, ',');
+			double v = stod(oneWord);
+			MTriplet.push_back(Eigen::Triplet<double>(i, j, v));			
+		}
+	}
+	file.close();
+	printf(", with %d elements\n", MTriplet.size());
+	Basis.setFromTriplets(MTriplet.begin(), MTriplet.end());
 }
 
 void VectorFields::normalizeBasis()
