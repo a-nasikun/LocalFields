@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	vectorFields.constructGradient3D();
 	vectorFields.constructGradientStar3D();
-	///vectorFields.constructStiffnessMatrices();
+	//vectorFields.constructStiffnessMatrices();
 	vectorFields.constructStiffnessMatrices_Implicit();
-	///vectorFields.loadStiffnessMatrices();
+	//vectorFields.loadStiffnessMatrices();
 	vectorFields.constructMatrixB();
 	//vectorFields.constructConstraints();
 	//vectorFields.checkB2DStructure();
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 	//vectorFields.constructSamples(numSample);
 	//vectorFields.constructBasis();	
 	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	vectorFields.constructMultiBasis();
+	///vectorFields.constructMultiBasis();
 	//vectorFields.retrieveBasis(filename_basis);	
 	//vectorFields.normalizeBasisAbs(2);
 	//vectorFields.setupReducedBiLaplacian();
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
 	//double error; 
 	//vectorFields.projectionTest();
-	///vectorFields.convergenceTest();
+	vectorFields.convergenceTest();
 	///vectorFields.compareModalBasis_SameStorage();
 	
 	/* _____ Vector fields design test __________________________*/
@@ -556,9 +556,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 2.0f; 
 
-	return viewer.launch();
+	//return viewer.launch();
 
 	/* Trick for remote desktop */
-	//getchar();
-	//return 1;
+	getchar();
+	return 1;
 }

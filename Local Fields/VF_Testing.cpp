@@ -136,7 +136,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_20sup.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_160sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields.txt";
@@ -1148,8 +1148,8 @@ void VectorFields::convergenceTest()
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_20000_EigFields_35sup");
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
-	vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
-	//vector<int> subspdim{ 2000 };
+	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
+	vector<int> subspdim{ 500, 1000, 2000, 5000, 10000, 20000 };
 	for (int i : subspdim) {
 		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_20sup");
 	}
