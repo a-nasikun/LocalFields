@@ -2208,10 +2208,10 @@ void VectorFields::constructMultiBasis()
 
 		constructSamples(sample);
 		
-		constructBasis();
-		///loadAndConstructBasis();		
-		///string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-		///storeBasis(filename_basis);		
+		///constructBasis();
+		loadAndConstructBasis();		
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		storeBasis(filename_basis);		
 	}
 }
 
