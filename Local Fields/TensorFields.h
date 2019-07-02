@@ -3,6 +3,8 @@
 
 #include "Utility.h"
 
+#include <igl/opengl/glfw/Viewer.h>
+
 using namespace std;
 
 class TensorFields
@@ -10,18 +12,22 @@ class TensorFields
 public:
 	TensorFields();
 	~TensorFields();
-	void constructCurvatureTensor();
 
 	/* Mesh-related items*/
 	void readMesh(const string &meshFile);
 	void scaleMesh();
 	void computeFaceCenter();
 	void computeEdges();
+	void computeAverageEdgeLength();
+	void computeFaceNormal();
 
 	/* SETTING UP UTILITY MATRICES */
-	void computeAverageEdgeLength();
 	void constructMappingMatrix();
 	void constructFaceAdjacency3NMatrix();
+	
+
+	/* TENSOR STUFF */
+	void constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 protected:

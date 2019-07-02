@@ -3,6 +3,7 @@
 #include <set>
 
 #include <igl/per_vertex_normals.h>
+#include <igl/per_face_normals.h>
 #include <igl/edges.h>
 #include <igl/readOBJ.h>
 #include <igl/readOFF.h>
@@ -141,8 +142,11 @@ void TensorFields::computeEdges()
 	printf("....E=%dx%d\n", E.rows(), E.cols());
 }
 
+void TensorFields::computeFaceNormal()
+{
+	igl::per_face_normals(V, F, NF);
+}
 
-/* ====================== UTILITY FUNCTIONS ============================*/
 void TensorFields::computeAverageEdgeLength()
 {
 	Eigen::Vector3d e;
@@ -155,6 +159,8 @@ void TensorFields::computeAverageEdgeLength()
 	}
 	avgEdgeLength = totalLength / (double)(F.rows()*F.cols());
 }
+
+/* ====================== UTILITY FUNCTIONS ============================*/
 
 void TensorFields::constructMappingMatrix()
 {
@@ -298,7 +304,7 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 }
 
 /* ====================== MAIN METHODS OF THE CLASS ======================*/
-void TensorFields::constructCurvatureTensor()
+void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Constructing curvature tensor \n";
 	cout << "__Computing vertex normal\n";
@@ -315,9 +321,9 @@ void TensorFields::constructCurvatureTensor()
 	Tensor.resize(2 * F.rows(), 2);
 	//CurvatureTensor2D.resize(2 * F.rows(), 2 * F.rows());
 	//CurvatureTensor2D.reserve(2 * 2 * F.rows());			// 2*F rows, each with 2 non-zero entries
-	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(2 * 2 * F.rows());						// 2*F rows, each with 2 non-zero entries
-	const double scale = 0.2 * avgEdgeLength;
+	//vector<Eigen::Triplet<double>> CTriplet;
+	//CTriplet.reserve(2 * 2 * F.rows());						// 2*F rows, each with 2 non-zero entries
+	const double scale = avgEdgeLength;
 
 	cout << "__Computing curvature tensor\n";
 	/* Loop over all faces */
@@ -417,15 +423,15 @@ void TensorFields::constructCurvatureTensor()
 		//	viewer.data().add_edges(V.row(F(i, 1)), V.row(F(i, 1)) + e2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
 		//	viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 		//
-		//	// Showing rotated edge => t
-		//	viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-		//	viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-		//	viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
-		//
-		//	// Showing the normals  ni
-		//	viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-		//	viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-		//	viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+			// Showing rotated edge => t
+			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+		
+			// Showing the normals  ni
+			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 		//
 		//	cout << "MT=" << i << endl << ": " << mT << endl;
 		//	cout << "MT2D=" << i << endl << ": " << mT2D << endl;

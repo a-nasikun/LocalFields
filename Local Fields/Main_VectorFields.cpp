@@ -1,5 +1,7 @@
 #include "VectorFields.h"
 #include "NRoSyFields.h"
+#include "TensorFields.h"
+
 #include <igl/unproject_onto_mesh.h>
 
 #include "TestSolver.h"
@@ -33,10 +35,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
+	string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	///string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
@@ -237,7 +239,19 @@ int main(int argc, char *argv[])
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
-	vectorFields.ConstructCurvatureTensor(viewer);
+	TensorFields tensorFields;
+	tensorFields.readMesh(meshFile);
+	tensorFields.scaleMesh();
+	tensorFields.computeEdges();
+	tensorFields.computeAverageEdgeLength();
+	tensorFields.computeFaceCenter();
+	tensorFields.computeFaceNormal();	
+	tensorFields.constructMappingMatrix();
+	tensorFields.constructFaceAdjacency3NMatrix();
+	tensorFields.constructCurvatureTensor(viewer);
+
+
+	//vectorFields.ConstructCurvatureTensor(viewer);
 	//vectorFields.ComputeCurvatureFields();
 
 	/* ==================== VISUALIZATION ======================== */
