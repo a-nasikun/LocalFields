@@ -1,6 +1,8 @@
 #include "TensorFields.h"
+#include "EigenSolver.h"
 
 #include <set>
+#include <queue>
 
 #include <igl/per_vertex_normals.h>
 #include <igl/per_face_normals.h>
@@ -303,6 +305,95 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 
 }
 
+void TensorFields::selectFaceToDraw(const int& numFaces)
+{
+	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
+
+	if (numFaces < F.rows())
+	{
+		FaceToDraw.resize(numFaces);
+		Eigen::VectorXd D(F.rows());
+
+		/* Initialize the value of D */
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//srand(time(NULL));
+		//FaceToDraw[0] = rand() % F.rows();
+		FaceToDraw[0] = 0;
+
+		for (int i = 1; i < numFaces; i++) {
+			Eigen::VectorXi::Index maxIndex;
+			computeDijkstraDistanceFaceForSampling(FaceToDraw[i - 1], D);
+			D.maxCoeff(&maxIndex);
+			FaceToDraw[i] = maxIndex;
+		}
+	}
+	else
+	{
+		FaceToDraw.resize(F.rows());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			FaceToDraw[i] = i;
+		}
+	}
+}
+
+void TensorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D)
+{
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
+
+	D(source) = 0.0f;
+	VertexPair vp{ source,D(source) };
+	DistPQueue.push(vp);
+
+	double distFromCenter = numeric_limits<double>::infinity();
+
+	// For other vertices in mesh
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		//auto const& elem = AdjMF3N_temp[vp1.vId];
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		for (auto it = 0; it != F.cols(); ++it) {
+			/* Regular Dikjstra */
+			const int neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
+			double dist = (c2 - c1).norm();
+			double tempDist = distFromCenter + dist;
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+			}
+		}
+	} while (!DistPQueue.empty());
+}
+
+void TensorFields::computeTensorFields()
+{
+	tensorFields.resize(2 * F.rows(), 2);
+
+	cout << Tensor.block(0, 0, 20, 2);
+
+	for (int i = 0; i < F.rows(); i++)
+	{
+		Eigen::Matrix2d evect_;
+		Eigen::Vector2d eval_;
+		Eigen::Matrix2d block_ = Tensor.block(2 * i, 0, 2, 2);
+		computeEigenExplicit(block_, eval_, evect_);
+		tensorFields.block(2 * i, 0, 2, 2) = evect_;
+	}
+}
+
 /* ====================== MAIN METHODS OF THE CLASS ======================*/
 void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
@@ -424,14 +515,14 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		//	viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 		//
 			// Showing rotated edge => t
-			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
-		
-			// Showing the normals  ni
-			viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+			//viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			//viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			//viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+			//
+			//// Showing the normals  ni
+			//viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			//viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+			//viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 		//
 		//	cout << "MT=" << i << endl << ": " << mT << endl;
 		//	cout << "MT2D=" << i << endl << ": " << mT2D << endl;
@@ -441,4 +532,117 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		//}
 	}
 	//CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
+}
+
+
+/* ==================== VISUALIZATION ================== */
+void TensorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
+{
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	//cout << "> Adding edges... ";
+
+	//=======
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = scale;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	//>>>>>>> master
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	Eigen::SparseMatrix<double> MRot1(2 * FaceToDraw.size(), 2 * FaceToDraw.size()), MRot2(2 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> R1Triplet, R2Triplet;
+	R1Triplet.reserve(2 * 2 * FaceToDraw.size());
+	R2Triplet.reserve(2 * 2 * FaceToDraw.size());
+	Eigen::MatrixXd FCLoc(FaceToDraw.size(), 3);
+
+	/* Defining the rotation matrix (2-by-2) on the local frame */
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		/* Rotation matrix for the first head */
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, rotMat1(0, 0)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, rotMat1(1, 0)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, rotMat1(0, 1)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, rotMat1(1, 1)));
+
+		/* Rotation matrix for the second head */
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, rotMat2(0, 0)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, rotMat2(1, 0)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, rotMat2(0, 1)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, rotMat2(1, 1)));
+
+		/* Getting the face center of selected faces */
+		FCLoc.row(i) = FC.row(FaceToDraw[i]);
+	}
+	MRot1.setFromTriplets(R1Triplet.begin(), R1Triplet.end());
+	MRot2.setFromTriplets(R2Triplet.begin(), R2Triplet.end());
+
+	/* Getting the local data from the population of data */
+	Eigen::SparseMatrix<double> ALoc(3 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(6 * FaceToDraw.size());
+	Eigen::VectorXd fieldLoc(2 * FaceToDraw.size()), fields3D(3 * FaceToDraw.size()), rot1Field, rot2Field;
+	Eigen::MatrixXd TFields(FaceToDraw.size(), F.cols()), Head1Fields(FaceToDraw.size(), F.cols()), Head2Fields(FaceToDraw.size(), F.cols());
+
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		/* Getting the selected ALoc from A */
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 1)));
+
+		/* Getting the selected face */
+		fieldLoc.block(2 * i, 0, 2, 1) = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+	}
+	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	fields3D = ALoc * fieldLoc;
+
+	/* The head of the arrows */
+	rot1Field = MRot1*fieldLoc;
+	rot1Field = ALoc * rot1Field;
+	rot2Field = MRot2*fieldLoc;
+	rot2Field = ALoc * rot2Field;
+
+	/* Transform field to Matrix format */
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		TFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+		Head1Fields.row(i) = (rot1Field.block(3 * i, 0, 3, 1)).transpose();
+		Head2Fields.row(i) = (rot2Field.block(3 * i, 0, 3, 1)).transpose();
+	}
+
+	/* If user wants normalized fields, then so do it */
+	if (normalized)
+	{
+		TFields.rowwise().normalize();
+		Head1Fields.rowwise().normalize();
+		Head2Fields.rowwise().normalize();
+	}
+
+	/* Draw the fields */
+	viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
+	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
+	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	//cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
+	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
+	visualize2Dfields(viewer, tensorFields.col(0), color1, 0.3);
+	visualize2Dfields(viewer, tensorFields.col(1), color2, 0.3);
 }

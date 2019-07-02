@@ -247,8 +247,12 @@ int main(int argc, char *argv[])
 	tensorFields.computeFaceCenter();
 	tensorFields.computeFaceNormal();	
 	tensorFields.constructMappingMatrix();
+	tensorFields.selectFaceToDraw(5000);
 	tensorFields.constructFaceAdjacency3NMatrix();
 	tensorFields.constructCurvatureTensor(viewer);
+	tensorFields.computeTensorFields();
+	tensorFields.visualizeTensorFields(viewer);
+
 
 
 	//vectorFields.ConstructCurvatureTensor(viewer);
