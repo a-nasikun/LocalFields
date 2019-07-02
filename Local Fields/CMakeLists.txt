@@ -53,6 +53,8 @@ add_executable(${PROJECT_NAME}
 	VF_Visualization.cpp
 	VF_Testing.cpp
 	VF_MatrixConstructions.cpp
+	TensorFields.h
+	TensorFields.cpp
 )
 
 target_link_libraries(
