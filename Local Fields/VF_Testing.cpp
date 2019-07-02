@@ -969,6 +969,7 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	string eigBasisFile2 = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_401-667_eigenfields_Ref";
 
 	/* Factorization of the mass matrix approx in reduced system */
+	cout << "___Factorizing the reduced massmatrix Md \n";
 	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF2D * Basis;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver_NR(B_NR);
 	Eigen::MatrixXd										B_MB;
@@ -1102,10 +1103,10 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
 		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
-		///testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
+		//testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
 
 		
-		a_NR = (EigenBasis.transpose()*(MF2D*Xf));
+		///a_NR = (EigenBasis.transpose()*(MF2D*Xf));
 		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
@@ -1149,17 +1150,17 @@ void VectorFields::convergenceTest()
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
 	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
-	vector<int> subspdim{ 500, 1000, 2000, 5000, 10000, 20000 };
+	vector<int> subspdim{ 50000 };
 	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_20sup");
+		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_160sup");
 	}
 
 	/* For the projection tests */
-	bool readDesFields = true;
+	bool readDesFields  = true;
 	bool readPertFields = true;
-	bool useEigenBasis = false;
+	bool useEigenBasis  = false;
 	int idStart = 0;
-	int NUM_TEST = 20;
+	int NUM_TEST = 100;
 
 	for (string file_ : basisFile)
 	{
@@ -1766,7 +1767,8 @@ void VectorFields::testCurlAndDiv()
 
 void VectorFields::perturbVectorFields(Eigen::VectorXd& inputFields)
 {
-	const int NUM_PERTS = 50000;
+	//const int NUM_PERTS = 50000;
+	const int NUM_PERTS = 10000;
 	set<int> perturbedFaces;
 
 	/* Random number generator */
