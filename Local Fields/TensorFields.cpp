@@ -178,8 +178,8 @@ void TensorFields::constructEVList()
 		VENeighbors[E(i, 1)].emplace(i);
 
 		//if (i < 100)
-		if (E(i, 0) == 0 || E(i, 1) == 0)
-			printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
+		//if (E(i, 0) == 0 || E(i, 1) == 0)
+		//	printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
 	}
 }
 
@@ -201,18 +201,11 @@ void TensorFields::constructEFList()
 			if (i < 1)
 				ip = 2;
 			else
-				ip = (i - 1) % (int)F.cols();
-
-			//for (set<int>::iterator it = VENeighbors[ii].begin(); it != VENeighbors[ii].end(); ++it)
-			//{
-			//	int edge = 
-			//}
+				ip = (i - 1) % (int)F.cols();			
 
 			/* Loop over all edges having element F(i,j) */
-			//printf("V=%d", ii);
 			for (set<int>::iterator ij = VENeighbors[ii].begin(); ij != VENeighbors[ii].end(); ++ij) {
 				int edge = *ij;
-				//printf("_Edge=%d", edge);
 				if ((ii == E(edge, 0) && in == E(edge, 1)) || (ii == E(edge, 1) && in == E(edge, 0)))
 				{
 					FE(ijk, ip) = edge;
@@ -220,7 +213,6 @@ void TensorFields::constructEFList()
 				}
 			}
 		}
-		//printf("\n");
 	}
 
 	for (int i = 0; i < E.rows(); i++) {
@@ -235,17 +227,39 @@ void TensorFields::constructEFList()
 
 
 	/* For test */
-	int ft = 264;
-	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
-	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
-
-	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
+	//int ft = 264;
+	//printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	//printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+	//
+	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
 
 }
 /* ====================== UTILITY FUNCTIONS ============================*/
+void TensorFields::constructMassMatrixMF3D()
+{
+	MF.resize(3 * F.rows(), 3 * F.rows());
+	MFinv.resize(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(3 * F.rows());
+	vector<Eigen::Triplet<double>> MFInvTriplet;
+	MFInvTriplet.reserve(2 * F.rows());
+
+	for (int i = 0; i < F.rows(); i++) {
+		double area = doubleArea(i) / 2.0;
+		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, area));
+		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, area));
+		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, 1.0/area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0/area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0/area));
+	}
+	MF.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
+	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
+
+}
 
 void TensorFields::constructMappingMatrix()
 {
@@ -461,6 +475,85 @@ void TensorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 	} while (!DistPQueue.empty());
 }
 
+void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
+{
+	FrameRot.resize(E.rows(), 2);
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+
+		/* Frame basis of each TA and TB */
+		Eigen::VectorXd basisTA = V.row(F(TA, 1)) - V.row(F(TA, 0));
+		Eigen::VectorXd basisTB = V.row(F(TB, 1)) - V.row(F(TB, 0));
+
+	}
+}
+
+void TensorFields::buildStiffnessMatrix()
+{
+	SF.resize(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> STriplet;
+	STriplet.reserve(4 * 9 * F.rows());
+
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+
+		/* Construct the rotation matrix RA and SB */
+		double cosRA = cos(FrameRot(ei, 0));
+		double sinRA = cos(FrameRot(ei, 0));
+		double cosSB = cos(FrameRot(ei, 1));
+		double sinSB = cos(FrameRot(ei, 1));
+
+		/* Rbar = R*A*RT | Rtil = RT*A*R | Sbar=S*A*ST | Stil=ST*A*S */
+		Eigen::Matrix3d Rbar, Rtil, Sbar, Stil;
+
+		Rbar << cosRA*cosRA, -sinRA*-sinRA, 2 * cosRA*-sinRA,
+				sinRA*sinRA,  cosRA*cosRA,  2 * sinRA*cosRA,
+				cosRA*sinRA, -sinRA*cosRA,  cosRA*cosRA - sinRA*sinRA;
+		Rtil << cosRA*cosRA,  sinRA*sinRA, 2 * cosRA*sinRA,
+			   -sinRA*-sinRA, cosRA*cosRA, 2 * -sinRA*cosRA,
+				cosRA*-sinRA, sinRA*cosRA, cosRA*cosRA - sinRA*sinRA;
+
+		Sbar << cosSB*cosSB, -sinSB*-sinSB, 2 * cosSB*-sinSB,
+			    sinSB*sinSB,  cosSB*cosSB,  2 * sinSB*cosSB,
+			    cosSB*sinSB, -sinSB*cosSB,  cosSB*cosSB - sinSB*sinSB;
+		Stil << cosSB*cosSB,  sinSB*sinSB, 2 * cosSB*sinSB,
+			   -sinSB*-sinSB, cosSB*cosSB, 2 * -sinSB*cosSB,
+				cosSB*-sinSB, sinSB*cosSB, cosSB*cosSB - sinSB*sinSB;
+
+		/* Stiffness matrix from A (first triangle) perspective */
+		Eigen::Matrix3d RtRb = Rtil*Rbar;
+		Eigen::Matrix3d RtSb = -Rtil*Sbar;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + j, RtRb(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, RtSb(i, j)));
+			}
+		}
+
+		/* Stiffness matrix from B (second triangle) perspective */
+		Eigen::Matrix3d StSb = Stil*Sbar;
+		Eigen::Matrix3d StRb = -Stil*Rbar;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + j, RtRb(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, RtSb(i, j)));
+			}												   
+		}
+	}
+
+	/* Populate the matrix with configured triplets */
+	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+}
+
+/* ====================== MAIN METHODS OF THE CLASS ======================*/
 void TensorFields::computeTensorFields()
 {
 	tensorFields.resize(2 * F.rows(), 2);
@@ -478,7 +571,6 @@ void TensorFields::computeTensorFields()
 	}
 }
 
-/* ====================== MAIN METHODS OF THE CLASS ======================*/
 void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Constructing curvature tensor \n";
@@ -738,4 +830,29 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
 	visualize2Dfields(viewer, -tensorFields.col(0), color1, scale);
 	visualize2Dfields(viewer,  tensorFields.col(1), color2, scale);
 	visualize2Dfields(viewer, -tensorFields.col(1), color2, scale);
+}
+
+
+/* TESTING STUFF*/
+void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
+{
+	readMesh(meshFile);
+	//scaleMesh();
+	computeEdges();
+	computeAverageEdgeLength();
+	computeFaceCenter();
+	computeFaceNormal();
+	constructMappingMatrix();
+	constructMassMatrixMF3D();
+	constructFaceAdjacency3NMatrix();
+	constructEVList();
+	constructEFList();
+	selectFaceToDraw(5000);	
+
+
+	constructCurvatureTensor(viewer);
+	computeTensorFields();
+	constructVoigtVector();
+
+	visualizeTensorFields(viewer);
 }

@@ -1291,7 +1291,7 @@ void VectorFields::checkB2DStructure()
 }
 
 // ITEMS FOR TESTING ONLY
-void VectorFields::TEST_VECTOR(const string& meshFile)
+void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n";
@@ -1448,6 +1448,36 @@ void VectorFields::TEST_VECTOR(const string& meshFile)
 	//constructParallelTransport();
 	//visualizeParallelTransportPath(viewer);
 	//visualizeParallelTransport(viewer);
+
+
+	/* ==================== VISUALIZATION ======================== */
+	/* GLOBAL  */
+	//.visualizeApproximatedFields(viewer);
+	//.visualizeGlobalConstraints(viewer);
+	//.visualizeSingularitiesConstraints(viewer);
+	//.visualizeSharedEdges(viewer);
+
+	/* LOCAL  */
+	//.visualizeApproxResult(viewer);	
+	//.visualizeUserConstraints(viewer);
+	//.visualizeSamples(viewer);
+	//.visualizeSingularitiesConstraints(viewer);
+
+	/* VISUALIZATION FOR TESTING PURPOSE */
+	//.visualizeNeighboringRings(viewer);
+	//.visualizeDijkstraFace(viewer);
+	//.visualizeArbField(viewer);
+	//.visualizeVertexFacesNeighbors(viewer, 0);
+	//.testEdgesAddition(viewer);
+	//.visualizePatchDijkstra(viewer);
+
+	/* SOFT CONSTRAINTS */
+	//.visualizeCurveConstraints(viewer);
+	///.visualizeSoftConstraints(viewer);
+
+
+	/* MEASURE ACCURACY */
+	//.measureApproxAccuracyL2Norm();
 }
 
 void VectorFields::constructParallelTransport()

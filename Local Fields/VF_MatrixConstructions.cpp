@@ -510,8 +510,8 @@ void VectorFields::constructEVList()
 		VENeighbors[E(i, 1)].emplace(i);
 
 		//if (i < 100)
-		if(E(i,0)==0 || E(i,1)==0)
-			printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
+		//if(E(i,0)==0 || E(i,1)==0)
+		//	printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
 	}
 }
 
@@ -567,14 +567,14 @@ void VectorFields::constructEFList()
 
 
 	/* For test */
-	int ft = 264;
-	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
-	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
-
-	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0),0), EF(FE(ft, 0),1));
+	//int ft = 264;
+	//printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	//printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+	//
+	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0),0), EF(FE(ft, 0),1));
 
 }
 

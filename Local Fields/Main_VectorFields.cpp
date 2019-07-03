@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	/* ====================== VECTOR FIELDS  ====================*/
 	cout << "\n========================= VECTOR FIELDS =============================\n";
 	VectorFields vectorFields;
-	vectorFields.TEST_VECTOR(meshFile);
+	//vectorFields.TEST_VECTOR(viewer, meshFile);
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	//Eigen::VectorXd v_in = vectorFields.arbField2D;
@@ -83,15 +83,7 @@ int main(int argc, char *argv[])
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
 	cout << "\n========================= TENSOR FIELDS =============================\n";
 	TensorFields tensorFields;
-	tensorFields.readMesh(meshFile);
-	//tensorFields.scaleMesh();
-	tensorFields.computeEdges();
-	tensorFields.computeAverageEdgeLength();
-	tensorFields.computeFaceCenter();
-	tensorFields.computeFaceNormal();	
-	tensorFields.constructMappingMatrix();
-	tensorFields.constructFaceAdjacency3NMatrix();
-	tensorFields.selectFaceToDraw(5000);
+	tensorFields.TEST_TENSOR(viewer, meshFile);
 
 	tensorFields.getVF(V, F);
 	viewer.data().set_mesh(V, F);
@@ -100,54 +92,13 @@ int main(int argc, char *argv[])
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
 	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
-
-	tensorFields.constructCurvatureTensor(viewer);
-	tensorFields.computeTensorFields();
-	tensorFields.constructVoigtVector();
-
-	tensorFields.visualizeTensorFields(viewer);
-	
-
-	//vectorFields.ConstructCurvatureTensor(viewer);
-	//vectorFields.ComputeCurvatureFields();
-
-	/* ==================== VISUALIZATION ======================== */
-	/* GLOBAL  */
-	//vectorFields.visualizeApproximatedFields(viewer);
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
-	//vectorFields.visualizeSharedEdges(viewer);
-
-	/* LOCAL  */
-	//vectorFields.visualizeApproxResult(viewer);	
-	//vectorFields.visualizeUserConstraints(viewer);
-	//vectorFields.visualizeSamples(viewer);
-	//vectorFields.visualizeSingularitiesConstraints(viewer);
-	
-	/* VISUALIZATION FOR TESTING PURPOSE */
-	//vectorFields.visualizeNeighboringRings(viewer);
-	//vectorFields.visualizeDijkstraFace(viewer);
-	//vectorFields.visualizeArbField(viewer);
-	//vectorFields.visualizeVertexFacesNeighbors(viewer, 0);
-	//vectorFields.testEdgesAddition(viewer);
-	//vectorFields.visualizePatchDijkstra(viewer);
-	
-	/* SOFT CONSTRAINTS */
-	//vectorFields.visualizeCurveConstraints(viewer);
-	///vectorFields.visualizeSoftConstraints(viewer);
-	
-
-	/* MEASURE ACCURACY */
-	//vectorFields.measureApproxAccuracyL2Norm();
+		
 
 	/* TEST SOLVERS */
 	//testLAPACKEdsysv();
 	//testCUDA_LULinearSolver();
 	//testLDLTLinearSolver();
 	//testMKL_Pardiso();
-
-	/* VISUALIZATION OF APPLICATIONS */
-	//vectorFields.visualizeCurvatureTensor(viewer);
 
 
 	/* FOR GENERATING IMAGES on PAPER */
