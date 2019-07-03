@@ -849,7 +849,8 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEFList();
 	selectFaceToDraw(5000);	
 
-
+	computeFrameRotation(viewer);
+	buildStiffnessMatrix();
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
