@@ -15,11 +15,14 @@ public:
 
 	/* Mesh-related items*/
 	void readMesh(const string &meshFile);
+	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void scaleMesh();
 	void computeFaceCenter();
 	void computeEdges();
 	void computeAverageEdgeLength();
 	void computeFaceNormal();
+	void constructEVList();
+	void constructEFList();
 
 	/* SETTING UP UTILITY MATRICES */
 	void constructMappingMatrix();
@@ -31,6 +34,7 @@ public:
 
 	/* TENSOR STUFF */
 	void constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
+	void constructVoigtVector();
 
 	/* VISUALIZATION */
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
@@ -38,14 +42,16 @@ public:
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 protected:
-	Eigen::MatrixXd					Tensor, tensorFields;
-	Eigen::VectorXd					voigtReps;
-	Eigen::MatrixXd					V, FC, NF;
-	Eigen::MatrixXi					F, E, AdjMF3N;
-	Eigen::VectorXd					doubleArea;
-	Eigen::SparseMatrix<double>		A;
-	double							avgEdgeLength;
-	vector<int>						FaceToDraw;
+	Eigen::MatrixXd					Tensor, tensorFields;	// 2-by-2 tensor and the representing vectors (using principal curvatures)
+	Eigen::VectorXd					voigtReps;				// a 3-by-1 representation of 2-by-2 tensor
+	Eigen::MatrixXd					V, FC, NF;				// Vertex, Face-center, and Face-normals
+	Eigen::MatrixXi					F, E, AdjMF3N;			// Faces, Edges, and Face-Face adjacency matrices
+	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
+	Eigen::SparseMatrix<double>		A;						// A map from local to to world coordinate
+	double							avgEdgeLength;			// avg edge length -> to scale the fields
+	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
+	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
+	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 
 private:
 

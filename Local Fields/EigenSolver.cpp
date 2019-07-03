@@ -781,10 +781,10 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 	EigVal(1) = a_ - b_;
 
 	
-	/* Computing the eigenvectors */
+	/* Computing the eigenvectors for 2x2 symmetric matrix*/
 	if (abs(M(1, 0)) > 1.0*std::numeric_limits<double>::epsilon())
 	{
-		//cout << "Reguler " << EigVal << endl;
+		//cout << "Reguler " << EigVal.transpose() << endl;
 		Eigen::Vector2d v1(EigVal(0) - M(1, 1), M(1, 0)); v1.normalize();
 		Eigen::Vector2d v2(EigVal(1) - M(1, 1), M(1, 0)); v2.normalize();
 		//EigVect.col(0) = EigVal(0)*v1; 
@@ -792,18 +792,10 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 		EigVect.col(0) = v1;
 		EigVect.col(1) = v2;
 	}
-	else if (abs(M(0, 1)) > 1.0*std::numeric_limits<double>::epsilon())
+	else 
 	{
-		//cout << "Reguler 2 " << EigVal << endl;
-		Eigen::Vector2d v1(M(0, 1), EigVal(0) - M(0, 0)); v1.normalize();
-		Eigen::Vector2d v2(M(0, 1), EigVal(1) - M(0, 0)); v2.normalize();
-		//EigVect.col(0) = EigVal(0)*v1;
-		//EigVect.col(1) = EigVal(1)*v2;
-		EigVect.col(0) = v1;
-		EigVect.col(1) = v2;
-	}
-	else {
-		//cout << "NOT BOTH!!!! " << EigVal << endl;
+		cout << "Off diagonal zeros | eigVal: " << EigVal.transpose() << endl;
+		cout << "__M=" << M << "\t\t , its trace: " << trace << endl; 
 		//EigVect.col(0) = EigVal(0)*Eigen::Vector2d(1.0, 0.0);
 		//EigVect.col(1) = EigVal(1)*Eigen::Vector2d(0.0, 1.0);
 		EigVect.col(0) = Eigen::Vector2d(1.0, 0.0);

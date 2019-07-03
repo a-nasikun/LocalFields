@@ -62,6 +62,12 @@ void TensorFields::readMesh(const string &meshFile)
 	printf("This model is of genus %d\n", genus);
 }
 
+void TensorFields::getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F)
+{
+	V = this->V;
+	F = this->F;
+}
+
 void TensorFields::scaleMesh()
 {
 	Eigen::RowVectorXd minV(V.rows(), 3);
@@ -162,6 +168,83 @@ void TensorFields::computeAverageEdgeLength()
 	avgEdgeLength = totalLength / (double)(F.rows()*F.cols());
 }
 
+// For every vertex V, find where it belongs in edge E
+void TensorFields::constructEVList()
+{
+	VENeighbors.resize(V.rows());
+
+	for (int i = 0; i < E.rows(); i++) {
+		VENeighbors[E(i, 0)].emplace(i);
+		VENeighbors[E(i, 1)].emplace(i);
+
+		//if (i < 100)
+		if (E(i, 0) == 0 || E(i, 1) == 0)
+			printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
+	}
+}
+
+void TensorFields::constructEFList()
+{
+	cout << "Constructing F-E lists\n";
+	FE.resize(F.rows(), 3);
+	EF.resize(E.rows(), 2);
+
+	vector<set<int>> EFlist;
+	EFlist.resize(E.rows());
+
+	for (int ijk = 0; ijk < F.rows(); ijk++) {
+		//printf("Test of F=%d: ", ijk);
+		for (int i = 0; i < F.cols(); i++) {
+			int ii = F(ijk, i);
+			int in = F(ijk, (i + 1) % (int)F.cols());
+			int ip;
+			if (i < 1)
+				ip = 2;
+			else
+				ip = (i - 1) % (int)F.cols();
+
+			//for (set<int>::iterator it = VENeighbors[ii].begin(); it != VENeighbors[ii].end(); ++it)
+			//{
+			//	int edge = 
+			//}
+
+			/* Loop over all edges having element F(i,j) */
+			//printf("V=%d", ii);
+			for (set<int>::iterator ij = VENeighbors[ii].begin(); ij != VENeighbors[ii].end(); ++ij) {
+				int edge = *ij;
+				//printf("_Edge=%d", edge);
+				if ((ii == E(edge, 0) && in == E(edge, 1)) || (ii == E(edge, 1) && in == E(edge, 0)))
+				{
+					FE(ijk, ip) = edge;
+					EFlist[edge].emplace(ijk);
+				}
+			}
+		}
+		//printf("\n");
+	}
+
+	for (int i = 0; i < E.rows(); i++) {
+		int counter = 0;
+		for (set<int>::iterator ij = EFlist[i].begin(); ij != EFlist[i].end(); ++ij)
+		{
+			EF(i, counter) = *ij;
+			counter++;
+		}
+	}
+
+
+
+	/* For test */
+	int ft = 264;
+	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+
+	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
+
+}
 /* ====================== UTILITY FUNCTIONS ============================*/
 
 void TensorFields::constructMappingMatrix()
@@ -308,7 +391,7 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 void TensorFields::selectFaceToDraw(const int& numFaces)
 {
 	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
-
+	
 	if (numFaces < F.rows())
 	{
 		FaceToDraw.resize(numFaces);
@@ -390,7 +473,8 @@ void TensorFields::computeTensorFields()
 		Eigen::Vector2d eval_;
 		Eigen::Matrix2d block_ = Tensor.block(2 * i, 0, 2, 2);
 		computeEigenExplicit(block_, eval_, evect_);
-		tensorFields.block(2 * i, 0, 2, 2) = evect_;
+		tensorFields.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
+		tensorFields.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
 	}
 }
 
@@ -410,10 +494,6 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	Eigen::Matrix2d mT2D;
 
 	Tensor.resize(2 * F.rows(), 2);
-	//CurvatureTensor2D.resize(2 * F.rows(), 2 * F.rows());
-	//CurvatureTensor2D.reserve(2 * 2 * F.rows());			// 2*F rows, each with 2 non-zero entries
-	//vector<Eigen::Triplet<double>> CTriplet;
-	//CTriplet.reserve(2 * 2 * F.rows());						// 2*F rows, each with 2 non-zero entries
 	const double scale = avgEdgeLength;
 
 	cout << "__Computing curvature tensor\n";
@@ -493,18 +573,14 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		m2 = (f2Form3 + f2Form1 - f2Form2) * (t2 * t2.transpose());
 		m3 = (f2Form1 + f2Form2 - f2Form3) * (t3 * t3.transpose());
 
-		/* Computing the curvature tensor on each face */
+		/* Computing the curvature tensor on each face 
+		** 1/(8*area^2) * sum of (IIj+IIk-IIi) * outerproduct(ti,ti) */
 		mT = (m1 + m2 + m3) / (2.0*doubleArea(i)*doubleArea(i));
 
 		/* Inserting the 2x2 matrix*/
 		Eigen::MatrixXd ALoc = A.block(3 * i, 2 * i, 3, 2);
 		mT2D = ALoc.transpose() * mT * ALoc;
 		Tensor.block(2 * i, 0, 2, 2) = mT2D;
-
-		//CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, mT2D(0, 0)));
-		//CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, mT2D(1, 0)));
-		//CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, mT2D(0, 1)));
-		//CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, mT2D(1, 1)));
 
 		/* For testing purpose only*/
 		//if (i <= 20)
@@ -514,15 +590,16 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		//	viewer.data().add_edges(V.row(F(i, 1)), V.row(F(i, 1)) + e2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
 		//	viewer.data().add_edges(V.row(F(i, 2)), V.row(F(i, 2)) + e3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 		//
-			// Showing rotated edge => t
-			//viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			//viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			//viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
-			//
-			//// Showing the normals  ni
-			//viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			//viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
-			//viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+		//	// Showing rotated edge => t
+		//	viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + t1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + t2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + t3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
+		//	cout << i << " t1= " << t1.transpose() << " | n1" << nT.transpose() << " | e1" << e1.transpose() << endl;
+		//
+		//	// Showing the normals  ni
+		//	viewer.data().add_edges(V.row(F(i, 0)) + e1.transpose() / 2.0, V.row(F(i, 0)) + e1.transpose() / 2.0 + scale*n1.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 1)) + e2.transpose() / 2.0, V.row(F(i, 1)) + e2.transpose() / 2.0 + scale*n2.transpose(), Eigen::RowVector3d(0.0, 0.7, 0.0));
+		//	viewer.data().add_edges(V.row(F(i, 2)) + e3.transpose() / 2.0, V.row(F(i, 2)) + e3.transpose() / 2.0 + scale*n3.transpose(), Eigen::RowVector3d(0.0, 0.0, 1.0));
 		//
 		//	cout << "MT=" << i << endl << ": " << mT << endl;
 		//	cout << "MT2D=" << i << endl << ": " << mT2D << endl;
@@ -531,7 +608,19 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 		//	//cout << "M3=" << f2Form3 << endl << ": " << m3 << endl;
 		//}
 	}
-	//CurvatureTensor2D.setFromTriplets(CTriplet.begin(), CTriplet.end());
+}
+
+void TensorFields::constructVoigtVector()
+{
+	voigtReps.resize(3 * F.rows());
+
+	for (int i = 0; i < F.rows(); i++)
+	{
+		voigtReps(3*i + 0) = Tensor(2*i+0, 0);
+		voigtReps(3*i + 1) = Tensor(2*i+1, 1);
+		voigtReps(3*i + 2) = Tensor(2*i+1, 0);
+	}
+
 }
 
 
@@ -643,6 +732,10 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
 {
 	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
 	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
-	visualize2Dfields(viewer, tensorFields.col(0), color1, 0.3);
-	visualize2Dfields(viewer, tensorFields.col(1), color2, 0.3);
+
+	double scale = 0.01;
+	visualize2Dfields(viewer,  tensorFields.col(0), color1, scale);
+	visualize2Dfields(viewer, -tensorFields.col(0), color1, scale);
+	visualize2Dfields(viewer,  tensorFields.col(1), color2, scale);
+	visualize2Dfields(viewer, -tensorFields.col(1), color2, scale);
 }

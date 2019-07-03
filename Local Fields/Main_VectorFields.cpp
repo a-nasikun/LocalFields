@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 	bool selectFace = false;
 	Eigen::MatrixXd C;
 
-	VectorFields vectorFields;
+	
 	igl::opengl::glfw::Viewer		viewer;
 	Eigen::MatrixXd					V;
 	Eigen::MatrixXi					F, E;
@@ -35,12 +35,12 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
+	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	///string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -68,192 +68,45 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 
-	/* ========================= PRE-PROCESS ==============================*/
-	cout << "========================= PRE-PROCESS ==============================\n"; 
-	vectorFields.readMesh(meshFile);
-	vectorFields.scaleMesh();
-	//Eigen::SparseMatrix<double> ChrisSparseMat;
-	//ReadChristopherStiffnessMatrix("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Models/hodgeLaplace.txt", ChrisSparseMat);
-	//WriteSparseMatrixToMatlab(ChrisSparseMat, "hello");
-	//vectorFields.readArrowMesh("../LocalFields/Models/arrow.obj");
-	vectorFields.computeEdges();
-	vectorFields.computeAverageEdgeLength();
-	vectorFields.computeFaceCenter();
-	vectorFields.computeFaceNormal();
-	vectorFields.constructVFNeighbors();
-	//vectorFields.constructVFNeighborsFull();
-	//vectorFields.constructVFAdjacency();
-	//vectorFields.testAdjacency();
-	vectorFields.constructVertexAdjacencyMatrix();
-	vectorFields.constructFaceAdjacency3NMatrix();
-	vectorFields.constructFaceAdjacency2RingMatrix();
-	vectorFields.constructEVList();
-	vectorFields.constructEFList();
-	vectorFields.selectFaceToDraw(10000);
-	
-	vectorFields.getVF(V, F);
-	viewer.data().set_mesh(V, F);
-	viewer.append_mesh();
-	viewer.data().set_mesh(V, F);
-	viewer.data().show_lines = false; 
-	viewer.selected_data_index = 0; 
-	viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
-
-	/* MATRIX CONSTRUCTIONS */
-	vectorFields.constructMassMatrices();
-	vectorFields.constructRotationMatrix();
-	vectorFields.constructMappingMatrix();
-	
-	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
-	vectorFields.constructGradient3D();
-	vectorFields.constructGradientStar3D();
-	//vectorFields.constructStiffnessMatrices();
-	vectorFields.constructStiffnessMatrices_Implicit();
-	//vectorFields.loadStiffnessMatrices();
-	vectorFields.constructMatrixB();
-	//vectorFields.constructConstraints();
-	//vectorFields.checkB2DStructure();
-	
-	//////* ====================== GLOBAL PROBLEM ====================*/
-	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
-	Eigen::Vector3d lambda;
-	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
-	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
-	lambda(2) = 0.4;
-	//vectorFields.setupGlobalProblem(lambda);
-	
-	/* ====================== LOCAL ELEMENTS ====================*/
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
-	
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_Eigfields_40sup";
-
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_eigFields10_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigPatch_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_Grad_30sup";
-
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_OptAlg_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_eigFields10_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigPatch_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Grad_30sup";
-
-	/* For convergence */
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_500_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_1000_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_10000_EigFields_35sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup";
-	
-
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
-	
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_farConst_Asym_1.txt";	//fartheset point
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_xyz-axis.txt";
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
-
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_0 (from center).txt";
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_1 (going left).txt";
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_2 (going down).txt";
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_3 (center and down).txt";
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_4 (around_52).txt";
-	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_5 (from right arm_35).txt";
-
-	//vectorFields.testSparseMatrix();
-
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//vectorFields.constructSamples(numSample);
-	//vectorFields.constructBasis();	
-	//vectorFields.storeBasis(filename_basis);			// Binary, Eigen-base
-	///vectorFields.constructMultiBasis();
-	//vectorFields.retrieveBasis(filename_basis);	
-	//vectorFields.normalizeBasisAbs(2);
-	//vectorFields.setupReducedBiLaplacian();
-	//vectorFields.setAndSolveUserSystem(lambda);
-	//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
-
-	
-
-	/* Test Spectra */	
-	//vectorFields.testSpectra();
-	//testViennaCL2();
-	
-	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
-	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_25_Approx_EigenBasis_2000dim_30sup";
-	//vectorFields.computeEigenFields(eigsToCompute, filename_refField);	
-	//vectorFields.retrieveEigenFields(filename_refField);
-	//vectorFields.computeApproxEigenFields(eigsToCompute, filename_approxField);
-	//vectorFields.retrieveApproxEigenFields();
-
-	// Store the eigenfields as vector fields
-	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields";
-	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(0), filename_vfields+"_0.txt");
-	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(1), filename_vfields+"_1.txt");
-	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(2), filename_vfields+"_2.txt");
-	//WriteEigenVectorToTxtFile(vectorFields.eigFieldFull2D.col(3), filename_vfields+"_3.txt");
-
-	//vectorFields.testEnergyOfLocalPatch(viewer);
-
-	//vectorFields.printDataForVTK();
-	//vectorFields.writeEigenFieldsForVTK();
-
-	/* ====================== TESTING BASIS ====================*/
-	/* _____ Projection Test ___________________________________*/
-	//vectorFields.constructArbitraryField();
-	//vectorFields.constructArbitraryField2D();
-	///WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
-	//LoadEigenVectorFromTxtFile(filename_vfields, vectorFields.arbField2D);
-	//double error; 
-	//vectorFields.projectionTest();
-	//vectorFields.convergenceTest();
-	//vectorFields.compareModalBasis_SameStorage();
-	
-	/* _____ Vector fields design test __________________________*/
-	//vectorFields.vectorFieldsDesignTest();
-	//vectorFields.vectorFieldsDesignTest_Normalized();
-
-
-	//vectorFields.visualizeGlobalConstraints(viewer);
-	//vectorFields.measureDirichletEnergy();
-
-	/* ====================== PARALLEL TRANSPORT ====================*/
-	//vectorFields.computeDijkstraForParallelTransport(200, 5000);
-	//vectorFields.constructParallelTransport();
-	//vectorFields.visualizeParallelTransportPath(viewer);
-	//vectorFields.visualizeParallelTransport(viewer);
+	/* ====================== VECTOR FIELDS  ====================*/
+	cout << "\n========================= VECTOR FIELDS =============================\n";
+	VectorFields vectorFields;
+	vectorFields.TEST_VECTOR(meshFile);
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	//Eigen::VectorXd v_in = vectorFields.arbField2D;
-	Eigen::VectorXd v_in = vectorFields.getRefFields();
+	//Eigen::VectorXd v_in = vectorFields.getRefFields();
+	Eigen::VectorXd v_in;
 	Eigen::VectorXd v_out;
 	const double mu = 0.04; 
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
+	cout << "\n========================= TENSOR FIELDS =============================\n";
 	TensorFields tensorFields;
 	tensorFields.readMesh(meshFile);
-	tensorFields.scaleMesh();
+	//tensorFields.scaleMesh();
 	tensorFields.computeEdges();
 	tensorFields.computeAverageEdgeLength();
 	tensorFields.computeFaceCenter();
 	tensorFields.computeFaceNormal();	
 	tensorFields.constructMappingMatrix();
-	tensorFields.selectFaceToDraw(5000);
 	tensorFields.constructFaceAdjacency3NMatrix();
+	tensorFields.selectFaceToDraw(5000);
+
+	tensorFields.getVF(V, F);
+	viewer.data().set_mesh(V, F);
+	viewer.append_mesh();
+	viewer.data().set_mesh(V, F);
+	viewer.data().show_lines = false;
+	viewer.selected_data_index = 0;
+	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
+
 	tensorFields.constructCurvatureTensor(viewer);
 	tensorFields.computeTensorFields();
+	tensorFields.constructVoigtVector();
+
 	tensorFields.visualizeTensorFields(viewer);
-
-
+	
 
 	//vectorFields.ConstructCurvatureTensor(viewer);
 	//vectorFields.ComputeCurvatureFields();
@@ -314,6 +167,9 @@ int main(int argc, char *argv[])
 	/////nRoSyFields.visualizeNRoSyFields(viewer);
 	///nRoSyFields.visualizeRepVectorFields(viewer);
 
+	string filename_vfields;
+	Eigen::Vector3d lambda(1, 1e-4, 0.4);
+
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
 		int selectedFace;
@@ -325,6 +181,7 @@ int main(int argc, char *argv[])
 		double yMouse;
 		int fid;
 		Eigen::Vector3f bc;
+		
 		
 
 		switch (key)

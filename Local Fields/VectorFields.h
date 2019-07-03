@@ -215,6 +215,7 @@ public:
 	void ComputeCurvatureFields();
 
 	// ITEMS FOR TESTING ONLY
+	void TEST_VECTOR(const string& meshFile);
 	void constructParallelTransport();
 	void writeBasisToFile();
 	void writeField3DToFile();

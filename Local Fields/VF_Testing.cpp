@@ -1290,6 +1290,166 @@ void VectorFields::checkB2DStructure()
 
 }
 
+// ITEMS FOR TESTING ONLY
+void VectorFields::TEST_VECTOR(const string& meshFile)
+{
+	/* ========================= PRE-PROCESS ==============================*/
+	cout << "========================= PRE-PROCESS ==============================\n";
+	readMesh(meshFile);
+	//scaleMesh();
+	//Eigen::SparseMatrix<double> ChrisSparseMat;
+	//ReadChristopherStiffnessMatrix("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Models/hodgeLaplace.txt", ChrisSparseMat);
+	//WriteSparseMatrixToMatlab(ChrisSparseMat, "hello");
+	//readArrowMesh("../LocalFields/Models/arrow.obj");
+	computeEdges();
+	computeAverageEdgeLength();
+	computeFaceCenter();
+	computeFaceNormal();
+	constructVFNeighbors();
+	//constructVFNeighborsFull();
+	//constructVFAdjacency();
+	//testAdjacency();
+	constructVertexAdjacencyMatrix();
+	constructFaceAdjacency3NMatrix();
+	constructFaceAdjacency2RingMatrix();
+	constructEVList();
+	constructEFList();
+	selectFaceToDraw(10000);
+
+	/* MATRIX CONSTRUCTIONS */
+	constructMassMatrices();
+	constructRotationMatrix();
+	constructMappingMatrix();
+
+	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
+	constructGradient3D();
+	constructGradientStar3D();
+	//constructStiffnessMatrices();
+	constructStiffnessMatrices_Implicit();
+	//loadStiffnessMatrices();
+	constructMatrixB();
+	//constructConstraints();
+	//checkB2DStructure();
+
+	//////* ====================== GLOBAL PROBLEM ====================*/
+	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
+	Eigen::Vector3d lambda;
+	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+	lambda(2) = 0.4;
+	//setupGlobalProblem(lambda);
+
+	/* ====================== LOCAL ELEMENTS ====================*/
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
+
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_Eigfields_40sup";
+
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_eigFields10_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigPatch_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_Grad_30sup";
+
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_OptAlg_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_eigFields10_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigPatch_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Grad_30sup";
+
+	/* For convergence */
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_500_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_1000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_10000_EigFields_35sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup";
+
+
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup";
+
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields_2.txt";	
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Asym_1.txt";	//random constraint
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_randConst_Sym_1.txt";	//random constraint
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_farConst_Asym_1.txt";	//fartheset point
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_xyz-axis.txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_arbFields_y-axis.txt";
+
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_0 (from center).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_1 (going left).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_2 (going down).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_3 (center and down).txt";
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_4 (around_52).txt";
+	string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_5 (from right arm_35).txt";
+
+	//testSparseMatrix();
+
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
+	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//constructSamples(numSample);
+	//constructBasis();	
+	//storeBasis(filename_basis);			// Binary, Eigen-base
+	///constructMultiBasis();
+	//retrieveBasis(filename_basis);	
+	//normalizeBasisAbs(2);
+	//setupReducedBiLaplacian();
+	//setAndSolveUserSystem(lambda);
+	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
+	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
+
+
+
+	/* Test Spectra */
+	//testSpectra();
+	//testViennaCL2();
+
+	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
+	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_25_Approx_EigenBasis_2000dim_30sup";
+	//computeEigenFields(eigsToCompute, filename_refField);	
+	//retrieveEigenFields(filename_refField);
+	//computeApproxEigenFields(eigsToCompute, filename_approxField);
+	//retrieveApproxEigenFields();
+
+	// Store the eigenfields as vector fields
+	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_4_Ref_eigFields";
+	//WriteEigenVectorToTxtFile(eigFieldFull2D.col(0), filename_vfields+"_0.txt");
+	//WriteEigenVectorToTxtFile(eigFieldFull2D.col(1), filename_vfields+"_1.txt");
+	//WriteEigenVectorToTxtFile(eigFieldFull2D.col(2), filename_vfields+"_2.txt");
+	//WriteEigenVectorToTxtFile(eigFieldFull2D.col(3), filename_vfields+"_3.txt");
+
+	//testEnergyOfLocalPatch(viewer);
+
+	//printDataForVTK();
+	//writeEigenFieldsForVTK();
+
+	/* ====================== TESTING BASIS ====================*/
+	/* _____ Projection Test ___________________________________*/
+	//constructArbitraryField();
+	//constructArbitraryField2D();
+	///WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
+	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
+	//double error; 
+	//projectionTest();
+	//convergenceTest();
+	//compareModalBasis_SameStorage();
+
+	/* _____ Vector fields design test __________________________*/
+	//vectorFieldsDesignTest();
+	//vectorFieldsDesignTest_Normalized();
+
+
+	//visualizeGlobalConstraints(viewer);
+	//measureDirichletEnergy();
+
+	/* ====================== PARALLEL TRANSPORT ====================*/
+	//computeDijkstraForParallelTransport(200, 5000);
+	//constructParallelTransport();
+	//visualizeParallelTransportPath(viewer);
+	//visualizeParallelTransport(viewer);
+}
+
 void VectorFields::constructParallelTransport()
 {
 	Eigen::Vector2d PTvalue;
