@@ -48,6 +48,7 @@ public:
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
 	void testDirichletAndLaplace();
+	void testSmoothing(igl::opengl::glfw::Viewer &viewer);
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 protected:

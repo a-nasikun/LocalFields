@@ -10,6 +10,8 @@
 #include <igl/readOBJ.h>
 #include <igl/readOFF.h>
 
+#include <Eigen/PardisoSupport>
+
 TensorFields::TensorFields()
 {
 
@@ -978,6 +980,7 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
+	/* Read + construct utilities */
 	readMesh(meshFile);
 	//scaleMesh();
 	computeEdges();
@@ -991,16 +994,54 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEFList();
 	selectFaceToDraw(5000);	
 
+	/* Construct necessary elements for tensor analysis */
 	computeFrameRotation(viewer);
 	buildStiffnessMatrix();
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
 
-	visualizeTensorFields(viewer);
+	//visualizeTensorFields(viewer);
+	
+	/* Testing the result */
+	testDirichletAndLaplace();
+	testSmoothing(viewer);
 }
 
 void TensorFields::testDirichletAndLaplace()
 {
 	double dir = voigtReps.transpose()*SF*voigtReps;
+	printf("The energy is %.10f\n", dir);
+}
+
+void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::VectorXd id(MF.rows());
+	id.setConstant(1.0);
+	double factor1 = id.transpose()*MF*id;
+	double factor2 = id.transpose()*SF*id;
+	double lambda = 0.03;
+
+	Eigen::VectorXd lap = (MFinv*SF)*voigtReps;
+
+	cout << "Set and solve for smoothing \n";
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.compute(MF + factor1 / factor2*lambda*SF);
+	
+	Eigen::MatrixXd smoothedTensor, smoothedFields;
+	Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
+	convertVoigtToTensor(smoothedVoigt, smoothedTensor);
+	constructTensorRepFields(smoothedTensor, smoothedFields);
+
+	Eigen::RowVector3d color1(0.5, 0.3, 0.3);
+	Eigen::RowVector3d color2(0.3, 0.3, 0.5);
+	double scale = 0.01;
+	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
+	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale);
+	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale);
+	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
+
+	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("The energy is %.10f\n", dir);
+
 }
