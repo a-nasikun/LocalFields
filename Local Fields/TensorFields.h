@@ -32,6 +32,9 @@ public:
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 	void buildStiffnessMatrix();
+	void convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::VectorXd& voigt);
+	void convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor);
+	void constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep);
 
 	/* TENSOR STUFF */
 	void computeTensorFields();
@@ -44,6 +47,7 @@ public:
 
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
+	void testDirichletAndLaplace();
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 protected:

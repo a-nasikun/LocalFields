@@ -478,6 +478,9 @@ void TensorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 {
 	FrameRot.resize(E.rows(), 2);
+	Eigen::Vector3d e_ij, e_ji;
+	Eigen::Vector3d e_i, e_j;		// e_i: 1st edge vector of the 1st triangle     |  e_j: 1st edge vector of the 2nd triangle
+
 	for (int ei = 0; ei < E.rows(); ei++)
 	{
 		/* Obtain two neighboring triangles TA and TB */
@@ -487,7 +490,99 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 		/* Frame basis of each TA and TB */
 		Eigen::VectorXd basisTA = V.row(F(TA, 1)) - V.row(F(TA, 0));
 		Eigen::VectorXd basisTB = V.row(F(TB, 1)) - V.row(F(TB, 0));
+		e_i = basisTA;
+		e_j = basisTB;
 
+		/* Finding the common edge direction + index of its first vertex */
+		int eMatchA, eMatchB;
+		for (int j = 0; j < 3; j++)
+		{
+			if (E(ei, 0) == F(TA, j))
+			{				
+				if (E(ei, 1) == F(TA, (j + 1) % 3))
+				{
+					e_ij = V.row(E(ei, 1)) - V.row(E(ei, 0));
+					e_ji = V.row(E(ei, 0)) - V.row(E(ei, 1));
+					eMatchA = j;
+				}
+				else
+				{
+					e_ij = V.row(E(ei, 0)) - V.row(E(ei, 1));
+					e_ji = V.row(E(ei, 1)) - V.row(E(ei, 0));
+					eMatchA = (3 + j - 1) % 3; 
+				}
+			}
+		}
+
+		/* for the 2nd triangle */
+		for (int j = 0; j < 3; j++)
+		{
+			if (E(ei, 1) == F(TB, j))
+			{
+				if (E(ei, 0) == F(TB, (j + 1) % 3))
+				{
+					eMatchB = j;
+				} 
+				else
+				{
+					eMatchB = (3 + j - 1) % 3; 
+				}
+			} 
+		}
+
+		/* Computing angle for triangle A (the first one) */
+		double dp_, angle_;
+		switch (eMatchA)
+		{
+		case 0:
+			FrameRot(ei, 0) = 0.0;
+			break;
+		case 1:
+			dp_ = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
+			angle_ = acos(dp_);
+			FrameRot(ei, 0) = angle_;
+			break;
+		case 2:
+			dp_ = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
+			angle_ = 2.0*M_PI - acos(dp_);
+			FrameRot(ei, 0) = angle_;
+			break;
+		default:
+			break;
+		}
+
+		/* Computing angle for triangle B (the second one) */
+		switch (eMatchB)
+		{
+		case 0:
+			FrameRot(ei, 1) = 0.0;
+			break;
+		case 1:
+			dp_ = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
+			angle_ = acos(dp_);
+			FrameRot(ei, 1) = angle_;
+			break;
+		case 2:
+			dp_ = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
+			angle_ = 2.0*M_PI - acos(dp_);
+			FrameRot(ei, 1) = angle_;
+			break;
+		default:
+			break;
+		}
+
+
+		/** _____________________ DEBUG PURPOSE _____________________________*/
+		//if (ei < 100 && ei%10==0)
+		if(ei==1110)
+		{
+			// first basis of the triangle frame
+			viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 0)) + e_i.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			// shared edge
+			viewer.data().add_edges(V.row(F(TA, eMatchA)), V.row(F(TA, eMatchA)) + e_ij.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			viewer.data().add_points(V.row(F(TA, eMatchA)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+			printf("Angle between them is %.5f degree \n", FrameRot(ei, 0)*180.0 / M_PI);
+		}
 	}
 }
 
@@ -553,22 +648,68 @@ void TensorFields::buildStiffnessMatrix()
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 }
 
-/* ====================== MAIN METHODS OF THE CLASS ======================*/
-void TensorFields::computeTensorFields()
+/* Converting tensor fields (each of 2x2 size) to voigt's notation vector fields (3x1) 
+** __input : tensor fields
+** __output: voigt reprsentation vector fields */
+void TensorFields::convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::VectorXd& voigt)
 {
-	tensorFields.resize(2 * F.rows(), 2);
+	voigt.resize(3 * F.rows());
 
-	cout << Tensor.block(0, 0, 20, 2);
+	for (int i = 0; i < F.rows(); i++)
+	{
+		voigt(3 * i + 0) = tensor(2 * i + 0, 0);
+		voigt(3 * i + 1) = tensor(2 * i + 1, 1);
+		voigt(3 * i + 2) = tensor(2 * i + 1, 0);
+	}
+}
 
+/* Converting voigt's notation vector fields (3x1) back to tensor fields (each of 2x2 size)
+** __input : voigt reprsentation vector fields
+** __output: tensor fields */
+void TensorFields::convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor)
+{
+	tensor.resize(2 * F.rows(), 2);
+	for (int i = 0; i < F.rows(); i++)
+	{
+		tensor(2 * i + 0, 0) = voigt(3 * i + 0);
+		tensor(2 * i + 1, 0) = voigt(3 * i + 2);
+		tensor(2 * i + 0, 1) = voigt(3 * i + 2);
+		tensor(2 * i + 0, 0) = voigt(3 * i + 1);
+	}
+}
+
+
+void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep)
+{
+	matrixRep.resize(2 * F.rows(), 2);
 	for (int i = 0; i < F.rows(); i++)
 	{
 		Eigen::Matrix2d evect_;
 		Eigen::Vector2d eval_;
-		Eigen::Matrix2d block_ = Tensor.block(2 * i, 0, 2, 2);
+		Eigen::Matrix2d block_ = tensor.block(2 * i, 0, 2, 2);
 		computeEigenExplicit(block_, eval_, evect_);
-		tensorFields.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
-		tensorFields.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
+		matrixRep.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
+		matrixRep.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
 	}
+}
+
+/* ====================== MAIN METHODS OF THE CLASS ======================*/
+void TensorFields::computeTensorFields()
+{
+	constructTensorRepFields(Tensor, tensorFields);
+	//tensorFields.resize(2 * F.rows(), 2);
+	//
+	//cout << Tensor.block(0, 0, 20, 2);
+	//
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	Eigen::Matrix2d evect_;
+	//	Eigen::Vector2d eval_;
+	//	Eigen::Matrix2d block_ = Tensor.block(2 * i, 0, 2, 2);
+	//	computeEigenExplicit(block_, eval_, evect_);
+	//	tensorFields.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
+	//	tensorFields.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
+	//}
 }
 
 void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
@@ -704,14 +845,15 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 
 void TensorFields::constructVoigtVector()
 {
-	voigtReps.resize(3 * F.rows());
-
-	for (int i = 0; i < F.rows(); i++)
-	{
-		voigtReps(3*i + 0) = Tensor(2*i+0, 0);
-		voigtReps(3*i + 1) = Tensor(2*i+1, 1);
-		voigtReps(3*i + 2) = Tensor(2*i+1, 0);
-	}
+	convertTensorToVoigt(Tensor, voigtReps);
+	//voigtReps.resize(3 * F.rows());
+	//
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	voigtReps(3*i + 0) = Tensor(2*i+0, 0);
+	//	voigtReps(3*i + 1) = Tensor(2*i+1, 1);
+	//	voigtReps(3*i + 2) = Tensor(2*i+1, 0);
+	//}
 
 }
 
@@ -856,4 +998,9 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructVoigtVector();
 
 	visualizeTensorFields(viewer);
+}
+
+void TensorFields::testDirichletAndLaplace()
+{
+	double dir = voigtReps.transpose()*SF*voigtReps;
 }
