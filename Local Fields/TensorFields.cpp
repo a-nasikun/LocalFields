@@ -588,6 +588,35 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 	}
 }
 
+void TensorFields::obtainTransformationForLaplacian(double cT, double sT, double cF, double sF, Eigen::Matrix3d& G) 
+{
+	double t1 = cT;				// First rotation matrix T: map the first basis to basis in common edge
+	double t2 = -sT;
+	double t3 = sT;
+	double t4 = cT;
+
+	double f1 = cF;				// Second rotation matrix F: map the second basis to basis in common edge
+	double f2 = -sF;
+	double f3 = sF; 
+	double f4 = cF; 
+
+	double g1 = t1*f1 + t2*f2;	// T * F' (F.transpose())
+	double g2 = t1*f3 + t2*f4;
+	double g3 = t3*f1 + t4*f2;
+	double g4 = t3*f3 + t4*f4;
+
+	G(0, 0) = g1*g1;			// Transformation matrix in voigt notation
+	G(0, 1) = g2*g2;
+	G(0, 2) = 2 * g1*g2;
+	G(1, 0) = g3*g3;
+	G(1, 1) = g4*g4;
+	G(1, 2) = 2 * g3*g4;
+	G(2, 0) = g1*g3;
+	G(2, 1) = g2*g4;
+	G(2, 2) = g1*g4 + g2*g3;
+}
+
+
 void TensorFields::buildStiffnessMatrix()
 {
 	SF.resize(3 * F.rows(), 3 * F.rows());
@@ -606,49 +635,106 @@ void TensorFields::buildStiffnessMatrix()
 		double cosSB = cos(FrameRot(ei, 1));
 		double sinSB = cos(FrameRot(ei, 1));
 
-		/* Rbar = R*A*RT | Rtil = RT*A*R | Sbar=S*A*ST | Stil=ST*A*S */
-		Eigen::Matrix3d Rbar, Rtil, Sbar, Stil;
 
-		Rbar << cosRA*cosRA, -sinRA*-sinRA, 2 * cosRA*-sinRA,
-				sinRA*sinRA,  cosRA*cosRA,  2 * sinRA*cosRA,
-				cosRA*sinRA, -sinRA*cosRA,  cosRA*cosRA - sinRA*sinRA;
-		Rtil << cosRA*cosRA,  sinRA*sinRA, 2 * cosRA*sinRA,
-			   -sinRA*-sinRA, cosRA*cosRA, 2 * -sinRA*cosRA,
-				cosRA*-sinRA, sinRA*cosRA, cosRA*cosRA - sinRA*sinRA;
+		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT 
+		** having M = R*-Id*ST
+		** then T = M*B*MT */
+		
 
-		Sbar << cosSB*cosSB, -sinSB*-sinSB, 2 * cosSB*-sinSB,
-			    sinSB*sinSB,  cosSB*cosSB,  2 * sinSB*cosSB,
-			    cosSB*sinSB, -sinSB*cosSB,  cosSB*cosSB - sinSB*sinSB;
-		Stil << cosSB*cosSB,  sinSB*sinSB, 2 * cosSB*sinSB,
-			   -sinSB*-sinSB, cosSB*cosSB, 2 * -sinSB*cosSB,
-				cosSB*-sinSB, sinSB*cosSB, cosSB*cosSB - sinSB*sinSB;
+		Eigen::Matrix3d B1toB2, B2toB1;
+		/* B1toB2 => parallel transport matrix A to B *
+		** B2toB1 => parallel transport matrix B to A */
+		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
+		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+	
 
-		/* Stiffness matrix from A (first triangle) perspective */
-		Eigen::Matrix3d RtRb = Rtil*Rbar;
-		Eigen::Matrix3d RtSb = -Rtil*Sbar;
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++)
+		/* (Combinatorial) Laplace matrix from A (first triangle) perspective */
+		for (int i = 0; i < 3; i++) 
+		{
+			STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + i, 1.0));
+			for (int j = 0; j < 3; j++) 
 			{
-				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + j, RtRb(i, j)));
-				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, RtSb(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, -B2toB1(i, j)));
 			}
 		}
 
-		/* Stiffness matrix from B (second triangle) perspective */
-		Eigen::Matrix3d StSb = Stil*Sbar;
-		Eigen::Matrix3d StRb = -Stil*Rbar;
-		for (int i = 0; i < 3; i++) {
+		/* (Combinatorial) Laplace matrix from B (second triangle) perspective */
+		for (int i = 0; i < 3; i++)
+		{
+			STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + i, 1.0));
 			for (int j = 0; j < 3; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + j, RtRb(i, j)));
-				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, RtSb(i, j)));
-			}												   
+				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, -B1toB2(i, j)));
+			}
 		}
 	}
 
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 }
+
+
+//void TensorFields::buildStiffnessMatrix_oldOne()
+//{
+//	SF.resize(3 * F.rows(), 3 * F.rows());
+//	vector<Eigen::Triplet<double>> STriplet;
+//	STriplet.reserve(4 * 9 * F.rows());
+//
+//	for (int ei = 0; ei < E.rows(); ei++)
+//	{
+//		/* Obtain two neighboring triangles TA and TB */
+//		int TA = EF(ei, 0);
+//		int TB = EF(ei, 1);
+//
+//		/* Construct the rotation matrix RA and SB */
+//		double cosRA = cos(FrameRot(ei, 0));
+//		double sinRA = cos(FrameRot(ei, 0));
+//		double cosSB = cos(FrameRot(ei, 1));
+//		double sinSB = cos(FrameRot(ei, 1));
+//
+//		/* Rbar = R*A*RT | Rtil = RT*A*R | Sbar=S*A*ST | Stil=ST*A*S */
+//		Eigen::Matrix3d Rbar, Rtil, Sbar, Stil;
+//
+//		Rbar << cosRA*cosRA, -sinRA*-sinRA, 2 * cosRA*-sinRA,
+//				sinRA*sinRA,  cosRA*cosRA,  2 * sinRA*cosRA,
+//				cosRA*sinRA, -sinRA*cosRA,  cosRA*cosRA - sinRA*sinRA;
+//		Rtil << cosRA*cosRA,  sinRA*sinRA, 2 * cosRA*sinRA,
+//			   -sinRA*-sinRA, cosRA*cosRA, 2 * -sinRA*cosRA,
+//				cosRA*-sinRA, sinRA*cosRA, cosRA*cosRA - sinRA*sinRA;
+//
+//		Sbar << cosSB*cosSB, -sinSB*-sinSB, 2 * cosSB*-sinSB,
+//			    sinSB*sinSB,  cosSB*cosSB,  2 * sinSB*cosSB,
+//			    cosSB*sinSB, -sinSB*cosSB,  cosSB*cosSB - sinSB*sinSB;
+//		Stil << cosSB*cosSB,  sinSB*sinSB, 2 * cosSB*sinSB,
+//			   -sinSB*-sinSB, cosSB*cosSB, 2 * -sinSB*cosSB,
+//				cosSB*-sinSB, sinSB*cosSB, cosSB*cosSB - sinSB*sinSB;
+//
+//		/* Stiffness matrix from A (first triangle) perspective */
+//		Eigen::Matrix3d RtRb = Rtil*Rbar;
+//		Eigen::Matrix3d RtSb = -Rtil*Sbar;
+//		for (int i = 0; i < 3; i++) {
+//			for (int j = 0; j < 3; j++)
+//			{
+//				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + j, RtRb(i, j)));
+//				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, RtSb(i, j)));
+//			}
+//		}
+//
+//		/* Stiffness matrix from B (second triangle) perspective */
+//		Eigen::Matrix3d StSb = Stil*Sbar;
+//		Eigen::Matrix3d StRb = -Stil*Rbar;
+//		for (int i = 0; i < 3; i++) {
+//			for (int j = 0; j < 3; j++)
+//			{
+//				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + j, RtRb(i, j)));
+//				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, RtSb(i, j)));
+//			}												   
+//		}
+//	}
+//
+//	/* Populate the matrix with configured triplets */
+//	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+//}
 
 /* Converting tensor fields (each of 2x2 size) to voigt's notation vector fields (3x1) 
 ** __input : tensor fields
@@ -982,7 +1068,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 {
 	/* Read + construct utilities */
 	readMesh(meshFile);
-	//scaleMesh();
+	scaleMesh();
 	computeEdges();
 	computeAverageEdgeLength();
 	computeFaceCenter();
@@ -1020,13 +1106,13 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 0.03;
+	double lambda = 0.003;
 
 	Eigen::VectorXd lap = (MFinv*SF)*voigtReps;
 
 	cout << "Set and solve for smoothing \n";
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
-	sparseSolver.compute(MF + factor1 / factor2*lambda*SF);
+	sparseSolver.compute(MF - factor1 / factor2*lambda*SF);
 	
 	Eigen::MatrixXd smoothedTensor, smoothedFields;
 	Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
@@ -1035,7 +1121,7 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
 
 	Eigen::RowVector3d color1(0.5, 0.3, 0.3);
 	Eigen::RowVector3d color2(0.3, 0.3, 0.5);
-	double scale = 0.01;
+	double scale = 1;
 	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
 	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale);
 	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale);

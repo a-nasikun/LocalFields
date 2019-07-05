@@ -31,6 +31,7 @@ public:
 	void selectFaceToDraw(const int& numFaces);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
+	void obtainTransformationForLaplacian(double cT, double sT, double cF, double sF, Eigen::Matrix3d& G);
 	void buildStiffnessMatrix();
 	void convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::VectorXd& voigt);
 	void convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor);
