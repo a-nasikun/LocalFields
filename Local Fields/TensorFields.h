@@ -34,7 +34,9 @@ public:
 	void obtainTransformationForLaplacian(double cT, double sT, double cF, double sF, Eigen::Matrix3d& G);
 	void buildStiffnessMatrix();
 	void convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::VectorXd& voigt);
+	void convertTensorToVoigt_Elementary(const Eigen::Matrix2d& tensor, Eigen::Vector3d& voigt);
 	void convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor);
+	void convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt, Eigen::Matrix2d& tensor);
 	void constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep);
 
 	/* TENSOR STUFF */
@@ -50,6 +52,7 @@ public:
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
 	void testDirichletAndLaplace();
 	void testSmoothing(igl::opengl::glfw::Viewer &viewer);
+	void testTransformation(igl::opengl::glfw::Viewer &viewer);
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 protected:

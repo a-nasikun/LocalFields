@@ -407,7 +407,8 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 void TensorFields::selectFaceToDraw(const int& numFaces)
 {
 	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
-	
+	cout << "Selecting " << numFaces << " that will be drawn\n";
+
 	if (numFaces < F.rows())
 	{
 		FaceToDraw.resize(numFaces);
@@ -479,6 +480,7 @@ void TensorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 
 void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 {
+	cout << "Computing the angles between pairs of triangles \n";
 	FrameRot.resize(E.rows(), 2);
 	Eigen::Vector3d e_ij, e_ji;
 	Eigen::Vector3d e_i, e_j;		// e_i: 1st edge vector of the 1st triangle     |  e_j: 1st edge vector of the 2nd triangle
@@ -546,7 +548,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 			break;
 		case 2:
 			dp_ = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
-			angle_ = 2.0*M_PI - acos(dp_);
+			angle_ = M_PI + acos(dp_);
 			FrameRot(ei, 0) = angle_;
 			break;
 		default:
@@ -566,7 +568,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 			break;
 		case 2:
 			dp_ = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
-			angle_ = 2.0*M_PI - acos(dp_);
+			angle_ = M_PI + acos(dp_);
 			FrameRot(ei, 1) = angle_;
 			break;
 		default:
@@ -751,6 +753,13 @@ void TensorFields::convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::Ve
 	}
 }
 
+void TensorFields::convertTensorToVoigt_Elementary(const Eigen::Matrix2d& tensor, Eigen::Vector3d& voigt)
+{	
+	voigt(0) = tensor(0, 0);
+	voigt(1) = tensor(1, 1);
+	voigt(2) = tensor(1, 0);
+}
+
 /* Converting voigt's notation vector fields (3x1) back to tensor fields (each of 2x2 size)
 ** __input : voigt reprsentation vector fields
 ** __output: tensor fields */
@@ -762,10 +771,17 @@ void TensorFields::convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::Mat
 		tensor(2 * i + 0, 0) = voigt(3 * i + 0);
 		tensor(2 * i + 1, 0) = voigt(3 * i + 2);
 		tensor(2 * i + 0, 1) = voigt(3 * i + 2);
-		tensor(2 * i + 0, 0) = voigt(3 * i + 1);
+		tensor(2 * i + 1, 1) = voigt(3 * i + 1);
 	}
 }
 
+void TensorFields::convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt, Eigen::Matrix2d& tensor)
+{
+	tensor(0, 0) = voigt(0);
+	tensor(1, 0) = voigt(2);
+	tensor(0, 1) = voigt(2);
+	tensor(1, 1) = voigt(1);
+}
 
 void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep)
 {
@@ -784,6 +800,7 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 /* ====================== MAIN METHODS OF THE CLASS ======================*/
 void TensorFields::computeTensorFields()
 {
+	cout << "Computing 2 vector fields to represent tensor (eigen problem). \n"; 
 	constructTensorRepFields(Tensor, tensorFields);
 	//tensorFields.resize(2 * F.rows(), 2);
 	//
@@ -933,6 +950,7 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 
 void TensorFields::constructVoigtVector()
 {
+	cout << "Representing tensor in voigt notation\n";
 	convertTensorToVoigt(Tensor, voigtReps);
 	//voigtReps.resize(3 * F.rows());
 	//
@@ -1055,7 +1073,7 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
 	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
 	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
 
-	double scale = 0.01;
+	double scale = 1;
 	visualize2Dfields(viewer,  tensorFields.col(0), color1, scale);
 	visualize2Dfields(viewer, -tensorFields.col(0), color1, scale);
 	visualize2Dfields(viewer,  tensorFields.col(1), color2, scale);
@@ -1081,17 +1099,19 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	selectFaceToDraw(5000);	
 
 	/* Construct necessary elements for tensor analysis */
-	computeFrameRotation(viewer);
-	buildStiffnessMatrix();
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-
 	//visualizeTensorFields(viewer);
+
+	computeFrameRotation(viewer);
+	testTransformation(viewer);
+	///buildStiffnessMatrix();
+	///
 	
 	/* Testing the result */
-	testDirichletAndLaplace();
-	testSmoothing(viewer);
+	///testDirichletAndLaplace();
+	///testSmoothing(viewer);
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -1130,4 +1150,54 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
 	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
 	printf("The energy is %.10f\n", dir);
 
+}
+
+void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Test on transformation \n";
+	const int ei = 0;
+
+	/* Obtain two neighboring triangles TA and TB */
+	int TA = EF(ei, 0);
+	int TB = EF(ei, 1);
+
+	/* Drawing the edges: first edge of TA, common edge, first edge of TB */
+	viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 1)), Eigen::RowVector3d(0.8, 0.1, 0.1));
+	viewer.data().add_edges(V.row(E(ei,0)),  V.row(E(ei,1)),  Eigen::RowVector3d(0.1, 0.1, 0.1));
+	viewer.data().add_edges(V.row(F(TB, 0)), V.row(F(TB, 1)), Eigen::RowVector3d(0.1, 0.1, 0.8));
+	cout << "___Angle between TA and the shared edge is: " << FrameRot(ei, 0)*180.0/M_PI << endl;
+	cout << "___Angle between TB and the shared edge is: " << FrameRot(ei, 1)*180.0/M_PI << endl;
+
+	/* Construct the rotation matrix RA and SB */
+	double cosRA = cos(FrameRot(ei, 0));
+	double sinRA = cos(FrameRot(ei, 0));
+	double cosSB = cos(FrameRot(ei, 1));
+	double sinSB = cos(FrameRot(ei, 1));
+
+	cout << "___Transforming back and forth\n";
+	/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT
+	** having M = R*-Id*ST
+	** then T = M*B*MT */
+	Eigen::Matrix3d B1toB2, B2toB1;
+	/* B1toB2 => parallel transport matrix A to B *
+	** B2toB1 => parallel transport matrix B to A */
+	obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
+	obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+
+	cout << "___Testing on a random matrix \n";
+	Eigen::Matrix2d A1; A1 << 1.0, 2.0, 2.0, -3.0;
+	Eigen::Matrix2d A1back;
+	Eigen::Vector3d a1, a1inB2, a1inB1fromB2;
+	cout << "__A1 was: \n" << A1 << endl << endl;
+	cout << "__convert to voigt, becomes: \n";
+	convertTensorToVoigt_Elementary(A1, a1);
+	cout << a1 << endl;
+	cout << "__transfer a1 to B2\n";
+	a1inB2 = B1toB2*a1;
+	cout << "__transfer a1 back to B1: \n";
+	a1inB1fromB2 = B2toB1*a1inB2;
+	cout << a1inB1fromB2 << endl;
+	cout << "__convert a1 back to a matrix \n";
+	convertVoigtToTensor_Elementary(a1inB1fromB2, A1back);
+	cout << "A1 after going to B2 and back to B1 is now: \n" << A1back << endl << endl;
 }
