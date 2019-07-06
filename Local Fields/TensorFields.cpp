@@ -648,25 +648,24 @@ void TensorFields::buildStiffnessMatrix()
 		** B2toB1 => parallel transport matrix B to A */
 		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
 		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
-	
 
 		/* (Combinatorial) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 3; i++) 
 		{
-			STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + i, 1.0));
+			STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + i, 1.0 / 3.0));
 			for (int j = 0; j < 3; j++) 
 			{
-				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, -B2toB1(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, -B2toB1(i, j) / 3.0));
 			}
 		}
 
 		/* (Combinatorial) Laplace matrix from B (second triangle) perspective */
 		for (int i = 0; i < 3; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + i, 1.0));
+			STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + i, 1.0 / 3.0));
 			for (int j = 0; j < 3; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, -B1toB2(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, -B1toB2(i, j) / 3.0));
 			}
 		}
 	}
@@ -832,7 +831,7 @@ void TensorFields::constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	Eigen::Matrix2d mT2D;
 
 	Tensor.resize(2 * F.rows(), 2);
-	const double scale = avgEdgeLength;
+	//const double scale = avgEdgeLength;
 
 	cout << "__Computing curvature tensor\n";
 	/* Loop over all faces */
@@ -1073,11 +1072,25 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
 	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
 	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
 
-	double scale = 1;
+	//double scale = 0.01;
 	visualize2Dfields(viewer,  tensorFields.col(0), color1, scale);
 	visualize2Dfields(viewer, -tensorFields.col(0), color1, scale);
 	visualize2Dfields(viewer,  tensorFields.col(1), color2, scale);
 	visualize2Dfields(viewer, -tensorFields.col(1), color2, scale);
+}
+
+void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
+	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	Eigen::MatrixXd smoothedFields;
+	constructTensorRepFields(smoothedTensor, smoothedFields);
+
+	//double scale = 0.01;
+	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
+	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale);
+	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale);
+	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
 }
 
 
@@ -1105,19 +1118,20 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizeTensorFields(viewer);
 
 	computeFrameRotation(viewer);
-	testTransformation(viewer);
-	///buildStiffnessMatrix();
-	///
-	
+	///testTransformation(viewer);
+	buildStiffnessMatrix();
+		
 	/* Testing the result */
-	///testDirichletAndLaplace();
-	///testSmoothing(viewer);
+	testDirichletAndLaplace();
+	testSmoothing(viewer);
 }
 
 void TensorFields::testDirichletAndLaplace()
 {
 	double dir = voigtReps.transpose()*SF*voigtReps;
 	printf("The energy is %.10f\n", dir);
+	double l2 = voigtReps.transpose()*MF*voigtReps;
+	printf("The energy is %.10f\n", MF);
 }
 
 void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
@@ -1126,26 +1140,21 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 0.003;
+	double lambda = 0.25;
 
 	Eigen::VectorXd lap = (MFinv*SF)*voigtReps;
 
 	cout << "Set and solve for smoothing \n";
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
-	sparseSolver.compute(MF - factor1 / factor2*lambda*SF);
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//sparseSolver.compute(MF - factor1 / factor2*lambda*SF);
+	//sparseSolver.compute(MF - lambda*SF);
 	
-	Eigen::MatrixXd smoothedTensor, smoothedFields;
-	Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
+	Eigen::MatrixXd smoothedFields;
+	//Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
+	Eigen::VectorXd smoothedVoigt = voigtReps - lambda*SF*voigtReps;
 	convertVoigtToTensor(smoothedVoigt, smoothedTensor);
-	constructTensorRepFields(smoothedTensor, smoothedFields);
-
-	Eigen::RowVector3d color1(0.5, 0.3, 0.3);
-	Eigen::RowVector3d color2(0.3, 0.3, 0.5);
-	double scale = 1;
-	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
-	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale);
-	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale);
-	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
+	
+	visualizeSmoothedTensorFields(viewer);
 
 	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
 	printf("The energy is %.10f\n", dir);
@@ -1154,8 +1163,10 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
 
 void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
 {
-	cout << "Test on transformation \n";
-	const int ei = 0;
+	cout << "Test on transformation on ";
+	srand(time(NULL));
+	const int ei = rand() % E.rows();
+	cout << " edge " << ei << endl; 
 
 	/* Obtain two neighboring triangles TA and TB */
 	int TA = EF(ei, 0);
@@ -1170,9 +1181,15 @@ void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
 
 	/* Construct the rotation matrix RA and SB */
 	double cosRA = cos(FrameRot(ei, 0));
-	double sinRA = cos(FrameRot(ei, 0));
+	double sinRA = sin(FrameRot(ei, 0));
 	double cosSB = cos(FrameRot(ei, 1));
-	double sinSB = cos(FrameRot(ei, 1));
+	double sinSB = sin(FrameRot(ei, 1));
+
+	/* Matrix representation */
+	Eigen::Matrix2d RA; RA << cosRA, -sinRA, sinRA, cosRA;
+	Eigen::Matrix2d SB; SB << cosSB, -sinSB, sinSB, cosSB;
+
+	cout << "RA\n: " << RA << endl << endl << "SB:\n" << SB << endl << endl; 
 
 	cout << "___Transforming back and forth\n";
 	/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT
@@ -1184,8 +1201,16 @@ void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
 	obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
 	obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
 
+	cout << "___Check the transformation in voigt: \n";
+	cout << "_____ B2 to B1: \n" << B2toB1 << endl;
+	cout << "_____ (B2 to B1)-T \n" << B2toB1.inverse().transpose() << endl; 
+	cout << "_____ B1 to B2: \n" << B1toB2 << endl << endl;
+
 	cout << "___Testing on a random matrix \n";
-	Eigen::Matrix2d A1; A1 << 1.0, 2.0, 2.0, -3.0;
+	double aa = rand() % 10 - 5;
+	double ab = rand() % 10 - 5;
+	double ac = rand() % 10 - 5;
+	Eigen::Matrix2d A1; A1 << aa, ab, ab, ac;
 	Eigen::Matrix2d A1back;
 	Eigen::Vector3d a1, a1inB2, a1inB1fromB2;
 	cout << "__A1 was: \n" << A1 << endl << endl;
@@ -1194,9 +1219,15 @@ void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
 	cout << a1 << endl;
 	cout << "__transfer a1 to B2\n";
 	a1inB2 = B1toB2*a1;
+	cout << a1inB2 << endl; 
+	cout << "____Operation in matrix: S * R' * A * R * S'\n";
+	Eigen::Matrix2d A1inB2 = SB * RA.transpose() * A1 * RA * SB.transpose();
+	cout << A1inB2 << endl; 
 	cout << "__transfer a1 back to B1: \n";
 	a1inB1fromB2 = B2toB1*a1inB2;
 	cout << a1inB1fromB2 << endl;
+	cout << "____Operation in matrix: R * S' * B * S * R'\n";
+	cout << RA * SB.transpose() * A1inB2 * SB * RA.transpose() << endl;
 	cout << "__convert a1 back to a matrix \n";
 	convertVoigtToTensor_Elementary(a1inB1fromB2, A1back);
 	cout << "A1 after going to B2 and back to B1 is now: \n" << A1back << endl << endl;

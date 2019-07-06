@@ -47,6 +47,7 @@ public:
 	/* VISUALIZATION */
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeTensorFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer);
 
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
@@ -57,6 +58,7 @@ public:
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 protected:
 	Eigen::MatrixXd					Tensor, tensorFields;	// 2-by-2 tensor and the representing vectors (using principal curvatures)
+	Eigen::MatrixXd					smoothedTensor;			// Smoothed tensor, application;
 	Eigen::VectorXd					voigtReps;				// a 3-by-1 representation of 2-by-2 tensor
 	Eigen::MatrixXd					V, FC, NF;				// Vertex, Face-center, and Face-normals
 	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
@@ -69,6 +71,7 @@ protected:
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
+	double							scale = 10;
 
 private:
 
