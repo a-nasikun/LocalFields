@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	///string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
@@ -64,14 +64,14 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 
 	/* ====================== VECTOR FIELDS  ====================*/
 	cout << "\n========================= VECTOR FIELDS =============================\n";
 	VectorFields vectorFields;
-	//vectorFields.TEST_VECTOR(viewer, meshFile);
+	vectorFields.TEST_VECTOR(viewer, meshFile);
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	//Eigen::VectorXd v_in = vectorFields.arbField2D;
@@ -83,9 +83,11 @@ int main(int argc, char *argv[])
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
 	cout << "\n========================= TENSOR FIELDS =============================\n";
 	TensorFields tensorFields;
-	tensorFields.TEST_TENSOR(viewer, meshFile);
+	//tensorFields.TEST_TENSOR(viewer, meshFile);
+	//tensorFields.getVF(V, F);
 
-	tensorFields.getVF(V, F);
+	vectorFields.getVF(V, F);
+
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
 	viewer.data().set_mesh(V, F);

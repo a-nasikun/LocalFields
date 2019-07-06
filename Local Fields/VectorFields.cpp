@@ -2200,18 +2200,18 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 25000 };
+	vector<int> sampleSizeVect{ 50 };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
-	numSupport = 160.0;
+	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
 	{	
 
 		constructSamples(sample);
 		
-		///constructBasis();
-		loadAndConstructBasis();		
+		constructBasis();
+		///loadAndConstructBasis();		
 		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-		storeBasis(filename_basis);		
+		//storeBasis(filename_basis);		
 	}
 }
 
@@ -2333,6 +2333,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
 			//printf("Starting engine %d for element %d\n", tid, id);
+			if(id%((int)(Sample.size()/4))==0)
+				cout << "[" << id << "] Constructing local eigen problem\n ";
 			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
@@ -2389,7 +2391,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 
-	bool writeBasisCompsToFile = true;
+	bool writeBasisCompsToFile = false;
 	if(writeBasisCompsToFile)
 		writeBasisElementsToFile(UiTriplet, 2);
 	else 		
@@ -2413,12 +2415,13 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	printf("....[0] Constructing internal elements: %.8f seconds.\n", durations[0].count());
 	printf("....[1] Constructing boundary: %.8f seconds.\n", durations[1].count());
 	printf("....[2] Constructing local subdomains: %.8f seconds.\n", durations[2].count());
+	printf("....==> Total SET UP: %.8f\n", durations[0].count() + durations[1].count() + durations[2].count());
 	printf("....[3] Solving local eigenvalue problems: %.8f seconds.\n", durations[3].count());
 
 	// Information about Basis
 	printf("> Basis Structure information \n");
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
-	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
+	printf("....NNZ=%d, per row = %.4f\n", Basis.nonZeros(),  (double)Basis.nonZeros() / (double)Basis.rows());
 }
 
 void VectorFields::constructBasis_OptProblem()

@@ -1391,7 +1391,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructSamples(numSample);
 	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
-	///constructMultiBasis();
+	constructMultiBasis();
 	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//setupReducedBiLaplacian();
@@ -1432,7 +1432,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	//convergenceTest();
+	///convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* _____ Vector fields design test __________________________*/
