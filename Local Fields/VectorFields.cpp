@@ -2200,7 +2200,7 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 50 };
+	vector<int> sampleSizeVect{ 25000  };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
