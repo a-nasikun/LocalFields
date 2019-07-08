@@ -133,6 +133,7 @@ public:
 	void constructHardConstraintsWithSingularitiesWithGauss();
 	void constructSoftConstraints();
 	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
+	void measureSoftConstraintError(const Eigen::Vector3d& lambda);
 	void projectCurvesToFrame();
 	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);

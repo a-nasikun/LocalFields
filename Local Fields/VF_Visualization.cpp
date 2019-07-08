@@ -131,8 +131,8 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 {
 	//viewer.data().clear();
 	//viewer.data().set_mesh(V, F);
-	//Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
-	Eigen::RowVector3d color = Eigen::RowVector3d(0.53, 0.95, 1.0);
+	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);	
+	//Eigen::RowVector3d color = Eigen::RowVector3d(0.53, 0.95, 1.0);
 	//Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.9, 0.0);
 
 	visualize2Dfields(viewer, Xf, color, 3.0, false);
@@ -147,21 +147,6 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	t1 = chrono::high_resolution_clock::now();
 	//cout << "> Adding edges... ";
 
-//<<<<<<< HEAD
-//	for (int i = 0; i < F.rows(); i++)
-//	{
-//		Eigen::RowVector3d c;
-//		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-//		viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, color);
-//	}
-//}
-//void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
-//{
-//	/* Some constants for arrow drawing */
-//	const double HEAD_RATIO = 5.0;
-//	const double EDGE_RATIO = 10.0;
-//
-//=======
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double EDGE_RATIO = scale;
@@ -246,7 +231,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 		Head2Fields.rowwise().normalize();
 	}
 
-	/* Draw the fields */
+	/* Draw the fields in MATRIX format (much faster then looping over each face and draw them) */
 	viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
 	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
 	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
@@ -451,8 +436,8 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
-	visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
-	//visualize2Dfields(viewer, XFullDim, color, 3, false);
+	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
+	visualize2Dfields(viewer, XFullDim, color, 3, false);
 	//visualize2Dfields(viewer, XFullDim, color, 2, true);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }

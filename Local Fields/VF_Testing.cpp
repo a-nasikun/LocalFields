@@ -1341,22 +1341,22 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructStiffnessMatrices_Implicit();
 	//loadStiffnessMatrices();
 	constructMatrixB();
-	//constructConstraints();
+	constructConstraints();
 	//checkB2DStructure();
 
 	//////* ====================== GLOBAL PROBLEM ====================*/
 	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	Eigen::Vector3d lambda;
-	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	lambda(0) = 1; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
-	lambda(2) = 0.4;
+	lambda(2) = 0.5;
 	//setupGlobalProblem(lambda);
 
 	/* ====================== LOCAL ELEMENTS ====================*/
-	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_OptAlg_30sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigFields_40sup";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_Eigfields_40sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_Eigfields_40sup";
 
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_OptAlg_30sup";
@@ -1404,8 +1404,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructSamples(numSample);
 	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
-	constructMultiBasis();
-	//retrieveBasis(filename_basis);	
+	//constructMultiBasis();
+	retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//setupReducedBiLaplacian();
 	//setAndSolveUserSystem(lambda);
@@ -1465,28 +1465,29 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/* ==================== VISUALIZATION ======================== */
 	/* GLOBAL  */
-	//.visualizeApproximatedFields(viewer);
-	//.visualizeGlobalConstraints(viewer);
-	//.visualizeSingularitiesConstraints(viewer);
-	//.visualizeSharedEdges(viewer);
+	//visualizeApproximatedFields(viewer);
+	//visualizeGlobalConstraints(viewer);
+	//visualizeSingularitiesConstraints(viewer);
+	//visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
-	//.visualizeApproxResult(viewer);	
-	//.visualizeUserConstraints(viewer);
-	//.visualizeSamples(viewer);
-	//.visualizeSingularitiesConstraints(viewer);
+	//visualizeApproxResult(viewer);	
+	//visualizeUserConstraints(viewer);
+	//visualizeSamples(viewer);
+	//visualizeSingularitiesConstraints(viewer);
 
 	/* VISUALIZATION FOR TESTING PURPOSE */
-	//.visualizeNeighboringRings(viewer);
-	//.visualizeDijkstraFace(viewer);
-	//.visualizeArbField(viewer);
-	//.visualizeVertexFacesNeighbors(viewer, 0);
-	//.testEdgesAddition(viewer);
-	//.visualizePatchDijkstra(viewer);
+	//visualizeNeighboringRings(viewer);
+	//visualizeDijkstraFace(viewer);
+	//visualizeArbField(viewer);
+	//visualizeVertexFacesNeighbors(viewer, 0);
+	//testEdgesAddition(viewer);
+	//visualizePatchDijkstra(viewer);
 
 	/* SOFT CONSTRAINTS */
-	//.visualizeCurveConstraints(viewer);
-	///.visualizeSoftConstraints(viewer);
+	visualizeCurveConstraints(viewer);
+	visualizeSoftConstraints(viewer);
+	measureSoftConstraintError(lambda);
 
 
 	/* MEASURE ACCURACY */
@@ -1833,7 +1834,7 @@ void VectorFields::testGradients()
 	Eigen::VectorXd diff = gV3D - gE3D;
 	double l2norm = diff.transpose()*MF3D*diff;
 	double ref = gV3D.transpose()*MF3D*gV3D;
-	l2norm = l2norm / ref;
+	l2norm = sqrt(l2norm / ref);
 	printf(">>>The l2norm diff is %.10f\n", l2norm);
 
 	//cout << "grad Vertex \n " << gV3D.block(0, 0, 30, 1) << endl; 

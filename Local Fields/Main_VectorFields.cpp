@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/272_bimba_clean_1Mf.obj";	
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	///nRoSyFields.visualizeRepVectorFields(viewer);
 
 	string filename_vfields;
-	Eigen::Vector3d lambda(1, 1e-4, 0.4);
+	Eigen::Vector3d lambda(1, 1e-4, 0.9);
 
 	bool showSmoothed = false; 
 
@@ -150,18 +150,18 @@ int main(int argc, char *argv[])
 			break;
 		case '`':			
 			//vectorFields.visualizeSubdomain(viewer);
-			vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 3.0, false);			
-			//vectorFields.visualizeSoftConstraints(viewer);
+			///vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 3.0, false);			
+			vectorFields.visualizeSoftConstraints(viewer);
 			break;
 		case '1':
 			//vectorFields.visualizeSubdomain(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
 			vectorFields.visualizeApproximatedFields(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case '2':
-			vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-			///vectorFields.visualizeApproxResult(viewer);
+			///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
+			vectorFields.visualizeApproxResult(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//evenSpaceField = !evenSpaceField; 
 			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 			cout << "\n========================= GLOBAL PROBLEM =============================\n";
 			vectorFields.setupGlobalProblem(lambda);
 			vectorFields.visualizeApproximatedFields(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
 			break;
 		case 's':
 		case 'S':
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 			vectorFields.setAndSolveUserSystem(lambda);
 			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
+			//vectorFields.visualizeGlobalConstraints(viewer);
 			
 			break; 
 		case 'Z':
@@ -397,9 +397,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 2.0f; 
 
-	//return viewer.launch();
+	return viewer.launch();
 
 	/* Trick for remote desktop */
-	getchar();
-	return 1;
+	//getchar();
+	//return 1;
 }

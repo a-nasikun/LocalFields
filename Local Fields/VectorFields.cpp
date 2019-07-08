@@ -17,8 +17,8 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
-	//constructSoftConstraints();
+	///constructRandomHardConstraints();
+	constructSoftConstraints();
 	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
@@ -1194,6 +1194,32 @@ void VectorFields::constructCurvesAsConstraints(const int& init, const int& end,
 	curve.shrink_to_fit();
 }
 
+void VectorFields::measureSoftConstraintError(const Eigen::Vector3d& lambda)
+{
+	setupGlobalProblem(lambda);
+	setAndSolveUserSystem(lambda);
+
+	Eigen::VectorXd diff = (Xf - XFullDim);
+	double error = diff.transpose()*MF2D*diff;
+	double ref = Xf.transpose()*MF2D*Xf;
+	double relError = sqrt(error / ref);
+	cout << "The l2-norm error is " << relError << endl; 
+	cout << "__The rel error is: " << error / ref << endl; 
+	cout << "__The apprxo length is: " << XFullDim.transpose()*MF2D*XFullDim << endl;
+	cout << "__The difference length is: " << error << endl;
+	cout << "__The reference length is: " << ref << endl;
+
+	error = diff.transpose()*SF2DAsym*diff;
+	ref = Xf.transpose()*SF2DAsym*Xf;
+	relError = sqrt(error / ref);
+	cout << "The rel. energy error is " << relError << endl;
+	cout << "__The rel energy is: " << error / ref << endl;
+	cout << "__The apprxo energy is: " << XFullDim.transpose()*SF2DAsym*XFullDim << endl;
+	cout << "__The difference energy is: " << error << endl;
+	cout << "__The reference energy is: " << ref << endl;
+	cout << "__The apprxo energy is: " << XFullDim.transpose()*SF2DAsym*XFullDim << endl;
+}
+
 void VectorFields::projectCurvesToFrame()
 {
 	Eigen::MatrixXd ALoc(3, 2);
@@ -1838,18 +1864,21 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	Eigen::SparseMatrix<double>		tempB2D = B2D;
 	B2D = B2DAsym;
 
+	// lambda 0: dirichlet
+	// lambda 1: bilaplacian
+	// lambda 2: (soft-) constraint	
 
 	constructConstraints();
-	setupRHSGlobalProblemMapped(g, h, vEst, b);
-	setupLHSGlobalProblemMapped(A_LHS);
-	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	//setupRHSGlobalProblemMapped(g, h, vEst, b);
+	//setupLHSGlobalProblemMapped(A_LHS);
+	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 
 	arbField2D = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
-	//setupRHSGlobalProblemSoftConstraints(lambda, b);
-	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	setupRHSGlobalProblemSoftConstraints(lambda, b);
+	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 
 	B2D = tempB2D;
 }
@@ -1925,7 +1954,10 @@ void VectorFields::setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& l
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Setting up the RHS of the system... ";
 
-	b = lambda(2) * C.transpose() * c;
+	Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
+
+	b = lambda(2) * C.transpose() * Mconst * c;
+	//b = lambda(2) * C.transpose() * c;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -1942,9 +1974,12 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& l
 
 	//const double lambda_1 = 10000 / B2D.coeff(0, 0);
 
+	Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
 	
-	A_LHS = lambda(0)*SF2D + lambda(1)*B2D + lambda(2)*C.transpose()*C;
-	//A_LHS = lambda(0)*SF2D + lambda_1*B2D + lambda(2)*C.transpose()*C;
+	//A_LHS = lambda(0)*SF2DAsym + lambda(1)*B2D + lambda(2)*C.transpose()*C;
+	A_LHS = lambda(0)*SF2DAsym + lambda(2)*C.transpose()*Mconst*C;
+	//A_LHS = lambda(0)*SF2DAsym + lambda(2)*C.transpose()*C;
+	//A_LHS = lambda(0)*SF2DAsym + lambda_1*B2D + lambda(2)*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -3359,9 +3394,9 @@ void VectorFields::getUserConstraints()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Obtaining user constraints ";
 
-	constructConstraints();
+	//constructConstraints();
 
-	userConstraints = globalConstraints; 
+	//userConstraints = globalConstraints; 
 	CBar			= C * Basis;
 	cBar			= c;
 
@@ -3369,8 +3404,8 @@ void VectorFields::getUserConstraints()
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 
-	printf(".... C_Lobal = %dx%d\n", CBar.rows(), CBar.cols());
-	printf(".... c_Lobal = %dx%d\n", cBar.rows(), cBar.cols());
+	printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
+	printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
 }
 
 void VectorFields::setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)
@@ -3439,7 +3474,14 @@ void VectorFields::setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing RHS (mapped)...";
 
-	bBar = lambda(2)*CBar.transpose() * cBar; 
+	/* Mass matrix of the selected faces (on constraints) */
+	Eigen::SparseMatrix<double> Mconst =C*MF2D*C.transpose();
+
+	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
+	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());
+
+	//bBar = lambda(2)*CBar.transpose() * cBar; 
+	bBar = lambda(2)*CBar.transpose() * Mconst * cBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3454,15 +3496,23 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing LHS (mapped)...";
 
-	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2D * Basis; 
-	Eigen::SparseMatrix<double> B2DBar = Basis.transpose() * B2D * Basis;
+	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF2DAsym * Basis;
+	//Eigen::SparseMatrix<double> B2DBar = Basis.transpose() * B2D * Basis;
 	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
 
 
 	//const double lambda_1 = 10000 / B2D.coeff(0, 0);
-	cout << "lambda_1 " << lambda(1) << endl;
+	cout << "lambda_2 " << lambda(2) << endl;
 
-	A_LHSBar = lambda(0)*SF2DBar +  lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
+	/* Local matrix */
+	Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
+
+	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
+	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());
+
+	//A_LHSBar = lambda(0)*SF2DBar +  lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
+	A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*Mconst*CBar;
+	//A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*CBar;
 	//A_LHSBar = lambda(0)*SF2DBar + lambda_1*B2DBar + lambda(2)*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
