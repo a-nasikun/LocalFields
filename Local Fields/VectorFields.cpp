@@ -2235,7 +2235,7 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 25000  };
+	vector<int> sampleSizeVect{ 500, 1000, 2500  };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
@@ -2245,8 +2245,8 @@ void VectorFields::constructMultiBasis()
 		
 		constructBasis();
 		///loadAndConstructBasis();		
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-		//storeBasis(filename_basis);		
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		storeBasis(filename_basis);		
 	}
 }
 
