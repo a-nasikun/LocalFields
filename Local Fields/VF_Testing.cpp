@@ -1165,7 +1165,7 @@ void VectorFields::convergenceTest()
 	vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
 	//vector<int> subspdim{ 50000 };
 	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_" + to_string(i) + "_Eigfields_40sup");
+		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_40sup");
 	}
 
 	/* For the projection tests */
@@ -1445,7 +1445,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	convergenceTest();
+	///convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* _____ Vector fields design test __________________________*/
