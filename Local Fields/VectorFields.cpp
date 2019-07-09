@@ -17,8 +17,8 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	///constructRandomHardConstraints();
-	constructSoftConstraints();
+	constructRandomHardConstraints();
+	///constructSoftConstraints();
 	//constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
@@ -187,12 +187,12 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
+	const bool readFromFile = false;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
-	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -1869,16 +1869,16 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	// lambda 2: (soft-) constraint	
 
 	constructConstraints();
-	//setupRHSGlobalProblemMapped(g, h, vEst, b);
-	//setupLHSGlobalProblemMapped(A_LHS);
-	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	setupRHSGlobalProblemMapped(g, h, vEst, b);
+	setupLHSGlobalProblemMapped(A_LHS);
+	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 
 	arbField2D = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
-	setupRHSGlobalProblemSoftConstraints(lambda, b);
-	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	//setupRHSGlobalProblemSoftConstraints(lambda, b);
+	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 
 	B2D = tempB2D;
 }

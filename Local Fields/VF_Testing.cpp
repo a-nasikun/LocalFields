@@ -994,156 +994,156 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 
-	printf("Time for computing reduced laplacian: %.10f\n", duration.count());
-	printf("__non-zero entries: %d \n", SFRed.nonZeros());
-	printf("__non-zero per-row: %.10f \n", (double) SFRed.nonZeros() /  (double) Basis.cols());
-	printf("__non-zero percentrage: %.10f \n", 100.0 * (double) SFRed.nonZeros() / (double) (SFRed.rows()*SFRed.cols()));
-	printf("__Basis size=%dx%d \n", Basis.rows(), Basis.cols());
+	//printf("Time for computing reduced laplacian: %.10f\n", duration.count());
+	//printf("__non-zero entries: %d \n", SFRed.nonZeros());
+	//printf("__non-zero per-row: %.10f \n", (double) SFRed.nonZeros() /  (double) Basis.cols());
+	//printf("__non-zero percentrage: %.10f \n", 100.0 * (double) SFRed.nonZeros() / (double) (SFRed.rows()*SFRed.cols()));
+	//printf("__Basis size=%dx%d \n", Basis.rows(), Basis.cols());
 
 	
-	//if (projTestWithReg)
-	//{
-	//	for (int i = 0; i < NUM_SOLVER; i++)
-	//	{
-	//		double l2_ = 25 * (i + 1);
-	//		double	lambda = l2_ * en1 / en2;
-	//		//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
-	//		//Eigen::SparseMatrix<double> BRed = Basis.transpose()*BRef*Basis;
-	//
-	//		cout << "____[" << i << "] Factorizing the sparse matrix (M+a*S) (Ref and Red) \n";
-	//		BRef[i] = MF2D + lambda*SF2DAsym;
-	//		BRed_Sp[i] = Basis.transpose()*BRef[i] * Basis;
-	//		sparseSolver_WR_Ref[i].analyzePattern(BRef[i]);
-	//		sparseSolver_WR_Ref[i].factorize(BRef[i]);
-	//		sparseSolver_WR_Ref[i].pardisoParameterArray()[1] = 0;
-	//		sparseSolver_WR_Ref[i].pardisoParameterArray()[59] = 2;
-	//		sparseSolver_WR_Red[i].analyzePattern(BRed_Sp[i]);
-	//		sparseSolver_WR_Red[i].factorize(BRed_Sp[i]);
-	//		sparseSolver_WR_Red[i].pardisoParameterArray()[1] = 0;
-	//		sparseSolver_WR_Red[i].pardisoParameterArray()[59] = 2;
-	//	}
-	//}
-	//
-	//if (useEigenBasis)
-	//{
-	//	cout << "Reading eigenbasis (if possible...) \n";
-	//	//ReadDenseMatrixFromMatlab(EigenBasis2, eigBasisFile2, 2*F.rows(), 267);
-	//	//ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 2*F.rows(), 40);
-	//	ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 2 * F.rows(), 243);
-	//
-	//	// same storage
-	//	//EigenBasis.resize(EigenBasisFull.rows(), 40);
-	//	//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
-	//	//EigenBasis = EigenBasisFull;
-	//	// same performance
-	//	//cout << "Alloc. memory for eigen basis\n";
-	//	//EigenBasis.resize(EigenBasisFull.rows(), EigenBasisFull.cols() + EigenBasis2.cols());
-	//	//cout << "Combining to eigen basis\n";
-	//	//EigenBasis.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols()) = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols());
-	//	//EigenBasis.block(0, EigenBasisFull.cols(), EigenBasis2.rows(), EigenBasis2.cols()) = EigenBasis2.block(0, 0, EigenBasis2.rows(), EigenBasis2.cols());
-	//
-	//	// Free memory manually
-	//	EigenBasisFull.resize(0, 0);
-	//	EigenBasis2.resize(0, 0);
-	//	
-	//
-	//	B_MB = EigenBasis.transpose()*MF2D*EigenBasis;
-	//	cout << "Factorizing using eigen basis\n";
-	//	denseSolver_NR.compute(B_MB);
-	//
-	//	/* The one with regularizer*/
-	//	if (projTestWithReg)
-	//	{
-	//		for (int i = 0; i < NUM_SOLVER; i++)
-	//		{
-	//			double l2_ = 25 * (i + 1);
-	//			double	lambda = l2_ * en1 / en2;
-	//			//BRef[i] = MF2D + lambda*SF2DAsym;
-	//			BRed_Dn[i] = EigenBasis.transpose()*BRef[i] * EigenBasis;
-	//
-	//			cout << "____[" << i << "] Factorizing the dense matrix (M+a*S) (Red) \n";
-	//			denseSolver_WR_Red[i].compute(BRed_Dn[i]);
-	//		}
-	//	}
-	//}
-	//
-	///* Fields and perturbed Fields */
-	//string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_DesignedFields";
-	//string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_PerturbedFields";
-	//if (readDesFieldsFromFile) {
-	//	ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
-	//}
-	//if (readPertFieldsFromFile) {
-	//	ReadDenseMatrixFromMatlab(PerturbedFields, pertFieldsFile, 2 * F.rows(), NUM_TEST);
-	//}
-	////Xf = arbField2D; 
-	//
-	//for (int i = start; i < start + NUM_TEST; i++)
-	//	//for (int i = 37; i < 39; i++)
-	//{
-	//	t1 = chrono::high_resolution_clock::now();
-	//	testID = i;
-	//
-	//	Eigen::Vector3d lambda;
-	//	lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
-	//	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
-	//	lambda(2) = 0.4;
-	//
-	//	// to get the number of constraints (for output purpose only)
-	//	if (readDesFieldsFromFile || readPertFieldsFromFile) {
-	//		constructRandomHardConstraints();
-	//	}
-	//	if (readDesFieldsFromFile) {
-	//		pertFields = PerturbedFields.col(i-start);
-	//	}
-	//	if (readPertFieldsFromFile) {
-	//		Xf = DesignedFields.col(i-start);
-	//	}
-	//
-	//	/* In case none are read from files, constructs one! */
-	//	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
-	//	{
-	//		setupGlobalProblem(lambda);
-	//		DesignedFields.col(i-start) = Xf;
-	//		Eigen::VectorXd vp_ = Xf;
-	//		perturbVectorFields(vp_);
-	//		pertFields = vp_;
-	//		PerturbedFields.col(i-start) = pertFields;
-	//	}
-	//	/* Projection to the subspace */
-	//	/* Reference results */
-	//	Eigen::VectorXd										a_Ref = MF2D*Xf;
-	//	Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
-	//	//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
-	//	//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
-	//	//testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
-	//
-	//	
-	//	///a_NR = (EigenBasis.transpose()*(MF2D*Xf));
-	//	//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
-	//	//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
-	//	//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
-	//
-	//	t2 = chrono::high_resolution_clock::now();
-	//	duration = t2 - t1;
-	//	//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
-	//	printf("[%d] run => [No. Reg.]  Error=%.10f\n", i, errors1(i));
-	//	printf("            [with Reg.] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
-	//}
-	//
-	//if (!readPertFieldsFromFile && !readDesFieldsFromFile)
-	//{
-	//	/* Write the matrices to matlab:
-	//	** this will be in a new file, so I need to combine them with previous files (ensure that we still save the old file, by renaming it) */
-	//	WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
-	//	WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
-	//
-	//	// set to be true for the next test
-	//	readPertFieldsFromFile = true;
-	//	readDesFieldsFromFile = true;
-	//}
-	//
-	//cout << "ERRORS: \n" << errors1 << endl << "ERRORS2 \n" << errors2 << endl;
+	if (projTestWithReg)
+	{
+		for (int i = 0; i < NUM_SOLVER; i++)
+		{
+			double l2_ = 25 * (i + 1);
+			double	lambda = l2_ * en1 / en2;
+			//Eigen::SparseMatrix<double> BRef = MF2D + lambda*SF2DAsym;
+			//Eigen::SparseMatrix<double> BRed = Basis.transpose()*BRef*Basis;
+	
+			cout << "____[" << i << "] Factorizing the sparse matrix (M+a*S) (Ref and Red) \n";
+			BRef[i] = MF2D + lambda*SF2DAsym;
+			BRed_Sp[i] = Basis.transpose()*BRef[i] * Basis;
+			sparseSolver_WR_Ref[i].analyzePattern(BRef[i]);
+			sparseSolver_WR_Ref[i].factorize(BRef[i]);
+			sparseSolver_WR_Ref[i].pardisoParameterArray()[1] = 0;
+			sparseSolver_WR_Ref[i].pardisoParameterArray()[59] = 2;
+			sparseSolver_WR_Red[i].analyzePattern(BRed_Sp[i]);
+			sparseSolver_WR_Red[i].factorize(BRed_Sp[i]);
+			sparseSolver_WR_Red[i].pardisoParameterArray()[1] = 0;
+			sparseSolver_WR_Red[i].pardisoParameterArray()[59] = 2;
+		}
+	}
+	
+	if (useEigenBasis)
+	{
+		cout << "Reading eigenbasis (if possible...) \n";
+		//ReadDenseMatrixFromMatlab(EigenBasis2, eigBasisFile2, 2*F.rows(), 267);
+		//ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 2*F.rows(), 40);
+		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 2 * F.rows(), 243);
+	
+		// same storage
+		//EigenBasis.resize(EigenBasisFull.rows(), 40);
+		//EigenBasis = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), 40);
+		//EigenBasis = EigenBasisFull;
+		// same performance
+		//cout << "Alloc. memory for eigen basis\n";
+		//EigenBasis.resize(EigenBasisFull.rows(), EigenBasisFull.cols() + EigenBasis2.cols());
+		//cout << "Combining to eigen basis\n";
+		//EigenBasis.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols()) = EigenBasisFull.block(0, 0, EigenBasisFull.rows(), EigenBasisFull.cols());
+		//EigenBasis.block(0, EigenBasisFull.cols(), EigenBasis2.rows(), EigenBasis2.cols()) = EigenBasis2.block(0, 0, EigenBasis2.rows(), EigenBasis2.cols());
+	
+		// Free memory manually
+		EigenBasisFull.resize(0, 0);
+		EigenBasis2.resize(0, 0);
+		
+	
+		B_MB = EigenBasis.transpose()*MF2D*EigenBasis;
+		cout << "Factorizing using eigen basis\n";
+		denseSolver_NR.compute(B_MB);
+	
+		/* The one with regularizer*/
+		if (projTestWithReg)
+		{
+			for (int i = 0; i < NUM_SOLVER; i++)
+			{
+				double l2_ = 25 * (i + 1);
+				double	lambda = l2_ * en1 / en2;
+				//BRef[i] = MF2D + lambda*SF2DAsym;
+				BRed_Dn[i] = EigenBasis.transpose()*BRef[i] * EigenBasis;
+	
+				cout << "____[" << i << "] Factorizing the dense matrix (M+a*S) (Red) \n";
+				denseSolver_WR_Red[i].compute(BRed_Dn[i]);
+			}
+		}
+	}
+	
+	/* Fields and perturbed Fields */
+	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_DesignedFields";
+	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_PerturbedFields";
+	if (readDesFieldsFromFile) {
+		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
+	}
+	if (readPertFieldsFromFile) {
+		ReadDenseMatrixFromMatlab(PerturbedFields, pertFieldsFile, 2 * F.rows(), NUM_TEST);
+	}
+	//Xf = arbField2D; 
+	
+	for (int i = start; i < start + NUM_TEST; i++)
+		//for (int i = 37; i < 39; i++)
+	{
+		t1 = chrono::high_resolution_clock::now();
+		testID = i;
+	
+		Eigen::Vector3d lambda;
+		lambda(0) = 1.0; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+		lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+		lambda(2) = 0.4;
+	
+		// to get the number of constraints (for output purpose only)
+		if (readDesFieldsFromFile || readPertFieldsFromFile) {
+			constructRandomHardConstraints();
+		}
+		if (readDesFieldsFromFile) {
+			pertFields = PerturbedFields.col(i-start);
+		}
+		if (readPertFieldsFromFile) {
+			Xf = DesignedFields.col(i-start);
+		}
+	
+		/* In case none are read from files, constructs one! */
+		if (!readPertFieldsFromFile && !readDesFieldsFromFile)
+		{
+			setupGlobalProblem(lambda);
+			DesignedFields.col(i-start) = Xf;
+			Eigen::VectorXd vp_ = Xf;
+			perturbVectorFields(vp_);
+			pertFields = vp_;
+			PerturbedFields.col(i-start) = pertFields;
+		}
+		/* Projection to the subspace */
+		/* Reference results */
+		Eigen::VectorXd										a_Ref = MF2D*Xf;
+		Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
+		//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
+		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
+		//testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
+	
+		
+		///a_NR = (EigenBasis.transpose()*(MF2D*Xf));
+		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
+		//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
+	
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
+		printf("[%d] run => [No. Reg.]  Error=%.10f\n", i, errors1(i));
+		printf("            [with Reg.] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
+	}
+	
+	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
+	{
+		/* Write the matrices to matlab:
+		** this will be in a new file, so I need to combine them with previous files (ensure that we still save the old file, by renaming it) */
+		WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
+		WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
+	
+		// set to be true for the next test
+		readPertFieldsFromFile = true;
+		readDesFieldsFromFile = true;
+	}
+	
+	cout << "ERRORS: \n" << errors1 << endl << "ERRORS2 \n" << errors2 << endl;
 }
 
 void VectorFields::convergenceTest()
@@ -1162,18 +1162,18 @@ void VectorFields::convergenceTest()
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_20000_EigFields_35sup");
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
-	vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
-	//vector<int> subspdim{ 50000 };
+	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
+	vector<int> subspdim{ 2000 };
 	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(i) + "_Eigfields_40sup");
+		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_" + to_string(i) + "_Eigfields_40sup");
 	}
 
 	/* For the projection tests */
-	bool readDesFields  = true;
-	bool readPertFields = true;
+	bool readDesFields  = false;
+	bool readPertFields = false;
 	bool useEigenBasis  = false;
 	int idStart = 0;
-	int NUM_TEST = 1;
+	int NUM_TEST = 100;
 
 	for (string file_ : basisFile)
 	{
@@ -1445,7 +1445,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	///convergenceTest();
+	convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* _____ Vector fields design test __________________________*/
