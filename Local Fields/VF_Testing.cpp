@@ -136,14 +136,14 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_160sup.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_160sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields.txt";
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_optAlg.txt";
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigFields10.txt";
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigPatch.txt";
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_grad.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigenFields_40sup.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_optAlg.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigFields10.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigPatch.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_grad.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -232,7 +232,7 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_modalBasis_sameStorage.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_modalBasis_250.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_modalBasis_500.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -964,7 +964,7 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
 	Eigen::MatrixXd EigenBasisFull, EigenBasis2;
-	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Fertility_250_eigenfields_Ref_real";
+	string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_500_eigenfields_Ref";
 	//string eigBasisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Fertility_250_eigenfields_Ref";
 	string eigBasisFile2 = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_401-667_eigenfields_Ref";
 
@@ -1029,7 +1029,7 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		cout << "Reading eigenbasis (if possible...) \n";
 		//ReadDenseMatrixFromMatlab(EigenBasis2, eigBasisFile2, 2*F.rows(), 267);
 		//ReadDenseMatrixFromMatlab(EigenBasisFull, eigBasisFile, 2*F.rows(), 40);
-		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 2 * F.rows(), 243);
+		ReadDenseMatrixFromMatlab(EigenBasis, eigBasisFile, 2 * F.rows(), 500);
 	
 		// same storage
 		//EigenBasis.resize(EigenBasisFull.rows(), 40);
@@ -1119,8 +1119,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		//testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
 	
 		
-		///a_NR = (EigenBasis.transpose()*(MF2D*Xf));
-		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
+		a_NR = (EigenBasis.transpose()*(MF2D*Xf));
+		testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
 	
@@ -1152,7 +1152,12 @@ void VectorFields::convergenceTest()
 	vector<std::string> basisFile;
 	basisFile.reserve(NUM_DIFF_BASIS);	
 
-	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup");
+
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Eigfields_40sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlg_30sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_eigFields10_30sup");
+	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_EigPatch_30sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Grad_30sup");
 
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_500_EigFields_35sup");
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_1000_EigFields_35sup");
@@ -1163,15 +1168,15 @@ void VectorFields::convergenceTest()
 	//basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_50000_EigFields_35sup");
 
 	//vector<int> subspdim{500, 1000, 2000, 5000, 10000, 20000, 50000};
-	vector<int> subspdim{ 2000 };
-	for (int i : subspdim) {
-		basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_" + to_string(i) + "_Eigfields_40sup");
-	}
+	//vector<int> subspdim{ 2000 };
+	//for (int i : subspdim) {
+	//	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_" + to_string(i) + "_Eigfields_40sup");
+	//}
 
 	/* For the projection tests */
-	bool readDesFields  = false;
-	bool readPertFields = false;
-	bool useEigenBasis  = false;
+	bool readDesFields  = true;
+	bool readPertFields = true;
+	bool useEigenBasis  = true;
 	int idStart = 0;
 	int NUM_TEST = 100;
 
@@ -1405,7 +1410,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	retrieveBasis(filename_basis);	
+	///retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//setupReducedBiLaplacian();
 	//setAndSolveUserSystem(lambda);
@@ -1485,9 +1490,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizePatchDijkstra(viewer);
 
 	/* SOFT CONSTRAINTS */
-	visualizeCurveConstraints(viewer);
-	visualizeSoftConstraints(viewer);
-	measureSoftConstraintError(lambda);
+	//visualizeCurveConstraints(viewer);
+	//visualizeSoftConstraints(viewer);
+	//measureSoftConstraintError(lambda);
 
 
 	/* MEASURE ACCURACY */
