@@ -169,6 +169,10 @@ void TensorFields::computeAverageEdgeLength()
 		}
 	}
 	avgEdgeLength = totalLength / (double)(F.rows()*F.cols());
+
+	cout << "__Avg edgelength=" << avgEdgeLength << endl;
+	cout << "__scale=" << scale << endl;
+	cout << "__avg edge * scale: " << avgEdgeLength*scale << endl; 
 }
 
 // For every vertex V, find where it belongs in edge E
@@ -1139,7 +1143,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency3NMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(5000);	
+	selectFaceToDraw(7500);	
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1170,7 +1174,7 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen:
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 0.05;
+	double lambda = 0.5;
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);

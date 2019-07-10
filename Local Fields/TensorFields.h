@@ -71,7 +71,7 @@ public:
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
-	double							scale = 0.01;
+	double							scale = 10000000;
 
 private:
 
