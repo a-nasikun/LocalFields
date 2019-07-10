@@ -52,11 +52,11 @@ public:
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
 	void testDirichletAndLaplace();
-	void testSmoothing(igl::opengl::glfw::Viewer &viewer);
+	void testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void testTransformation(igl::opengl::glfw::Viewer &viewer);
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
-protected:
+public:
 	Eigen::MatrixXd					Tensor, tensorFields;	// 2-by-2 tensor and the representing vectors (using principal curvatures)
 	Eigen::MatrixXd					smoothedTensor;			// Smoothed tensor, application;
 	Eigen::VectorXd					voigtReps;				// a 3-by-1 representation of 2-by-2 tensor
@@ -71,7 +71,7 @@ protected:
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
-	double							scale = 10;
+	double							scale = 0.01;
 
 private:
 

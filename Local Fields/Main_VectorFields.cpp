@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/272_bimba_clean_1Mf.obj";	
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
@@ -71,7 +71,8 @@ int main(int argc, char *argv[])
 	/* ====================== VECTOR FIELDS  ====================*/
 	cout << "\n========================= VECTOR FIELDS =============================\n";
 	VectorFields vectorFields;
-	vectorFields.TEST_VECTOR(viewer, meshFile);
+	//vectorFields.TEST_VECTOR(viewer, meshFile);
+	//vectorFields.getVF(V, F);
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	//Eigen::VectorXd v_in = vectorFields.arbField2D;
@@ -83,16 +84,19 @@ int main(int argc, char *argv[])
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
 	cout << "\n========================= TENSOR FIELDS =============================\n";
 	TensorFields tensorFields;
-	//tensorFields.TEST_TENSOR(viewer, meshFile);
-	//tensorFields.getVF(V, F);
+	tensorFields.TEST_TENSOR(viewer, meshFile);
+	tensorFields.getVF(V, F);
 
-	vectorFields.getVF(V, F);
 
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
+
+	Eigen::MatrixXd inputTensor = tensorFields.Tensor;
+	Eigen::MatrixXd outputTensor;
+
 	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
 		
 
@@ -252,12 +256,15 @@ int main(int argc, char *argv[])
 		case 'm':
 			showSmoothed = !showSmoothed;
 			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
 			if (!showSmoothed) {				
 				tensorFields.visualizeTensorFields(viewer);
 			}
 			else
 			{
+				tensorFields.testSmoothing(viewer, inputTensor, outputTensor);
 				tensorFields.visualizeSmoothedTensorFields(viewer);
+				inputTensor = outputTensor;
 			}
 			break; 
 
@@ -397,9 +404,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 2.0f; 
 
-	//return viewer.launch();
+	return viewer.launch();
 
 	/* Trick for remote desktop */
-	getchar();
-	return 1;
+	//getchar();
+	//return 1;
 }

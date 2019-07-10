@@ -11,6 +11,7 @@
 #include <igl/readOFF.h>
 
 #include <Eigen/PardisoSupport>
+#include <Eigen/SparseQR>
 
 TensorFields::TensorFields()
 {
@@ -485,6 +486,9 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 	Eigen::Vector3d e_ij, e_ji;
 	Eigen::Vector3d e_i, e_j;		// e_i: 1st edge vector of the 1st triangle     |  e_j: 1st edge vector of the 2nd triangle
 
+	srand(time(NULL));
+	int testEdge = rand() % E.rows();
+
 	for (int ei = 0; ei < E.rows(); ei++)
 	{
 		/* Obtain two neighboring triangles TA and TB */
@@ -535,41 +539,48 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 		}
 
 		/* Computing angle for triangle A (the first one) */
-		double dp_, angle_;
+		double dp_1, angle_1;
 		switch (eMatchA)
 		{
 		case 0:
+			angle_1 = 0.0;
 			FrameRot(ei, 0) = 0.0;
 			break;
 		case 1:
-			dp_ = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
-			angle_ = acos(dp_);
-			FrameRot(ei, 0) = angle_;
+			//dp_1 = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
+			dp_1 = (-e_i).dot(e_ij) / (e_i.norm()*e_ij.norm());
+			angle_1 = M_PI - acos(dp_1);
+			FrameRot(ei, 0) = angle_1;
 			break;
 		case 2:
-			dp_ = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
-			angle_ = M_PI + acos(dp_);
-			FrameRot(ei, 0) = angle_;
+			//dp_1 = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
+			dp_1 = (-e_ij).dot(e_i) / (e_i.norm() * e_ij.norm());
+			angle_1 = M_PI + acos(dp_1);
+			FrameRot(ei, 0) = angle_1;
 			break;
 		default:
 			break;
 		}
 
 		/* Computing angle for triangle B (the second one) */
+		double dp_2, angle_2;
 		switch (eMatchB)
 		{
 		case 0:
+			angle_2 = 0.0;
 			FrameRot(ei, 1) = 0.0;
 			break;
 		case 1:
-			dp_ = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
-			angle_ = acos(dp_);
-			FrameRot(ei, 1) = angle_;
+			//dp_2 = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
+			dp_2 = (-e_j).dot(e_ji) / (e_j.norm() * e_ji.norm());
+			angle_2 = M_PI - acos(dp_2);
+			FrameRot(ei, 1) = angle_2;
 			break;
 		case 2:
-			dp_ = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
-			angle_ = M_PI + acos(dp_);
-			FrameRot(ei, 1) = angle_;
+			//dp_2 = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
+			dp_2 = (-e_ji).dot(e_j) / (e_j.norm() * e_ji.norm());
+			angle_2 = M_PI + acos(dp_2);
+			FrameRot(ei, 1) = angle_2;
 			break;
 		default:
 			break;
@@ -578,14 +589,23 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 
 		/** _____________________ DEBUG PURPOSE _____________________________*/
 		//if (ei < 100 && ei%10==0)
-		if(ei==1110)
+		if(ei==testEdge)
 		{
-			// first basis of the triangle frame
+			// first basis of the triangle frame (frist and second)
 			viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 0)) + e_i.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(TB, 0)), V.row(F(TB, 0)) + e_j.transpose(), Eigen::RowVector3d(0.0, 0.9, 0.0));
 			// shared edge
-			viewer.data().add_edges(V.row(F(TA, eMatchA)), V.row(F(TA, eMatchA)) + e_ij.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
-			viewer.data().add_points(V.row(F(TA, eMatchA)), Eigen::RowVector3d(0.0, 0.1, 0.1));
-			printf("Angle between them is %.5f degree \n", FrameRot(ei, 0)*180.0 / M_PI);
+			viewer.data().add_edges(V.row(E(ei, 0)), V.row(E(ei, 1)), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			viewer.data().add_points(V.row(E(ei, 0)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+			viewer.data().add_points(V.row(E(ei, 1)), Eigen::RowVector3d(0.9, 0.1, 0.1));
+			//viewer.data().add_edges(V.row(F(TA, eMatchA)), V.row(F(TA, eMatchA)) + e_ij.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			//viewer.data().add_points(V.row(F(TA, eMatchA)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+			printf("Angle between basis and shared edge (fram 1) is %.5f degree \n", FrameRot(ei, 0)*180.0 / M_PI);
+			cout << "__case 1= " << eMatchA << endl;
+			printf("__angle1 = %.10f \n", angle_1*180.0 / M_PI);
+			printf("Angle between basis and shared edge (fram 2) is %.5f degree \n", FrameRot(ei, 1)*180.0 / M_PI);
+			cout << "__case 2= " << eMatchB << endl;
+			printf("__angle2 = %.10f \n", angle_2*180.0 / M_PI);
 		}
 	}
 }
@@ -633,9 +653,9 @@ void TensorFields::buildStiffnessMatrix()
 
 		/* Construct the rotation matrix RA and SB */
 		double cosRA = cos(FrameRot(ei, 0));
-		double sinRA = cos(FrameRot(ei, 0));
+		double sinRA = sin(FrameRot(ei, 0));
 		double cosSB = cos(FrameRot(ei, 1));
-		double sinSB = cos(FrameRot(ei, 1));
+		double sinSB = sin(FrameRot(ei, 1));
 
 
 		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT 
@@ -672,6 +692,16 @@ void TensorFields::buildStiffnessMatrix()
 
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+
+	//printf("__Size of SF: %dx%d \n", SF.rows(), SF.cols());
+	//Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> sparseSolver;
+	//sparseSolver.setPivotThreshold(5.0*std::numeric_limits<double>::epsilon());
+	//sparseSolver.analyzePattern(SF);
+	//sparseSolver.factorize(SF);
+	//
+	//int SFRank = sparseSolver.rank();
+	//
+	//printf("__ranke of SF: %d \n", SFRank);
 }
 
 
@@ -1115,15 +1145,15 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	//visualizeTensorFields(viewer);
+	visualizeTensorFields(viewer);
 
 	computeFrameRotation(viewer);
-	///testTransformation(viewer);
+	//testTransformation(viewer);
 	buildStiffnessMatrix();
 		
 	/* Testing the result */
 	testDirichletAndLaplace();
-	testSmoothing(viewer);
+	//testSmoothing(viewer, Tensor, smoothedTensor);
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -1134,15 +1164,18 @@ void TensorFields::testDirichletAndLaplace()
 	printf("The energy is %.10f\n", MF);
 }
 
-void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
+void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 0.25;
+	double lambda = 0.05;
 
-	Eigen::VectorXd lap = (MFinv*SF)*voigtReps;
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+	//Eigen::VectorXd lap = (MFinv*SF)*inputVoigt;
+	Eigen::VectorXd lap = SF*inputVoigt;
 
 	cout << "Set and solve for smoothing \n";
 	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
@@ -1151,10 +1184,11 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer)
 	
 	Eigen::MatrixXd smoothedFields;
 	//Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
-	Eigen::VectorXd smoothedVoigt = voigtReps - lambda*SF*voigtReps;
+	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
 	convertVoigtToTensor(smoothedVoigt, smoothedTensor);
-	
-	visualizeSmoothedTensorFields(viewer);
+	outputTensor = smoothedTensor;
+
+	//visualizeSmoothedTensorFields(viewer);
 
 	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
 	printf("The energy is %.10f\n", dir);
@@ -1232,3 +1266,4 @@ void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
 	convertVoigtToTensor_Elementary(a1inB1fromB2, A1back);
 	cout << "A1 after going to B2 and back to B1 is now: \n" << A1back << endl << endl;
 }
+
