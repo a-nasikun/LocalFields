@@ -643,7 +643,7 @@ void TensorFields::obtainTransformationForLaplacian(double cT, double sT, double
 }
 
 
-void TensorFields::buildStiffnessMatrix()
+void TensorFields::buildStiffnessMatrix_Combinatorial()
 {
 	SF.resize(3 * F.rows(), 3 * F.rows());
 	vector<Eigen::Triplet<double>> STriplet;
@@ -708,68 +708,65 @@ void TensorFields::buildStiffnessMatrix()
 	//printf("__ranke of SF: %d \n", SFRank);
 }
 
+void TensorFields::buildStiffnessMatrix_Geometric()
+{
+	SF.resize(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> STriplet;
+	STriplet.reserve(4 * 9 * F.rows());
 
-//void TensorFields::buildStiffnessMatrix_oldOne()
-//{
-//	SF.resize(3 * F.rows(), 3 * F.rows());
-//	vector<Eigen::Triplet<double>> STriplet;
-//	STriplet.reserve(4 * 9 * F.rows());
-//
-//	for (int ei = 0; ei < E.rows(); ei++)
-//	{
-//		/* Obtain two neighboring triangles TA and TB */
-//		int TA = EF(ei, 0);
-//		int TB = EF(ei, 1);
-//
-//		/* Construct the rotation matrix RA and SB */
-//		double cosRA = cos(FrameRot(ei, 0));
-//		double sinRA = cos(FrameRot(ei, 0));
-//		double cosSB = cos(FrameRot(ei, 1));
-//		double sinSB = cos(FrameRot(ei, 1));
-//
-//		/* Rbar = R*A*RT | Rtil = RT*A*R | Sbar=S*A*ST | Stil=ST*A*S */
-//		Eigen::Matrix3d Rbar, Rtil, Sbar, Stil;
-//
-//		Rbar << cosRA*cosRA, -sinRA*-sinRA, 2 * cosRA*-sinRA,
-//				sinRA*sinRA,  cosRA*cosRA,  2 * sinRA*cosRA,
-//				cosRA*sinRA, -sinRA*cosRA,  cosRA*cosRA - sinRA*sinRA;
-//		Rtil << cosRA*cosRA,  sinRA*sinRA, 2 * cosRA*sinRA,
-//			   -sinRA*-sinRA, cosRA*cosRA, 2 * -sinRA*cosRA,
-//				cosRA*-sinRA, sinRA*cosRA, cosRA*cosRA - sinRA*sinRA;
-//
-//		Sbar << cosSB*cosSB, -sinSB*-sinSB, 2 * cosSB*-sinSB,
-//			    sinSB*sinSB,  cosSB*cosSB,  2 * sinSB*cosSB,
-//			    cosSB*sinSB, -sinSB*cosSB,  cosSB*cosSB - sinSB*sinSB;
-//		Stil << cosSB*cosSB,  sinSB*sinSB, 2 * cosSB*sinSB,
-//			   -sinSB*-sinSB, cosSB*cosSB, 2 * -sinSB*cosSB,
-//				cosSB*-sinSB, sinSB*cosSB, cosSB*cosSB - sinSB*sinSB;
-//
-//		/* Stiffness matrix from A (first triangle) perspective */
-//		Eigen::Matrix3d RtRb = Rtil*Rbar;
-//		Eigen::Matrix3d RtSb = -Rtil*Sbar;
-//		for (int i = 0; i < 3; i++) {
-//			for (int j = 0; j < 3; j++)
-//			{
-//				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + j, RtRb(i, j)));
-//				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, RtSb(i, j)));
-//			}
-//		}
-//
-//		/* Stiffness matrix from B (second triangle) perspective */
-//		Eigen::Matrix3d StSb = Stil*Sbar;
-//		Eigen::Matrix3d StRb = -Stil*Rbar;
-//		for (int i = 0; i < 3; i++) {
-//			for (int j = 0; j < 3; j++)
-//			{
-//				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + j, RtRb(i, j)));
-//				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, RtSb(i, j)));
-//			}												   
-//		}
-//	}
-//
-//	/* Populate the matrix with configured triplets */
-//	SF.setFromTriplets(STriplet.begin(), STriplet.end());
-//}
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+		double weight;
+
+		/* Construct the rotation matrix RA and SB */
+		double cosRA = cos(FrameRot(ei, 0));
+		double sinRA = sin(FrameRot(ei, 0));
+		double cosSB = cos(FrameRot(ei, 1));
+		double sinSB = sin(FrameRot(ei, 1));
+
+		/* Compute the weight on each edge */
+		Eigen::Vector3d edge_ = V.row(E(ei, 1)) - V.row(E(ei, 0));
+		weight = 3 * edge_.dot(edge_) / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
+
+
+		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT
+		** having M = R*-Id*ST
+		** then T = M*B*MT */
+
+
+		Eigen::Matrix3d B1toB2, B2toB1;
+		/* B1toB2 => parallel transport matrix A to B *
+		** B2toB1 => parallel transport matrix B to A */
+		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
+		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+
+		/* (Combinatorial) Laplace matrix from A (first triangle) perspective */
+		for (int i = 0; i < 3; i++)
+		{
+			STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + i, weight));
+			for (int j = 0; j < 3; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TB + j, -weight*B2toB1(i, j)));
+			}
+		}
+
+		/* (Combinatorial) Laplace matrix from B (second triangle) perspective */
+		for (int i = 0; i < 3; i++)
+		{
+			STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + i, weight));
+			for (int j = 0; j < 3; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, -weight*B1toB2(i, j)));
+			}
+		}
+	}
+
+	/* Populate the matrix with configured triplets */
+	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+}
 
 /* Converting tensor fields (each of 2x2 size) to voigt's notation vector fields (3x1) 
 ** __input : tensor fields
@@ -1153,7 +1150,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	computeFrameRotation(viewer);
 	//testTransformation(viewer);
-	buildStiffnessMatrix();
+	buildStiffnessMatrix_Geometric();
 		
 	/* Testing the result */
 	testDirichletAndLaplace();
@@ -1176,10 +1173,16 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen:
 	double factor2 = id.transpose()*SF*id;
 	double lambda = 0.5;
 
+	
+
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
-	//Eigen::VectorXd lap = (MFinv*SF)*inputVoigt;
-	Eigen::VectorXd lap = SF*inputVoigt;
+	Eigen::SparseMatrix<double> L = (MFinv*SF);
+	//Eigen::VectorXd lap = SF*inputVoigt;
+
+	double geom_scale = L.diagonal().sum() / (double) L.rows();
+	geom_scale = 1.0 / geom_scale;
+	lambda = geom_scale * lambda;
 
 	cout << "Set and solve for smoothing \n";
 	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
@@ -1188,7 +1191,8 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen:
 	
 	Eigen::MatrixXd smoothedFields;
 	//Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
-	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
+	//Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
+	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*L*inputVoigt;
 	convertVoigtToTensor(smoothedVoigt, smoothedTensor);
 	outputTensor = smoothedTensor;
 

@@ -32,7 +32,8 @@ public:
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 	void obtainTransformationForLaplacian(double cT, double sT, double cF, double sF, Eigen::Matrix3d& G);
-	void buildStiffnessMatrix();
+	void buildStiffnessMatrix_Combinatorial();
+	void buildStiffnessMatrix_Geometric();
 	void convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::VectorXd& voigt);
 	void convertTensorToVoigt_Elementary(const Eigen::Matrix2d& tensor, Eigen::Vector3d& voigt);
 	void convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor);
