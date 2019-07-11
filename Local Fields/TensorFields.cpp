@@ -729,7 +729,11 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 
 		/* Compute the weight on each edge */
 		Eigen::Vector3d edge_ = V.row(E(ei, 1)) - V.row(E(ei, 0));
-		weight = 3 * edge_.dot(edge_) / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
+		double el = edge_.dot(edge_);
+		/* Should be multiplied by 3.0 
+		** but because later will be divided by 3.0 again (due to 3 neighbors),
+		** I just dont multiply with anything */
+		weight = el * el / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
 
 
 		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT
