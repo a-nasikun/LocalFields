@@ -2186,7 +2186,7 @@ void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_i
 void VectorFields::constructSamples(const int &n)
 {
 	numSample = n; 
-
+	cout << "> Constructing " << n << " samples in ";
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
 
@@ -2195,7 +2195,7 @@ void VectorFields::constructSamples(const int &n)
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 
-	cout << "> Constructing " << n << " samples in " << duration.count() << "seconds" << endl;	
+	cout << duration.count() << "seconds" << endl;	
 
 	///testViennaCL2(SF2DAsym, MF2Dinv, eigFieldFull2D, eigValuesFull);
 }
@@ -2290,6 +2290,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
 	durations.resize(NUM_PROCESS);
+	const int Num_fields = 2;
 
 	for (int i = 0; i < NUM_PROCESS; i++) {
 		durations[i] = t1 - t1;
@@ -2361,7 +2362,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			durations[1] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(F);
+			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;			
 
@@ -2370,7 +2371,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//printf("Starting engine %d for element %d\n", tid, id);
 			if(id%((int)(Sample.size()/4))==0)
 				cout << "[" << id << "] Constructing local eigen problem\n ";
-			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -2544,7 +2545,7 @@ void VectorFields::constructBasis_OptProblem()
 			durations[1] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(F);
+			localField.constructLocalElements(2, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;
 
@@ -2885,7 +2886,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			durations[1] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(F);
+			localField.constructLocalElements(2, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;
 
@@ -3021,7 +3022,7 @@ void VectorFields::constructBasisEigenVects()
 			durations[0] += t2 - t1;
 			
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(F);
+			localField.constructLocalElements(2, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;			
 

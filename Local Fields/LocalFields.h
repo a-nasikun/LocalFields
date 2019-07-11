@@ -22,9 +22,9 @@ public:
 	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const vector<set<int>>& AdjMF2Ring, const double& distRatio);
 	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport);
 	void constructBoundary(const Eigen::MatrixXi& F, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring);
-	void constructLocalElements(const Eigen::MatrixXi &F);
+	void constructLocalElements(const int NUM_FIELDS, const Eigen::MatrixXi &F);
 	void computeDijkstraFaceDistance(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const Eigen::MatrixXd &FC, const Eigen::MatrixXi &AdjMF3N);
-	void obtainLocalMatrixPatch2D(const Eigen::SparseMatrix<double>& MGlob, Eigen::SparseMatrix<double>& MPatch);
+	void obtainLocalMatrixPatch2D(const int NUM_FIELDS, const Eigen::SparseMatrix<double>& MGlob, Eigen::SparseMatrix<double>& MPatch);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring);
 	void constructMatrixBLocal(const Eigen::SparseMatrix<double>& B2D, const vector<set<int>>& AdjMF2Ring, vector<Eigen::Triplet<double>>& BTriplet);
@@ -40,7 +40,7 @@ public:
 	void constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const vector<set<int>>& AdjMF2Ring, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	void constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const Eigen::MatrixXd &AdjMF3N, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	void constructLocalEigenProblemWithSelector(const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
-	void constructLocalEigenProblemWithSelector(Engine*& ep, const int tid, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
+	void constructLocalEigenProblemWithSelector(Engine*& ep, const int tid, const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	//void constructLocalConstraints();
 	void setupRHSLocalProblemMapped();
 	void setupLHSLocalProblemMapped(const vector<Eigen::Triplet<double>>& BTriplet, const vector<Eigen::Triplet<double>>& C1Triplet, const vector<Eigen::Triplet<double>>& C2Triplet);

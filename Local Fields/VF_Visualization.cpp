@@ -351,7 +351,8 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	}
 
 	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id/2]);
-	visualize2DfieldsScaled(viewer, BasisTemp, bId, color);
+	//visualize2DfieldsScaled(viewer, BasisTemp, bId, color);
+	visualize2Dfields(viewer, BasisTemp.col(bId), color, 1.0);
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
@@ -392,7 +393,8 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	//else
 	//{
 		printf("Showing the %d Basis field\n", bId);
-		visualize2DfieldsScaled(viewer, Basis, bId, color);
+		//visualize2DfieldsScaled(viewer, Basis, bId, color);
+		visualize2Dfields(viewer, Basis.col(bId), color, 1.0);
 	//}
 }
 

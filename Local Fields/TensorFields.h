@@ -28,6 +28,7 @@ public:
 	void constructMassMatrixMF3D();
 	void constructMappingMatrix();
 	void constructFaceAdjacency3NMatrix();
+	void constructFaceAdjacency2RingMatrix();
 	void selectFaceToDraw(const int& numFaces);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
@@ -40,6 +41,13 @@ public:
 	void convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt, Eigen::Matrix2d& tensor);
 	void constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep);
 
+	/* SUBSPACE CONSTRUCTION */
+	void constructBasis();
+	void constructSamples(const int &n);
+	void farthestPointSampling();
+	void constructBasis_LocalEigenProblem();
+	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
+
 	/* TENSOR STUFF */
 	void computeTensorFields();
 	void constructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
@@ -49,6 +57,8 @@ public:
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeTensorFields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
+	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
@@ -71,8 +81,19 @@ public:
 	double							avgEdgeLength;			// avg edge length -> to scale the fields
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
+	vector<set<int>>				AdjMF2Ring;				// 2-ring neighborhood of triangles
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
-	double							scale = 10000000;
+	//double							scale = 10000000;
+	double							scale = 1;
+
+	// Variable related to subspace construction
+	Eigen::SparseMatrix<double>		Basis;
+	vector<int>						Sample;
+	int								numSample;
+	double							numSupport;
+	Eigen::VectorXd					sampleDistance;
+	Eigen::VectorXd					localSystem;
+	set<int>						SubDomain, Boundary;
 
 private:
 

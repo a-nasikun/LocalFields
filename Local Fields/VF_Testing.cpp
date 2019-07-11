@@ -1346,7 +1346,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructStiffnessMatrices_Implicit();
 	//loadStiffnessMatrices();
 	constructMatrixB();
-	constructConstraints();
+	//constructConstraints();
 	//checkB2DStructure();
 
 	//////* ====================== GLOBAL PROBLEM ====================*/
@@ -1406,8 +1406,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//constructSamples(numSample);
-	//constructBasis();	
+	numSample = 50; 
+	numSupport = 40.0;
+	constructSamples(numSample);
+	constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	///retrieveBasis(filename_basis);	
@@ -1450,7 +1452,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	convergenceTest();
+	///convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* _____ Vector fields design test __________________________*/

@@ -1,5 +1,6 @@
 #include "TensorFields.h"
 #include "EigenSolver.h"
+#include "LocalFields.h"
 
 #include <set>
 #include <queue>
@@ -244,6 +245,9 @@ void TensorFields::constructEFList()
 	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
 
 }
+
+
+
 /* ====================== UTILITY FUNCTIONS ============================*/
 void TensorFields::constructMassMatrixMF3D()
 {
@@ -409,6 +413,45 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 
 }
 
+void TensorFields::constructFaceAdjacency2RingMatrix()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Building \"Face-to-Face\" Adjacency (All connected neigbors)... ";
+	
+	AdjMF2Ring.clear();
+	AdjMF2Ring.resize(F.rows());
+
+	vector<set<int>> faceNeighOnVert;
+	faceNeighOnVert.resize(V.rows());
+
+	//cout << "Construct face adjacency." << endl;
+
+	//Getting the faces on which each vertex resides
+	for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < F.cols(); j++) {
+			int a1 = F(i, j);
+			faceNeighOnVert[a1].insert(i);
+		}
+	}
+
+	// Getting the neighborhood structure
+	for (int i = 0; i < V.rows(); i++) {
+		for (std::set<int>::iterator it1 = faceNeighOnVert[i].begin(); it1 != faceNeighOnVert[i].end(); ++it1) {
+			for (std::set<int>::iterator it2 = next(it1, 1); it2 != faceNeighOnVert[i].end(); ++it2) {
+				AdjMF2Ring[*it1].insert(*it2);
+				AdjMF2Ring[*it2].insert(*it1);
+			}
+		}
+	}
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
 void TensorFields::selectFaceToDraw(const int& numFaces)
 {
 	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
@@ -831,6 +874,242 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 	}
 }
 
+/* ====================== SUBSPACE CONSTRUCTION ====================== */
+void TensorFields::constructBasis()
+{
+	numSupport = 20.0;
+	numSample = 100;
+	constructSamples(numSample);
+	constructBasis_LocalEigenProblem();
+	cout << "Basis:: \n";
+	cout << Basis.block(0,0,100,1) << endl << endl; 
+}
+void TensorFields::constructSamples(const int &n)
+{
+	numSample = n;
+
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+
+	t1 = chrono::high_resolution_clock::now();
+	farthestPointSampling();
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+
+	cout << "> Constructing " << n << " samples in " << duration.count() << "seconds" << endl;
+}
+
+void TensorFields::farthestPointSampling()
+{
+	Sample.resize(numSample);
+	Eigen::VectorXd D;
+	D.resize(F.rows());
+
+	// Initialize the value of D
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+	}
+
+	srand(time(NULL));
+	Sample[0] = 0;
+
+	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
+	//Eigen::VectorXi::Index maxIndex1;
+	//D.maxCoeff(&maxIndex1);
+	//Sample[1] = maxIndex1;
+
+	for (int i = 1; i < numSample; i++) {
+		Eigen::VectorXi::Index maxIndex;
+		computeDijkstraDistanceFaceForSampling(Sample[i - 1], D);
+		D.maxCoeff(&maxIndex);
+		Sample[i] = maxIndex;
+	}
+
+	sampleDistance = D;
+}
+
+void TensorFields::constructBasis_LocalEigenProblem()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Constructing Basis...\n";
+
+	const int Num_fields = 3;
+	// Setup sizes of each element to construct basis
+	try {
+		Basis.resize(1, 1);
+		Basis.data().clear();
+		Basis.data().squeeze();
+		Basis.resize(Num_fields * F.rows(), 2 * Sample.size());
+	}
+	catch (string &msg) {
+		cout << "Cannot allocate memory for basis.." << endl;
+	}
+
+	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
+	
+	cout << "....Constructing and solving local systems...";
+	const int NUM_PROCESS = 4;
+	vector<chrono::duration<double>>durations;
+	durations.resize(NUM_PROCESS);
+
+	for (int i = 0; i < NUM_PROCESS; i++) {
+		durations[i] = t1 - t1;
+		//cout << "Init dur " << i<< " = " << durations[i].count() << " seconds" << endl;
+	}
+
+	/* Default color for the domain selected */
+	localSystem.resize(F.rows());
+	for (int fid = 0; fid < F.rows(); fid++) {
+		//localSystem(fid) = 1-0.3725;
+		localSystem(fid) = 0;
+	}
+
+	int id, tid, ntids, ipts, istart, iproc;
+
+	omp_set_num_threads(1);
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+	{
+		iproc = omp_get_num_procs();
+		//iproc = 1; 
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		//ntids = 2; 
+		ipts = (int)ceil(1.00*(double)Sample.size() / (double)ntids);
+		//ipts = (int)ceil(1.00*(double)ntids / (double)ntids);
+		istart = tid * ipts;
+		if (tid == ntids - 1) ipts = Sample.size() - istart;
+		if (ipts <= 0) ipts = 0;
+
+		std::vector<Engine*> ep;
+		ep.resize(ntids);
+		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
+
+		Eigen::VectorXd				D(F.rows());
+		for (int i = 0; i < F.rows(); i++) {
+			D(i) = numeric_limits<double>::infinity();
+		}
+
+		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
+
+		UiTriplet[tid].reserve(Num_fields * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
+
+		// Computing the values of each element
+		for (id = istart; id < (istart + ipts); id++) {
+			//for (id = istart; id < (istart + ipts) && id < 10; id++) {
+			if (id >= Sample.size()) break;
+
+			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
+			cout << "[" << id << "] Constructing local eigen problem\n ";
+
+			cout << "__creating subdomain \n";
+			LocalFields localField(id);
+			t1 = chrono::high_resolution_clock::now();
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, AdjMF2Ring, Sample.size(), this->numSupport);
+			t2 = chrono::high_resolution_clock::now();
+			durations[0] += t2 - t1;
+
+			cout << "__creating boundary \n";
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			t2 = chrono::high_resolution_clock::now();
+			durations[1] += t2 - t1;
+
+			cout << "__gathering local elements \n";
+			t1 = chrono::high_resolution_clock::now();
+			localField.constructLocalElements(Num_fields, F);
+			t2 = chrono::high_resolution_clock::now();
+			durations[2] += t2 - t1;
+
+			cout << "__solving local eigenvalue problem \n";
+			t1 = chrono::high_resolution_clock::now();
+			//ep[tid] = engOpen(NULL);
+			//printf("Starting engine %d for element %d\n", tid, id);
+			//if (id % ((int)(Sample.size() / 4)) == 0)
+			//	cout << "[" << id << "] Constructing local eigen problem\n ";
+			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
+			//engClose(ep[tid]);
+			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
+			t2 = chrono::high_resolution_clock::now();
+			durations[3] += t2 - t1;
+
+
+			if (id == 0)
+			{
+				SubDomain = localField.SubDomain;
+				Boundary = localField.Boundary;
+			}
+		}
+	}
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+
+	cout << "....Gathering local elements as basis matrix... ";
+	t1 = chrono::high_resolution_clock::now();
+
+	bool writeBasisCompsToFile = false;
+	//if (writeBasisCompsToFile)
+	//	writeBasisElementsToFile(UiTriplet, 2);
+	//else
+		gatherBasisElements(UiTriplet, 2);
+
+	//Basis = BasisTemp;
+	//normalizeBasisAbs(2);
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "..in Total of " << duration.count() << " seconds" << endl;
+
+
+	// Information about the process timing
+	printf("> Basis Timing information \n");
+	printf("....[0] Constructing internal elements: %.8f seconds.\n", durations[0].count());
+	printf("....[1] Constructing boundary: %.8f seconds.\n", durations[1].count());
+	printf("....[2] Constructing local subdomains: %.8f seconds.\n", durations[2].count());
+	printf("....==> Total SET UP: %.8f\n", durations[0].count() + durations[1].count() + durations[2].count());
+	printf("....[3] Solving local eigenvalue problems: %.8f seconds.\n", durations[3].count());
+
+	// Information about Basis
+	printf("> Basis Structure information \n");
+	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
+	printf("....NNZ=%d, per row = %.4f\n", Basis.nonZeros(), (double)Basis.nonZeros() / (double)Basis.rows());
+}
+
+void TensorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN)
+{
+	/* Set the basis sum to be zero on each column-group */
+	vector<Eigen::Triplet<double>> BTriplet;
+
+	/* Getting the number of total elements on the triplet*/
+	int totalElements = 0;
+	for (int j = 0; j < Sample.size(); j++) {
+		totalElements += UiTriplet[j].size();
+	}
+
+	/* Constructing the basis matrix from the triplet */
+	BTriplet.resize(totalElements);
+	for (int j = 0; j < Sample.size(); j++) {
+		int tripSize = 0;
+		for (int k = 0; k < j; k++) {
+			tripSize += UiTriplet[k].size();
+		}
+		//std::copy(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
+		std::move(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
+	}
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+}
+
 /* ====================== MAIN METHODS OF THE CLASS ======================*/
 void TensorFields::computeTensorFields()
 {
@@ -1128,6 +1407,55 @@ void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &view
 	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
 }
 
+void TensorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::RowVector3d color(0.0, 0.8, 0.0);
+	Eigen::RowVector3d c;
+
+	/* Point based */
+	//for (int i : Sample) {
+	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
+	//	viewer.data().add_points(c, color);
+	//}
+
+	/* Color based */
+	Eigen::MatrixXd FColor;
+	igl::jet(-sampleDistance, true, FColor);
+	viewer.data().set_colors(FColor);
+}
+
+void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
+{
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
+
+	int bId = id;
+	Eigen::RowVector3d color;
+	if (id % 2 == 0) {
+		color = Eigen::RowVector3d(1.0, 0.1, 0.2);
+		//color = Eigen::RowVector3d(0.6, 0.2, 0.2);
+	}
+	else {
+		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
+	}
+
+	if (id >= 2 * Sample.size()) {
+		bId = 2 * Sample.size() - 1;
+	}
+
+	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id / 2]);
+	Eigen::MatrixXd basisTensor, basisTensorFields;
+	convertVoigtToTensor(Basis.col(id), basisTensor);
+	constructTensorRepFields(basisTensor, basisTensorFields);
+
+	visualize2Dfields(viewer, basisTensorFields.col(0), color,									  scale, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(0), color,									  scale, false);
+	visualize2Dfields(viewer, basisTensorFields.col(1), Eigen::RowVector3d(1.0, 1.0,1.0) - color, scale, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(1), Eigen::RowVector3d(1.0, 1.0,1.0) - color, scale, false);
+
+	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
+	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+}
 
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
@@ -1142,6 +1470,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructMappingMatrix();
 	constructMassMatrixMF3D();
 	constructFaceAdjacency3NMatrix();
+	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
 	selectFaceToDraw(7500);	
@@ -1150,14 +1479,18 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	visualizeTensorFields(viewer);
+	//visualizeTensorFields(viewer);
 
 	computeFrameRotation(viewer);
 	//testTransformation(viewer);
 	buildStiffnessMatrix_Geometric();
+
+	/*Subspace construction */
+	constructBasis();
+	visualizeBasis(viewer, 0);
 		
 	/* Testing the result */
-	testDirichletAndLaplace();
+	//testDirichletAndLaplace();
 	//testSmoothing(viewer, Tensor, smoothedTensor);
 }
 

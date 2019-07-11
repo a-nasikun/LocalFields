@@ -794,8 +794,8 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 	}
 	else 
 	{
-		cout << "Off diagonal zeros | eigVal: " << EigVal.transpose() << endl;
-		cout << "__M=" << M << "\t\t , its trace: " << trace << endl; 
+		///cout << "Off diagonal zeros | eigVal: " << EigVal.transpose() << endl;
+		///cout << "__M=" << M << "\t\t , its trace: " << trace << endl; 
 		//EigVect.col(0) = EigVal(0)*Eigen::Vector2d(1.0, 0.0);
 		//EigVect.col(1) = EigVal(1)*Eigen::Vector2d(0.0, 1.0);
 		EigVect.col(0) = Eigen::Vector2d(1.0, 0.0);
