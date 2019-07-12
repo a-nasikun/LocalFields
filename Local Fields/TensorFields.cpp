@@ -874,6 +874,30 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 	}
 }
 
+/* ======================ADDITIONAL STUFF====================== */
+void TensorFields::computeEigenFields_regular(const int &numEigs, const string& filename)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Computing reference regular-eigenproblem (in Matlab)... ";
+	
+	computeEigenMatlab(SF, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
+	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
+	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
+	//WriteSparseMatrixToMatlab(MF2D, "hello");
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void TensorFields::computeEigenFields_generalized(const int &numEigs, const string& filename)
+{
+
+}
+
 /* ====================== SUBSPACE CONSTRUCTION ====================== */
 void TensorFields::constructBasis()
 {
@@ -1381,16 +1405,16 @@ void TensorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//cout << "in " << duration.count() << " seconds" << endl;
 }
 
-void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer)
+void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& tensorFields_)
 {
 	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
 	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
 
 	//double scale = 0.01;
-	visualize2Dfields(viewer,  tensorFields.col(0), color1, scale);
-	visualize2Dfields(viewer, -tensorFields.col(0), color1, scale);
-	visualize2Dfields(viewer,  tensorFields.col(1), color2, scale);
-	visualize2Dfields(viewer, -tensorFields.col(1), color2, scale);
+	visualize2Dfields(viewer,  tensorFields_.col(0), color1, scale);
+	visualize2Dfields(viewer, -tensorFields_.col(0), color1, scale);
+	visualize2Dfields(viewer,  tensorFields_.col(1), color2, scale);
+	visualize2Dfields(viewer, -tensorFields_.col(1), color2, scale);
 }
 
 void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer)
@@ -1422,6 +1446,20 @@ void TensorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 	Eigen::MatrixXd FColor;
 	igl::jet(-sampleDistance, true, FColor);
 	viewer.data().set_colors(FColor);
+}
+
+void TensorFields::visualizeEigenTensorFields(igl::opengl::glfw::Viewer &viewer, int id)
+{
+	Eigen::VectorXd eigFields_ = eigFieldsTensorRef.col(id);
+	Eigen::MatrixXd eigTensor_, eigTensorRep_;
+	convertVoigtToTensor(eigFields_, eigTensor_);
+	constructTensorRepFields(eigTensor_, eigTensorRep_);
+
+	viewer.data().clear();
+	viewer.data().set_mesh(V, F);
+
+	visualizeTensorFields(viewer, eigTensorRep_);
+	
 }
 
 void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
@@ -1479,15 +1517,19 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	//visualizeTensorFields(viewer);
+	//visualizeTensorFields(viewer, tensorFields);
 
 	computeFrameRotation(viewer);
 	//testTransformation(viewer);
-	buildStiffnessMatrix_Geometric();
+	//buildStiffnessMatrix_Geometric();
+	buildStiffnessMatrix_Combinatorial();
+	string fileEigFields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_10_eigenfields_Ref";
+	computeEigenFields_regular(20, fileEigFields);
+	visualizeEigenTensorFields(viewer, 1);
 
 	/*Subspace construction */
-	constructBasis();
-	visualizeBasis(viewer, 0);
+	///constructBasis();
+	///visualizeBasis(viewer, 0);
 		
 	/* Testing the result */
 	//testDirichletAndLaplace();

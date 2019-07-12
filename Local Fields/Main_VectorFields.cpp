@@ -12,6 +12,9 @@ int eigToShow2 = 0;
 int eigsToCompute = 50; 
 int vfSaveId = 0;
 
+enum class FieldsType {VECTOR, NROSY, TENSOR};
+FieldsType fieldsType = FieldsType::TENSOR;
+
 int main(int argc, char *argv[])
 {
 	/* TEST MATLAB DATA C++ */
@@ -69,10 +72,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 
 	/* ====================== VECTOR FIELDS  ====================*/
-	cout << "\n========================= VECTOR FIELDS =============================\n";
-	VectorFields vectorFields;
-	//vectorFields.TEST_VECTOR(viewer, meshFile);
-	//vectorFields.getVF(V, F);
+	
 
 	/* ====================== APP: SMOOTHING VECTOR FIELDS  ====================*/
 	//Eigen::VectorXd v_in = vectorFields.arbField2D;
@@ -83,9 +83,26 @@ int main(int argc, char *argv[])
 
 	/* ====================== APP: SMOOTHING TENSOR FIELDS (CURVATURE) ====================*/
 	cout << "\n========================= TENSOR FIELDS =============================\n";
+	
 	TensorFields tensorFields;
-	tensorFields.TEST_TENSOR(viewer, meshFile);
-	tensorFields.getVF(V, F);
+	VectorFields vectorFields;
+
+	switch (fieldsType)
+	{
+	case FieldsType::VECTOR:
+		cout << "\n========================= VECTOR FIELDS =============================\n";
+		vectorFields.TEST_VECTOR(viewer, meshFile);
+		vectorFields.getVF(V, F);
+		break;
+	case FieldsType::NROSY:
+		break;
+	case FieldsType::TENSOR:
+		tensorFields.TEST_TENSOR(viewer, meshFile);
+		tensorFields.getVF(V, F);
+		break;
+	default:
+		break;
+	}
 
 
 	viewer.data().set_mesh(V, F);
@@ -191,13 +208,35 @@ int main(int argc, char *argv[])
 			break;
 		case '7':
 			eigToShow = max(eigToShow - 1, 0);
-			vectorFields.visualizeEigenfields(viewer, eigToShow);
-			printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
+			if (fieldsType == FieldsType::VECTOR) 
+			{				
+				vectorFields.visualizeEigenfields(viewer, eigToShow);
+				printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
+			}
+			else if (fieldsType == FieldsType::NROSY) 
+			{
+
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				tensorFields.visualizeEigenTensorFields(viewer, eigToShow);
+			}
 			break;
 		case '8':
 			eigToShow = min(eigToShow + 1, eigsToCompute - 1);
-			vectorFields.visualizeEigenfields(viewer, eigToShow);
-			printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				vectorFields.visualizeEigenfields(viewer, eigToShow);
+				printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, vectorFields.eigValuesFull(eigToShow));
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				tensorFields.visualizeEigenTensorFields(viewer, eigToShow);
+			}
 			break;
 		case '9':
 			//vectorFields.visualizeApproximatedFields(viewer);
@@ -258,7 +297,7 @@ int main(int argc, char *argv[])
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
 			if (!showSmoothed) {				
-				tensorFields.visualizeTensorFields(viewer);
+				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}
 			else
 			{

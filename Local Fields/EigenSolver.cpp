@@ -625,6 +625,115 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 */
 }
 
+void computeEigenMatlab(Eigen::SparseMatrix<double> &S, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	//printf("Size of S = %dx%d\n", S.rows(), S.cols());
+	using namespace matlab::engine;
+	Engine *ep;
+	mxArray *MS = NULL, *result = NULL, *eigVecResult, *nEigsBuff;
+
+	/* Storing element to determine how many eigenpairs to compute*/	
+	nEigsBuff = mxCreateDoubleMatrix((mwSize)1, (mwSize)1, mxREAL);
+	double *numEigsPtr = mxGetPr(nEigsBuff);
+	*numEigsPtr = numEigs;
+
+	chrono::high_resolution_clock::time_point	t1, t2, t3, t4;
+	chrono::duration<double>					time_span, ts2;
+
+	const int NNZ_S = S.nonZeros();
+	double *eigVal, *eigVec;
+
+	// Allocate memory for S and M (sparse representation)
+	double	*srs = (double*)malloc(NNZ_S * sizeof(double));
+	mwIndex *irs = (mwIndex*)malloc(NNZ_S * sizeof(mwIndex));
+	mwIndex *jcs = (mwIndex*)malloc((S.cols() + 1) * sizeof(mwIndex));
+
+
+	// Bind MM with M, and MS with S
+	MS = mxCreateSparse(S.rows(), S.cols(), NNZ_S, mxREAL);
+	srs = mxGetPr(MS);
+	irs = mxGetIr(MS);
+	jcs = mxGetJc(MS);
+
+	// Setting initial variable value
+	int nnzSCounter = 0;
+	int nnzMCounter = 0;
+
+	t1 = chrono::high_resolution_clock::now();
+
+	// Getting matrix S
+	jcs[0] = nnzSCounter;
+	for (int i = 0; i < S.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(S, i); it; ++it) {
+			srs[nnzSCounter] = it.value();
+			irs[nnzSCounter] = it.row();
+			nnzSCounter++;
+		}
+		jcs[i + 1] = nnzSCounter;
+	}
+
+	// Start Matlab Engine
+	int *matlabStatus;
+	ep = engOpen(NULL);
+	if (!(ep = engOpen(""))) {
+		//ep = engOpenSingleUse(NULL, NULL, matlabStatus);
+		//if (!(ep = engOpenSingleUse(NULL, NULL, matlabStatus))) {
+		fprintf(stderr, "\nCan't start MATLAB engine\n");
+		cout << "CANNOT START MATLAB " << endl;
+	}
+	else {
+		//cout << "MATLAB STARTS. OH YEAH!!!" << endl;
+	}
+
+	//cout << "Status => " << matlabStatus << endl; 
+
+	// Compute Eigenvalue in Matlab
+	int NUM_EIGEN = numEigs;
+
+	engPutVariable(ep, "MS", MS);
+	engPutVariable(ep, "Num", nEigsBuff);
+
+	t3 = chrono::high_resolution_clock::now();
+	engEvalString(ep, "[EigVec, EigVal]=eigs(MS, Num(1,1),'smallestabs');");
+	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
+	engEvalString(ep, "EigVal=diag(EigVal);");
+	if (numEigs > 2)
+	{
+		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
+		string approxFile = "save('" + filename + "_eigFields','data','EigVal');";
+		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
+		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
+		cout << "Saving the eigen problem\n";
+		engEvalString(ep, approxFile.c_str());
+	}
+	t4 = chrono::high_resolution_clock::now();
+
+
+	result = engGetVariable(ep, "EigVal");
+	eigVal = (double*)malloc(NUM_EIGEN * sizeof(double));
+	memcpy((void *)eigVal, (void *)mxGetPr(result), NUM_EIGEN * sizeof(double));
+
+	eigVecResult = engGetVariable(ep, "EigVec");
+	eigVec = (double*)malloc(S.rows() * NUM_EIGEN * sizeof(double));
+	memcpy((void *)eigVec, (void *)mxGetPr(eigVecResult), S.rows() * NUM_EIGEN * sizeof(double));
+
+	EigVal = Eigen::Map<Eigen::VectorXd>(eigVal, NUM_EIGEN);
+	EigVec = Eigen::Map<Eigen::MatrixXd, 0, Eigen::OuterStride<>>(eigVec, S.rows(), NUM_EIGEN, Eigen::OuterStride<>(S.rows()));
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+	ts2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
+
+	engEvalString(ep, "clear; clc;");
+	
+	mxDestroyArray(MS);
+	mxDestroyArray(result);
+	mxDestroyArray(eigVecResult);
+	mxDestroyArray(nEigsBuff);
+
+	engClose(ep);
+}
+
 void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
 {
 	//printf("Size of S = %dx%d\n", S.rows(), S.cols());

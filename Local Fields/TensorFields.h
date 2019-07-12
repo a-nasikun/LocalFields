@@ -41,6 +41,10 @@ public:
 	void convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt, Eigen::Matrix2d& tensor);
 	void constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep);
 
+	/* ADDITIONAL STUFF */
+	void computeEigenFields_regular(const int &numEigs, const string& filename);
+	void computeEigenFields_generalized(const int &numEigs, const string& filename);
+
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
 	void constructSamples(const int &n);
@@ -55,9 +59,10 @@ public:
 
 	/* VISUALIZATION */
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
-	void visualizeTensorFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& tensorFields_);
 	void visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
+	void visualizeEigenTensorFields(igl::opengl::glfw::Viewer &viewer, int id);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 
 	/* TESTING STUFF*/
@@ -84,7 +89,11 @@ public:
 	vector<set<int>>				AdjMF2Ring;				// 2-ring neighborhood of triangles
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	//double							scale = 10000000;
-	double							scale = 1;
+	double							scale = 100;
+
+	//
+	Eigen::MatrixXd eigFieldsTensorRef;
+	Eigen::VectorXd eigValuesTensorRef;
 
 	// Variable related to subspace construction
 	Eigen::SparseMatrix<double>		Basis;
