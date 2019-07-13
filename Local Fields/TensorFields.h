@@ -89,7 +89,8 @@ public:
 	vector<set<int>>				AdjMF2Ring;				// 2-ring neighborhood of triangles
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	//double							scale = 10000000;
-	double							scale = 100;
+	//double							scale = 100;		// regular eigenfields => arma 10k
+	double							scale = 1.0;
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;

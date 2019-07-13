@@ -1332,7 +1332,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(10000);
+	selectFaceToDraw(1000);
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1405,11 +1405,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testSparseMatrix();
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 50; 
-	numSupport = 40.0;
-	constructSamples(numSample);
-	constructBasis();	
+	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+	//numSample = 50; 
+	//numSupport = 40.0;
+	//constructSamples(numSample);
+	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	///retrieveBasis(filename_basis);	
@@ -1425,9 +1425,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testSpectra();
 	//testViennaCL2();
 
-	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_4_Ref_eigFields";
+	int eigsToCompute = 20;
+	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_20_eigVectorFields_Ref";
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_25_Approx_EigenBasis_2000dim_30sup";
-	//computeEigenFields(eigsToCompute, filename_refField);	
+	computeEigenFields(eigsToCompute, filename_refField);	
 	//retrieveEigenFields(filename_refField);
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//retrieveApproxEigenFields();

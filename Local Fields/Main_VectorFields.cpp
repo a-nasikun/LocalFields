@@ -220,6 +220,7 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::TENSOR)
 			{
 				tensorFields.visualizeEigenTensorFields(viewer, eigToShow);
+				printf("[Ref] Eigen tensor fields: %d (eigval=%.3f)\n", eigToShow, tensorFields.eigValuesTensorRef(eigToShow));
 			}
 			break;
 		case '8':
@@ -236,6 +237,7 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::TENSOR)
 			{
 				tensorFields.visualizeEigenTensorFields(viewer, eigToShow);
+				printf("[Ref] Eigen tensor fields: %d (eigval=%.3f)\n", eigToShow, tensorFields.eigValuesTensorRef(eigToShow));
 			}
 			break;
 		case '9':

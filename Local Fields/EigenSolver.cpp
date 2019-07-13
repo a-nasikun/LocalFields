@@ -574,7 +574,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engPutVariable(ep, "Num", nEigsBuff);
 
 	t3 = chrono::high_resolution_clock::now();
-	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
+	engEvalString(ep, "[data, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
 	if (numEigs > 2)
@@ -584,7 +584,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
-		///engEvalString(ep, approxFile.c_str());
+		engEvalString(ep, approxFile.c_str());
 	}
 	t4 = chrono::high_resolution_clock::now();
 
@@ -593,7 +593,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	eigVal = (double*)malloc(NUM_EIGEN * sizeof(double));
 	memcpy((void *)eigVal, (void *)mxGetPr(result), NUM_EIGEN * sizeof(double));
 
-	eigVecResult = engGetVariable(ep, "EigVec");
+	eigVecResult = engGetVariable(ep, "data");
 	eigVec = (double*)malloc(M.rows() * NUM_EIGEN * sizeof(double));
 	memcpy((void *)eigVec, (void *)mxGetPr(eigVecResult), M.rows() * NUM_EIGEN * sizeof(double));
 
@@ -699,6 +699,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, const int& numEigs, Eige
 	engEvalString(ep, "EigVal=diag(EigVal);");
 	if (numEigs > 2)
 	{
+		cout << "Should be written: to " << filename << endl;
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
 		string approxFile = "save('" + filename + "_eigFields','data','EigVal');";
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";

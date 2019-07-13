@@ -739,16 +739,8 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
-
-	//printf("__Size of SF: %dx%d \n", SF.rows(), SF.cols());
-	//Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> sparseSolver;
-	//sparseSolver.setPivotThreshold(5.0*std::numeric_limits<double>::epsilon());
-	//sparseSolver.analyzePattern(SF);
-	//sparseSolver.factorize(SF);
-	//
-	//int SFRank = sparseSolver.rank();
-	//
-	//printf("__ranke of SF: %d \n", SFRank);
+	string fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_10k_Lap_Comb";
+	WriteSparseMatrixToMatlab(SF, fileLaplace);
 }
 
 void TensorFields::buildStiffnessMatrix_Geometric()
@@ -776,7 +768,9 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 		/* Should be multiplied by 3.0 
 		** but because later will be divided by 3.0 again (due to 3 neighbors),
 		** I just dont multiply with anything */
-		weight = el * el / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
+		//weight = el * el / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
+		weight = 3.0 * el * el / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
+		//weight = 3.0 / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
 
 
 		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT
@@ -813,6 +807,8 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+
+
 }
 
 /* Converting tensor fields (each of 2x2 size) to voigt's notation vector fields (3x1) 
@@ -895,7 +891,18 @@ void TensorFields::computeEigenFields_regular(const int &numEigs, const string& 
 
 void TensorFields::computeEigenFields_generalized(const int &numEigs, const string& filename)
 {
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Computing reference generalized-eigenproblem (in Matlab)... ";
 
+	computeEigenMatlab(SF, MF, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
+	//WriteSparseMatrixToMatlab(MF2D, "hello");
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 /* ====================== SUBSPACE CONSTRUCTION ====================== */
@@ -1450,6 +1457,7 @@ void TensorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 
 void TensorFields::visualizeEigenTensorFields(igl::opengl::glfw::Viewer &viewer, int id)
 {
+	cout << "Visuzlizeing \n";
 	Eigen::VectorXd eigFields_ = eigFieldsTensorRef.col(id);
 	Eigen::MatrixXd eigTensor_, eigTensorRep_;
 	convertVoigtToTensor(eigFields_, eigTensor_);
@@ -1523,9 +1531,10 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testTransformation(viewer);
 	//buildStiffnessMatrix_Geometric();
 	buildStiffnessMatrix_Combinatorial();
-	string fileEigFields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_10_eigenfields_Ref";
-	computeEigenFields_regular(20, fileEigFields);
-	visualizeEigenTensorFields(viewer, 1);
+	string fileEigFields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_1000_Ref";
+	//computeEigenFields_generalized((int) 1000, fileEigFields);
+	//computeEigenFields_regular(50, fileEigFields);
+	//visualizeEigenTensorFields(viewer, 1);
 
 	/*Subspace construction */
 	///constructBasis();
