@@ -44,6 +44,7 @@ public:
 	/* ADDITIONAL STUFF */
 	void computeEigenFields_regular(const int &numEigs, const string& filename);
 	void computeEigenFields_generalized(const int &numEigs, const string& filename);
+	void loadEigenFields(const string& filename);
 
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
@@ -90,7 +91,7 @@ public:
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	//double							scale = 10000000;
 	//double							scale = 100;		// regular eigenfields => arma 10k
-	double							scale = 1.0;
+	double							scale = 1000.0;
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;

@@ -712,7 +712,8 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 
 		Eigen::Matrix3d B1toB2, B2toB1;
 		/* B1toB2 => parallel transport matrix A to B *
-		** B2toB1 => parallel transport matrix B to A */
+		** B2toB1 => parallel transport matrix B to A 
+		** parameters: cos_Target, sin_Target, cos_Source, sin_Source, rep_matrix */
 		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
 		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
 
@@ -739,7 +740,7 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
-	string fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_10k_Lap_Comb";
+	string fileLaplace = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_Lap_Tensor_Comb";
 	WriteSparseMatrixToMatlab(SF, fileLaplace);
 }
 
@@ -769,14 +770,13 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 		** but because later will be divided by 3.0 again (due to 3 neighbors),
 		** I just dont multiply with anything */
 		//weight = el * el / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
-		weight = 3.0 * el * el / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
+		weight = (3.0 * el * el ) / (0.5*doubleArea(TA)+0.5*doubleArea(TB));
 		//weight = 3.0 / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
 
 
 		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT
 		** having M = R*-Id*ST
 		** then T = M*B*MT */
-
 
 		Eigen::Matrix3d B1toB2, B2toB1;
 		/* B1toB2 => parallel transport matrix A to B *
@@ -803,12 +803,17 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 				STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TA + j, -weight*B1toB2(i, j)));
 			}
 		}
+
 	}
 
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 
-
+	string model		= "CDragon";
+	string fileLaplace	= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_Tensor_Geom";
+	WriteSparseMatrixToMatlab(SF, fileLaplace);
+	fileLaplace			= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_Tensor_Geom";
+	WriteSparseMatrixToMatlab(MF, fileLaplace);
 }
 
 /* Converting tensor fields (each of 2x2 size) to voigt's notation vector fields (3x1) 
@@ -903,6 +908,10 @@ void TensorFields::computeEigenFields_generalized(const int &numEigs, const stri
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+}
+void TensorFields::loadEigenFields(const string& filename)
+{
+	ReadDenseMatrixFromMatlab(eigFieldsTensorRef, filename, F.rows()*3, 500);
 }
 
 /* ====================== SUBSPACE CONSTRUCTION ====================== */
@@ -1529,12 +1538,14 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	computeFrameRotation(viewer);
 	//testTransformation(viewer);
-	//buildStiffnessMatrix_Geometric();
-	buildStiffnessMatrix_Combinatorial();
-	string fileEigFields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_1000_Ref";
-	//computeEigenFields_generalized((int) 1000, fileEigFields);
+	buildStiffnessMatrix_Geometric();
+	//buildStiffnessMatrix_Combinatorial();
+	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_1000_Ref";
+	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Geom_eigFields";
+	computeEigenFields_generalized((int) 50, fileEigFields);
 	//computeEigenFields_regular(50, fileEigFields);
-	//visualizeEigenTensorFields(viewer, 1);
+	///loadEigenFields(fileEigFields);
+	visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
 	///constructBasis();

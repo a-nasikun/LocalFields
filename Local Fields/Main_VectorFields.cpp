@@ -9,7 +9,7 @@
 int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
-int eigsToCompute = 50; 
+int eigsToCompute = 500; 
 int vfSaveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
@@ -42,9 +42,9 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -157,9 +157,6 @@ int main(int argc, char *argv[])
 		double yMouse;
 		int fid;
 		Eigen::Vector3f bc;
-		
-		
-
 		switch (key)
 		{
 		case '-':
