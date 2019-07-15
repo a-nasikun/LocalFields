@@ -689,6 +689,7 @@ void TensorFields::obtainTransformationForLaplacian(double cT, double sT, double
 void TensorFields::buildStiffnessMatrix_Combinatorial()
 {
 	SF.resize(3 * F.rows(), 3 * F.rows());
+	Eigen::SparseMatrix<double> STemp(3 * F.rows(), 3 * F.rows());
 	vector<Eigen::Triplet<double>> STriplet;
 	STriplet.reserve(4 * 9 * F.rows());
 
@@ -711,11 +712,24 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 		
 
 		Eigen::Matrix3d B1toB2, B2toB1;
+		Eigen::Matrix3d B1B2, B2B1;
 		/* B1toB2 => parallel transport matrix A to B *
 		** B2toB1 => parallel transport matrix B to A 
 		** parameters: cos_Target, sin_Target, cos_Source, sin_Source, rep_matrix */
-		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
-		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2B1);
+		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1B2);
+
+		B2toB1 = 0.5*(B2B1 + B2B1.transpose());
+		B1toB2 = 0.5*(B1B2 + B1B2.transpose());
+
+		//if (ei < 10)
+		//{
+		//	cout << "EI=" << ei << endl; 
+		//	cout << "B2->B1=\n" << B2B1 << endl;
+		//	cout << "B2toB1=\n" << B2toB1 << endl;
+		//	cout << "B1->B2=\n" << B1B2 << endl;
+		//	cout << "B1toB2=\n" << B1toB2 << endl;
+		//}
 
 		/* (Combinatorial) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 3; i++) 
@@ -739,7 +753,9 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 	}
 
 	/* Populate the matrix with configured triplets */
-	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+	STemp.setFromTriplets(STriplet.begin(), STriplet.end());
+	Eigen::SparseMatrix<double> ST = STemp.transpose();
+	SF = 0.5*(ST + STemp);
 	string fileLaplace = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_Lap_Tensor_Comb";
 	WriteSparseMatrixToMatlab(SF, fileLaplace);
 }
@@ -1538,12 +1554,12 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	computeFrameRotation(viewer);
 	//testTransformation(viewer);
-	buildStiffnessMatrix_Geometric();
-	//buildStiffnessMatrix_Combinatorial();
+	//buildStiffnessMatrix_Geometric();
+	buildStiffnessMatrix_Combinatorial();
 	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_1000_Ref";
-	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Geom_eigFields";
-	computeEigenFields_generalized((int) 50, fileEigFields);
-	//computeEigenFields_regular(50, fileEigFields);
+	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
+	//computeEigenFields_generalized((int) 50, fileEigFields);
+	computeEigenFields_regular(50, fileEigFields);
 	///loadEigenFields(fileEigFields);
 	visualizeEigenTensorFields(viewer, 0);
 
