@@ -30,8 +30,8 @@ public:
 	void constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F);
 
 	/* Rep. Vectors and N-RoSy Fields interface */
-	void convertNRoSyToRepVectors(Eigen::VectorXd& vectorFields);
-	void convertRepVectorsToNRoSy(const Eigen::VectorXd& vectorFields);
+	void convertNRoSyToRepVectors();
+	void convertRepVectorsToNRoSy();
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);
 
 	/* Visualizing the NRoSyFields */

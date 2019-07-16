@@ -403,12 +403,29 @@ void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& 
 }
 
 /* Rep. Vectors and N-RoSy Fields interface */
-void NRoSyFields::convertNRoSyToRepVectors(Eigen::VectorXd& vectorFields)
+void NRoSyFields::convertNRoSyToRepVectors()
 {
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);	
+	
+	repVector.resize(2 * F.rows());
 
+	/* Construct rotation matrix*/
+	for (int j = 0; j < F.rows(); j++)
+	{
+		double angle = theta(j) + (2.0*M_PI / (double)NRoSy);
+		
+		Eigen::Matrix2d RotM;
+		RotM(0, 0) = cos(angle);
+		RotM(0, 1) = -sin(angle);
+		RotM(1, 0) = sin(angle);
+		RotM(1, 1) = cos(angle);
+
+		repVector.block(2 * j, 0, 2, 1) = magnitude(j) * RotM * b;
+	}
 }
 
-void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& vectorFields)
+void NRoSyFields::convertRepVectorsToNRoSy()
 {
 	theta.resize(F.rows());
 	magnitude.resize(F.rows());
@@ -418,15 +435,15 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& vectorFields)
 
 	for (int i = 0; i < F.rows(); i++)
 	{
-		v = vectorFields.block(2 * i, 0, 2, 1);
+		v = repVector.block(2 * i, 0, 2, 1);
 
 		magnitude(i) = v.norm();
 		v.normalize();
 		double angle;
 		if(v(1)<0)
-			theta(i) = 2*M_PI - acos(b.dot(v)) / (double)NRoSy;
+			theta(i) = M_PI - acos(b.dot(v));
 		else 
-			theta(i) = acos(b.dot(v)) / (double)NRoSy;
+			theta(i) = acos(b.dot(v));
 	}
 }
 
@@ -452,7 +469,7 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
 		v.normalize();
 		double angle;
 		if (v(1)<0)
-			theta(i) = 2 * M_PI - acos(b.dot(v));
+			theta(i) = M_PI - acos(b.dot(v));
 		else
 			theta(i) = acos(b.dot(v));
 	}
@@ -499,6 +516,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer)
 
 void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer)
 {
+	const double scale = 1.0;
 	Eigen::Vector2d b(1, 0);	
 	Eigen::RowVector3d color (117.0/255.0, 107.0/255.0, 177.0/255.0);
 	Eigen::VectorXd TempFields(2 * F.rows());
@@ -510,7 +528,7 @@ void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer)
 		TempFields(2 * j)		= magnitude(j)*cos(angle);
 		TempFields(2 * j + 1)   = magnitude(j)*sin(angle);		
 	}
-	visualize2Dfields(viewer, TempFields, color, 0.4, false);	
+	visualize2Dfields(viewer, TempFields, color, scale, false);	
 }
 
 void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
@@ -619,7 +637,7 @@ void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eig
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	NRoSy = 2;
+	NRoSy = 4;
 	readMesh(meshFile);
 	scaleMesh();
 	computeAverageEdgeLength();
@@ -633,6 +651,11 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
 	ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
 	createNRoSyFromVectors(inputNFields);
+	//visualizeNRoSyFields(viewer);
+
+	convertNRoSyToRepVectors();
+	//visualizeRepVectorFields(viewer);
+	convertRepVectorsToNRoSy();
 	visualizeNRoSyFields(viewer);
 }
 
