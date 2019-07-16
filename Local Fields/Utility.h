@@ -72,7 +72,7 @@ void WriteSparseMatrixToMatlab(const Eigen::SparseMatrix<double>& M, const strin
 void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const int& nRows, const int& nCols, const int& nBlocks=1);
 void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename);
 void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& filename);
-void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename);
+void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename, const int nRows);
 void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
 void ReadChristopherStiffnessMatrix(const string &filename, Eigen::SparseMatrix<double> &M);
 void LoadSparseMatrixFromTxtFile(const string& filename, Eigen::SparseMatrix<double> &M);

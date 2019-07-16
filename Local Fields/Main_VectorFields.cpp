@@ -13,7 +13,7 @@ int eigsToCompute = 500;
 int vfSaveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::TENSOR;
+FieldsType fieldsType = FieldsType::NROSY;
 
 int main(int argc, char *argv[])
 {
@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
 	
 	TensorFields tensorFields;
 	VectorFields vectorFields;
+	NRoSyFields nRoSyFields;
 
 	switch (fieldsType)
 	{
@@ -95,16 +96,19 @@ int main(int argc, char *argv[])
 		vectorFields.getVF(V, F);
 		break;
 	case FieldsType::NROSY:
+		cout << "\n========================= N-ROSY FIELDS =============================\n";
+		nRoSyFields.TEST_NROSY(viewer, meshFile);
+		nRoSyFields.getVF(V, F);
 		break;
 	case FieldsType::TENSOR:
+		cout << "\n========================= TENSOR FIELDS =============================\n";
 		tensorFields.TEST_TENSOR(viewer, meshFile);
 		tensorFields.getVF(V, F);
 		break;
 	default:
 		break;
 	}
-
-
+	
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
 	viewer.data().set_mesh(V, F);

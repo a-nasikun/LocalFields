@@ -3629,7 +3629,7 @@ void VectorFields::computeEigenFields(const int &numEigs, const string& filename
 void VectorFields::retrieveEigenFields(const string& filename)
 {
 	ReadDenseMatrixFromMatlab(eigFieldFull2D, filename);
-	ReadVectorFromMatlab(eigValuesFull, filename);
+	ReadVectorFromMatlab(eigValuesFull, filename, 2*F.rows());
 }
 
 void VectorFields::computeApproxEigenFields(const int &numEigs, const string& filename)
@@ -3696,7 +3696,7 @@ void VectorFields::retrieveApproxEigenFields()
 {
 	//ReadSparseMatrixFromMatlab(Basis, "Hello");
 	ReadDenseMatrixFromMatlab(eigFieldReduced2D, "Hello");
-	ReadVectorFromMatlab(eigValuesReduced, "hello");
+	ReadVectorFromMatlab(eigValuesReduced, "hello", 2*F.rows());
 }
 
 void VectorFields::measureApproxAccuracyL2Norm()

@@ -205,13 +205,13 @@ void ReadSparseMatrixFromMatlab(Eigen::SparseMatrix<double>& M, const string& fi
 	/// [TO DO]
 }
 
-void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename)
+void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename, const int nRows)
 {
 	using namespace matlab::engine;
 	Engine *ep;
 	mxArray *eigValM, *eigVecM;		// for Matlab
 	double	*eigValE, *eigVecE;		// for Eigen
-	const int NUM_EIGEN = 500;
+	const int NUM_EIGEN = nRows;		// num rows
 	const int NUM_BLOCKS = 1;
 
 	v.resize(NUM_BLOCKS*NUM_EIGEN);	
@@ -233,12 +233,12 @@ void ReadVectorFromMatlab(Eigen::VectorXd& v, const string& filename)
 
 	// Get the EIGENVALUES from Matlab => C++
 	cout << "Retrieving the eigenvalues" << endl;
-	eigValM = engGetVariable(ep, "EigVal");
+	eigValM = engGetVariable(ep, "data");
 	eigValE = (double*)malloc(NUM_BLOCKS*NUM_EIGEN * sizeof(double));
 	memcpy((void *)eigValE, (void *)mxGetPr(eigValM), NUM_BLOCKS*NUM_EIGEN * sizeof(double));
 	v = Eigen::Map<Eigen::VectorXd>(eigValE, NUM_EIGEN);
-	cout << "Eigenvalues: \n" << v << endl; 
-
+	//cout << "Eigenvalues: \n" << v << endl; 
+	cout << "Reading done\n";
 		
 	engEvalString(ep, "clear;");
 	engClose(ep);
