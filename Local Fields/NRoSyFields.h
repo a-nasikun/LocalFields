@@ -26,6 +26,7 @@ public:
 	void selectFaceToDraw(const int& numFaces);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void constructMassMatrixMF3D();
+	void buildStiffnessMatrix_Geometric();
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 
 	/* Creating NRoSyFields */
@@ -55,6 +56,7 @@ private:
 	vector<int>						FaceToDraw;
 	double							avgEdgeLength;
 	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::SparseMatrix<double>		SF;						//  Harmonic/Dirichlet Energy
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information

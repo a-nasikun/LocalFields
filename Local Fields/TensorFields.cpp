@@ -132,6 +132,8 @@ void TensorFields::scaleMesh()
 	}
 	scaleFactor = length.maxCoeff();
 
+	igl::doublearea(V, F, doubleArea);
+
 	//cout << "AFTER Scaling\n";
 	//cout << "Max coeff \n" << maxV << endl;
 	//cout << "Min coeff \n" << minV << endl;
@@ -801,7 +803,7 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
 		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
 
-		/* (Combinatorial) Laplace matrix from A (first triangle) perspective */
+		/* (Geometric) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 3; i++)
 		{
 			STriplet.push_back(Eigen::Triplet<double>(3 * TA + i, 3 * TA + i, weight));
@@ -811,7 +813,7 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 			}
 		}
 
-		/* (Combinatorial) Laplace matrix from B (second triangle) perspective */
+		/* (Geometric) Laplace matrix from B (second triangle) perspective */
 		for (int i = 0; i < 3; i++)
 		{
 			STriplet.push_back(Eigen::Triplet<double>(3 * TB + i, 3 * TB + i, weight));

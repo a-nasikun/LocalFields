@@ -101,6 +101,8 @@ void NRoSyFields::scaleMesh()
 		length(i) = maxV(i) - minV(i);
 	}
 	scaleFactor = length.maxCoeff();
+
+	igl::doublearea(V, F, doubleArea);
 }
 
 void NRoSyFields::getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F)
@@ -455,6 +457,85 @@ void NRoSyFields::constructMassMatrixMF3D()
 	MF.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
 	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
 
+}
+
+void NRoSyFields::buildStiffnessMatrix_Geometric()
+{
+	cout << "Try to build the harmonic energy \n";
+	SF.resize(2 * F.rows(), 2 * F.rows());
+	vector<Eigen::Triplet<double>> STriplet;
+	STriplet.reserve(4 * 4 * F.rows());
+
+	srand(time(NULL));
+	const int ee = rand() % E.rows();
+
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		//cout << "Obtain two neighboring triangles TA and TB \n";
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+		double weight;
+
+		if (ei == 0)
+		{
+			cout << "TA: " << TA << ", and TB: " << TB << endl; 
+		}
+
+		/* Construct the rotation matrix RA and SB */
+		//cout << "Construct the rotation matrix RA and SB\n";
+		double cosRA = cos(NRoSy*FrameRot(ei, 0));
+		double sinRA = sin(NRoSy*FrameRot(ei, 0));
+		double cosSB = cos(NRoSy*FrameRot(ei, 1));
+		double sinSB = sin(NRoSy*FrameRot(ei, 1));
+
+		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
+		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
+
+		//cout << "Copmute the weight \n";
+		/* Compute the weight on each edge */
+		Eigen::Vector3d edge_ = V.row(E(ei, 1)) - V.row(E(ei, 0));
+		double el = edge_.dot(edge_);
+		/* Should be multiplied by 3.0
+		** but because later will be divided by 3.0 again (due to 3 neighbors),
+		** I just dont multiply with anything */
+		//weight = el * el / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
+		weight = (3.0 * el * el) / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
+
+		/* The transport matrix */
+		Eigen::Matrix2d B2toB1 = R1.transpose()*R2;
+		Eigen::Matrix2d B1toB2 = R2.transpose()*R1;
+
+		if (ei == ee)
+		{
+			cout << "Data of : " << ei << endl;
+			cout << "B2 to B1 : \n" << B2toB1 << endl;
+			cout << "B1 to B2 : \n" << B1toB2 << endl; 
+		}
+
+		/* (Geometric) Laplace matrix from A (first triangle) perspective */
+		for (int i = 0; i < 2; i++) 
+		{
+			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight));
+			for (int j = 0; j < 2; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, weight*B2toB1(i, j)));
+			}
+		}
+
+		/* (Geometric) Laplace matrix from B (first triangle) perspective */
+		for (int i = 0; i < 2; i++)
+		{
+			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight));
+			for (int j = 0; j < 2; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + j, weight*B1toB2(i, j)));
+			}
+		}
+
+	}
+
+	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 }
 
 void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
@@ -853,6 +934,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	NRoSy = 4;
 	readMesh(meshFile);
 	scaleMesh();
+	
 	computeAverageEdgeLength();
 	computeFaceCenter();
 	constructFaceAdjacency3NMatrix();
@@ -874,6 +956,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//visualizeNRoSyFields(viewer);
 
 	computeFrameRotation(viewer);
+	buildStiffnessMatrix_Geometric();
 
 }
 
