@@ -5,6 +5,12 @@
 
 using namespace std;
 
+struct NRoSy
+{
+	Eigen::VectorXd					magnitude;
+	Eigen::VectorXd					theta;
+};
+
 class NRoSyFields
 {
 public:
@@ -26,8 +32,11 @@ public:
 	void selectFaceToDraw(const int& numFaces);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void constructMassMatrixMF3D();
+	void buildStiffnessMatrix_Combinatorial();
 	void buildStiffnessMatrix_Geometric();
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
+	void computeEigenFields_generalized(const int &numEigs, const string& filename);
+	void computeEigenFields_regular(const int &numEigs, const string& filename);
 
 	/* Creating NRoSyFields */
 	void representingNRoSyFields(const Eigen::MatrixXd& NFields);
@@ -35,23 +44,26 @@ public:
 	void constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F);
 
 	/* Rep. Vectors and N-RoSy Fields interface */
-	void convertNRoSyToRepVectors();
-	void convertRepVectorsToNRoSy();
+	void convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::VectorXd& repVect);
+	void convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields);
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);
 
 	/* Visualizing the NRoSyFields */
-	void visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer);
-	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields);
+	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields);
+	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
+	void visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id);
 
 	/* Testing stuff */
 	void TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
 
-private:
+public:
+	NRoSy							nRoSy;
 	Eigen::MatrixXd					V, FC;
 	Eigen::MatrixXi					F, E, AdjMF3N;
-	int								NRoSy;
-	Eigen::VectorXd					frameBasis, magnitude, theta, repVector; 
+	int								nRot;
+	Eigen::VectorXd					frameBasis, repVector; 
 	Eigen::SparseMatrix<double>		A; 
 	vector<int>						FaceToDraw;
 	double							avgEdgeLength;
@@ -61,6 +73,8 @@ private:
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
 	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
+	Eigen::MatrixXd					eigFieldsNRoSyRef;
+	Eigen::VectorXd					eigValuesNRoSyRef;
 };
 
 #endif

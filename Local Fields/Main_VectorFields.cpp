@@ -216,7 +216,9 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY) 
 			{
-
+				nRoSyFields.visualizeRepVectorFields(viewer, nRoSyFields.eigFieldsNRoSyRef.col(eigToShow));
+				//nRoSyFields.visualizeEigenFields(viewer, eigToShow);
+				printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, nRoSyFields.eigValuesNRoSyRef(eigToShow));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -233,7 +235,9 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-
+				nRoSyFields.visualizeRepVectorFields(viewer, nRoSyFields.eigFieldsNRoSyRef.col(eigToShow));
+				//nRoSyFields.visualizeEigenFields(viewer, eigToShow);
+				printf("[Full] Eigen vector: %d (eigval=%.3f)\n", eigToShow, nRoSyFields.eigValuesNRoSyRef(eigToShow));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{

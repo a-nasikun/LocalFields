@@ -438,25 +438,92 @@ void NRoSyFields::computeDijkstraDistanceFaceForSampling(const int &source, Eige
 
 void NRoSyFields::constructMassMatrixMF3D()
 {
-	MF.resize(3 * F.rows(), 3 * F.rows());
-	MFinv.resize(3 * F.rows(), 3 * F.rows());
+	MF.resize(2 * F.rows(), 2 * F.rows());
+	MFinv.resize(2 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> MFTriplet;
-	MFTriplet.reserve(3 * F.rows());
+	MFTriplet.reserve(2 * F.rows());
 	vector<Eigen::Triplet<double>> MFInvTriplet;
 	MFInvTriplet.reserve(2 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2.0;
-		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, area));
-		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, area));
-		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, area));
-		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, 1.0 / area));
-		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0 / area));
-		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0 / area));
+		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, area));
+		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, 1.0 / area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, 1.0 / area));
 	}
 	MF.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
 	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
 
+}
+
+void NRoSyFields::buildStiffnessMatrix_Combinatorial()
+{
+	cout << "Try to build the harmonic energy \n";
+	SF.resize(2 * F.rows(), 2 * F.rows());
+	vector<Eigen::Triplet<double>> STriplet;
+	STriplet.reserve(4 * 4 * F.rows());
+
+	srand(time(NULL));
+	const int ee = rand() % E.rows();
+
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		//cout << "Obtain two neighboring triangles TA and TB \n";
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+
+		if (ei == ee)
+		{
+			cout << "TA: " << TA << ", and TB: " << TB << endl;
+		}
+
+		/* Construct the rotation matrix RA and SB */
+		//cout << "Construct the rotation matrix RA and SB\n";
+		double cosRA = cos(FrameRot(ei, 0));
+		double sinRA = sin(FrameRot(ei, 0));
+		double cosSB = cos(FrameRot(ei, 1));
+		double sinSB = sin(FrameRot(ei, 1));
+
+		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
+		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
+		
+		/* The transport matrix */
+		Eigen::Matrix2d B2toB1 = R1*R2.transpose();
+		Eigen::Matrix2d B1toB2 = R2*R1.transpose();
+
+		if (ei == ee)
+		{
+			cout << "Data of : " << ei << endl;
+			cout << "B2 to B1 : \n" << B2toB1 << endl;
+			cout << "B1 to B2 : \n" << B1toB2 << endl;
+		}
+
+		/* (Geometric) Laplace matrix from A (first triangle) perspective */
+		for (int i = 0; i < 2; i++)
+		{
+			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, 1.0));
+			for (int j = 0; j < 2; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, B2toB1(i, j)));
+			}
+		}
+
+		/* (Geometric) Laplace matrix from B (first triangle) perspective */
+		for (int i = 0; i < 2; i++)
+		{
+			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, 1.0));
+			for (int j = 0; j < 2; j++)
+			{
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, B1toB2(i, j)));
+			}
+		}
+
+	}
+	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+	string filename = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Lap_NRoSy_Comb";
+	WriteSparseMatrixToMatlab(SF, filename);
 }
 
 void NRoSyFields::buildStiffnessMatrix_Geometric()
@@ -477,17 +544,17 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 		int TB = EF(ei, 1);
 		double weight;
 
-		if (ei == 0)
+		if (ei == ee)
 		{
 			cout << "TA: " << TA << ", and TB: " << TB << endl; 
 		}
 
 		/* Construct the rotation matrix RA and SB */
 		//cout << "Construct the rotation matrix RA and SB\n";
-		double cosRA = cos(NRoSy*FrameRot(ei, 0));
-		double sinRA = sin(NRoSy*FrameRot(ei, 0));
-		double cosSB = cos(NRoSy*FrameRot(ei, 1));
-		double sinSB = sin(NRoSy*FrameRot(ei, 1));
+		double cosRA = cos(nRot*FrameRot(ei, 0));
+		double sinRA = sin(nRot*FrameRot(ei, 0));
+		double cosSB = cos(nRot*FrameRot(ei, 1));
+		double sinSB = sin(nRot*FrameRot(ei, 1));
 
 		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
 		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
@@ -608,13 +675,27 @@ void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 		case 1:
 			//dp_1 = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
 			dp_1 = (e_ij).dot(-e_i) / (e_i.norm()*e_ij.norm());
-			angle_1 = acos(dp_1);
+			if (acos(dp_1) < 0.0)
+			{
+				angle_1 = M_PI + acos(dp_1);
+			}
+			else {
+				angle_1 = acos(dp_1);
+			}
+			
 			FrameRot(ei, 0) = M_PI - angle_1;
 			break;
 		case 2:
 			//dp_1 = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
 			dp_1 = (e_i).dot(-e_ij) / (e_i.norm() * e_ij.norm());
-			angle_1 =acos(dp_1);
+			//angle_1 =acos(dp_1);
+			if (acos(dp_1) < 0.0)
+			{
+				angle_1 = M_PI + acos(dp_1);
+			}
+			else {
+				angle_1 = acos(dp_1);
+			}
 			FrameRot(ei, 0) =  M_PI + angle_1;
 			break;
 		default:
@@ -632,13 +713,27 @@ void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 		case 1:
 			//dp_2 = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
 			dp_2 = (e_ji).dot(-e_j) / (e_j.norm() * e_ji.norm());
-			angle_2 =acos(dp_2);
+			//angle_2 =acos(dp_2);
+			if (acos(dp_2) < 0.0)
+			{
+				angle_2 = M_PI + acos(dp_2);
+			}
+			else {
+				angle_2 = acos(dp_2);
+			}
 			FrameRot(ei, 1) =  M_PI - angle_2;
 			break;
 		case 2:
 			//dp_2 = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
 			dp_2 = (e_j).dot(-e_ji) / (e_j.norm() * e_ji.norm());
-			angle_2 = acos(dp_2);
+			//angle_2 = acos(dp_2);
+			if (acos(dp_2) < 0.0)
+			{
+				angle_2 = M_PI + acos(dp_2);
+			}
+			else {
+				angle_2 = acos(dp_2);
+			}
 			FrameRot(ei, 1) = M_PI + angle_2;
 			break;
 		default:
@@ -669,6 +764,38 @@ void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 	}
 }
 
+void NRoSyFields::computeEigenFields_generalized(const int &numEigs, const string& filename)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Computing reference generalized-eigenproblem (in Matlab)... ";
+
+	printf("Size MF=%dx%d || size SF=%dx%d \n", MF.rows(), MF.cols(), SF.rows(), SF.cols());
+
+	computeEigenMatlab(SF, MF, numEigs, eigFieldsNRoSyRef, eigValuesNRoSyRef, filename);
+	//WriteSparseMatrixToMatlab(MF2D, "hello");
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void NRoSyFields::computeEigenFields_regular(const int &numEigs, const string& filename)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Computing reference regular-eigenproblem (in Matlab)... ";
+
+	computeEigenMatlab(SF, numEigs, eigFieldsNRoSyRef, eigValuesNRoSyRef, filename);
+	
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
 
 /* Creating NRoSyFields */
 void NRoSyFields::representingNRoSyFields(const Eigen::MatrixXd& NFields)
@@ -679,7 +806,7 @@ void NRoSyFields::representingNRoSyFields(const Eigen::MatrixXd& NFields)
 void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& NFields)
 {
 	cout << "> NRoSyFields::Construction (" << nRoSy << ") \n";
-	NRoSy = nRoSy;
+	nRot = nRoSy;
 	scaleMesh();
 	computeFaceCenter();
 	constructFrameBasis();
@@ -689,7 +816,7 @@ void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& 
 
 void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F)
 {
-	NRoSy = nRoSy;
+	nRot = nRoSy;
 	this->V = V; 
 	this->F = F;
 	scaleMesh();
@@ -697,17 +824,17 @@ void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& 
 }
 
 /* Rep. Vectors and N-RoSy Fields interface */
-void NRoSyFields::convertNRoSyToRepVectors()
+void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::VectorXd& repVect)
 {
 	double scale = 1.0;
 	Eigen::Vector2d b(1, 0);	
 	
-	repVector.resize(2 * F.rows());
+	repVect.resize(2 * F.rows());
 
 	/* Construct rotation matrix*/
 	for (int j = 0; j < F.rows(); j++)
 	{
-		double angle = theta(j) + (2.0*M_PI / (double)NRoSy);
+		double angle = nRoSyFields.theta(j) + (2.0*M_PI / (double)nRot);
 		
 		Eigen::Matrix2d RotM;
 		RotM(0, 0) = cos(angle);
@@ -715,37 +842,37 @@ void NRoSyFields::convertNRoSyToRepVectors()
 		RotM(1, 0) = sin(angle);
 		RotM(1, 1) = cos(angle);
 
-		repVector.block(2 * j, 0, 2, 1) = magnitude(j) * RotM * b;
+		repVector.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 	}
 }
 
-void NRoSyFields::convertRepVectorsToNRoSy()
+void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields)
 {
-	theta.resize(F.rows());
-	magnitude.resize(F.rows());
+	nRoSyFields.theta.resize(F.rows());
+	nRoSyFields.magnitude.resize(F.rows());
 
 	/* Temp variables */
 	Eigen::Vector2d v, b(1,0);
 
 	for (int i = 0; i < F.rows(); i++)
 	{
-		v = repVector.block(2 * i, 0, 2, 1);
+		v = repVect.block(2 * i, 0, 2, 1);
 
-		magnitude(i) = v.norm();
+		nRoSyFields.magnitude(i) = v.norm();
 		v.normalize();
 		double angle;
 		if(v(1)<0)
-			theta(i) = M_PI - acos(b.dot(v));
+			nRoSyFields.theta(i) = M_PI - acos(b.dot(v));
 		else 
-			theta(i) = acos(b.dot(v));
+			nRoSyFields.theta(i) = acos(b.dot(v));
 	}
 }
 
 void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
 {
 	cout << "Converting to nRoSy fields \n";
-	theta.resize(F.rows());
-	magnitude.resize(F.rows());
+	this->nRoSy.theta.resize(F.rows());
+	this->nRoSy.magnitude.resize(F.rows());
 
 	/* Temp variables */
 	Eigen::Vector2d v, b(1, 0);
@@ -759,30 +886,31 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
 			//printf("Data %d = (%.5f, %.5f) \n", i, v(0), v(1));
 		}
 
-		magnitude(i) = v.norm();
+		this->nRoSy.magnitude(i) = v.norm();
 		v.normalize();
 		double angle;
 		if (v(1)<0)
-			theta(i) = M_PI - acos(b.dot(v));
+			this->nRoSy.theta(i) = M_PI - acos(b.dot(v));
 		else
-			theta(i) = acos(b.dot(v));
+			this->nRoSy.theta(i) = acos(b.dot(v));
 	}
 }
 
 /* Visualizing the NRoSyFields */
-void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer)
+void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields)
 {
-	double scale = 1.0;
+	double scale = 250.0;
 	Eigen::Vector2d b(1, 0);
-	Eigen::VectorXd col(NRoSy);
-	Eigen::MatrixXd color;
-	for (int i = 0; i < NRoSy; i++)
-	{
-		col(i) = i*(1.0 / NRoSy);
-	}
-	igl::jet(col, true, color);
+	Eigen::RowVector3d color(0.1, 0.1, 0.9);
+	//Eigen::VectorXd col(nRot);
+	//Eigen::MatrixXd color;
+	//for (int i = 0; i < nRot; i++)
+	//{
+	//	col(i) = i*(1.0 / nRot);
+	//}
+	//igl::jet(col, true, color);
 
-	for (int i = 0; i < NRoSy; i++)
+	for (int i = 0; i < nRot; i++)
 	{
 		Eigen::VectorXd TempFields(2 * F.rows());
 		cout << "Drawing the " << i << " fields \n";
@@ -790,10 +918,10 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer)
 		/* Construct rotation matrix*/
 		for (int j = 0; j < F.rows(); j++)
 		{
-			double angle = theta(j) + ((double)i*2.0*M_PI / (double)NRoSy);
+			double angle = nRoSyFields.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
 			if (j == 0)
 			{
-				printf("angle 0=%.5f, theta 0=%.5f\n", angle, theta(j));
+				printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSyFields.theta(j));
 			}
 			Eigen::Matrix2d RotM;
 			RotM(0, 0) =  cos(angle);
@@ -801,14 +929,14 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer)
 			RotM(1, 0) =  sin(angle);
 			RotM(1, 1) =  cos(angle);
 
-			TempFields.block(2 * j, 0, 2, 1) = magnitude(j) * RotM * b; 
+			TempFields.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 		}
 
-		visualize2Dfields(viewer, TempFields, color.row(i), scale, false);
+		visualize2Dfields(viewer, TempFields, color, scale, false);
 	}
 }
 
-void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer)
+void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields)
 {
 	const double scale = 1.0;
 	Eigen::Vector2d b(1, 0);	
@@ -818,11 +946,21 @@ void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer)
 	/* Construct rotation matrix*/
 	for (int j = 0; j < F.rows(); j++)
 	{
-		double angle = NRoSy * theta(j);
-		TempFields(2 * j)		= magnitude(j)*cos(angle);
-		TempFields(2 * j + 1)   = magnitude(j)*sin(angle);		
+		double angle = nRot * nRoSyFields.theta(j);
+		TempFields(2 * j)		= nRoSyFields.magnitude(j)*cos(angle);
+		TempFields(2 * j + 1)   = nRoSyFields.magnitude(j)*sin(angle);		
 	}
 	visualize2Dfields(viewer, TempFields, color, scale, false);	
+}
+
+void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector)
+{
+	viewer.data().clear();
+	viewer.data().set_mesh(V, F);
+
+	const double scale = 250.0;
+	Eigen::RowVector3d color(117.0 / 255.0, 107.0 / 255.0, 177.0 / 255.0);
+	visualize2Dfields(viewer, repVector, color, scale, false);
 }
 
 void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
@@ -928,10 +1066,20 @@ void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eig
 	//cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void NRoSyFields::visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id)
+{
+	viewer.data().clear();
+	viewer.data().set_mesh(V, F);
+
+	NRoSy nRoSy_eigenFields;
+	convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(id), nRoSy_eigenFields);
+	visualizeNRoSyFields(viewer, nRoSy_eigenFields);
+}
+
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	NRoSy = 4;
+	nRot = 4;
 	readMesh(meshFile);
 	scaleMesh();
 	
@@ -942,21 +1090,30 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	constructEFList();
 	constructFrameBasis();
 	constructMappingMatrix();
+	constructMassMatrixMF3D();
 
-	selectFaceToDraw(5000);
+	selectFaceToDraw(2500);
 	Eigen::VectorXd inputNFields;
-	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
+	string fieldsfile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
 	ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
 	createNRoSyFromVectors(inputNFields);
 	//visualizeNRoSyFields(viewer);
 
-	convertNRoSyToRepVectors();
+	//convertNRoSyToRepVectors(nRoSy, repVector);
 	//visualizeRepVectorFields(viewer);
-	convertRepVectorsToNRoSy();
-	//visualizeNRoSyFields(viewer);
+	//convertRepVectorsToNRoSy(repVector, nRoSy);
+	//visualizeNRoSyFields(viewer, nRoSy);
 
 	computeFrameRotation(viewer);
-	buildStiffnessMatrix_Geometric();
+	//buildStiffnessMatrix_Geometric();
+	//computeEigenFields_generalized(50, fieldsfile);
+	buildStiffnessMatrix_Combinatorial();
+	computeEigenFields_regular(50, fieldsfile);
+	NRoSy nRoSy_eigenFields;
+	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(1), nRoSy_eigenFields);
+	//visualizeNRoSyFields(viewer, nRoSy_eigenFields);
+	visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
+	
 
 }
 

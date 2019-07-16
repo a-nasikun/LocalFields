@@ -584,7 +584,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
-		engEvalString(ep, approxFile.c_str());
+		///engEvalString(ep, approxFile.c_str());
 	}
 	t4 = chrono::high_resolution_clock::now();
 
@@ -603,6 +603,8 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	t2 = chrono::high_resolution_clock::now();
 	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
 	ts2 = chrono::duration_cast<chrono::duration<double>>(t4 - t3);
+
+	engEvalString(ep, "clear;");
 
 	mxDestroyArray(MM);
 	mxDestroyArray(MS);
