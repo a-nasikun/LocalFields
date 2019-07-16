@@ -553,7 +553,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 		for (int j = 0; j < 3; j++)
 		{
 			if (E(ei, 0) == F(TA, j))
-			{				
+			{
 				if (E(ei, 1) == F(TA, (j + 1) % 3))
 				{
 					e_ij = V.row(E(ei, 1)) - V.row(E(ei, 0));
@@ -564,7 +564,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 				{
 					e_ij = V.row(E(ei, 0)) - V.row(E(ei, 1));
 					e_ji = V.row(E(ei, 1)) - V.row(E(ei, 0));
-					eMatchA = (3 + j - 1) % 3; 
+					eMatchA = (3 + j - 1) % 3;
 				}
 			}
 		}
@@ -577,12 +577,12 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 				if (E(ei, 0) == F(TB, (j + 1) % 3))
 				{
 					eMatchB = j;
-				} 
+				}
 				else
 				{
-					eMatchB = (3 + j - 1) % 3; 
+					eMatchB = (3 + j - 1) % 3;
 				}
-			} 
+			}
 		}
 
 		/* Computing angle for triangle A (the first one) */
@@ -595,15 +595,15 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 			break;
 		case 1:
 			//dp_1 = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
-			dp_1 = (-e_i).dot(e_ij) / (e_i.norm()*e_ij.norm());
-			angle_1 = M_PI - acos(dp_1);
-			FrameRot(ei, 0) = angle_1;
+			dp_1 = (e_ij).dot(-e_i) / (e_i.norm()*e_ij.norm());
+			angle_1 = acos(dp_1);
+			FrameRot(ei, 0) = M_PI - angle_1;
 			break;
 		case 2:
 			//dp_1 = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
-			dp_1 = (-e_ij).dot(e_i) / (e_i.norm() * e_ij.norm());
-			angle_1 = M_PI + acos(dp_1);
-			FrameRot(ei, 0) = angle_1;
+			dp_1 = (e_i).dot(-e_ij) / (e_i.norm() * e_ij.norm());
+			angle_1 = acos(dp_1);
+			FrameRot(ei, 0) = M_PI + angle_1;
 			break;
 		default:
 			break;
@@ -619,15 +619,15 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 			break;
 		case 1:
 			//dp_2 = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
-			dp_2 = (-e_j).dot(e_ji) / (e_j.norm() * e_ji.norm());
-			angle_2 = M_PI - acos(dp_2);
-			FrameRot(ei, 1) = angle_2;
+			dp_2 = (e_ji).dot(-e_j) / (e_j.norm() * e_ji.norm());
+			angle_2 = acos(dp_2);
+			FrameRot(ei, 1) = M_PI - angle_2;
 			break;
 		case 2:
 			//dp_2 = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
-			dp_2 = (-e_ji).dot(e_j) / (e_j.norm() * e_ji.norm());
-			angle_2 = M_PI + acos(dp_2);
-			FrameRot(ei, 1) = angle_2;
+			dp_2 = (e_j).dot(-e_ji) / (e_j.norm() * e_ji.norm());
+			angle_2 = acos(dp_2);
+			FrameRot(ei, 1) = M_PI + angle_2;
 			break;
 		default:
 			break;
@@ -636,7 +636,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 
 		/** _____________________ DEBUG PURPOSE _____________________________*/
 		//if (ei < 100 && ei%10==0)
-		if(ei==testEdge)
+		if (ei == testEdge)
 		{
 			// first basis of the triangle frame (frist and second)
 			viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 0)) + e_i.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));

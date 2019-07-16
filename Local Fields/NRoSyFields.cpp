@@ -220,6 +220,64 @@ void NRoSyFields::constructFaceAdjacency3NMatrix()
 
 }
 
+// For every vertex V, find where it belongs in edge E
+void NRoSyFields::constructEVList()
+{
+	VENeighbors.resize(V.rows());
+
+	for (int i = 0; i < E.rows(); i++) {
+		VENeighbors[E(i, 0)].emplace(i);
+		VENeighbors[E(i, 1)].emplace(i);
+
+		//if (i < 100)
+		//if (E(i, 0) == 0 || E(i, 1) == 0)
+		//	printf("Edge %d has <%d, %d> vertices \n", i, E(i, 0), E(i, 1));
+	}
+}
+
+void NRoSyFields::constructEFList()
+{
+	cout << "Constructing F-E lists\n";
+	FE.resize(F.rows(), 3);
+	EF.resize(E.rows(), 2);
+
+	vector<set<int>> EFlist;
+	EFlist.resize(E.rows());
+
+	for (int ijk = 0; ijk < F.rows(); ijk++) {
+		//printf("Test of F=%d: ", ijk);
+		for (int i = 0; i < F.cols(); i++) {
+			int ii = F(ijk, i);
+			int in = F(ijk, (i + 1) % (int)F.cols());
+			int ip;
+			if (i < 1)
+				ip = 2;
+			else
+				ip = (i - 1) % (int)F.cols();
+
+			/* Loop over all edges having element F(i,j) */
+			for (set<int>::iterator ij = VENeighbors[ii].begin(); ij != VENeighbors[ii].end(); ++ij) {
+				int edge = *ij;
+				if ((ii == E(edge, 0) && in == E(edge, 1)) || (ii == E(edge, 1) && in == E(edge, 0)))
+				{
+					FE(ijk, ip) = edge;
+					EFlist[edge].emplace(ijk);
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < E.rows(); i++) {
+		int counter = 0;
+		for (set<int>::iterator ij = EFlist[i].begin(); ij != EFlist[i].end(); ++ij)
+		{
+			EF(i, counter) = *ij;
+			counter++;
+		}
+	}
+}
+
+
 void NRoSyFields::computeAverageEdgeLength()
 {
 	Eigen::Vector3d e;
@@ -375,6 +433,161 @@ void NRoSyFields::computeDijkstraDistanceFaceForSampling(const int &source, Eige
 		}
 	} while (!DistPQueue.empty());
 }
+
+void NRoSyFields::constructMassMatrixMF3D()
+{
+	MF.resize(3 * F.rows(), 3 * F.rows());
+	MFinv.resize(3 * F.rows(), 3 * F.rows());
+	vector<Eigen::Triplet<double>> MFTriplet;
+	MFTriplet.reserve(3 * F.rows());
+	vector<Eigen::Triplet<double>> MFInvTriplet;
+	MFInvTriplet.reserve(2 * F.rows());
+
+	for (int i = 0; i < F.rows(); i++) {
+		double area = doubleArea(i) / 2.0;
+		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, area));
+		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, area));
+		MFTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, 1.0 / area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0 / area));
+		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0 / area));
+	}
+	MF.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
+	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
+
+}
+
+void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Computing the angles between pairs of triangles \n";
+	FrameRot.resize(E.rows(), 2);
+	Eigen::Vector3d e_ij, e_ji;
+	Eigen::Vector3d e_i, e_j;		// e_i: 1st edge vector of the 1st triangle     |  e_j: 1st edge vector of the 2nd triangle
+
+	srand(time(NULL));
+	int testEdge = rand() % E.rows();
+
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+
+		/* Frame basis of each TA and TB */
+		Eigen::VectorXd basisTA = V.row(F(TA, 1)) - V.row(F(TA, 0));
+		Eigen::VectorXd basisTB = V.row(F(TB, 1)) - V.row(F(TB, 0));
+		e_i = basisTA;
+		e_j = basisTB;
+
+		/* Finding the common edge direction + index of its first vertex */
+		int eMatchA, eMatchB;
+		for (int j = 0; j < 3; j++)
+		{
+			if (E(ei, 0) == F(TA, j))
+			{
+				if (E(ei, 1) == F(TA, (j + 1) % 3))
+				{
+					e_ij = V.row(E(ei, 1)) - V.row(E(ei, 0));
+					e_ji = V.row(E(ei, 0)) - V.row(E(ei, 1));
+					eMatchA = j;
+				}
+				else
+				{
+					e_ij = V.row(E(ei, 0)) - V.row(E(ei, 1));
+					e_ji = V.row(E(ei, 1)) - V.row(E(ei, 0));
+					eMatchA = (3 + j - 1) % 3;
+				}
+			}
+		}
+
+		/* for the 2nd triangle */
+		for (int j = 0; j < 3; j++)
+		{
+			if (E(ei, 1) == F(TB, j))
+			{
+				if (E(ei, 0) == F(TB, (j + 1) % 3))
+				{
+					eMatchB = j;
+				}
+				else
+				{
+					eMatchB = (3 + j - 1) % 3;
+				}
+			}
+		}
+
+		/* Computing angle for triangle A (the first one) */
+		double dp_1, angle_1;
+		switch (eMatchA)
+		{
+		case 0:
+			angle_1 = 0.0;
+			FrameRot(ei, 0) = 0.0;
+			break;
+		case 1:
+			//dp_1 = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
+			dp_1 = (e_ij).dot(-e_i) / (e_i.norm()*e_ij.norm());
+			angle_1 = acos(dp_1);
+			FrameRot(ei, 0) = M_PI - angle_1;
+			break;
+		case 2:
+			//dp_1 = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
+			dp_1 = (e_i).dot(-e_ij) / (e_i.norm() * e_ij.norm());
+			angle_1 =acos(dp_1);
+			FrameRot(ei, 0) =  M_PI + angle_1;
+			break;
+		default:
+			break;
+		}
+
+		/* Computing angle for triangle B (the second one) */
+		double dp_2, angle_2;
+		switch (eMatchB)
+		{
+		case 0:
+			angle_2 = 0.0;
+			FrameRot(ei, 1) = 0.0;
+			break;
+		case 1:
+			//dp_2 = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
+			dp_2 = (e_ji).dot(-e_j) / (e_j.norm() * e_ji.norm());
+			angle_2 =acos(dp_2);
+			FrameRot(ei, 1) =  M_PI - angle_2;
+			break;
+		case 2:
+			//dp_2 = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
+			dp_2 = (e_j).dot(-e_ji) / (e_j.norm() * e_ji.norm());
+			angle_2 = acos(dp_2);
+			FrameRot(ei, 1) = M_PI + angle_2;
+			break;
+		default:
+			break;
+		}
+
+
+		/** _____________________ DEBUG PURPOSE _____________________________*/
+		//if (ei < 100 && ei%10==0)
+		if (ei == testEdge)
+		{
+			// first basis of the triangle frame (frist and second)
+			viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 0)) + e_i.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+			viewer.data().add_edges(V.row(F(TB, 0)), V.row(F(TB, 0)) + e_j.transpose(), Eigen::RowVector3d(0.0, 0.9, 0.0));
+			// shared edge
+			viewer.data().add_edges(V.row(E(ei, 0)), V.row(E(ei, 1)), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			viewer.data().add_points(V.row(E(ei, 0)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+			viewer.data().add_points(V.row(E(ei, 1)), Eigen::RowVector3d(0.9, 0.1, 0.1));
+			//viewer.data().add_edges(V.row(F(TA, eMatchA)), V.row(F(TA, eMatchA)) + e_ij.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
+			//viewer.data().add_points(V.row(F(TA, eMatchA)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+			printf("Angle between basis and shared edge (fram 1) is %.5f degree \n", FrameRot(ei, 0)*180.0 / M_PI);
+			cout << "__case 1= " << eMatchA << endl;
+			printf("__angle1 = %.10f \n", angle_1*180.0 / M_PI);
+			printf("Angle between basis and shared edge (fram 2) is %.5f degree \n", FrameRot(ei, 1)*180.0 / M_PI);
+			cout << "__case 2= " << eMatchB << endl;
+			printf("__angle2 = %.10f \n", angle_2*180.0 / M_PI);
+		}
+	}
+}
+
 
 /* Creating NRoSyFields */
 void NRoSyFields::representingNRoSyFields(const Eigen::MatrixXd& NFields)
@@ -643,6 +856,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	computeAverageEdgeLength();
 	computeFaceCenter();
 	constructFaceAdjacency3NMatrix();
+	constructEVList();
+	constructEFList();
 	constructFrameBasis();
 	constructMappingMatrix();
 
@@ -656,7 +871,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	convertNRoSyToRepVectors();
 	//visualizeRepVectorFields(viewer);
 	convertRepVectorsToNRoSy();
-	visualizeNRoSyFields(viewer);
+	//visualizeNRoSyFields(viewer);
+
+	computeFrameRotation(viewer);
+
 }
 
 

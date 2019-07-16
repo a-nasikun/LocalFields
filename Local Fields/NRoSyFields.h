@@ -15,6 +15,8 @@ public:
 	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void computeFaceCenter();
 	void constructFaceAdjacency3NMatrix();
+	void constructEVList();
+	void constructEFList();
 	void computeAverageEdgeLength();
 
 
@@ -23,6 +25,8 @@ public:
 	void constructMappingMatrix();
 	void selectFaceToDraw(const int& numFaces);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
+	void constructMassMatrixMF3D();
+	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 
 	/* Creating NRoSyFields */
 	void representingNRoSyFields(const Eigen::MatrixXd& NFields);
@@ -50,7 +54,11 @@ private:
 	Eigen::SparseMatrix<double>		A; 
 	vector<int>						FaceToDraw;
 	double							avgEdgeLength;
-	
+	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
+	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
+	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
+	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
 };
 
 #endif
