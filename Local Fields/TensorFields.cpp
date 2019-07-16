@@ -716,11 +716,11 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 		/* B1toB2 => parallel transport matrix A to B *
 		** B2toB1 => parallel transport matrix B to A 
 		** parameters: cos_Target, sin_Target, cos_Source, sin_Source, rep_matrix */
-		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2B1);
-		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1B2);
+		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
+		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
 
-		B2toB1 = 0.5*(B2B1 + B2B1.transpose());
-		B1toB2 = 0.5*(B1B2 + B1B2.transpose());
+		//B2toB1 = 0.5*(B2B1 + B2B1.transpose());
+		//B1toB2 = 0.5*(B1B2 + B1B2.transpose());
 
 		//if (ei < 10)
 		//{
@@ -753,11 +753,12 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 	}
 
 	/* Populate the matrix with configured triplets */
-	STemp.setFromTriplets(STriplet.begin(), STriplet.end());
-	Eigen::SparseMatrix<double> ST = STemp.transpose();
-	SF = 0.5*(ST + STemp);
+	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+	//STemp.setFromTriplets(STriplet.begin(), STriplet.end());
+	//Eigen::SparseMatrix<double> ST = STemp.transpose();
+	//SF = 0.5*(ST + STemp);
 	string fileLaplace = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_Lap_Tensor_Comb";
-	WriteSparseMatrixToMatlab(SF, fileLaplace);
+	///WriteSparseMatrixToMatlab(SF, fileLaplace);
 }
 
 void TensorFields::buildStiffnessMatrix_Geometric()
@@ -1559,7 +1560,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_1000_Ref";
 	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
 	//computeEigenFields_generalized((int) 50, fileEigFields);
-	computeEigenFields_regular(50, fileEigFields);
+	computeEigenFields_regular(25, fileEigFields);
 	///loadEigenFields(fileEigFields);
 	visualizeEigenTensorFields(viewer, 0);
 

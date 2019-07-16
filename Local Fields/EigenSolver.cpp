@@ -705,7 +705,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, const int& numEigs, Eige
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
-		engEvalString(ep, approxFile.c_str());
+		///engEvalString(ep, approxFile.c_str());
 	}
 	t4 = chrono::high_resolution_clock::now();
 
