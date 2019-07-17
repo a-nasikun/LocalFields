@@ -48,6 +48,7 @@ public:
 	void convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::VectorXd& repVect);
 	void convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields);
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);
+	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NRoSy& nRoSyFields);
 
 	/* Visualizing the NRoSyFields */
 	void visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields);
@@ -56,8 +57,16 @@ public:
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
+	void visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeConstraints(igl::opengl::glfw::Viewer &viewer);
 
-
+	/* N-FIELDS DESIGN */
+	void nRoSyFieldsDesignRef();
+	void nRoSyFieldsDesignRef_HardConstraints();
+	void constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c);
+	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
+	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
+	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
@@ -97,6 +106,14 @@ public:
 	Eigen::VectorXd					sampleDistance;
 	Eigen::VectorXd					localSystem;
 	set<int>						SubDomain, Boundary;
+
+	/* Variable related to n-RoSy fields design */
+	Eigen::VectorXd					Xf;
+	Eigen::VectorXd					c;										// representation vector of the constraints
+	vector<int>						reducedConstraints, globalConstraints;
+
+	/* Testing variables */
+	int								testID;
 
 };
 

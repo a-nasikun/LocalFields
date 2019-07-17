@@ -1,5 +1,7 @@
 #include "NRoSyFields.h"
 
+#include <random>
+
 /* Reading data*/
 void NRoSyFields::readMesh(const string &filename)
 {
@@ -864,13 +866,15 @@ void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& 
 /* Rep. Vectors and N-RoSy Fields interface */
 void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::VectorXd& repVect)
 {
+	cout << "Converting N-Rosy to reprsentation vectors \n";
 	double scale = 1.0;
 	Eigen::Vector2d b(1, 0);	
 	
-	repVect.resize(2 * F.rows());
+	const int nSize = nRoSyFields.magnitude.size();
+	repVect.resize(2 * nSize);
 
 	/* Construct rotation matrix*/
-	for (int j = 0; j < F.rows(); j++)
+	for (int j = 0; j < nSize; j++)
 	{
 		double angle = nRoSyFields.theta(j) + (2.0*M_PI / (double)nRot);
 		
@@ -880,19 +884,20 @@ void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::Vect
 		RotM(1, 0) = sin(angle);
 		RotM(1, 1) = cos(angle);
 
-		repVector.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
+		repVect.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 	}
 }
 
 void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields)
 {
-	nRoSyFields.theta.resize(F.rows());
-	nRoSyFields.magnitude.resize(F.rows());
+	const int nSize = repVect.size() / 2;
+	nRoSyFields.theta.resize(nSize);
+	nRoSyFields.magnitude.resize(nSize);
 
 	/* Temp variables */
 	Eigen::Vector2d v, b(1,0);
 
-	for (int i = 0; i < F.rows(); i++)
+	for (int i = 0; i < nSize; i++)
 	{
 		v = repVect.block(2 * i, 0, 2, 1);
 
@@ -909,13 +914,14 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy
 void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
 {
 	cout << "Converting to nRoSy fields \n";
-	this->nRoSy.theta.resize(F.rows());
-	this->nRoSy.magnitude.resize(F.rows());
+	const int nSize = vectorFields.size() / 2;
+	this->nRoSy.theta.resize(nSize);
+	this->nRoSy.magnitude.resize(nSize);
 
 	/* Temp variables */
 	Eigen::Vector2d v, b(1, 0);
 
-	for (int i = 0; i < F.rows(); i++)
+	for (int i = 0; i < nSize; i++)
 	{
 		v = vectorFields.block(2 * i, 0, 2, 1);
 
@@ -931,6 +937,36 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
 			this->nRoSy.theta(i) = M_PI - acos(b.dot(v));
 		else
 			this->nRoSy.theta(i) = acos(b.dot(v));
+	}
+}
+
+void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NRoSy& nRoSyFields)
+{
+	cout << "Converting to nRoSy fields ( on " << vectorFields.size()/2 << " faces). \n";
+	int nSize = vectorFields.size() / 2;
+	nRoSyFields.theta.resize(nSize);
+	nRoSyFields.magnitude.resize(nSize);
+
+	/* Temp variables */
+	Eigen::Vector2d v, b(1, 0);
+
+	for (int i = 0; i < nSize; i++)
+	{
+		v = vectorFields.block(2 * i, 0, 2, 1);
+
+		printf("data for %d: [%.2f, %.2f]\n", i, v(0), v(1));
+		if (i % 50 == 0)
+		{
+			//printf("Data %d = (%.5f, %.5f) \n", i, v(0), v(1));
+		}
+
+		nRoSyFields.magnitude(i) = v.norm();
+		v.normalize();
+		double angle;
+		if (v(1)<0)
+			nRoSyFields.theta(i) = M_PI - acos(b.dot(v));
+		else
+			nRoSyFields.theta(i) = acos(b.dot(v));
 	}
 }
 
@@ -1145,6 +1181,354 @@ void NRoSyFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &i
 	//visualizeNRoSyFields(viewer, basisNRoSy);
 	visualizeRepVectorFields(viewer, basisRepVectors);
 }
+
+void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Visualizing the fields \n";
+	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);
+	//visualizeRepVectorFields(viewer, Xf);
+	
+	NRoSy nRoSy_;
+	convertRepVectorsToNRoSy(Xf, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_);
+}
+
+void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "visualizing the constraints \n";
+	/* ORIGINAL + OVERLAY on 2nd Mesh */
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double ARRAW_RATIO = 4.0;
+	const double EDGE_RATIO = 1.5;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d color2(0.4, 0.8, 0.2);
+	Eigen::RowVector3d color(0.7, 0.0, 0.2);
+
+	cout << "Getting face normals \n";
+	Eigen::MatrixXd NF;
+	igl::per_face_normals(V, F, NF);
+
+	cout << "Drawing on the overlay mesh \n";
+	viewer.selected_data_index = 0;
+	viewer.data().line_width = 5.0;
+	viewer.data().point_size = 5.0;
+	viewer.data().show_lines = false;
+
+	cout << "Computing rotaiton angle\n";
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	NRoSy nRoSy_;
+	convertRepVectorsToNRoSy(c, nRoSy_);
+	Eigen::VectorXd c2(c.size());
+
+	Eigen::MatrixXd ALoc(3, 2);
+	for (int j = 0; j < nRot; j++)
+	{
+		for (int i = 0; i < globalConstraints.size(); i++) {
+			//cout << "Setting up the " << i << "-th constraint.\n";
+			Eigen::RowVector3d cc, g, h1, h2, v1, v2, v3, e, f, n;
+			Eigen::Vector2d v, id;
+
+
+			id << 1.0, 0.0;
+			double angle = nRoSy_.theta(i) + ((double)j*2.0*M_PI / (double)nRot);
+			double cosA = cos(angle);
+			double sinA = sin(angle);
+			Eigen::Matrix2d RotA; RotA << cosA, -sinA, sinA, cosA;
+			c2.block(2 * i, 0, 2, 1) = RotA*id;
+
+			//cout << "Fetching the face center + nromal\n";
+			cc = FC.row(globalConstraints[i]);
+			n = NF.row(globalConstraints[i]);
+			n *= (avgEdgeLength / 10.0);
+			//cout << "Getting local c\n";
+			ALoc = A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2);
+			v = c2.block(2 * i, 0, 2, 1);
+			
+			g = (ALoc * v).transpose();
+			cc += n;
+			f = cc + g*lengthScale;
+			//cout << "Adding new entries on viewer \n";
+			//cout << "cc: " << cc << endl;
+			//cout << "f:" << f << endl;
+			//cout << "colro: " << color << endl; 
+			viewer.data().add_edges(cc, f, color);
+			viewer.data().add_points(cc, color2);
+
+			//cout << "Drawing the head \n";
+			h1 = (ALoc * (rotMat1*c2.block(2 * i, 0, 2, 1))).transpose();
+			h2 = (ALoc * (rotMat2*c2.block(2 * i, 0, 2, 1))).transpose();
+
+			//cout << "h1=" << h1 << endl;
+			//cout << "h2=" << h2 << endl;
+			//cout << "scale: " << lengthScale << endl;
+			//cout << "head ration: " << HEAD_RATIO << endl; 
+			viewer.data().add_edges(f, f + h1*lengthScale / HEAD_RATIO, color);
+			viewer.data().add_edges(f, f + h2*lengthScale / HEAD_RATIO, color);
+		}
+	}
+	viewer.selected_data_index = 0;
+}
+
+/* ============================= N-FIELDS DESIGN ============================= */
+
+void NRoSyFields::nRoSyFieldsDesignRef()
+{
+	nRoSyFieldsDesignRef_HardConstraints();
+}
+
+void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
+{
+	Eigen::VectorXd					b, g, h, vEst;
+	Eigen::SparseMatrix<double>		A_LHS, C;
+	Eigen::SparseMatrix<double>		B2F;
+	if (MF.rows() < 1) constructMassMatrixMF3D();
+	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
+	B2F = SF * MFinv * SF;
+
+	constructRandomHardConstraints(C, c);
+	setupRHSBiharmSystemRef(B2F, C, c, g, h, vEst, b);
+	setupLHSBiharmSystemRef(B2F, C, c, A_LHS);
+	solveBiharmSystemRef(vEst, A_LHS, b, Xf);
+}
+
+void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
+{
+	// Define the constraints
+	const bool readFromFile = false;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
+	bool lineNotFound = true;
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
+
+	/* Reading the constraints from file */
+	if (readFromFile)
+	{
+		/* Old type of reading */
+		//cout << "____Loading constraints from file \n";
+		//LoadSTDVectorFromTxtFile(filename, globalConstraints);
+
+		/* New read: all constraints are in a single line */
+		ifstream file(resultFile);
+		string oneLine, oneWord;
+
+		int lineNow = 0;
+		int toRead = testID;
+		vector<double> constraint;
+		constraint.reserve(100);
+
+		if (file.is_open())
+		{
+			//getline(file, oneLine);
+			while (getline(file, oneLine) && lineNotFound)
+			{
+				if (toRead == lineNow)
+				{
+					istringstream iStream(oneLine);
+					getline(iStream, oneWord, ',');
+
+					while (oneWord != "") {
+						constraint.push_back(stod(oneWord));
+						cout << oneWord << "|";
+						getline(iStream, oneWord, ',');
+					}
+					cout << endl;
+
+					globalConstraints.resize(constraint.size());
+
+					for (int i = 0; i < constraint.size(); i++) {
+						globalConstraints[i] = constraint[i];
+					}
+
+					lineNotFound = false;
+					//return;
+				}
+
+				cout << "line =" << lineNow << endl;
+				lineNow++;
+			}
+		}
+		file.close();
+	}
+	else
+	{
+		/* Random number generator */
+		std::random_device rd;								// Will be used to obtain a seed for the random number engine
+		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
+
+		/* Creating random constraints */
+		std::uniform_int_distribution<> disConst(2, 20); // From 0 to F.rows()-1
+		int numConstraints = disConst(gen);
+		cout << "we gave you " << numConstraints << " number of constnraints. Good luck!\n";
+
+		//int numConstraints = 20;
+		set<int> constraints;
+		globalConstraints.resize(numConstraints);
+
+		do {
+			std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+			int constraintFace = dis(gen);
+			constraints.insert(constraintFace);
+		} while (constraints.size() < numConstraints);
+
+		int counter1 = 0;
+		for (int i : constraints) {
+			globalConstraints[counter1++] = i;
+		}
+
+		bool writeToFile = false;
+
+		if (writeToFile) {
+			std::ofstream ofs;
+			ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
+
+			for (int i : globalConstraints) {
+				ofs << i << ",";
+			}
+			ofs << "\n";																												// l2-norm
+
+			ofs.close();
+			//WriteSTDVectorToTxtFile(globalConstraints, filename);
+		}
+	}
+	
+	cout << "Setting up matrix C\n";
+	// Setting up matrix C
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+	Eigen::VectorXd cTemp(2 * globalConstraints.size());
+	//c.resize(2 * globalConstraints.size());
+	Eigen::Vector2d cRand;
+
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		//cRand(0) = (double)(rand() % F.rows()) / (double) F.rows();
+		//cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand << 1.0, 0.0;
+		cRand.normalize();
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		cTemp(counter, 0) = cRand(0);
+		counter++;
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		cTemp(counter, 0) = cRand(1);
+		counter++;
+	}
+	cout << "__Setting the selection matrix for the constraints \n";
+	C.resize(2 * globalConstraints.size(), SF.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+
+	/* representing c as representation vectors */
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(cTemp, nRoSy_);
+	convertNRoSyToRepVectors(nRoSy_, c);
+}
+
+void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Constructing RHS... ";
+
+	vEst.resize(B2F.cols());
+	for (int i = 0; i < vEst.rows(); i++) {
+		vEst(i) = 0.5;
+	}
+
+	g = B2F * vEst;
+	b.resize(B2F.rows() + c.rows(), c.cols());
+
+	// First column of b
+	h = C * vEst - c;
+	b << g, h;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+void NRoSyFields::setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Constructing LHS... ";
+
+	A_LHS.resize(B2F.rows() + C.rows(), B2F.cols() + C.rows());
+
+	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(10 * B2F.rows());		// It should be #rows x 4 blocks @ 2 elements (8) + #constraints,
+											// but made it 10 for safety + simplicity
+
+	for (int k = 0; k < B2F.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(B2F, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+		}
+	}
+
+	for (int k = 0; k < C.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(C, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(B2F.rows() + it.row(), it.col(), it.value()));
+			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2F.cols() + it.row(), it.value()));
+		}
+	}
+	A_LHS.setFromTriplets(ATriplet.begin(), ATriplet.end());
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Solving the global system (Pardiso LDLT)... \n";
+
+
+	//cout << "Starting to solve problem." << endl;
+	Xf.resize(SF.rows());
+
+	// Setting up the solver
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
+
+	// FIRST BASIS
+	cout << "....Solving first problem (first frame)..." << endl;
+	Eigen::VectorXd x = sparseSolver.solve(b);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		if (sparseSolver.info() == Eigen::InvalidInput)
+			cout << "Input is Invalid. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	Xf = -x.block(0, 0, SF.rows(), 1) + vEst;
+
+	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
 
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
 void NRoSyFields::constructBasis()
@@ -1401,7 +1785,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	buildStiffnessMatrix_Geometric();
 	// buildStiffnessMatrix_Combinatorial();
 
-	selectFaceToDraw(2500);
+	selectFaceToDraw(5000);
 	//Eigen::VectorXd inputNFields;
 	//string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
 	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
@@ -1426,9 +1810,13 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
 	/* Build reduced space */
-	constructBasis();
-	visualizeBasis(viewer, 0);
+	//constructBasis();
+	//visualizeBasis(viewer, 0);
 
+	/* Constrained fields (biharmonic) */
+	nRoSyFieldsDesignRef();
+	visualizeConstraints(viewer);
+	visualizeConstrainedFields(viewer);
 }
 
 
