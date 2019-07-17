@@ -42,8 +42,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -192,8 +192,22 @@ int main(int argc, char *argv[])
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 1.0);
 			//vectorFields.visualizeGlobalConstraints(viewer);
-			basisId = max(basisId - 1, 0);
-			vectorFields.visualizeBasis(viewer, basisId);
+			basisId = max(basisId - 1, 0);		
+
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				vectorFields.visualizeBasis(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.visualizeBasis(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				
+			}
 			break;
 		case '4':
 			basisId = min(basisId + 1, 2*numSample-1);
@@ -201,11 +215,39 @@ int main(int argc, char *argv[])
 			break;
 		case '5':
 			basisId = max(basisId - 1, 0);
-			vectorFields.visualizeBasisNormalized(viewer, basisId);
+
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				vectorFields.visualizeBasisNormalized(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.visualizeBasis(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
+			
 			break;
 		case '6':
 			basisId = min(basisId + 1, 2 * numSample - 1);
-			vectorFields.visualizeBasisNormalized(viewer, basisId);
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				vectorFields.visualizeBasisNormalized(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.visualizeBasis(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
 			break;
 		case '7':
 			eigToShow = max(eigToShow - 1, 0);

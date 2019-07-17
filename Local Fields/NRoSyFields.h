@@ -21,6 +21,7 @@ public:
 	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void computeFaceCenter();
 	void constructFaceAdjacency3NMatrix();
+	void constructFaceAdjacency2RingMatrix();
 	void constructEVList();
 	void constructEFList();
 	void computeAverageEdgeLength();
@@ -54,6 +55,16 @@ public:
 	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id);
+	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
+
+
+
+	/* SUBSPACE CONSTRUCTION */
+	void constructBasis();
+	void constructSamples(const int &n);
+	void farthestPointSampling();
+	void constructBasis_LocalEigenProblem();
+	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
 
 	/* Testing stuff */
 	void TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
@@ -61,7 +72,7 @@ public:
 public:
 	NRoSy							nRoSy;
 	Eigen::MatrixXd					V, FC;
-	Eigen::MatrixXi					F, E, AdjMF3N;
+	Eigen::MatrixXi					F, E;
 	int								nRot;
 	Eigen::VectorXd					frameBasis, repVector; 
 	Eigen::SparseMatrix<double>		A; 
@@ -72,9 +83,21 @@ public:
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
+	vector<set<int>>				AdjMF2Ring;				// 2-ring neighborhood of triangles
+	Eigen::MatrixXi					AdjMF3N;				// List of 3 neighbors of a triangle
 	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
 	Eigen::MatrixXd					eigFieldsNRoSyRef;
 	Eigen::VectorXd					eigValuesNRoSyRef;
+
+	// Variable related to subspace construction
+	Eigen::SparseMatrix<double>		Basis;
+	vector<int>						Sample;
+	int								numSample;
+	double							numSupport;
+	Eigen::VectorXd					sampleDistance;
+	Eigen::VectorXd					localSystem;
+	set<int>						SubDomain, Boundary;
+
 };
 
 #endif
