@@ -503,20 +503,20 @@ void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 		/* (Geometric) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, 1.0));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, 1.0/3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, B2toB1(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, B2toB1(i, j) / 3.0));
 			}
 		}
 
 		/* (Geometric) Laplace matrix from B (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, 1.0));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, 1.0 / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, B1toB2(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, B1toB2(i, j) / 3.0));
 			}
 		}
 
@@ -551,10 +551,10 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 
 		/* Construct the rotation matrix RA and SB */
 		//cout << "Construct the rotation matrix RA and SB\n";
-		double cosRA = cos(nRot*FrameRot(ei, 0));
-		double sinRA = sin(nRot*FrameRot(ei, 0));
-		double cosSB = cos(nRot*FrameRot(ei, 1));
-		double sinSB = sin(nRot*FrameRot(ei, 1));
+		double cosRA = cos(FrameRot(ei, 0));
+		double sinRA = sin(FrameRot(ei, 0));
+		double cosSB = cos(FrameRot(ei, 1));
+		double sinSB = sin(FrameRot(ei, 1));
 
 		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
 		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
@@ -570,8 +570,8 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 		weight = (3.0 * el * el) / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
 
 		/* The transport matrix */
-		Eigen::Matrix2d B2toB1 = R1.transpose()*R2;
-		Eigen::Matrix2d B1toB2 = R2.transpose()*R1;
+		Eigen::Matrix2d B2toB1 = R1*R2.transpose();
+		Eigen::Matrix2d B1toB2 = R2*R1.transpose();
 
 		if (ei == ee)
 		{
@@ -581,7 +581,7 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 		}
 
 		/* (Geometric) Laplace matrix from A (first triangle) perspective */
-		for (int i = 0; i < 2; i++) 
+		for (int i = 0; i < 2; i++)
 		{
 			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight));
 			for (int j = 0; j < 2; j++)
@@ -596,12 +596,10 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + j, weight*B1toB2(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, weight*B1toB2(i, j)));
 			}
 		}
-
 	}
-
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 }
 
@@ -899,7 +897,8 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
 /* Visualizing the NRoSyFields */
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields)
 {
-	double scale = 250.0;
+	//double scale = 250.0;
+	double scale = 1.0;
 	Eigen::Vector2d b(1, 0);
 	Eigen::RowVector3d color(0.1, 0.1, 0.9);
 	//Eigen::VectorXd col(nRot);
@@ -958,7 +957,8 @@ void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, co
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 
-	const double scale = 250.0;
+	//const double scale = 250.0;
+	const double scale = 1.0;
 	Eigen::RowVector3d color(117.0 / 255.0, 107.0 / 255.0, 177.0 / 255.0);
 	visualize2Dfields(viewer, repVector, color, scale, false);
 }
@@ -1105,10 +1105,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//visualizeNRoSyFields(viewer, nRoSy);
 
 	computeFrameRotation(viewer);
-	//buildStiffnessMatrix_Geometric();
-	//computeEigenFields_generalized(50, fieldsfile);
-	buildStiffnessMatrix_Combinatorial();
-	computeEigenFields_regular(50, fieldsfile);
+	buildStiffnessMatrix_Geometric();
+	computeEigenFields_generalized(25, fieldsfile);
+	//buildStiffnessMatrix_Combinatorial();
+	//computeEigenFields_regular(50, fieldsfile);
 	NRoSy nRoSy_eigenFields;
 	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(1), nRoSy_eigenFields);
 	//visualizeNRoSyFields(viewer, nRoSy_eigenFields);
