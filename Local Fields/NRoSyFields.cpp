@@ -499,6 +499,86 @@ void NRoSyFields::constructMassMatrixMF3D()
 
 }
 
+//void NRoSyFields::buildStiffnessMatrix_Combinatorial()
+//{
+//	cout << "Try to build the harmonic energy \n";
+//	SF.resize(2 * F.rows(), 2 * F.rows());
+//	vector<Eigen::Triplet<double>> STriplet;
+//	STriplet.reserve(4 * 4 * F.rows());
+//
+//	srand(time(NULL));
+//	const int ee = rand() % E.rows();
+//
+//	for (int ei = 0; ei < E.rows(); ei++)
+//	{
+//		/* Obtain two neighboring triangles TA and TB */
+//		//cout << "Obtain two neighboring triangles TA and TB \n";
+//		int TA = EF(ei, 0);
+//		int TB = EF(ei, 1);
+//
+//		if (ei == ee)
+//		{
+//			cout << "TA: " << TA << ", and TB: " << TB << endl;
+//		}
+//
+//		/* Construct the rotation matrix RA and SB */
+//		//cout << "Construct the rotation matrix RA and SB\n";
+//		double cosRA = cos(FrameRot(ei, 0)/(double)nRot);
+//		double sinRA = sin(FrameRot(ei, 0)/(double)nRot);
+//		double cosSB = cos(FrameRot(ei, 1)/(double)nRot);
+//		double sinSB = sin(FrameRot(ei, 1)/(double)nRot);
+//
+//		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
+//		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
+//
+//		Eigen::Matrix2d B2toB1 = R1*R2.transpose();
+//		Eigen::Matrix2d B1toB2 = R2*R1.transpose();
+//
+//		//double cosRA = cos(nRot*(FrameRot(ei, 0)-FrameRot(ei, 1)));
+//		//double sinRA = sin(nRot*(FrameRot(ei, 0)-FrameRot(ei, 1)));
+//		//double cosSB = cos(nRot*(FrameRot(ei, 1)-FrameRot(ei, 0)));
+//		//double sinSB = sin(nRot*(FrameRot(ei, 1)-FrameRot(ei, 0)));
+//		//
+//		//Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
+//		//Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
+//		//
+//		///* The transport matrix */
+//		//Eigen::Matrix2d B2toB1 = R1;
+//		//Eigen::Matrix2d B1toB2 = R2;
+//
+//		if (ei == ee)
+//		{
+//			cout << "Data of : " << ei << endl;
+//			cout << "B2 to B1 : \n" << B2toB1 << endl;
+//			cout << "B1 to B2 : \n" << B1toB2 << endl;
+//		}
+//
+//		/* (Geometric) Laplace matrix from A (first triangle) perspective */
+//		for (int i = 0; i < 2; i++)
+//		{
+//			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, 1.0/3.0));
+//			for (int j = 0; j < 2; j++)
+//			{
+//				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, B2toB1(i, j) / 3.0));
+//			}
+//		}
+//
+//		/* (Geometric) Laplace matrix from B (first triangle) perspective */
+//		for (int i = 0; i < 2; i++)
+//		{
+//			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, 1.0 / 3.0));
+//			for (int j = 0; j < 2; j++)
+//			{
+//				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, B1toB2(i, j) / 3.0));
+//			}
+//		}
+//
+//	}
+//	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+//	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Lap_NRoSy_Comb";
+//	WriteSparseMatrixToMatlab(SF, filename);
+//}
+
 void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 {
 	cout << "Try to build the harmonic energy \n";
@@ -523,43 +603,24 @@ void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 
 		/* Construct the rotation matrix RA and SB */
 		//cout << "Construct the rotation matrix RA and SB\n";
-		double cosRA = cos(FrameRot(ei, 0));
-		double sinRA = sin(FrameRot(ei, 0));
-		double cosSB = cos(FrameRot(ei, 1));
-		double sinSB = sin(FrameRot(ei, 1));
+		double map_angle = nRot * (FrameRot(ei, 0) - FrameRot(ei, 1));
+		Eigen::Matrix2d Rot; Rot << cos(map_angle), -sin(map_angle), sin(map_angle), cos(map_angle);
 
-		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
-		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
-
-		Eigen::Matrix2d B2toB1 = R1*R2.transpose();
-		Eigen::Matrix2d B1toB2 = R2*R1.transpose();
-
-		//double cosRA = cos(nRot*(FrameRot(ei, 0)-FrameRot(ei, 1)));
-		//double sinRA = sin(nRot*(FrameRot(ei, 0)-FrameRot(ei, 1)));
-		//double cosSB = cos(nRot*(FrameRot(ei, 1)-FrameRot(ei, 0)));
-		//double sinSB = sin(nRot*(FrameRot(ei, 1)-FrameRot(ei, 0)));
-		//
-		//Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
-		//Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
-		//
-		///* The transport matrix */
-		//Eigen::Matrix2d B2toB1 = R1;
-		//Eigen::Matrix2d B1toB2 = R2;
 
 		if (ei == ee)
 		{
 			cout << "Data of : " << ei << endl;
-			cout << "B2 to B1 : \n" << B2toB1 << endl;
-			cout << "B1 to B2 : \n" << B1toB2 << endl;
+			cout << "B2 to B1 : \n" << Rot << endl;
+			cout << "B1 to B2 : \n" << Rot.transpose() << endl;
 		}
 
 		/* (Geometric) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, 1.0/3.0));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, 1.0 / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, B2toB1(i, j) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, -Rot(i, j) / 3.0));
 			}
 		}
 
@@ -569,7 +630,7 @@ void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, 1.0 / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, B1toB2(i, j) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, -Rot(j, i) / 3.0));
 			}
 		}
 
@@ -578,6 +639,86 @@ void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Lap_NRoSy_Comb";
 	WriteSparseMatrixToMatlab(SF, filename);
 }
+//void NRoSyFields::buildStiffnessMatrix_Geometric()
+//{
+//	cout << "Try to build the harmonic energy \n";
+//	SF.resize(2 * F.rows(), 2 * F.rows());
+//	vector<Eigen::Triplet<double>> STriplet;
+//	STriplet.reserve(4 * 4 * F.rows());
+//
+//	srand(time(NULL));
+//	const int ee = rand() % E.rows();
+//
+//	for (int ei = 0; ei < E.rows(); ei++)
+//	{
+//		/* Obtain two neighboring triangles TA and TB */
+//		//cout << "Obtain two neighboring triangles TA and TB \n";
+//		int TA = EF(ei, 0);
+//		int TB = EF(ei, 1);
+//		double weight;
+//
+//		if (ei == ee)
+//		{
+//			cout << "TA: " << TA << ", and TB: " << TB << endl; 
+//		}
+//
+//		/* Construct the rotation matrix RA and SB */
+//		//cout << "Construct the rotation matrix RA and SB\n";
+//		double cosRA = cos(FrameRot(ei, 0));
+//		double sinRA = sin(FrameRot(ei, 0));
+//		double cosSB = cos(FrameRot(ei, 1));
+//		double sinSB = sin(FrameRot(ei, 1));
+//		//double cosRA = cos(FrameRot(ei, 0) / (double)nRot);
+//		//double sinRA = sin(FrameRot(ei, 0) / (double)nRot);
+//		//double cosSB = cos(FrameRot(ei, 1) / (double)nRot);
+//		//double sinSB = sin(FrameRot(ei, 1) / (double)nRot);
+//
+//		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
+//		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
+//
+//		//cout << "Copmute the weight \n";
+//		/* Compute the weight on each edge */
+//		Eigen::Vector3d edge_ = V.row(E(ei, 1)) - V.row(E(ei, 0));
+//		double el = edge_.dot(edge_);
+//		/* Should be multiplied by 3.0
+//		** but because later will be divided by 3.0 again (due to 3 neighbors),
+//		** I just dont multiply with anything */
+//		//weight = el * el / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
+//		weight = (3.0 * el * el) / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
+//
+//		/* The transport matrix */
+//		Eigen::Matrix2d B2toB1 = R1*R2.transpose();
+//		Eigen::Matrix2d B1toB2 = R2*R1.transpose();
+//
+//		if (ei == ee)
+//		{
+//			cout << "Data of : " << ei << endl;
+//			cout << "B2 to B1 : \n" << B2toB1 << endl;
+//			cout << "B1 to B2 : \n" << B1toB2 << endl; 
+//		}
+//
+//		/* (Geometric) Laplace matrix from A (first triangle) perspective */
+//		for (int i = 0; i < 2; i++)
+//		{
+//			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight));
+//			for (int j = 0; j < 2; j++)
+//			{
+//				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, weight*B2toB1(i, j)));
+//			}
+//		}
+//
+//		/* (Geometric) Laplace matrix from B (first triangle) perspective */
+//		for (int i = 0; i < 2; i++)
+//		{
+//			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight));
+//			for (int j = 0; j < 2; j++)
+//			{
+//				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, weight*B1toB2(i, j)));
+//			}
+//		}
+//	}
+//	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+//}
 
 void NRoSyFields::buildStiffnessMatrix_Geometric()
 {
@@ -597,20 +738,18 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 		int TB = EF(ei, 1);
 		double weight;
 
-		if (ei == ee)
-		{
-			cout << "TA: " << TA << ", and TB: " << TB << endl; 
-		}
-
 		/* Construct the rotation matrix RA and SB */
 		//cout << "Construct the rotation matrix RA and SB\n";
-		double cosRA = cos(FrameRot(ei, 0));
-		double sinRA = sin(FrameRot(ei, 0));
-		double cosSB = cos(FrameRot(ei, 1));
-		double sinSB = sin(FrameRot(ei, 1));
+		double map_angle = nRot * (FrameRot(ei, 0) - FrameRot(ei, 1));
+		Eigen::Matrix2d Rot; Rot << cos(map_angle), -sin(map_angle), sin(map_angle), cos(map_angle);
 
-		Eigen::Matrix2d R1; R1 << cosRA, -sinRA, sinRA, cosRA;
-		Eigen::Matrix2d R2; R2 << cosSB, -sinSB, sinSB, cosSB;
+
+		if (ei == ee)
+		{
+			cout << "Data of : " << ei << endl;
+			cout << "B2 to B1 : \n" << Rot << endl;
+			cout << "B1 to B2 : \n" << Rot.transpose() << endl;
+		}
 
 		//cout << "Copmute the weight \n";
 		/* Compute the weight on each edge */
@@ -621,35 +760,25 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 		** I just dont multiply with anything */
 		//weight = el * el / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
 		weight = (3.0 * el * el) / (0.5*doubleArea(TA) + 0.5*doubleArea(TB));
-
-		/* The transport matrix */
-		Eigen::Matrix2d B2toB1 = R1*R2.transpose();
-		Eigen::Matrix2d B1toB2 = R2*R1.transpose();
-
-		if (ei == ee)
-		{
-			cout << "Data of : " << ei << endl;
-			cout << "B2 to B1 : \n" << B2toB1 << endl;
-			cout << "B1 to B2 : \n" << B1toB2 << endl; 
-		}
+				
 
 		/* (Geometric) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight*1.0 / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, weight*B2toB1(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, -weight*Rot(i, j) / 3.0));
 			}
 		}
 
 		/* (Geometric) Laplace matrix from B (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, weight*B1toB2(i, j)));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, -weight*Rot(j, i) / 3.0));
 			}
 		}
 	}
@@ -897,7 +1026,7 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy
 		}
 		else
 		{
-			nRoSyFields.theta(i) = angle / (double)nRot;
+			nRoSyFields.theta(i) = angle / (double) nRot;
 		}
 	}
 }
@@ -979,8 +1108,8 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 /* Visualizing the NRoSyFields */
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields)
 {
-	double scale = 250.0;
-	//double scale = 1.0;
+	//double scale = 250.0;
+	double scale = 1.0;
 	//double scale = 0.5;
 	Eigen::Vector2d b(1, 0);
 	Eigen::RowVector3d color(0.1, 0.1, 0.9);
@@ -1037,8 +1166,8 @@ void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, co
 
 void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector)
 {
-	//viewer.data().clear();
-	//viewer.data().set_mesh(V, F);
+	viewer.data().clear();
+	viewer.data().set_mesh(V, F);
 
 	const double scale = 250.0;
 	//const double scale = 1.0;
@@ -1184,8 +1313,8 @@ void NRoSyFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &i
 
 	basisRepVectors = Basis.col(id);
 	convertRepVectorsToNRoSy(basisRepVectors, basisNRoSy);
-	//visualizeNRoSyFields(viewer, basisNRoSy);
-	visualizeRepVectorFields(viewer, basisRepVectors);
+	visualizeNRoSyFields(viewer, basisNRoSy);
+	//visualizeRepVectorFields(viewer, basisRepVectors);
 }
 
 void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
@@ -1540,7 +1669,7 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 void NRoSyFields::constructBasis()
 {
 	numSupport = 20.0;
-	numSample = 100;
+	numSample = 1000;
 	constructSamples(numSample);
 	constructBasis_LocalEigenProblem();
 	cout << "Basis:: \n";
@@ -1773,7 +1902,7 @@ void NRoSyFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 4;
+	nRot = 2;
 	readMesh(meshFile);
 	scaleMesh();
 	
@@ -1788,19 +1917,19 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	constructMassMatrixMF3D();
 	computeFrameRotation(viewer);
-	//buildStiffnessMatrix_Geometric();
-	buildStiffnessMatrix_Combinatorial();
+	buildStiffnessMatrix_Geometric();
+	//buildStiffnessMatrix_Combinatorial();
 
 	selectFaceToDraw(5000);
 	Eigen::VectorXd inputNFields;
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
-	ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
+	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
 	//visualize2Dfields(viewer, inputNFields, Eigen::RowVector3d(0.1, 0.2, 0.2), 1.0);
-	createNRoSyFromVectors(inputNFields, nRoSy);
+	//createNRoSyFromVectors(inputNFields, nRoSy);
 	//visualizeNRoSyFields(viewer, nRoSy );
-	convertNRoSyToRepVectors(nRoSy, repVector);
+	//convertNRoSyToRepVectors(nRoSy, repVector);
 	//visualizeRepVectorFields(viewer, repVector);
-	convertRepVectorsToNRoSy(repVector, nRoSy);
+	//convertRepVectorsToNRoSy(repVector, nRoSy);
 	//visualizeNRoSyFields(viewer, nRoSy);
 
 	/* Visualizing + Manipulating n-RoSy fields */
@@ -1811,17 +1940,17 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Working with eigenvectors of n-RoSy fields*/
 
-	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_25_NRoSy_Ref";
+	//string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_25_NRoSy_Ref";
 	//computeEigenFields_generalized(25, fieldsfile);
-	computeEigenFields_regular(50, fileEigen);
-	NRoSy nRoSy_eigenFields;
-	convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(1), nRoSy_eigenFields);
+	////computeEigenFields_regular(50, fileEigen);
+	//NRoSy nRoSy_eigenFields;
+	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
 	//visualizeNRoSyFields(viewer, nRoSy_eigenFields);
-	visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
+	////visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
 	/* Build reduced space */
-	//constructBasis();
-	//visualizeBasis(viewer, 0);
+	constructBasis();
+	visualizeBasis(viewer, 0);
 
 	/* Constrained fields (biharmonic) */
 	//nRoSyFieldsDesignRef();
