@@ -1162,11 +1162,11 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	}
 }
 
-void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields)
+void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	const double scale = 1.0;
 	Eigen::Vector2d b(1, 0);	
-	Eigen::RowVector3d color (117.0/255.0, 107.0/255.0, 177.0/255.0);
+	//Eigen::RowVector3d color (117.0/255.0, 107.0/255.0, 177.0/255.0);
 	Eigen::VectorXd TempFields(2 * F.rows());
 
 	/* Construct rotation matrix*/
@@ -1179,14 +1179,14 @@ void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, co
 	visualize2Dfields(viewer, TempFields, color, scale, false);	
 }
 
-void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector)
+void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector, const Eigen::RowVector3d& color)
 {
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 
-	const double scale = 250.0;
-	//const double scale = 1.0;
-	Eigen::RowVector3d color(117.0 / 255.0, 107.0 / 255.0, 177.0 / 255.0);
+	//const double scale = 250.0;
+	const double scale = 1.0;
+	//Eigen::RowVector3d color(117.0 / 255.0, 107.0 / 255.0, 177.0 / 255.0);
 	visualize2Dfields(viewer, repVector, color, scale, false);
 }
 
@@ -1351,8 +1351,9 @@ void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
 	//viewer.data().line_width = 1.0f;
 	
 	NRoSy nRoSy_;
-	convertRepVectorsToNRoSy(Xf, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, color);
+	visualizeRepVectorFields(viewer, Xf, color);
+	//convertRepVectorsToNRoSy(Xf, nRoSy_);
+	//visualizeNRoSyFields(viewer, nRoSy_, color);
 }
 
 void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer)
@@ -1366,8 +1367,9 @@ void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &
 	//viewer.data().line_width = 1.0f;
 
 	NRoSy nRoSy_;
-	convertRepVectorsToNRoSy(XfBar, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, color);
+	visualizeRepVectorFields(viewer, XfBar, color);
+	//convertRepVectorsToNRoSy(XfBar, nRoSy_);
+	//visualizeNRoSyFields(viewer, nRoSy_, color);
 }
 
 void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1481,7 +1483,7 @@ void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C,
 	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
-	string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
@@ -2025,6 +2027,29 @@ void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, cons
 	XfBar = Basis * XLowDim;
 }
 
+void NRoSyFields::measureAccuracy()
+{
+	if (Xf.size() < 1 || XfBar.size() < 1)
+	{
+		cout << "Either the reduced and the reference fields are not computed yet. Return \n";
+		return;
+	}
+
+	cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = Xf - XfBar;
+	double norm1 = diff.transpose()*MF*diff;
+	double norm2 = Xf.transpose()*MF*Xf;
+	double normL2 = sqrt(norm1 / norm2);
+	double error = normL2;
+	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
+
+	cout << "____Harmonic energy \n";
+	double harm_energy1_sym = Xf.transpose()*SF*Xf;
+	double harm_energy2_sym = XfBar.transpose()*SF*XfBar;
+	double harm_relEnergy_sym = abs(harm_energy1_sym - harm_energy2_sym) / harm_energy1_sym;
+	cout << "____Harmonic Energy => Ref=" << harm_energy1_sym << ", Approx:" << harm_energy2_sym << endl;
+	cout << "____Relative energy: " << harm_relEnergy_sym << endl;
+}
 
 
 
@@ -2079,7 +2104,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	////visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
 	/* Build reduced space */
-	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_NRoSy_2000_Eigfields_40sup";
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_NRoSy_2000_Eigfields_40sup";
 	//constructBasis();
 	//storeBasis(basisFile);
 	retrieveBasis(basisFile);
@@ -2096,6 +2121,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	nRoSyFieldsDesign_Reduced();
 	visualizeConstrainedFields_Reduced(viewer);
 	visualizeConstraints(viewer);
+	measureAccuracy();
 }
 
 
