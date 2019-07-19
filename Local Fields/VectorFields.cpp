@@ -3476,7 +3476,7 @@ void VectorFields::setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3
 	cout << "> Constructing RHS (mapped)...";
 
 	/* Mass matrix of the selected faces (on constraints) */
-	Eigen::SparseMatrix<double> Mconst =C*MF2D*C.transpose();
+	Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
 
 	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
 	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());

@@ -38,6 +38,8 @@ public:
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 	void computeEigenFields_generalized(const int &numEigs, const string& filename);
 	void computeEigenFields_regular(const int &numEigs, const string& filename);
+	void storeBasis(const string& filename);
+	void retrieveBasis(const string& filename);
 
 	/* Creating NRoSyFields */
 	void representingNRoSyFields(const Eigen::MatrixXd& NFields);
@@ -51,13 +53,14 @@ public:
 	void convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields);
 
 	/* Visualizing the NRoSyFields */
-	void visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields);
+	void visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color);
 	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields);
 	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer);
 	void visualizeConstraints(igl::opengl::glfw::Viewer &viewer);
 
 	/* N-FIELDS DESIGN */
@@ -74,6 +77,15 @@ public:
 	void farthestPointSampling();
 	void constructBasis_LocalEigenProblem();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
+
+	/* REDUCED N-FIELDS DESIGN */
+	void nRoSyFieldsDesign_Reduced();
+	void nRoSyFieldsDesign_Reduced_HardConstraints();
+	void constructRandomHardConstraints_Reduced();
+	void setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
+	void setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::SparseMatrix<double>& A_LHSBar);
+	void solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, const Eigen::SparseMatrix<double>& A_LHSBar, const Eigen::VectorXd& bBar);
+
 
 	/* Testing stuff */
 	void TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
@@ -110,10 +122,17 @@ public:
 	/* Variable related to n-RoSy fields design */
 	Eigen::VectorXd					Xf;
 	Eigen::VectorXd					c;										// representation vector of the constraints
+	Eigen::SparseMatrix<double>		C;										// selector matrix
 	vector<int>						reducedConstraints, globalConstraints;
 
+	/* Variable related to REDUCED n-RoSy fields design */
+	Eigen::VectorXd					XfBar;
+	Eigen::VectorXd					cBar;										// representation vector of the constraints
+	Eigen::SparseMatrix<double>		CBar;										// selector matrix
+	
+
 	/* Testing variables */
-	int								testID;
+	int								testID = 10;
 
 };
 

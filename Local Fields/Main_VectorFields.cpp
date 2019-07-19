@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
@@ -176,17 +176,42 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeSoftConstraints(viewer);
 			break;
 		case '1':
-			//vectorFields.visualizeSubdomain(viewer);
-			//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-			vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			if (fieldsType == FieldsType::VECTOR)
+			{				
+				//vectorFields.visualizeSubdomain(viewer);
+				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
+				vectorFields.visualizeApproximatedFields(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.visualizeConstrainedFields(viewer);
+				nRoSyFields.visualizeConstraints(viewer);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}			
 			break;
 		case '2':
-			///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-			vectorFields.visualizeApproxResult(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
-			//evenSpaceField = !evenSpaceField; 
-			//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
+				vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
+				//evenSpaceField = !evenSpaceField; 
+				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+				nRoSyFields.visualizeConstraints(viewer);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
+			
 			break;
 		case '3':
 			//vectorFields.visualizeGlobalConstraints(viewer);
@@ -490,7 +515,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 2.0f; 
+	viewer.data().line_width = 1.0f; 
 
 	return viewer.launch();
 

@@ -949,6 +949,20 @@ void NRoSyFields::computeEigenFields_regular(const int &numEigs, const string& f
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void NRoSyFields::storeBasis(const string& filename)
+{
+	writeEigenSparseMatrixToBinary(Basis, filename);
+}
+
+void NRoSyFields::retrieveBasis(const string& filename)
+{
+	readEigenSparseMatrixFromBinary(filename, Basis);
+
+	//BasisTemp = Basis; 
+	//normalizeBasisAbs();
+	printf("Basis size=%dx%d (nnz=%.4f)\n", Basis.rows(), Basis.cols(), (double)Basis.nonZeros() / (double)Basis.rows());
+}
+
 /* Creating NRoSyFields */
 void NRoSyFields::representingNRoSyFields(const Eigen::MatrixXd& NFields)
 {
@@ -1106,13 +1120,14 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 }
 
 /* Visualizing the NRoSyFields */
-void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields)
+void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	double scale = 1.0;
-	//double scale = 0.5;
+	double scale = 2.0;
+	//double scale = 2.5;
+	//double scale = 0.25;
 	Eigen::Vector2d b(1, 0);
-	Eigen::RowVector3d color(0.1, 0.1, 0.9);
+	//Eigen::RowVector3d color(0.1, 0.1, 0.9);
 	//Eigen::VectorXd col(nRot);
 	//Eigen::MatrixXd color;
 	//for (int i = 0; i < nRot; i++)
@@ -1283,9 +1298,11 @@ void NRoSyFields::visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const 
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 
+	Eigen::RowVector3d color(0.1, 0.1, 0.9);
+
 	NRoSy nRoSy_eigenFields;
 	convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(id), nRoSy_eigenFields);
-	visualizeNRoSyFields(viewer, nRoSy_eigenFields);
+	visualizeNRoSyFields(viewer, nRoSy_eigenFields, color);
 }
 
 void NRoSyFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
@@ -1311,9 +1328,15 @@ void NRoSyFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &i
 	Eigen::VectorXd basisRepVectors;
 	NRoSy basisNRoSy; 
 
+	Eigen::RowVector3d colorEven(0.1, 0.1, 0.9);
+	Eigen::RowVector3d colorOdd(0.1, 0.1, 0.9);
+
 	basisRepVectors = Basis.col(id);
 	convertRepVectorsToNRoSy(basisRepVectors, basisNRoSy);
-	visualizeNRoSyFields(viewer, basisNRoSy);
+	if(id%2==0)
+		visualizeNRoSyFields(viewer, basisNRoSy, colorEven);
+	else 
+		visualizeNRoSyFields(viewer, basisNRoSy, colorOdd);
 	//visualizeRepVectorFields(viewer, basisRepVectors);
 }
 
@@ -1322,10 +1345,29 @@ void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
 	cout << "Visualizing the fields \n";
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.1, 0.9);
 	//visualizeRepVectorFields(viewer, Xf);
+
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
+	//viewer.data().line_width = 1.0f;
 	
 	NRoSy nRoSy_;
 	convertRepVectorsToNRoSy(Xf, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, color);
+}
+
+void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Visualizing the fields \n";
+	Eigen::RowVector3d color = Eigen::RowVector3d(0.9, 0.1, 0.1);
+	//visualizeRepVectorFields(viewer, Xf);
+
+	//viewer.data().clear();
+	//viewer.data().set_mesh(V, F);
+	//viewer.data().line_width = 1.0f;
+
+	NRoSy nRoSy_;
+	convertRepVectorsToNRoSy(XfBar, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, color);
 }
 
 void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1408,6 +1450,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
+	viewer.data().line_width = 1.0;
 }
 
 /* ============================= N-FIELDS DESIGN ============================= */
@@ -1420,7 +1463,7 @@ void NRoSyFields::nRoSyFieldsDesignRef()
 void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 {
 	Eigen::VectorXd					b, g, h, vEst;
-	Eigen::SparseMatrix<double>		A_LHS, C;
+	Eigen::SparseMatrix<double>		A_LHS;
 	Eigen::SparseMatrix<double>		B2F;
 	if (MF.rows() < 1) constructMassMatrixMF3D();
 	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
@@ -1435,12 +1478,12 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
 {
 	// Define the constraints
-	const bool readFromFile = false;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
+	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
-	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
+	string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -1499,7 +1542,7 @@ void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C,
 		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
 
 		/* Creating random constraints */
-		std::uniform_int_distribution<> disConst(2, 20); // From 0 to F.rows()-1
+		std::uniform_int_distribution<> disConst(20, 50); // From 0 to F.rows()-1
 		int numConstraints = disConst(gen);
 		cout << "we gave you " << numConstraints << " number of constnraints. Good luck!\n";
 
@@ -1668,7 +1711,7 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
 void NRoSyFields::constructBasis()
 {
-	numSupport = 20.0;
+	numSupport = 40.0;
 	numSample = 1000;
 	constructSamples(numSample);
 	constructBasis_LocalEigenProblem();
@@ -1899,10 +1942,96 @@ void NRoSyFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
 }
 
+/* ============================= REDUCED N-FIELDS DESIGN ============================= */
+void NRoSyFields::nRoSyFieldsDesign_Reduced()
+{
+	nRoSyFieldsDesign_Reduced_HardConstraints();
+}
+
+void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
+{
+	Eigen::SparseMatrix<double>		B2FBar = Basis.transpose()*(SF*MFinv*SF)*Basis;
+	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
+	Eigen::SparseMatrix<double>		A_LHSBar;
+
+	constructRandomHardConstraints_Reduced();
+	setupRHSBiharmSystem_Reduced(B2FBar, gBar, hBar, vEstBar, bBar);
+	setupLHSBiharmSystem_Reduced(B2FBar, A_LHSBar);
+	solveBiharmSystem_Reduced(vEstBar, A_LHSBar, bBar);
+}
+
+void NRoSyFields::constructRandomHardConstraints_Reduced()
+{
+	//userConstraints = globalConstraints; 
+	CBar = C * Basis;
+	cBar = c;	
+}
+
+void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)
+{
+	vEstBar.resize(B2FBar.rows());
+	for (int i = 0; i < vEstBar.rows(); i++) {
+		vEstBar(i) = 0.5;
+	}
+
+	gBar = B2FBar * vEstBar;
+	bBar.resize(B2FBar.rows() + cBar.rows());
+
+	// Constructing b
+	hBar = CBar * vEstBar - cBar;
+	bBar << gBar, hBar;
+}
+
+void NRoSyFields::setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::SparseMatrix<double>& A_LHSBar)
+{
+	A_LHSBar.resize(B2FBar.rows() + CBar.rows(), B2FBar.cols() + CBar.rows());
+	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(B2FBar.nonZeros() + 2 * CBar.nonZeros());
+
+	for (int k = 0; k < B2FBar.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(B2FBar, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+		}
+	}
+
+	for (int k = 0; k < CBar.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(CBar, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(B2FBar.rows() + it.row(), it.col(), it.value()));
+			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2FBar.cols() + it.row(), it.value()));
+		}
+	}
+	A_LHSBar.setFromTriplets(ATriplet.begin(), ATriplet.end());
+}
+
+void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, const Eigen::SparseMatrix<double>& A_LHSBar, const Eigen::VectorXd& bBar)
+{
+	Eigen::VectorXd XLowDim(A_LHSBar.rows());
+	XfBar.resize(Basis.rows());
+	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
+
+	cout << "....Solving for the first frame.\n";
+	Eigen::VectorXd x = sparseSolver.solve(bBar);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	XLowDim = -x.block(0, 0, A_LHSBar.rows(), 1) + vEstBar;
+
+	XfBar = Basis * XLowDim;
+}
+
+
+
+
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 2;
+	nRot = 4;
 	readMesh(meshFile);
 	scaleMesh();
 	
@@ -1921,6 +2050,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//buildStiffnessMatrix_Combinatorial();
 
 	selectFaceToDraw(5000);
+	//selectFaceToDraw(F.rows());
 	Eigen::VectorXd inputNFields;
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
 	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
@@ -1949,13 +2079,23 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	////visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
 	/* Build reduced space */
-	constructBasis();
-	visualizeBasis(viewer, 0);
+	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_NRoSy_2000_Eigfields_40sup";
+	//constructBasis();
+	//storeBasis(basisFile);
+	retrieveBasis(basisFile);
+	//visualizeBasis(viewer, 0);
+
 
 	/* Constrained fields (biharmonic) */
-	//nRoSyFieldsDesignRef();
-	//visualizeConstraints(viewer);
-	//visualizeConstrainedFields(viewer);
+	nRoSyFieldsDesignRef();
+	visualizeConstraints(viewer);
+	visualizeConstrainedFields(viewer);
+
+	/* Reduced Constrained fields (biharmonic)--hard constraints */
+	constructRandomHardConstraints(C, c);
+	nRoSyFieldsDesign_Reduced();
+	visualizeConstrainedFields_Reduced(viewer);
+	visualizeConstraints(viewer);
 }
 
 
