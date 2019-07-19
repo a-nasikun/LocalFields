@@ -659,6 +659,24 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 	}
 }
 
+void TensorFields::obtainTransformationForLaplacian(double tetha, Eigen::Matrix3d& G)
+{
+	double g1 = cos(tetha);
+	double g2 = -sin(tetha);
+	double g3 = sin(tetha);
+	double g4 = cos(tetha);
+
+	G(0, 0) = g1*g1;			// Transformation matrix in voigt notation
+	G(0, 1) = g2*g2;
+	G(0, 2) = sqrt(2.0)*g1*g2;
+	G(1, 0) = g3*g3;
+	G(1, 1) = g4*g4;
+	G(1, 2) = sqrt(2.0)*g3*g4;
+	G(2, 0) = sqrt(2.0)*g1*g3;
+	G(2, 1) = sqrt(2.0)*g2*g4;
+	G(2, 2) = (g1*g4 + g2*g3);
+}
+
 void TensorFields::obtainTransformationForLaplacian(double cT, double sT, double cF, double sF, Eigen::Matrix3d& G) 
 {
 	double t1 = cT;				// First rotation matrix T: map the first basis to basis in common edge
@@ -678,13 +696,13 @@ void TensorFields::obtainTransformationForLaplacian(double cT, double sT, double
 
 	G(0, 0) = g1*g1;			// Transformation matrix in voigt notation
 	G(0, 1) = g2*g2;
-	G(0, 2) = 2 * g1*g2;
+	G(0, 2) = sqrt(2.0)*g1*g2;
 	G(1, 0) = g3*g3;
 	G(1, 1) = g4*g4;
-	G(1, 2) = 2 * g3*g4;
-	G(2, 0) = g1*g3;
-	G(2, 1) = g2*g4;
-	G(2, 2) = g1*g4 + g2*g3;
+	G(1, 2) = sqrt(2.0)*g3*g4;
+	G(2, 0) = sqrt(2.0)*g1*g3;
+	G(2, 1) = sqrt(2.0)*g2*g4;
+	G(2, 2) = (g1*g4 + g2*g3);
 }
 
 
@@ -706,7 +724,7 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 		double sinRA = sin(FrameRot(ei, 0));
 		double cosSB = cos(FrameRot(ei, 1));
 		double sinSB = sin(FrameRot(ei, 1));
-
+		//double tetha = FrameRot(ei, 0) - FrameRot(ei, 1);
 
 		/* Transformation T of entries of matrix B to basis of matrix A) => R*-Id*ST*B*S*-Id*RT 
 		** having M = R*-Id*ST
@@ -720,6 +738,8 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 		** parameters: cos_Target, sin_Target, cos_Source, sin_Source, rep_matrix */
 		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
 		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+		//obtainTransformationForLaplacian(tetha, B2toB1);
+		//B1toB2 = B2toB1.transpose();
 
 		//B2toB1 = 0.5*(B2B1 + B2B1.transpose());
 		//B1toB2 = 0.5*(B1B2 + B1B2.transpose());
@@ -760,7 +780,7 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 	//Eigen::SparseMatrix<double> ST = STemp.transpose();
 	//SF = 0.5*(ST + STemp);
 	string fileLaplace = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_Lap_Tensor_Comb";
-	///WriteSparseMatrixToMatlab(SF, fileLaplace);
+	WriteSparseMatrixToMatlab(SF, fileLaplace);
 }
 
 void TensorFields::buildStiffnessMatrix_Geometric()
@@ -777,10 +797,11 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 		double weight;
 
 		/* Construct the rotation matrix RA and SB */
-		double cosRA = cos(FrameRot(ei, 0));
-		double sinRA = sin(FrameRot(ei, 0));
-		double cosSB = cos(FrameRot(ei, 1));
-		double sinSB = sin(FrameRot(ei, 1));
+		//double cosRA = cos(FrameRot(ei, 0));
+		//double sinRA = sin(FrameRot(ei, 0));
+		//double cosSB = cos(FrameRot(ei, 1));
+		//double sinSB = sin(FrameRot(ei, 1));
+		double tetha = FrameRot(ei, 0) - FrameRot(ei, 1);
 
 		/* Compute the weight on each edge */
 		Eigen::Vector3d edge_ = V.row(E(ei, 1)) - V.row(E(ei, 0));
@@ -800,8 +821,10 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 		Eigen::Matrix3d B1toB2, B2toB1;
 		/* B1toB2 => parallel transport matrix A to B *
 		** B2toB1 => parallel transport matrix B to A */
-		obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
-		obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+		//obtainTransformationForLaplacian(cosRA, sinRA, cosSB, sinSB, B2toB1);
+		//obtainTransformationForLaplacian(cosSB, sinSB, cosRA, sinRA, B1toB2);
+		obtainTransformationForLaplacian(tetha, B2toB1);
+		B1toB2 = B2toB1.transpose();
 
 		/* (Geometric) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 3; i++)
@@ -828,7 +851,7 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 
-	string model		= "CDragon";
+	string model		= "Arma_43k";
 	string fileLaplace	= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_Tensor_Geom";
 	WriteSparseMatrixToMatlab(SF, fileLaplace);
 	fileLaplace			= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_Tensor_Geom";
@@ -846,7 +869,7 @@ void TensorFields::convertTensorToVoigt(const Eigen::MatrixXd& tensor, Eigen::Ve
 	{
 		voigt(3 * i + 0) = tensor(2 * i + 0, 0);
 		voigt(3 * i + 1) = tensor(2 * i + 1, 1);
-		voigt(3 * i + 2) = tensor(2 * i + 1, 0);
+		voigt(3 * i + 2) = sqrt(2.0)*tensor(2 * i + 1, 0);
 	}
 }
 
@@ -854,7 +877,7 @@ void TensorFields::convertTensorToVoigt_Elementary(const Eigen::Matrix2d& tensor
 {	
 	voigt(0) = tensor(0, 0);
 	voigt(1) = tensor(1, 1);
-	voigt(2) = tensor(1, 0);
+	voigt(2) = sqrt(2.0)*tensor(0, 1);
 }
 
 /* Converting voigt's notation vector fields (3x1) back to tensor fields (each of 2x2 size)
@@ -866,8 +889,8 @@ void TensorFields::convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::Mat
 	for (int i = 0; i < F.rows(); i++)
 	{
 		tensor(2 * i + 0, 0) = voigt(3 * i + 0);
-		tensor(2 * i + 1, 0) = voigt(3 * i + 2);
-		tensor(2 * i + 0, 1) = voigt(3 * i + 2);
+		tensor(2 * i + 1, 0) = voigt(3 * i + 2)/sqrt(2.0);
+		tensor(2 * i + 0, 1) = voigt(3 * i + 2)/sqrt(2.0);
 		tensor(2 * i + 1, 1) = voigt(3 * i + 1);
 	}
 }
@@ -875,8 +898,8 @@ void TensorFields::convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::Mat
 void TensorFields::convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt, Eigen::Matrix2d& tensor)
 {
 	tensor(0, 0) = voigt(0);
-	tensor(1, 0) = voigt(2);
-	tensor(0, 1) = voigt(2);
+	tensor(1, 0) = voigt(2)/sqrt(2.0);
+	tensor(0, 1) = voigt(2)/sqrt(2.0);
 	tensor(1, 1) = voigt(1);
 }
 
@@ -1547,23 +1570,25 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(7500);	
+	selectFaceToDraw(5000);	
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	//visualizeTensorFields(viewer, tensorFields);
+	visualizeTensorFields(viewer, tensorFields);
+
+
 
 	computeFrameRotation(viewer);
-	//testTransformation(viewer);
-	//buildStiffnessMatrix_Geometric();
-	buildStiffnessMatrix_Combinatorial();
-	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma10k_1000_Ref";
-	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
-	//computeEigenFields_generalized((int) 50, fileEigFields);
-	computeEigenFields_regular(25, fileEigFields);
-	///loadEigenFields(fileEigFields);
+	////testTransformation(viewer);
+	buildStiffnessMatrix_Geometric();
+	//buildStiffnessMatrix_Combinatorial();
+	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma43k_1000_Ref";
+	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
+	computeEigenFields_generalized(25, fileEigFields);
+	//computeEigenFields_regular(75, fileEigFields);
+	//////loadEigenFields(fileEigFields);
 	visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
@@ -1589,28 +1614,30 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen:
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 0.5;
+	double lambda = 0.75;
 
 	
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
-	Eigen::SparseMatrix<double> L = (MFinv*SF);
+	//Eigen::SparseMatrix<double> L = (MFinv*SF);
 	//Eigen::VectorXd lap = SF*inputVoigt;
 
-	double geom_scale = L.diagonal().sum() / (double) L.rows();
-	geom_scale = 1.0 / geom_scale;
-	lambda = geom_scale * lambda;
+	//double geom_scale = L.diagonal().sum() / (double) L.rows();
+	//geom_scale = 1.0 / geom_scale;
+	//lambda = geom_scale * lambda;
 
 	cout << "Set and solve for smoothing \n";
 	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	//sparseSolver.compute(MF - factor1 / factor2*lambda*SF);
 	//sparseSolver.compute(MF - lambda*SF);
+
+	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
 	
 	Eigen::MatrixXd smoothedFields;
 	//Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
-	//Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
-	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*L*inputVoigt;
+	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
+	//Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*L*inputVoigt;
 	convertVoigtToTensor(smoothedVoigt, smoothedTensor);
 	outputTensor = smoothedTensor;
 
@@ -1691,5 +1718,14 @@ void TensorFields::testTransformation(igl::opengl::glfw::Viewer &viewer)
 	cout << "__convert a1 back to a matrix \n";
 	convertVoigtToTensor_Elementary(a1inB1fromB2, A1back);
 	cout << "A1 after going to B2 and back to B1 is now: \n" << A1back << endl << endl;
+}
+
+void TensorFields::tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::MatrixXd tensorRepFields;
+	convertTensorToVoigt(Tensor, voigtReps);
+	convertVoigtToTensor(voigtReps, Tensor);
+	constructTensorRepFields(Tensor, tensorRepFields);
+	visualizeTensorFields(viewer, tensorRepFields);
 }
 

@@ -13,7 +13,7 @@ int eigsToCompute = 500;
 int vfSaveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::NROSY;
+FieldsType fieldsType = FieldsType::TENSOR;
 
 int main(int argc, char *argv[])
 {
@@ -149,6 +149,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector3d lambda(1, 1e-4, 0.9);
 
 	bool showSmoothed = false; 
+	bool represent_tensor_in_voigt = false; 
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -409,6 +410,20 @@ int main(int argc, char *argv[])
 		case 'b':
 		case 'B':
 			v_in = vectorFields.arbField2D; 
+			represent_tensor_in_voigt = !represent_tensor_in_voigt;
+			if (fieldsType == FieldsType::TENSOR)
+			{
+				if (represent_tensor_in_voigt)
+				{
+					cout << "Representing in double conversion \n";
+					tensorFields.tensorConvertNConvert(viewer);
+				}
+				else
+				{
+					cout << "Representing the original data \n";
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+			}
 			break;
 		case 'r':
 		case 'R':

@@ -32,6 +32,7 @@ public:
 	void selectFaceToDraw(const int& numFaces);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
+	void obtainTransformationForLaplacian(double tetha, Eigen::Matrix3d& G);
 	void obtainTransformationForLaplacian(double cT, double sT, double cF, double sF, Eigen::Matrix3d& G);
 	void buildStiffnessMatrix_Combinatorial();
 	void buildStiffnessMatrix_Geometric();
@@ -71,6 +72,7 @@ public:
 	void testDirichletAndLaplace();
 	void testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void testTransformation(igl::opengl::glfw::Viewer &viewer);
+	void tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer);
 
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 public:
@@ -91,7 +93,10 @@ public:
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	//double							scale = 10000000;
 	//double							scale = 100;		// regular eigenfields => arma 10k
-	double							scale = 1000.0;
+	//double							scale = 1000.0;		// regular eigenfields => arma 43k
+	//double								scale = 10;
+	//double								scale = 0.1;		// smoothing
+	double scale = 1.0; 
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;
