@@ -768,7 +768,7 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight*1.0 / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, -weight*Rot(i, j) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, weight*Rot(i, j) / 3.0));
 			}
 		}
 
@@ -778,11 +778,17 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, -weight*Rot(j, i) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, weight*Rot(j, i) / 3.0));
 			}
 		}
 	}
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
+
+	string model = "Brezel1920";
+	string fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_NRoSy_Geom2";
+	WriteSparseMatrixToMatlab(SF, fileLaplace);
+	fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_NRoSy_Geom2";
+	WriteSparseMatrixToMatlab(MF, fileLaplace);
 }
 
 void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
@@ -2056,7 +2062,7 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 4;
+	nRot = 1;
 	readMesh(meshFile);
 	scaleMesh();
 	
@@ -2095,33 +2101,33 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Working with eigenvectors of n-RoSy fields*/
 
-	//string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_25_NRoSy_Ref";
-	//computeEigenFields_generalized(25, fieldsfile);
-	////computeEigenFields_regular(50, fileEigen);
-	//NRoSy nRoSy_eigenFields;
-	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
-	//visualizeNRoSyFields(viewer, nRoSy_eigenFields);
-	////visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
+	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_25_NRoSy_Ref";
+	computeEigenFields_generalized(25, fieldsfile);
+	//computeEigenFields_regular(50, fileEigen);
+	NRoSy nRoSy_eigenFields;
+	convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
+	visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
+	//visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
 	/* Build reduced space */
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_NRoSy_2000_Eigfields_40sup";
 	//constructBasis();
 	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	//retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 
 	/* Constrained fields (biharmonic) */
-	nRoSyFieldsDesignRef();
-	visualizeConstraints(viewer);
-	visualizeConstrainedFields(viewer);
+	//nRoSyFieldsDesignRef();
+	//visualizeConstraints(viewer);
+	//visualizeConstrainedFields(viewer);
 
 	/* Reduced Constrained fields (biharmonic)--hard constraints */
-	constructRandomHardConstraints(C, c);
-	nRoSyFieldsDesign_Reduced();
-	visualizeConstrainedFields_Reduced(viewer);
-	visualizeConstraints(viewer);
-	measureAccuracy();
+	//constructRandomHardConstraints(C, c);
+	//nRoSyFieldsDesign_Reduced();
+	//visualizeConstrainedFields_Reduced(viewer);
+	//visualizeConstraints(viewer);
+	//measureAccuracy();
 }
 
 
