@@ -96,7 +96,7 @@ public:
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
 	//double								scale = 0.1;		// smoothing
-	double scale = 1.0; 
+	double scale = 2.0; 
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;

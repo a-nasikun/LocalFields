@@ -911,7 +911,22 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 		Eigen::Matrix2d evect_;
 		Eigen::Vector2d eval_;
 		Eigen::Matrix2d block_ = tensor.block(2 * i, 0, 2, 2);
+		
+		//Eigen::SparseMatrix<double> blockSp_(2,2);
+		//Eigen::MatrixXd evect2_;
+		//Eigen::VectorXd eval2_;
+		//vector<Eigen::Triplet<double>> bTriplet; bTriplet.reserve(4);
+		//bTriplet.push_back(Eigen::Triplet<double>(0, 0, block_(0, 0)));
+		//bTriplet.push_back(Eigen::Triplet<double>(0, 1, block_(0, 1)));
+		//bTriplet.push_back(Eigen::Triplet<double>(1, 0, block_(1, 0)));
+		//bTriplet.push_back(Eigen::Triplet<double>(1, 1, block_(1, 1)));
+		//blockSp_.setFromTriplets(bTriplet.begin(), bTriplet.end());
+
 		computeEigenExplicit(block_, eval_, evect_);
+		//computeEigenMatlab(blockSp_, 2, evect2_, eval2_, "hello");
+		//evect_ = evect2_.block(0, 0, 2, 2);
+		//eval_ = eval2_.block(0, 0, 1, 2);
+
 		matrixRep.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
 		matrixRep.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
 	}
@@ -1514,6 +1529,12 @@ void TensorFields::visualizeEigenTensorFields(igl::opengl::glfw::Viewer &viewer,
 	convertVoigtToTensor(eigFields_, eigTensor_);
 	constructTensorRepFields(eigTensor_, eigTensorRep_);
 
+	cout << "Epsilon: " << std::numeric_limits<double>::epsilon() << endl;
+	cout << "__voigt 1: \n " << eigFields_.block(0, 0, 1, 3) << endl << endl;
+	cout << "__tensor 1: <" <<  eigTensor_(0, 0) << ", " << eigTensor_(1, 0) << ">T, " << 
+								eigTensor_(0, 1) << ", " << eigTensor_(1, 1) << ">T, " << endl << endl;
+	cout << "__fields rep 1: \n" << eigTensorRep_(0, 0) << ", " << eigTensorRep_(1, 0) << ">T, " <<
+									eigTensorRep_(0, 1) << ", " << eigTensorRep_(1, 1) << ">T, " << endl << endl;
 	viewer.data().clear();
 	viewer.data().set_mesh(V, F);
 

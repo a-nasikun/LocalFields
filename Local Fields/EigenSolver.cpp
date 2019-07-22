@@ -881,39 +881,58 @@ void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> 
 /* ============ Computing eigenstructure of 2x2 matrix explicitly/analytically ============= */
 void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eigen::Matrix2d& EigVect)
 {
-	double trace = M.trace();
-	//double det = M.determinant();
-	double det = M(0, 0)*M(1, 1) - M(0, 1)*M(1, 0);
-	//printf("The determinant is %.5f \n", det);
-	double a_ = trace / 2.0;
-	double b_ = sqrt(trace*trace/4.0 - det);
+	double a = M(0, 0);
+	double b = M(0, 1);
+	double c = M(1, 1);
+	double D = sqrt(4 * b*b + (a - c)*(a - c));
 
-	/* Computing the eigenvalues */
-	EigVal(0) = a_ + b_;
-	EigVal(1) = a_ - b_;
+	/* Eigenvalues */
+	EigVal(0) = (a - D + c) / 2.0;
+	EigVal(1) = (a + D + c) / 2.0;
 
-	
-	/* Computing the eigenvectors for 2x2 symmetric matrix*/
-	if (abs(M(1, 0)) > 1.0*std::numeric_limits<double>::epsilon())
-	{
-		//cout << "Reguler " << EigVal.transpose() << endl;
-		Eigen::Vector2d v1(EigVal(0) - M(1, 1), M(1, 0)); v1.normalize();
-		Eigen::Vector2d v2(EigVal(1) - M(1, 1), M(1, 0)); v2.normalize();
-		//EigVect.col(0) = EigVal(0)*v1; 
-		//EigVect.col(1) = EigVal(1)*v2;
-		EigVect.col(0) = v1;
-		EigVect.col(1) = v2;
-	}
-	else 
-	{
-		///cout << "Off diagonal zeros | eigVal: " << EigVal.transpose() << endl;
-		///cout << "__M=" << M << "\t\t , its trace: " << trace << endl; 
-		//EigVect.col(0) = EigVal(0)*Eigen::Vector2d(1.0, 0.0);
-		//EigVect.col(1) = EigVal(1)*Eigen::Vector2d(0.0, 1.0);
-		EigVect.col(0) = Eigen::Vector2d(1.0, 0.0);
-		EigVect.col(1) = Eigen::Vector2d(0.0, 1.0);
-	}
+	/* Eigenvectors */
+	Eigen::Vector2d v1, v2;
+	v1 << a - D - c, 2 * b;
+	v2 << a + D - c, 2 * b; 
+	EigVect.col(0) = v1.normalized();
+	EigVect.col(1) = v2.normalized();
 }
+
+//void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eigen::Matrix2d& EigVect)
+//{
+//	double trace = M(0, 0) + M(1, 1);
+//	//double det = M.determinant();
+//	double det = M(0, 0)*M(1, 1) - M(0, 1)*M(1, 0);
+//	//printf("The determinant is %.5f \n", det);
+//	double a_ = trace / 2.0;
+//	double b_ = sqrt(trace*trace/4.0 - det);
+//
+//	/* Computing the eigenvalues */
+//	EigVal(0) = a_ + b_;
+//	EigVal(1) = a_ - b_;
+//
+//	
+//	/* Computing the eigenvectors for 2x2 symmetric matrix*/
+//	if (abs(M(1, 0)) > 1.0*std::numeric_limits<double>::epsilon())
+//	{
+//		//cout << "Reguler " << EigVal.transpose() << endl;
+//		Eigen::Vector2d v1(EigVal(0) - M(1, 1), M(1, 0)); v1.normalize();
+//		Eigen::Vector2d v2(EigVal(1) - M(1, 1), M(1, 0)); v2.normalize();
+//		//EigVect.col(0) = EigVal(0)*v1; 
+//		//EigVect.col(1) = EigVal(1)*v2;
+//		EigVect.col(0) = v1;
+//		EigVect.col(1) = v2;
+//	}
+//	else 
+//	{
+//		///cout << "Off diagonal zeros | eigVal: " << EigVal.transpose() << endl;
+//		///cout << "__M=" << M << "\t\t , its trace: " << trace << endl; 
+//		//EigVect.col(0) = EigVal(0)*Eigen::Vector2d(1.0, 0.0);
+//		//EigVect.col(1) = EigVal(1)*Eigen::Vector2d(0.0, 1.0);
+//		EigVect.col(0) = Eigen::Vector2d(1.0, 0.0);
+//		EigVect.col(1) = Eigen::Vector2d(0.0, 1.0);
+//	}
+//}
 
 /* Computing Eigenstructure in Spectra */
 //void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
