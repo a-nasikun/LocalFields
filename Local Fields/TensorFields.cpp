@@ -57,8 +57,8 @@ void TensorFields::readMesh(const string &meshFile)
 	printf("....V=%dx%d\n", V.rows(), V.cols());
 	printf("....F=%dx%d\n", F.rows(), F.cols());
 
-	igl::edges(F, E);
-	printf("....E=%dx%d\n", E.rows(), E.cols());
+	//igl::edges(F, E);
+	//printf("....E=%dx%d\n", E.rows(), E.cols());
 
 	igl::doublearea(V, F, doubleArea);
 
@@ -237,14 +237,14 @@ void TensorFields::constructEFList()
 
 
 	/* For test */
-	//int ft = 264;
-	//printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
-	//printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
-	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
-	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
-	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
-	//
-	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
+	int ft = rand() % F.rows();
+	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+	
+	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
 
 }
 
@@ -376,7 +376,6 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 	// FREE MEMORY for VFNeighbors
 	VFNeighbors.clear();
 	VFNeighbors.shrink_to_fit();
-
 
 
 	// MOVING THE ADJACENCY it to matrix format
@@ -851,7 +850,7 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 
-	string model		= "Arma_43k";
+	string model		= "Torus_73k";
 	string fileLaplace	= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_Tensor_Geom";
 	WriteSparseMatrixToMatlab(SF, fileLaplace);
 	fileLaplace			= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_Tensor_Geom";
@@ -932,6 +931,20 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 	}
 }
 
+void TensorFields::storeBasis(const string& filename)
+{
+	writeEigenSparseMatrixToBinary(Basis, filename);
+}
+
+void TensorFields::retrieveBasis(const string& filename)
+{
+	readEigenSparseMatrixFromBinary(filename, Basis);
+
+	//BasisTemp = Basis; 
+	//normalizeBasisAbs();
+	printf("Basis size=%dx%d (nnz=%.4f)\n", Basis.rows(), Basis.cols(), (double)Basis.nonZeros() / (double)Basis.rows());
+}
+
 /* ======================ADDITIONAL STUFF====================== */
 void TensorFields::computeEigenFields_regular(const int &numEigs, const string& filename)
 {
@@ -973,10 +986,7 @@ void TensorFields::loadEigenFields(const string& filename)
 
 /* ====================== SUBSPACE CONSTRUCTION ====================== */
 void TensorFields::constructBasis()
-{
-	numSupport = 20.0;
-	numSample = 100;
-	constructSamples(numSample);
+{	
 	constructBasis_LocalEigenProblem();
 	cout << "Basis:: \n";
 	cout << Basis.block(0,0,100,1) << endl << endl; 
@@ -1495,7 +1505,7 @@ void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &view
 	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
 	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
 	Eigen::MatrixXd smoothedFields;
-	constructTensorRepFields(smoothedTensor, smoothedFields);
+	constructTensorRepFields(smoothedTensorRef, smoothedFields);
 
 	//double scale = 0.01;
 	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
@@ -1548,13 +1558,14 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	//viewer.data().set_mesh(V, F);
 
 	int bId = id;
-	Eigen::RowVector3d color;
+	Eigen::RowVector3d color1, color2;
 	if (id % 2 == 0) {
-		color = Eigen::RowVector3d(1.0, 0.1, 0.2);
-		//color = Eigen::RowVector3d(0.6, 0.2, 0.2);
+		color1 = Eigen::RowVector3d( 34.0/255.0,  94.0/255.0, 168.0/255.0);
+		color2 = Eigen::RowVector3d(247.0/255.0, 104.0/255.0, 161.0/255.0);
 	}
 	else {
-		color = Eigen::RowVector3d(0.0, 0.1, 1.0);
+		color1 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
+		color1 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
 	}
 
 	if (id >= 2 * Sample.size()) {
@@ -1566,10 +1577,10 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	convertVoigtToTensor(Basis.col(id), basisTensor);
 	constructTensorRepFields(basisTensor, basisTensorFields);
 
-	visualize2Dfields(viewer, basisTensorFields.col(0), color,									  scale, false);
-	visualize2Dfields(viewer, -basisTensorFields.col(0), color,									  scale, false);
-	visualize2Dfields(viewer, basisTensorFields.col(1), Eigen::RowVector3d(1.0, 1.0,1.0) - color, scale, false);
-	visualize2Dfields(viewer, -basisTensorFields.col(1), Eigen::RowVector3d(1.0, 1.0,1.0) - color, scale, false);
+	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale/5.0, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale/5.0, false);
+	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale/5.0, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale/5.0, false);
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
@@ -1607,18 +1618,24 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//buildStiffnessMatrix_Combinatorial();
 	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma43k_1000_Ref";
 	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
-	computeEigenFields_generalized(25, fileEigFields);
+	//computeEigenFields_generalized(25, fileEigFields);
 	//computeEigenFields_regular(75, fileEigFields);
 	//////loadEigenFields(fileEigFields);
-	visualizeEigenTensorFields(viewer, 0);
+	//visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
-	///constructBasis();
-	///visualizeBasis(viewer, 0);
-		
+	//numSupport = 20.0;
+	//numSample = 500;
+	//constructSamples(numSample);
+	////constructBasis();
+	//string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Torus73k_"+to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
+	////storeBasis(fileBasis);
+	//retrieveBasis(fileBasis);
+	//visualizeBasis(viewer, 0);
+
 	/* Testing the result */
 	//testDirichletAndLaplace();
-	//testSmoothing(viewer, Tensor, smoothedTensor);
+	testSmoothing(viewer, Tensor, smoothedTensorRef);
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -1635,9 +1652,7 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen:
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 0.75;
-
-	
+	double lambda = 0.5;	
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
@@ -1659,8 +1674,8 @@ void TensorFields::testSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen:
 	//Eigen::VectorXd smoothedVoigt = sparseSolver.solve(MF*voigtReps);
 	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
 	//Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*L*inputVoigt;
-	convertVoigtToTensor(smoothedVoigt, smoothedTensor);
-	outputTensor = smoothedTensor;
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
+	outputTensor = smoothedTensorRef;
 
 	//visualizeSmoothedTensorFields(viewer);
 
@@ -1748,5 +1763,66 @@ void TensorFields::tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer)
 	convertVoigtToTensor(voigtReps, Tensor);
 	constructTensorRepFields(Tensor, tensorRepFields);
 	visualizeTensorFields(viewer, tensorRepFields);
+}
+
+/* APPLICATION :: SMOOTHING */
+void TensorFields::smoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+	//smoothing_Explicit_Combinatorial(viewer, inputTensor, outputTensor);
+	smoothing_Explicit_Geometric(viewer, inputTensor, outputTensor);
+	//smoothing_Implicit_Combinatorial(viewer, inputTensor, outputTensor);
+	//smoothing_Implicit_Geometric(viewer, inputTensor, outputTensor);
+}
+
+void TensorFields::smoothing_Explicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+	double lambda = 0.5;
+
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+	
+	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	Eigen::MatrixXd smoothedFields;
+	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*SF*inputVoigt;
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
+	outputTensor = smoothedTensorRef;
+
+	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("The energy is %.10f\n", dir);
+}
+
+void TensorFields::smoothing_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+	double lambda = 0.05;
+	Eigen::VectorXd id(MF.rows());
+	id.setConstant(1.0);
+	double factor1 = id.transpose()*MF*id;
+	double factor2 = id.transpose()*SF*id;
+	Eigen::SparseMatrix<double> L = (MFinv*SF);
+
+	double geom_scale = L.diagonal().sum() / (double)L.rows();
+	geom_scale = 1.0 / geom_scale;
+	lambda = geom_scale * lambda;
+
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+
+	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	Eigen::MatrixXd smoothedFields;
+	Eigen::VectorXd smoothedVoigt = inputVoigt - lambda*L*inputVoigt;
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
+	outputTensor = smoothedTensorRef;
+
+	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("The energy is %.10f\n", dir);
+}
+
+void TensorFields::smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+
+}
+void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+
 }
 

@@ -41,6 +41,8 @@ public:
 	void convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor);
 	void convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt, Eigen::Matrix2d& tensor);
 	void constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep);
+	void storeBasis(const string& filename);
+	void retrieveBasis(const string& filename);
 
 	/* ADDITIONAL STUFF */
 	void computeEigenFields_regular(const int &numEigs, const string& filename);
@@ -74,10 +76,17 @@ public:
 	void testTransformation(igl::opengl::glfw::Viewer &viewer);
 	void tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer);
 
+	/* APPLICATION :: SMOOTHING */
+	void smoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothing_Explicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothing_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 public:
 	Eigen::MatrixXd					Tensor, tensorFields;	// 2-by-2 tensor and the representing vectors (using principal curvatures)
-	Eigen::MatrixXd					smoothedTensor;			// Smoothed tensor, application;
+	
 	Eigen::VectorXd					voigtReps;				// a 3-by-1 representation of 2-by-2 tensor
 	Eigen::MatrixXd					V, FC, NF;				// Vertex, Face-center, and Face-normals
 	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
@@ -95,8 +104,9 @@ public:
 	//double							scale = 100;		// regular eigenfields => arma 10k
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
-	//double								scale = 0.1;		// smoothing
-	double scale = 2.0; 
+	//double								scale = 0.01;		// smoothing
+	double								scale = 0.1;		// smoothing torus
+	//double							scale = 2.0; 
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;
@@ -110,6 +120,10 @@ public:
 	Eigen::VectorXd					sampleDistance;
 	Eigen::VectorXd					localSystem;
 	set<int>						SubDomain, Boundary;
+
+	/* Application */
+	Eigen::MatrixXd					smoothedTensorRef;			// Smoothed tensor, application;
+	Eigen::MatrixXd					smoothedTensorRed;			// Smoothed tensor, application;
 
 private:
 
