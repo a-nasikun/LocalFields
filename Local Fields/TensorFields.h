@@ -65,9 +65,11 @@ public:
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& tensorFields_);
 	void visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSmoothedAppTensorFields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
 	void visualizeEigenTensorFields(igl::opengl::glfw::Viewer &viewer, int id);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
+	void visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewer);
 
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
@@ -77,16 +79,23 @@ public:
 	void tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer);
 
 	/* APPLICATION :: SMOOTHING */
-	void smoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothingRef(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothing_Explicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothing_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 
+	void smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+
+	/* APPLICATION :: Sub-space Projection */
+	void subspaceProjection(const Eigen::VectorXd& refField);
+
+
 /* For convenience, all variables that should be private will be declared protected in this prototyping stage */
 public:
-	Eigen::MatrixXd					Tensor, tensorFields;	// 2-by-2 tensor and the representing vectors (using principal curvatures)
-	
+	Eigen::MatrixXd					Tensor, tensorFields;	// 2-by-2 tensor and the representing vectors (using principal curvatures)	
 	Eigen::VectorXd					voigtReps;				// a 3-by-1 representation of 2-by-2 tensor
 	Eigen::MatrixXd					V, FC, NF;				// Vertex, Face-center, and Face-normals
 	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
@@ -125,6 +134,8 @@ public:
 	Eigen::MatrixXd					smoothedTensorRef;			// Smoothed tensor, application;
 	Eigen::MatrixXd					smoothedTensorRed;			// Smoothed tensor, application;
 
+	/* Projection */
+	Eigen::MatrixXd					TensorRed;
 private:
 
 };

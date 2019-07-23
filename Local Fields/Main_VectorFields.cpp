@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
 
 	Eigen::MatrixXd inputTensor = tensorFields.Tensor;
 	Eigen::MatrixXd outputTensor;
+	Eigen::MatrixXd inputTensorRed = tensorFields.Tensor;
+	Eigen::MatrixXd outputTensorRed;
 
 	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
 		
@@ -191,7 +193,7 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-
+				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}			
 			break;
 		case '2':
@@ -210,7 +212,7 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-
+				tensorFields.visualizeReducedTensorFields(viewer);
 			}
 			
 			break;
@@ -378,11 +380,26 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				tensorFields.smoothing(viewer, inputTensor, outputTensor);
+				tensorFields.smoothingRef(viewer, inputTensor, outputTensor);
 				tensorFields.visualizeSmoothedTensorFields(viewer);
 				inputTensor = outputTensor;
 			}
-			break; 
+			break;
+		// Reduced smoothing
+		case ',':
+			showSmoothed = !showSmoothed;
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
+			if (!showSmoothed) {
+				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+			}
+			else
+			{
+				tensorFields.smoothingRed(viewer, inputTensorRed, outputTensorRed);
+				tensorFields.visualizeSmoothedAppTensorFields(viewer);
+				inputTensorRed = outputTensorRed;
+			}
+			break;
 
 		/* Case x to activate for user inputted constraints */	
 		case 'x':

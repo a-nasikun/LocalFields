@@ -850,11 +850,11 @@ void TensorFields::buildStiffnessMatrix_Geometric()
 	/* Populate the matrix with configured triplets */
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 
-	string model		= "Torus_73k";
+	string model		= "CurvyCube";
 	string fileLaplace	= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_Tensor_Geom";
-	WriteSparseMatrixToMatlab(SF, fileLaplace);
+	//WriteSparseMatrixToMatlab(SF, fileLaplace);
 	fileLaplace			= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_Tensor_Geom";
-	WriteSparseMatrixToMatlab(MF, fileLaplace);
+	//WriteSparseMatrixToMatlab(MF, fileLaplace);
 }
 
 /* Converting tensor fields (each of 2x2 size) to voigt's notation vector fields (3x1) 
@@ -1514,6 +1514,20 @@ void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &view
 	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
 }
 
+
+void TensorFields::visualizeSmoothedAppTensorFields(igl::opengl::glfw::Viewer &viewer) 
+{
+	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
+	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	Eigen::MatrixXd smoothedFields;
+	constructTensorRepFields(smoothedTensorRed, smoothedFields);
+
+	//double scale = 0.01;
+	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
+	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale);
+	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale);
+	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
+}
 void TensorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 {
 	Eigen::RowVector3d color(0.0, 0.8, 0.0);
@@ -1586,6 +1600,13 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
 }
 
+void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::MatrixXd repFields;
+	constructTensorRepFields(TensorRed, repFields);
+	visualizeTensorFields(viewer, repFields);
+}
+
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
@@ -1610,8 +1631,6 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructVoigtVector();
 	visualizeTensorFields(viewer, tensorFields);
 
-
-
 	computeFrameRotation(viewer);
 	////testTransformation(viewer);
 	buildStiffnessMatrix_Geometric();
@@ -1624,18 +1643,21 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
-	//numSupport = 20.0;
-	//numSample = 500;
-	//constructSamples(numSample);
-	////constructBasis();
-	//string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Torus73k_"+to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
-	////storeBasis(fileBasis);
-	//retrieveBasis(fileBasis);
+	numSupport = 40.0;
+	numSample = 500;
+	constructSamples(numSample);
+	//constructBasis();
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CurvyCube_"+to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
+	//storeBasis(fileBasis);
+	retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
+	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CurvyCube_Basis");
 
 	/* Testing the result */
 	//testDirichletAndLaplace();
-	testSmoothing(viewer, Tensor, smoothedTensorRef);
+	//testSmoothing(viewer, Tensor, smoothedTensorRef);
+
+	subspaceProjection(voigtReps);
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -1766,12 +1788,12 @@ void TensorFields::tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer)
 }
 
 /* APPLICATION :: SMOOTHING */
-void TensorFields::smoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::smoothingRef(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
 	//smoothing_Explicit_Combinatorial(viewer, inputTensor, outputTensor);
-	smoothing_Explicit_Geometric(viewer, inputTensor, outputTensor);
+	//smoothing_Explicit_Geometric(viewer, inputTensor, outputTensor);
 	//smoothing_Implicit_Combinatorial(viewer, inputTensor, outputTensor);
-	//smoothing_Implicit_Geometric(viewer, inputTensor, outputTensor);
+	smoothing_Implicit_Geometric(viewer, inputTensor, outputTensor);
 }
 
 void TensorFields::smoothing_Explicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
@@ -1821,8 +1843,143 @@ void TensorFields::smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &v
 {
 
 }
+
+/* 
+* Implicit euler used for smoothing, using geometric Laplacian
+*/
 void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
+	double lambda = 0.5;
+	Eigen::VectorXd id(MF.rows());
+	id.setConstant(1.0);
+	double factor1 = id.transpose()*MF*id;
+	double factor2 = id.transpose()*SF*id;
+	lambda = lambda * factor1 / factor2;
+	
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);	
 
+	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	Eigen::MatrixXd smoothedFields;
+	Eigen::VectorXd smoothedVoigt;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	Eigen::SparseMatrix<double> LHS = MF + lambda*SF;
+	Eigen::VectorXd				rhs = MF*inputVoigt;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+	smoothedVoigt = sparseSolver.solve(rhs);
+
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
+	outputTensor = smoothedTensorRef;
+
+	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("The energy is %.10f\n", dir);
 }
 
+void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+	//smoothingRed_Implicit_Geometric(viewer, inputTensor, outputTensor);
+	smoothingRed_Explicit_Geometric(viewer, inputTensor, outputTensor);
+}
+
+void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+	double lambda = 10.0 * std::numeric_limits<double>::epsilon();
+
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+
+	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	Eigen::MatrixXd smoothedFields;
+	Eigen::VectorXd smoothedVoigt;
+
+	Eigen::SparseMatrix<double> MFbar, SFbar;
+	Eigen::VectorXd vInBar, vOutBar;
+	MFbar = Basis.transpose()*MF*Basis;
+	SFbar = Basis.transpose()*SF*Basis;
+	vInBar = Basis.transpose()*inputVoigt;
+
+	printf("Size of MFbar: %dx%d\n", MFbar.rows(), MFbar.cols());
+	printf("Size of SFbar: %dx%d\n", SFbar.rows(), SFbar.cols());
+	printf("Size of vInBar: %d \n", vInBar.rows());
+
+	vOutBar = vInBar - lambda*SFbar*vInBar;
+
+	smoothedVoigt = Basis*vOutBar;
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
+	outputTensor = smoothedTensorRed;
+
+	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("The energy is %.10f\n", dir);
+
+
+}
+void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+{
+	//double lambda = 0.00005;
+	double lambda = 10.0 * std::numeric_limits<double>::epsilon();
+	
+
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+
+	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	Eigen::MatrixXd smoothedFields;
+	Eigen::VectorXd smoothedVoigt;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	Eigen::SparseMatrix<double> MFbar, SFbar;
+	Eigen::VectorXd vInBar, vOutBar;
+	MFbar = Basis.transpose()*MF*Basis;
+	SFbar = Basis.transpose()*SF*Basis;
+	vInBar = Basis.transpose()*inputVoigt;
+
+	printf("Size of MFbar: %dx%d\n", MFbar.rows(), MFbar.cols());
+	printf("Size of SFbar: %dx%d\n", SFbar.rows(), SFbar.cols());
+	printf("Size of vInBar: %d \n", vInBar.rows());
+
+	Eigen::VectorXd id(MFbar.rows());
+	id.setConstant(1.0);
+	double factor1 = id.transpose()*MFbar*id;
+	double factor2 = id.transpose()*SFbar*id;
+	lambda = lambda * factor1 / factor2;
+
+	Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
+	Eigen::VectorXd				rhs = MFbar*vInBar;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+	vOutBar = sparseSolver.solve(rhs);
+
+	smoothedVoigt = Basis*vOutBar;
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
+	outputTensor = smoothedTensorRed;
+
+	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("The energy is %.10f\n", dir);
+}
+
+/* APPLICATION :: Sub-space Projection */
+void TensorFields::subspaceProjection(const Eigen::VectorXd& refField)
+{
+	Eigen::VectorXd q, v;
+
+	Eigen::SparseMatrix<double> LHS = Basis.transpose()*MF*Basis;
+	Eigen::VectorXd rhs = Basis.transpose()*refField;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(LHS);
+	q = sparseSolver.solve(rhs);
+	v = Basis*q;
+
+	convertVoigtToTensor(v, TensorRed);
+
+	cout << "Info: " << sparseSolver.info() << endl;
+	printf("Size of q : %d, size of v=%d \n", q.rows(), v.rows());
+
+	cout << "Computign L2 norm: " << endl; 
+	Eigen::VectorXd diff = refField - v;
+	double en1 = diff.transpose()*MF*diff;
+	double en2 = refField.transpose()*MF*refField;
+	double l2 = sqrt(en1 / en2);
+	cout << "The L2 norm error (from projection is) " << l2  << "from : " << en1 << ", and " << en2 << endl; 
+}
