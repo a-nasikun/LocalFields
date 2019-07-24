@@ -3613,10 +3613,12 @@ void VectorFields::computeEigenFields(const int &numEigs, const string& filename
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
-	cout << "> Computing reference eigenproblem (in Matlab)... ";
+	cout << "> Computing reference eigenproblem... ";
 
 	//computeEigenMatlab(SF2DAsym, MF2D, eigFieldFull2D, eigValuesFull);
-	computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	//computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	//computeEigenSpectra_GenSym(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	computeEigenSpectra_RegNSym(SF2DAsym, MF2Dinv, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");

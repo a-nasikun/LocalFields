@@ -27,6 +27,7 @@ include_directories(${IGL_DIR}/include/
 					${GLAD_INCLUDE_DIR}/include/
 					${IMGUI_DIR}
 					${MATLAB_INCLUDE_DIR}
+					"D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/spectra-0.5.0/include"
 )
 
 #Defining the system varibles where the link libraries reside					
