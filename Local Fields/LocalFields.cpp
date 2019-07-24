@@ -1321,7 +1321,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(Engine*& ep, const int 
 	
 
 	/* Getting the eigenfields*/
-	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
+	//computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
+	computeEigenSpectra_RegNSym(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 	//computeEigenSpectra(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 
 	//cusolverDnHandle_t	cusolverH;

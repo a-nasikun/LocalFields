@@ -133,7 +133,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 
-	bool writeToFile = true;
+	bool writeToFile = false;
 	if (writeToFile) {
 		std::ofstream ofs;
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_160sup.txt";
@@ -856,8 +856,8 @@ void VectorFields::projectionTest()
 
 	bool useEigenBasis = false; 
 	//bool readFieldsFromFile = true;
-	bool readDesFieldsFromFile = true;
-	bool readPertFieldsFromFile = true;
+	bool readDesFieldsFromFile = false;
+	bool readPertFieldsFromFile = false;
 
 	/* Loading eigen basis for Armadillo */
 	Eigen::MatrixXd EigenBasis;
@@ -882,7 +882,7 @@ void VectorFields::projectionTest()
 	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF2D * Basis;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver_NR(B_NR);
 
-	const int iStart = 10;
+	const int iStart = 0;
 	for (int i = iStart; i < iStart+NUM_TEST; i++)
 	//for (int i = 37; i < 39; i++)
 	{
@@ -935,11 +935,11 @@ void VectorFields::projectionTest()
 		printf("            [EigenBasis] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
 	}
 
-	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
-	{
-		WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
-		WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
-	}
+	//if (!readPertFieldsFromFile && !readDesFieldsFromFile)
+	//{
+	//	WriteDenseMatrixToMatlab(DesignedFields, desFieldsFile);
+	//	WriteDenseMatrixToMatlab(PerturbedFields, pertFieldsFile);
+	//}
 
 	cout << "ERRORS: \n" <<  errors1 << endl << "ERRORS2 \n" << errors2 << endl; 
 }
@@ -1314,7 +1314,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n";
 	readMesh(meshFile);
-	//scaleMesh();
+	scaleMesh();
 	//Eigen::SparseMatrix<double> ChrisSparseMat;
 	//ReadChristopherStiffnessMatrix("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Models/hodgeLaplace.txt", ChrisSparseMat);
 	//WriteSparseMatrixToMatlab(ChrisSparseMat, "hello");
@@ -1332,7 +1332,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(1000);
+	selectFaceToDraw(5000);
+	//selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1345,7 +1346,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructStiffnessMatrices();
 	constructStiffnessMatrices_Implicit();
 	//loadStiffnessMatrices();
-	///constructMatrixB();
+	constructMatrixB();
 	//constructConstraints();
 	//checkB2DStructure();
 
@@ -1358,7 +1359,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//setupGlobalProblem(lambda);
 
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Eigfields_40sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Eigfields_40sup_Spectra";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma43k_2000_Eigfields_40sup_Matlab";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_5000_Eigfields_40sup";
@@ -1406,20 +1408,20 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	//numSample = 50; 
-	//numSupport = 40.0;
-	//constructSamples(numSample);
-	//constructBasis();	
-	//storeBasis(filename_basis);			// Binary, Eigen-base
+	numSample = 10000; 
+	numSupport = 40.0;
+	constructSamples(numSample);
+	constructBasis();	
+	storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	///retrieveBasis(filename_basis);	
+	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//setupReducedBiLaplacian();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 
-
+	cout << "Basis \n" << Basis.col(0).block(0, 0, 100, 1) << endl; 
 
 	/* Test Spectra */
 	//testSpectra();
@@ -1428,7 +1430,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	int eigsToCompute = 2;
 	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_2k_50_eigVectorFields_Spectra_Ref";
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_25_Approx_EigenBasis_2000dim_30sup";
-	computeEigenFields(eigsToCompute, filename_refField);	
+	//computeEigenFields(eigsToCompute, filename_refField);	
 	//retrieveEigenFields(filename_refField);
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//retrieveApproxEigenFields();

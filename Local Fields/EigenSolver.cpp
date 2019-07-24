@@ -1020,7 +1020,7 @@ void computeEigenSpectra_RegNSym(Eigen::SparseMatrix<double> &S, Eigen::SparseMa
 	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
 
 	//WriteDenseMatrixToMatlab(eig_solver.eigenvectors(), filename);
-	cout << "Eigenvalues (Spectra): \n" << EigVal << endl << endl;
+	///cout << "Eigenvalues (Spectra): \n" << EigVal << endl << endl;
 }
 
 //void testViennaCL2()
