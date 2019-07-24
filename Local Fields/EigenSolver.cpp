@@ -835,7 +835,7 @@ void computeEigenMatlab(Engine*& ep, const int tid, Eigen::SparseMatrix<double> 
 	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	if (numEigs > 2)
+	if (numEigs > 3)
 	{
 		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
 		string approxFile = "save('" + filename + "_eigFields','EigVec','EigVal');";

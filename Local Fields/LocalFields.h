@@ -41,6 +41,7 @@ public:
 	void constructLocalEigenProblem(const Eigen::SparseMatrix<double>& SF2D, const Eigen::MatrixXd &AdjMF3N, Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	void constructLocalEigenProblemWithSelector(const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	void constructLocalEigenProblemWithSelector(Engine*& ep, const int tid, const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
+	void constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, const int tid, const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet);
 	//void constructLocalConstraints();
 	void setupRHSLocalProblemMapped();
 	void setupLHSLocalProblemMapped(const vector<Eigen::Triplet<double>>& BTriplet, const vector<Eigen::Triplet<double>>& C1Triplet, const vector<Eigen::Triplet<double>>& C2Triplet);

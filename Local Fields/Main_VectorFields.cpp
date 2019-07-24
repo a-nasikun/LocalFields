@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 

@@ -1138,7 +1138,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			//printf("Starting engine %d for element %d\n", tid, id);
 			//if (id % ((int)(Sample.size() / 4)) == 0)
 			//	cout << "[" << id << "] Constructing local eigen problem\n ";
-			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -1580,6 +1580,7 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	else {
 		color1 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
 		color1 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
+		cout << "Basis: " << id << "\n" << Basis.col(id).block(0, 0, 100, 1) << endl;
 	}
 
 	if (id >= 2 * Sample.size()) {
@@ -1591,10 +1592,10 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	convertVoigtToTensor(Basis.col(id), basisTensor);
 	constructTensorRepFields(basisTensor, basisTensorFields);
 
-	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale/5.0, false);
-	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale/5.0, false);
-	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale/5.0, false);
-	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale/5.0, false);
+	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale*10.0, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale*10.0, false);
+	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale*10.0, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale*10.0, false);
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
@@ -1610,6 +1611,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
+	string model = "Arma_10k_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1635,7 +1637,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	////testTransformation(viewer);
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
-	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma43k_1000_Ref";
+	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "1000_Ref";
 	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
 	//computeEigenFields_generalized(25, fileEigFields);
 	//computeEigenFields_regular(75, fileEigFields);
@@ -1644,14 +1646,14 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 500;
+	numSample = 250;
 	constructSamples(numSample);
-	//constructBasis();
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CurvyCube_"+to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
-	//storeBasis(fileBasis);
-	retrieveBasis(fileBasis);
-	//visualizeBasis(viewer, 0);
-	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CurvyCube_Basis");
+	constructBasis();
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
+	storeBasis(fileBasis);
+	//retrieveBasis(fileBasis);
+	visualizeBasis(viewer, 0);
+	WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
 	/* Testing the result */
 	//testDirichletAndLaplace();
