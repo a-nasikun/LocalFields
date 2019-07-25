@@ -2307,7 +2307,27 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	int id, tid, ntids, ipts, istart, iproc;	
 
 	///omp_set_num_threads(1);
-	omp_set_num_threads(omp_get_num_procs());
+
+	cout << "Setup the timing parameters: \n";
+	const int NUM_THREADS = omp_get_num_procs();
+	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
+	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
+	vector<chrono::duration<double>> subdom_dur(NUM_THREADS);
+	vector<chrono::duration<double>> boundary_dur(NUM_THREADS);
+	vector<chrono::duration<double>> localEls_dur(NUM_THREADS);
+	cout << "Setup the timing parameters: DONE! \n";
+
+	duration = t0 - t0;
+	for (int i = 0; i < NUM_THREADS; i++)
+	{
+		t_end[i] = chrono::high_resolution_clock::now();
+		eigen_dur[i]    = duration;
+		subdom_dur[i]   = duration;
+		boundary_dur[i] = duration;
+		localEls_dur[i] = duration;
+	}
+	
+	omp_set_num_threads(NUM_THREADS);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -2331,6 +2351,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//ep[tid] = engOpenSingleUse(NULL, vpDcom, &iret);
 		}
 
+		chrono::duration<double> dur_;
+
 		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
 
 		Eigen::VectorXd				D(F.rows());
@@ -2349,23 +2371,30 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
 
+
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
 			localField.constructSubdomain(Sample[id], V, F, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
+			dur_ = t2 - t1;
 			durations[0] += t2 - t1;
+			subdom_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
 			t2 = chrono::high_resolution_clock::now();
+			dur_ = t2 - t1;
 			durations[1] += t2 - t1;
+			boundary_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
-			durations[2] += t2 - t1;			
+			dur_ = t2 - t1;
+			durations[2] += t2 - t1;	
+			localEls_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
@@ -2379,7 +2408,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
+			dur_ = t2 - t1;
 			durations[3] += t2 - t1;
+			eigen_dur[tid] += dur_;
 
 
 			if (id == 0)
@@ -2414,6 +2445,12 @@ void VectorFields::constructBasis_LocalEigenProblem()
 				//visualizeSparseMatrixInMatlab(MTempStiff);
 				//localField.constructLocalEigenProblem(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
 				//localField.constructLocalEigenProblemWithSelector(SF2D, AdjMF2Ring, doubleArea, eigFieldsLocal);
+			}
+
+			if (id == istart + ipts - 1)
+			{
+				t_end[tid] = chrono::high_resolution_clock::now();
+				cout << "Thread " << tid << " is ALL DONE!!!\n";
 			}
 
 		}
@@ -2461,6 +2498,18 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	printf("> Basis Structure information \n");
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
 	printf("....NNZ=%d, per row = %.4f\n", Basis.nonZeros(),  (double)Basis.nonZeros() / (double)Basis.rows());
+
+	cout << "TIMING on each process for BASIS. \n";
+	chrono::duration<double> tot1 = t0-t0;
+	for (int i = 0; i < NUM_THREADS; i++)
+	{
+		chrono::duration<double> d = t_end[i] - t0;
+		cout << "[" << i << "] process. Subdomain: " << subdom_dur[i].count() << " \t | Boundary: " << boundary_dur[i].count()
+			 << " \t | Local entries: " << localEls_dur[i].count() << " | Eigen: " << eigen_dur[i].count() << " | tend: " << d.count() << endl; 
+
+		tot1 += subdom_dur[i];
+	}
+	cout << "Total duration: " << tot1.count() << endl; 
 }
 
 void VectorFields::constructBasis_OptProblem()

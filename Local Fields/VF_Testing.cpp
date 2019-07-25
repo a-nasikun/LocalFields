@@ -1332,8 +1332,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(5000);
-	//selectFaceToDraw(F.rows());
+	///selectFaceToDraw(5000);
+	selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1359,7 +1359,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//setupGlobalProblem(lambda);
 
 	/* ====================== LOCAL ELEMENTS ====================*/
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Eigfields_40sup_Spectra";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Eigfields_40sup_Spectra";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma43k_2000_Eigfields_40sup_Matlab";
 	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_OptAlgAsym_30sup";
 
@@ -1408,11 +1408,13 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 10000; 
+	numSample = 500; 
 	numSupport = 40.0;
+	string model = "Fertility_";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample*2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
 	constructSamples(numSample);
 	constructBasis();	
-	storeBasis(filename_basis);			// Binary, Eigen-base
+	///storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
