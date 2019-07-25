@@ -1023,6 +1023,30 @@ void computeEigenSpectra_RegNSym(Eigen::SparseMatrix<double> &S, Eigen::SparseMa
 	///cout << "Eigenvalues (Spectra): \n" << EigVal << endl << endl;
 }
 
+void computeEigenSpectra_RegSym_Transf(Eigen::SparseMatrix<double> &Sh, Eigen::SparseMatrix<double> &Mh, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					time_span;
+
+	t1 = chrono::high_resolution_clock::now();
+	
+	Spectra::SparseSymShiftSolve<double> Sop(Sh);
+	//Spectra::SparseGenMatProd<double> Lop(L);
+
+	//Spectra::GenEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseGenMatProd<double>> eig_solver(&Lop, numEigs, 2 * numEigs);
+	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eig_solver(&Sop, numEigs, 2 * numEigs, 0.0);
+
+	eig_solver.init();
+	eig_solver.compute();
+
+	EigVec = eig_solver.eigenvectors();	
+	EigVec = Mh * EigVec;
+	EigVal = eig_solver.eigenvalues();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+}
+
 //void testViennaCL2()
 //{
 //	 // If you GPU does not support double precision, use `float` instead of `double`:

@@ -1331,9 +1331,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency3NMatrix();
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
-	constructEFList();
-	///selectFaceToDraw(5000);
-	selectFaceToDraw(F.rows());
+	constructEFList(); 
+	//selectFaceToDraw(5000); 
+	selectFaceToDraw(max((int) round(0.01*F.rows()), 5000));
+	//selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1346,7 +1347,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructStiffnessMatrices();
 	constructStiffnessMatrices_Implicit();
 	//loadStiffnessMatrices();
-	constructMatrixB();
+	///constructMatrixB();
 	//constructConstraints();
 	//checkB2DStructure();
 
@@ -1408,7 +1409,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	//cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 500; 
+	numSample = 250; 
 	numSupport = 40.0;
 	string model = "Fertility_";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample*2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
@@ -1423,7 +1424,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 
-	cout << "Basis \n" << Basis.col(0).block(0, 0, 100, 1) << endl; 
+	//cout << "Basis \n" << Basis.col(0).block(0, 0, 100, 1) << endl; 
 
 	/* Test Spectra */
 	//testSpectra();

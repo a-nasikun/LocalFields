@@ -45,6 +45,7 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
 void computeEigenSpectra_GenSym(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
 void computeEigenSpectra_RegNSym(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &Minv, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
+void computeEigenSpectra_RegSym_Transf(Eigen::SparseMatrix<double> &Sh, Eigen::SparseMatrix<double> &Mh, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename);
 ///
 ///void testViennaCL2();
 ///void testViennaCL2(const Eigen::SparseMatrix<double> &S, const Eigen::SparseMatrix<double> &Minv, Eigen::MatrixXd &EigVects, Eigen::VectorXd &EigVals);
