@@ -2235,17 +2235,15 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{ 500, 1000, 2500  };
+	vector<int> sampleSizeVect{25000 };
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
 	{	
-
-		constructSamples(sample);
-		
+		constructSamples(sample);		
 		constructBasis();
 		///loadAndConstructBasis();		
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup_spectra";
 		storeBasis(filename_basis);		
 	}
 }
@@ -2357,7 +2355,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 		chrono::duration<double> dur_;
 
-		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
+		///printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
 
 		Eigen::VectorXd				D(F.rows());
 		vector<bool>				visitedFaces(F.rows());
@@ -2459,7 +2457,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			if (id == istart + ipts - 1)
 			{
 				t_end[tid] = chrono::high_resolution_clock::now();
-				cout << "Thread " << tid << " is ALL DONE!!!\n";
+				//cout << "Thread " << tid << " is ALL DONE!!!\n";
 			}
 
 		}
