@@ -2059,6 +2059,12 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	nRot = 4;
 	readMesh(meshFile);
 	scaleMesh();
+
+	viewer.data().set_mesh(V, F);
+	viewer.append_mesh();
+	viewer.data().set_mesh(V, F);
+	viewer.data().show_lines = false;
+	viewer.selected_data_index = 0;
 	
 	computeAverageEdgeLength();
 	computeFaceCenter();

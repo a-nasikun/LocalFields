@@ -1537,6 +1537,13 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
+
+	viewer.data().set_mesh(V, F);
+	viewer.append_mesh();
+	viewer.data().set_mesh(V, F);
+	viewer.data().show_lines = false;
+	viewer.selected_data_index = 0;
+
 	computeEdges();
 	computeAverageEdgeLength();
 	computeFaceCenter();

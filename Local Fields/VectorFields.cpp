@@ -2360,8 +2360,10 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		printf("num threads=%d, iproc=%d, ID=%d, start=%d, to end=%d, num els=%d\n", ntids, iproc, tid, istart, istart + ipts, ipts);
 
 		Eigen::VectorXd				D(F.rows());
+		vector<bool>				visitedFaces(F.rows());
 		for (int i = 0; i < F.rows(); i++) {
 			D(i) = numeric_limits<double>::infinity();
+			visitedFaces[i] = false;
 		}
 
 		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
@@ -2388,7 +2390,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			subdom_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			localField.constructBoundary(F, visitedFaces, AdjMF3N, AdjMF2Ring);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[1] += t2 - t1;
@@ -2421,29 +2423,28 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			eigen_dur[tid] += dur_;
 
 
-			if (id == 0)
-			{
-				SubDomain = localField.SubDomain;
-				Boundary = localField.Boundary;
-				//patchDijkstraDist = localField.dijksFaceDistMapped;
-			}
+			//if (id == 0)
+			//{
+			//	SubDomain = localField.SubDomain;
+			//	Boundary = localField.Boundary;
+			//	//patchDijkstraDist = localField.dijksFaceDistMapped;
+			//}
 
 			// To get local elements for visualizing subdomain
-			//if (id == 0 || id == 46) {
-			//	cout << "Getting element of ID " << id << endl;
-			//
-			//	for (int fid : localField.SubDomain) {
-			//		localSystem(fid) = 0.3;
-			//	}
-			//
-			//	for (int fid : localField.Boundary) {
-			//		localSystem(fid) = 0.7;
-			//	}
-			//
-			//	//localSystem(localField.sampleID) = 1.0;
-			//
-			//
-			//}
+			if (id == 0 || id == 46) {
+				cout << "Getting element of ID " << id << endl;
+			
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
+			
+				for (int fid : localField.Boundary) {
+					localSystem(fid) = 0.7;
+				}
+			
+				localSystem(localField.sampleID) = 1.0;			
+			
+			}
 
 			/* Localized eigenproblems */
 			//if (id == 15)

@@ -211,6 +211,12 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 			}
 		}
 	} while (SubDomain.size()<=numEntries);
+
+	/* Re-assign the infinity values of the subdomain for later usage */
+	for (int i : SubDomain)
+	{
+		D(i) = numeric_limits<double>::infinity();
+	}
 }
 
 void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring)
@@ -226,6 +232,7 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::Matri
 		}
 	}
 
+	
 	// Obtaining the (first-ring) BOUNDARY
 	for (std::set<int>::iterator it = outerPart.begin(); it != outerPart.end(); ++it) {
 		for (std::set<int>::iterator jt = AdjMF2Ring[*it].begin(); jt != AdjMF2Ring[*it].end(); ++jt) {
@@ -257,6 +264,60 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::Matri
 	//}
 
 	//cout << "Sample[" << id << "] has " << Boundary.size() << " elements in its boundary." << endl;
+}
+
+void LocalFields::constructBoundary(const Eigen::MatrixXi& F, vector<bool>& visitedFaces, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring)
+{
+	/* Define the subdomain */
+	for (int i : SubDomain) {
+		visitedFaces[i] = true;
+	}
+
+	// Obtaining the OUTER-most ELEMENTS
+	set<int> outerPart;
+	set<int> innerBoundary, outerBoundary;
+	for (std::set<int>::iterator it = SubDomain.begin(); it != SubDomain.end(); ++it) {
+		for (int i = 0; i < F.cols(); i++) {
+			if (SubDomain.find(AdjMF3N(*it, i)) == SubDomain.end()) {
+				outerPart.insert(*it);
+			}
+		}
+	}
+
+
+	// Obtaining the (first-ring) BOUNDARY
+	for (std::set<int>::iterator it = outerPart.begin(); it != outerPart.end(); ++it) {
+		for (std::set<int>::iterator jt = AdjMF2Ring[*it].begin(); jt != AdjMF2Ring[*it].end(); ++jt) {
+			if(!visitedFaces[*jt]){
+			//if (SubDomain.find(*jt) == SubDomain.end()) {
+				innerBoundary.insert(*jt);
+				Boundary.insert(*jt);
+				visitedFaces[*jt] = true;
+			}
+		}
+	}
+
+	// Obtaining the (second-ring) BOUNDARY
+	for (std::set<int>::iterator it = innerBoundary.begin(); it != innerBoundary.end(); ++it) {
+		for (std::set<int>::iterator jt = AdjMF2Ring[*it].begin(); jt != AdjMF2Ring[*it].end(); ++jt) {
+			//if (SubDomain.find(*jt) == SubDomain.end()) {
+			if (!visitedFaces[*jt]){
+				//if (outerPart.find(*jt) == outerPart.end()) {
+				outerBoundary.insert(*jt);
+				Boundary.insert(*jt);
+				visitedFaces[*jt] = true;
+			}
+		}
+	}
+
+	/* Re-assign the values to ve false */
+	for (int i : SubDomain) {
+		visitedFaces[i] = false;
+	}
+
+	for (int i : Boundary) {
+		visitedFaces[i] = false;
+	}
 }
 
 void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::MatrixXi &F)

@@ -1315,6 +1315,13 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	cout << "========================= PRE-PROCESS ==============================\n";
 	readMesh(meshFile);
 	scaleMesh();
+
+	viewer.data().set_mesh(V, F);
+	viewer.append_mesh();
+	viewer.data().set_mesh(V, F);
+	viewer.data().show_lines = false;
+	viewer.selected_data_index = 0;
+
 	//Eigen::SparseMatrix<double> ChrisSparseMat;
 	//ReadChristopherStiffnessMatrix("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Models/hodgeLaplace.txt", ChrisSparseMat);
 	//WriteSparseMatrixToMatlab(ChrisSparseMat, "hello");
@@ -1333,8 +1340,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	//selectFaceToDraw(5000); 
-	selectFaceToDraw(max((int) round(0.01*F.rows()), 5000));
-	//selectFaceToDraw(F.rows());
+	//selectFaceToDraw(max((int) round(0.01*F.rows()), 5000));
+	selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1419,6 +1426,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
+	//visualizeSubdomain(viewer);
+
+
 	//setupReducedBiLaplacian();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
