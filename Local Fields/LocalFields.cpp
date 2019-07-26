@@ -160,7 +160,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	} while (distFromCenter < maxDist);
 }
 
-void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport)
+void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport)
 {
 	int center = sampleID;
 	this->sampleID = sampleID;
@@ -168,12 +168,12 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	int numEntries = (int) round((numSupport*F.rows()) / (float) (2 * sampleSize));
 
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
-	Eigen::VectorXd D(F.rows());
+	//Eigen::VectorXd D(F.rows());
 
 	// Computing distance for initial sample points S
-	for (int i = 0; i < F.rows(); i++) {
-		D(i) = numeric_limits<double>::infinity();
-	}
+	//for (int i = 0; i < F.rows(); i++) {
+	//	D(i) = numeric_limits<double>::infinity();
+	//}
 
 	D(center) = 0.0f;
 	VertexPair vp{ center,D(center) };
@@ -226,7 +226,7 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::Matri
 		}
 	}
 
-	// Obtaining the BOUNDARY
+	// Obtaining the (first-ring) BOUNDARY
 	for (std::set<int>::iterator it = outerPart.begin(); it != outerPart.end(); ++it) {
 		for (std::set<int>::iterator jt = AdjMF2Ring[*it].begin(); jt != AdjMF2Ring[*it].end(); ++jt) {
 			if (SubDomain.find(*jt) == SubDomain.end()) {
@@ -236,9 +236,11 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::Matri
 		}
 	}
 
+	// Obtaining the (second-ring) BOUNDARY
 	for (std::set<int>::iterator it = innerBoundary.begin(); it != innerBoundary.end(); ++it) {
 		for (std::set<int>::iterator jt = AdjMF2Ring[*it].begin(); jt != AdjMF2Ring[*it].end(); ++jt) {
 			if (SubDomain.find(*jt) == SubDomain.end()) {
+			//if (outerPart.find(*jt) == outerPart.end()) {
 				outerBoundary.insert(*jt);
 				Boundary.insert(*jt);
 			}

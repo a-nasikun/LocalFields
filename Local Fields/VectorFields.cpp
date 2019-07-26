@@ -2312,8 +2312,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	///omp_set_num_threads(1);
 
 	cout << "Setup the timing parameters: \n";
-	const int NUM_THREADS = omp_get_num_procs();
-	//const int NUM_THREADS = 4;
+	//const int NUM_THREADS = omp_get_num_procs();
+	const int NUM_THREADS = 12;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
 	vector<chrono::duration<double>> subdom_dur(NUM_THREADS);
@@ -2373,14 +2373,15 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		//for (id = istart; id < (istart + ipts) && id < 10; id++) {
 			if (id >= Sample.size()) break;
 
-			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
-			UiTriplet[id].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
+			//vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
+			//UiTriplet[id].reserve(2.0 * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
+
 
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[0] += t2 - t1;
@@ -2399,6 +2400,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			dur_ = t2 - t1;
 			durations[2] += t2 - t1;	
 			localEls_dur[tid] += dur_;
+
+			UiTriplet[id].reserve(2 * localField.InnerElements.size());
 
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
