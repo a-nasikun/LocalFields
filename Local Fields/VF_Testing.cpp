@@ -1340,8 +1340,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	//selectFaceToDraw(5000); 
-	//selectFaceToDraw(max((int) round(0.01*F.rows()), 5000));
-	selectFaceToDraw(F.rows());
+	selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
+	//selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();

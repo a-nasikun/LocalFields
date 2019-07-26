@@ -342,6 +342,7 @@ void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::Matr
 	for (int face : SubDomain) {
 		LocalElements[counter] = face;
 		InnerElements[counter] = face; 
+
 		//LocToGlobMap[counter] = face;
 		//GlobToLocMap[face] = counter;
 		//GlobToLocInnerMap[face] = counter;
@@ -353,6 +354,10 @@ void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::Matr
 		counter++;
 	}
 	SelectorA.setFromTriplets(SATriplet.begin(), SATriplet.end());
+
+	//std::copy(SubDomain.begin(), SubDomain.end(), InnerElements.begin());
+	//std::copy(SubDomain.begin(), SubDomain.end(), LocalElements.begin());
+	//std::copy(Boundary.begin(), Boundary.end(), LocalElements.begin()+ InnerElements.size());
 
 	for (int face : Boundary) {
 		LocalElements[counter] = face;

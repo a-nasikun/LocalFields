@@ -2313,7 +2313,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "Setup the timing parameters: \n";
 	//const int NUM_THREADS = omp_get_num_procs();
-	const int NUM_THREADS = 12;
+	const int NUM_THREADS = 16;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
 	vector<chrono::duration<double>> subdom_dur(NUM_THREADS);
@@ -2431,20 +2431,20 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//}
 
 			// To get local elements for visualizing subdomain
-			if (id == 0 || id == 46) {
-				cout << "Getting element of ID " << id << endl;
-			
-				for (int fid : localField.SubDomain) {
-					localSystem(fid) = 0.3;
-				}
-			
-				for (int fid : localField.Boundary) {
-					localSystem(fid) = 0.7;
-				}
-			
-				localSystem(localField.sampleID) = 1.0;			
-			
-			}
+			//if (id == 0 || id == 46) {
+			//	cout << "Getting element of ID " << id << endl;
+			//
+			//	for (int fid : localField.SubDomain) {
+			//		localSystem(fid) = 0.3;
+			//	}
+			//
+			//	for (int fid : localField.Boundary) {
+			//		localSystem(fid) = 0.7;
+			//	}
+			//
+			//	localSystem(localField.sampleID) = 1.0;			
+			//
+			//}
 
 			/* Localized eigenproblems */
 			//if (id == 15)
