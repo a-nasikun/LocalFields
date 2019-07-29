@@ -7,6 +7,28 @@ find_package(CUDA QUIET REQUIRED)
 set (${PROJECT_NAME}_VERSION_MAJOR 1)
 set (${PROJECT_NAME}_VERSION_MINOR 0)
 
+# ------------------------------------------------------------------
+# Detect SuiteSparse libraries:
+# If not found automatically, set SuiteSparse_DIR in CMake to the 
+# directory where SuiteSparse was built.
+# ------------------------------------------------------------------
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/..") # Add the directory where FindSuiteSparse.cmake module can be found.
+
+set(SuiteSparse_USE_LAPACK_BLAS ON)
+# find_package(SuiteSparse QUIET NO_MODULE)  # 1st: Try to locate the *config.cmake file.
+# if(NOT SuiteSparse_FOUND)
+#         set(SuiteSparse_VERBOSE ON)
+#         find_package(SuiteSparse REQUIRED) # 2nd: Use FindSuiteSparse.cmake module
+#         include_directories(${SuiteSparse_INCLUDE_DIRS})
+# else()
+#         message(STATUS "Find SuiteSparse : include(${USE_SuiteSparse})")
+#         include(${USE_SuiteSparse})
+# endif()
+# MESSAGE(STATUS "SuiteSparse_LIBS: ${SuiteSparse_LIBRARIES}")
+# ------------------------------------------------------------------
+#   End of SuiteSparse detection
+# ------------------------------------------------------------------
+
 SET(CMAKE_BUILD_TYPE "Release")
 
 set (IGL_DIR "" CACHE PATH "Root directory of libIGL")
@@ -18,6 +40,7 @@ set (GLAD_INCLUDE_DIR "" CACHE PATH "Include directory of GLAD")
 set (GLAD_LIBRARY_DIR "" CACHE PATH "Library directory of GLAD")
 set (MATLAB_LIBRARY_DIR "" CACHE PATH "Matlab static library dirs (e.g. R2018a/extern/lib/win64/microsoft)")
 set (MATLAB_INCLUDE_DIR "" CACHE PATH "Matlab include dir ((e.g. R2018a/extern/include)")
+set (SuiteSparse_LIBRARIES "" CACHE PATH "SuiteSparse install folder")
 
 
 #Defining the system varibles where the include files reside
@@ -27,6 +50,8 @@ include_directories(${IGL_DIR}/include/
 					${GLAD_INCLUDE_DIR}/include/
 					${IMGUI_DIR}
 					${MATLAB_INCLUDE_DIR}
+					${SuiteSparse_LIBRARIES}/include/
+					${SuiteSparse_LIBRARIES}/include/suitesparse/
 					"D:/Nasikun/4_SCHOOL/TU Delft/Programming/Libraries/spectra-0.5.0/include"
 )
 
@@ -34,6 +59,8 @@ include_directories(${IGL_DIR}/include/
 link_directories(${GLFW_LIBRARY_DIR}
 				 ${GLAD_LIBRARY_DIR}
 				 ${MATLAB_LIBRARY_DIR}
+				 ${SuiteSparse_LIBRARIES}/lib/ 
+				 ${SuiteSparse_LIBRARIES}/lib64/lapack_blas_windows 
 )	
 
 #Stating what files to include in the project				 
@@ -71,6 +98,24 @@ target_link_libraries(
 	libut.lib
 	libmex.lib
 	libmx.lib
+	
+	GPUQREngine.lib 
+	libblas.lib
+	liblapack.lib 
+	libamd.lib 
+	libbtf.lib
+	libcamd.lib 
+	libccolamd.lib 
+	libcholmod.lib 
+	libcolamd.lib 
+	libcxsparse.lib 
+	libklu.lib 
+	libldl.lib
+	libspqr.lib 
+	libumfpack.lib 
+	metis.lib 
+	SuiteSparse_GPURuntime.lib 
+	suitesparseconfig.lib 
 )	
 
 if(MSVC)	

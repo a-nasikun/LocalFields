@@ -18,6 +18,7 @@
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
 #include <Eigen/PardisoSupport>
+#include <Eigen/CholmodSupport>
 
 
 ///#include "viennacl/scalar.hpp"

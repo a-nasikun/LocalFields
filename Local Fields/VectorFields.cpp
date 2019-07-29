@@ -4,6 +4,9 @@
 #include <Eigen/Eigenvalues>
 #include <random>
 #include <Eigen/OrderingMethods>
+#include <Eigen/CholmodSupport>
+#include <suitesparse/cholmod.h>
+
 
 /* ====================== SETTING UP MATRICES ============================*/
 void VectorFields::constructConstraints()
@@ -2002,6 +2005,7 @@ void VectorFields::solveGlobalSystemMappedLDLT(Eigen::VectorXd& vEst, Eigen::Spa
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);			
+	//Eigen::CholmodSupernodalLLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
 	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
 
 	// FIRST BASIS
@@ -3680,7 +3684,8 @@ void VectorFields::computeEigenFields(const int &numEigs, const string& filename
 	//computeEigenSpectra_GenSym(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	//computeEigenSpectra_RegNSym(SF2DAsym, MF2Dinv, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
-	computeEigenSpectra_RegSym_Transf(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	//computeEigenSpectra_RegSym_Transf(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	computeEigenSpectra_RegSym_Custom(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
