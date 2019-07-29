@@ -603,7 +603,7 @@ void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 
 		/* Construct the rotation matrix RA and SB */
 		//cout << "Construct the rotation matrix RA and SB\n";
-		double map_angle = nRot * (FrameRot(ei, 0) - FrameRot(ei, 1));
+		double map_angle = nRot * (FrameRot(ei, 0) - FrameRot(ei, 1) + M_PI);
 		Eigen::Matrix2d Rot; Rot << cos(map_angle), -sin(map_angle), sin(map_angle), cos(map_angle);
 
 
@@ -740,7 +740,7 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 
 		/* Construct the rotation matrix RA and SB */
 		//cout << "Construct the rotation matrix RA and SB\n";
-		double map_angle = nRot * (FrameRot(ei, 0) - FrameRot(ei, 1));
+		double map_angle = nRot * (FrameRot(ei, 0) - FrameRot(ei, 1) + M_PI);
 		Eigen::Matrix2d Rot; Rot << cos(map_angle), -sin(map_angle), sin(map_angle), cos(map_angle);
 
 
@@ -768,7 +768,7 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight*1.0 / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, weight*Rot(i, j) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, -weight*Rot(i, j) / 3.0));
 			}
 		}
 
@@ -778,14 +778,14 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight / 3.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, weight*Rot(j, i) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, -weight*Rot(j, i) / 3.0));
 			}
 		}
 	}
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 
 	string model = "Brezel1920";
-	string fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_NRoSy_Geom2";
+	string fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_NRoSy_Geom3";
 	WriteSparseMatrixToMatlab(SF, fileLaplace);
 	fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_NRoSy_Geom2";
 	WriteSparseMatrixToMatlab(MF, fileLaplace);
@@ -2078,7 +2078,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	constructMassMatrixMF3D();
 	computeFrameRotation(viewer);
 	buildStiffnessMatrix_Geometric();
-	//buildStiffnessMatrix_Combinatorial();
+	buildStiffnessMatrix_Combinatorial();
 
 	selectFaceToDraw(5000);
 	//selectFaceToDraw(F.rows());

@@ -1428,7 +1428,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	int eigsToCompute = 20;
 	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_20_eigVectorFields_Ref";
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_25_Approx_EigenBasis_2000dim_30sup";
-	///computeEigenFields(eigsToCompute, filename_refField);	
+	computeEigenFields(eigsToCompute, filename_refField);	
 	//retrieveEigenFields(filename_refField);
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
 	//retrieveApproxEigenFields();
