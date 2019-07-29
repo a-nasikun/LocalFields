@@ -1420,6 +1420,7 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	Eigen::MatrixXd EigVectLoc, eigTemp;
 	MF2DLoc.resize(NUM_FIELDS * LocalElements.size(), NUM_FIELDS * LocalElements.size());
 
+
 	//const int num_fields = 2;
 	obtainLocalMatrixPatch2D(NUM_FIELDS, MF2Dh, MF2DLoc);
 	obtainLocalMatrixPatch2D(NUM_FIELDS, SF2Dh, SF2DLoc);
@@ -1428,7 +1429,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
 		
-	computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
+	//computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
+	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 
 	EigVectLoc = SelectorA.transpose() * eigTemp;
 

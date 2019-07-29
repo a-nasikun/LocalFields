@@ -1,6 +1,5 @@
 #include "EigenSolver.h"
 
-
 /* For spectra*/
 #include <GenEigsSolver.h>
 #include <SymEigsSolver.h>
@@ -11,7 +10,15 @@
 #include <MatOp/SparseSymMatProd.h>
 #include <MatOp/SparseCholesky.h>
 #include <MatOp/SparseSymShiftSolve.h>
+#include <MatOp/SparseSymShiftPardisoSolve.h>
 #include <MatOp/SparseGenRealShiftSolve.h>
+
+#include <Eigen/Core>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseCholesky>
+#include <Eigen/PardisoSupport>
+
 
 ///#include "viennacl/scalar.hpp"
 ///#include "viennacl/vector.hpp"
@@ -1040,6 +1047,37 @@ void computeEigenSpectra_RegSym_Transf(Eigen::SparseMatrix<double> &Sh, Eigen::S
 	eig_solver.compute();
 
 	EigVec = eig_solver.eigenvectors();	
+	EigVec = Mh * EigVec;
+	EigVal = eig_solver.eigenvalues();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+}
+
+void computeEigenSpectra_RegSym_Custom(Eigen::SparseMatrix<double> &Sh, Eigen::SparseMatrix<double> &Mh, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					time_span;
+
+	t1 = chrono::high_resolution_clock::now();
+
+
+	Eigen::AMDOrdering<int> ordering;
+	Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic, int> perm;
+	ordering(Sh, perm);
+
+	Spectra::SparseSymShiftPardisoSolve<double> Sop(Sh);
+	//Spectra::SparseSymShiftSolve<double> Sop(Sh);
+	//Spectra::SparseGenMatProd<double> Lop(L);
+
+	//Spectra::GenEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseGenMatProd<double>> eig_solver(&Lop, numEigs, 2 * numEigs);
+	//Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftPardisoSolve<double>> eig_solver(&Sop, numEigs, 2 * numEigs, 0.0);
+	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftPardisoSolve<double>> eig_solver(&Sop, numEigs, 2 * numEigs, 0.0);
+
+	eig_solver.init();
+	eig_solver.compute();
+
+	EigVec = eig_solver.eigenvectors();
 	EigVec = Mh * EigVec;
 	EigVal = eig_solver.eigenvalues();
 
