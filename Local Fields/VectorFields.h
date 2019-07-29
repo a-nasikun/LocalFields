@@ -293,6 +293,8 @@ public:
 	// VISUALIZATION of APPLICATIONs
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
+
+	void writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const string& filename);
 	
 	// GETTER AND SETTER of IMPORTANT ELEMENTS
 	Eigen::VectorXd getRefFields() const; 

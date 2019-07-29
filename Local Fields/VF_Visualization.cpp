@@ -685,6 +685,24 @@ void VectorFields::visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer)
 	visualize2DfieldsScaled(viewer, -minCurvField, blue, 0.3);
 }
 
+void VectorFields::writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const string& filename)
+{
+	Eigen::VectorXd vfields3D = A*vfields;
+
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Writing vector fields to file to text \n";
+		printf("__|F|=%d  | vfields=%d\n", F.rows(), vfields3D.size());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			myfile << vfields3D(3*i) << ", " << vfields3D(3*i+1) << ", " << vfields3D(3*i+2) << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+}
+
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());
