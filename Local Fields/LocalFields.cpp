@@ -1389,8 +1389,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(Engine*& ep, const int 
 	
 
 	/* Getting the eigenfields*/
-	//computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
-	computeEigenSpectra_RegNSym(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
+	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
+	//computeEigenSpectra_RegNSym(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 	//computeEigenSpectra(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 
 	//cusolverDnHandle_t	cusolverH;
@@ -1429,7 +1429,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
 		
-	//computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
+
+	///computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 
 	EigVectLoc = SelectorA.transpose() * eigTemp;

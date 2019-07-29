@@ -2239,7 +2239,7 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{1000, 1000 };
+	vector<int> sampleSizeVect{10000};
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
@@ -2317,6 +2317,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	//const int NUM_THREADS = omp_get_num_procs();
 	const int NUM_THREADS = omp_get_num_procs()/2;
 	//const int NUM_THREADS = 16;
+	//const int NUM_THREADS = 1;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
 	vector<chrono::duration<double>> subdom_dur(NUM_THREADS);
