@@ -1395,7 +1395,6 @@ void LocalFields::constructLocalEigenProblemWithSelector(Engine*& ep, const int 
 
 	//cusolverDnHandle_t	cusolverH;
 	//computeEigenGPU(SF2DRed, MF2DRed, eigTemp, eigValsLoc);
-	//cout << "ID=" << id << ", eig vals=\n" << eigValsLoc << endl; 
 	EigVectLoc = SelectorA.transpose() * eigTemp;
 
 	/* Mapping to larger matrix */
@@ -1446,6 +1445,72 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
 			}
 		}
+	}
+}
+
+
+void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, const int tid, const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
+{
+	//cout << "[" << id << "] Constructing local eigen problem\n ";
+	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc, MF2DRed, SF2DRed, J2DRed;
+	Eigen::VectorXd eigValsLoc;
+	Eigen::MatrixXd EigVectLoc, eigTemp;
+	MF2DLoc.resize(NUM_FIELDS * LocalElements.size(), NUM_FIELDS * LocalElements.size());
+
+	//const int num_fields = 2;
+	obtainLocalMatrixPatch2D(NUM_FIELDS, MF2D, MF2DLoc);
+	obtainLocalMatrixPatch2D(NUM_FIELDS, SF2D, SF2DLoc);
+	
+	/* Reduced matrices */
+	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
+	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
+
+
+	/* Getting the eigenfields*/
+	const int shift = 2;
+	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG + shift, eigTemp, eigValsLoc, "hello");
+	//computeEigenSpectra(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
+
+	//cusolverDnHandle_t	cusolverH;
+	//computeEigenGPU(SF2DRed, MF2DRed, eigTemp, eigValsLoc);
+	EigVectLoc = SelectorA.transpose() * eigTemp;
+
+	double b_ = eigValsLoc(1);
+	double c_ = eigValsLoc(2);
+	double d_ = eigValsLoc(3);
+
+	vector<int> eigIDX(2);
+	eigIDX[0] = 1;
+	if ((c_ - b_) < (d_ - c_) / 10.0)
+	{
+		eigIDX[1] = 3;
+	}
+	else
+	{
+		eigIDX[1] = 1;
+	}
+
+	/* Mapping to larger matrix */
+	for (int i = 0; i < InnerElements.size(); i++)
+	{
+		// First column ==> First basis (2 elements per-local frame)
+		//for (int j = 0; j < NUM_EIG; j++)
+		for(int j=0; j<eigIDX.size(); j++)
+		{
+			for (int k = 0; k < NUM_FIELDS; k++)
+			{
+				
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, eigIDX[j])));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
+			}
+		}
+
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 0, NUM_EIG * id + 0, EigVectLoc(2 * i + 0, 0)));
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 1, NUM_EIG * id + 0, EigVectLoc(2 * i + 1, 0)));
+
+		// Second column ==> Second basis (2 elements per-local frame)
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 0, NUM_EIG * id + 1, EigVectLoc(2 * i + 0, 1)));
+		//BTriplet.push_back(Eigen::Triplet<double>(NUM_EIG * InnerElements[i] + 1, NUM_EIG * id + 1, EigVectLoc(2 * i + 1, 1)));
 	}
 }
 

@@ -13,7 +13,8 @@ int eigsToCompute = 500;
 int vfSaveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::VECTOR;
+FieldsType fieldsType = FieldsType::TENSOR;
+
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -53,8 +54,8 @@ int main(int argc, char *argv[])
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/272_bimba_clean_1Mf.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
@@ -65,10 +66,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_100.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 
 	/* ====================== VECTOR FIELDS  ====================*/
@@ -111,6 +112,8 @@ int main(int argc, char *argv[])
 	
 	Eigen::MatrixXd inputTensor = tensorFields.Tensor;
 	Eigen::MatrixXd outputTensor;
+	Eigen::MatrixXd inputTensorRed = tensorFields.Tensor;
+	Eigen::MatrixXd outputTensorRed;
 
 	//viewer.data().add_points(V.row(0), Eigen::RowVector3d(1, 0, 0));
 		
@@ -143,6 +146,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector3d lambda(1, 1e-4, 0.9);
 
 	bool showSmoothed = false; 
+	bool represent_tensor_in_voigt = false; 
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -184,7 +188,7 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-
+				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}			
 			break;
 		case '2':
@@ -204,7 +208,7 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-
+				tensorFields.visualizeReducedTensorFields(viewer);
 			}
 			
 			break;
@@ -248,7 +252,8 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-
+				tensorFields.visualizeBasis(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
 			}
 			
 			break;
@@ -266,7 +271,8 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-
+				tensorFields.visualizeBasis(viewer, basisId);
+				printf("Showing the %d-th basis \n", basisId);
 			}
 			break;
 		case '7':
@@ -370,11 +376,26 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				tensorFields.testSmoothing(viewer, inputTensor, outputTensor);
+				tensorFields.smoothingRef(viewer, inputTensor, outputTensor);
 				tensorFields.visualizeSmoothedTensorFields(viewer);
 				inputTensor = outputTensor;
 			}
-			break; 
+			break;
+		// Reduced smoothing
+		case ',':
+			showSmoothed = !showSmoothed;
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
+			if (!showSmoothed) {
+				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+			}
+			else
+			{
+				tensorFields.smoothingRed(viewer, inputTensorRed, outputTensorRed);
+				tensorFields.visualizeSmoothedAppTensorFields(viewer);
+				inputTensorRed = outputTensorRed;
+			}
+			break;
 
 		/* Case x to activate for user inputted constraints */	
 		case 'x':
@@ -404,6 +425,20 @@ int main(int argc, char *argv[])
 		case 'b':
 		case 'B':
 			v_in = vectorFields.arbField2D; 
+			represent_tensor_in_voigt = !represent_tensor_in_voigt;
+			if (fieldsType == FieldsType::TENSOR)
+			{
+				if (represent_tensor_in_voigt)
+				{
+					cout << "Representing in double conversion \n";
+					tensorFields.tensorConvertNConvert(viewer);
+				}
+				else
+				{
+					cout << "Representing the original data \n";
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+			}
 			break;
 		case 'r':
 		case 'R':
