@@ -482,10 +482,14 @@ void NRoSyFields::constructMassMatrixMF3D()
 {
 	MF.resize(2 * F.rows(), 2 * F.rows());
 	MFinv.resize(2 * F.rows(), 2 * F.rows());
-	vector<Eigen::Triplet<double>> MFTriplet;
-	MFTriplet.reserve(2 * F.rows());
-	vector<Eigen::Triplet<double>> MFInvTriplet;
-	MFInvTriplet.reserve(2 * F.rows());
+	MF2DhNeg.resize(2 * F.rows(), 2 * F.rows());
+	MF2DhPos.resize(2 * F.rows(), 2 * F.rows());
+
+	vector<Eigen::Triplet<double>> MFTriplet; MFTriplet.reserve(2 * F.rows());
+	vector<Eigen::Triplet<double>> MFInvTriplet; MFInvTriplet.reserve(2 * F.rows());
+	vector<Eigen::Triplet<double>> MhPosTriplet; MhPosTriplet.reserve(2 * F.rows());
+	vector<Eigen::Triplet<double>> MhNegTriplet; MhNegTriplet.reserve(2 * F.rows());
+		
 
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2.0;
@@ -493,10 +497,16 @@ void NRoSyFields::constructMassMatrixMF3D()
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, area));
 		MFInvTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, 1.0 / area));
 		MFInvTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, 1.0 / area));
+		double sqrt_area = sqrt(area);
+		MhPosTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, sqrt_area));
+		MhPosTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, sqrt_area));
+		MhNegTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, 1.0 / sqrt_area));
+		MhNegTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, 1.0 / sqrt_area));
 	}
 	MF.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
 	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
-
+	MF2DhPos.setFromTriplets(MhPosTriplet.begin(), MhPosTriplet.end());
+	MF2DhNeg.setFromTriplets(MhNegTriplet.begin(), MhNegTriplet.end());
 }
 
 //void NRoSyFields::buildStiffnessMatrix_Combinatorial()
@@ -1129,7 +1139,7 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	double scale = 2.0;
+	double scale = 1.0;
 	//double scale = 2.5;
 	//double scale = 0.25;
 	Eigen::Vector2d b(1, 0);
@@ -1148,7 +1158,8 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 		cout << "Drawing the " << i << " fields \n";
 
 		/* Construct rotation matrix*/
-		for (int j = 0; j < F.rows(); j++)
+		//for (int j = 0; j < F.rows(); j++)
+		for(int j:FaceToDraw)
 		{
 			double angle = nRoSyFields.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
 			if (j == 0)
@@ -1337,8 +1348,11 @@ void NRoSyFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &i
 	Eigen::RowVector3d colorEven(0.1, 0.1, 0.9);
 	Eigen::RowVector3d colorOdd(0.1, 0.1, 0.9);
 
+	cout << "Getting the n-th basis as rep vctors\n";
 	basisRepVectors = Basis.col(id);
 	convertRepVectorsToNRoSy(basisRepVectors, basisNRoSy);
+
+	cout << "Show is\n";
 	if(id%2==0)
 		visualizeNRoSyFields(viewer, basisNRoSy, colorEven);
 	else 
@@ -1373,9 +1387,9 @@ void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &
 	//viewer.data().line_width = 1.0f;
 
 	NRoSy nRoSy_;
-	visualizeRepVectorFields(viewer, XfBar, color);
-	//convertRepVectorsToNRoSy(XfBar, nRoSy_);
-	//visualizeNRoSyFields(viewer, nRoSy_, color);
+	//visualizeRepVectorFields(viewer, XfBar, color);
+	convertRepVectorsToNRoSy(XfBar, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, color);
 }
 
 void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1719,9 +1733,7 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
 void NRoSyFields::constructBasis()
 {
-	numSupport = 40.0;
-	numSample = 1000;
-	constructSamples(numSample);
+	
 	constructBasis_LocalEigenProblem();
 	cout << "Basis:: \n";
 	cout << Basis.block(0, 0, 20, 1) << endl << endl;
@@ -1792,6 +1804,7 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 	}
 
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
+	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF*MF2DhNeg;
 
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
@@ -1812,7 +1825,9 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 
 	int id, tid, ntids, ipts, istart, iproc;
 
-	omp_set_num_threads(1);
+	//const int NUM_THREADS = omp_get_num_procs();
+	const int NUM_THREADS = omp_get_num_procs()/2;
+	omp_set_num_threads(NUM_THREADS);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -1874,7 +1889,8 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 			//printf("Starting engine %d for element %d\n", tid, id);
 			//if (id % ((int)(Sample.size() / 4)) == 0)
 			//	cout << "[" << id << "] Constructing local eigen problem\n ";
-			localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// Matlab
+			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);						// Spectra
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -2062,9 +2078,10 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 1;
+	nRot = 2;
 	readMesh(meshFile);
 	scaleMesh();
+	string model = "Arma43k_";
 
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
@@ -2089,7 +2106,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	selectFaceToDraw(5000);
 	//selectFaceToDraw(F.rows());
 	Eigen::VectorXd inputNFields;
-	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_InputFields";
+	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"Arma_InputFields";
 	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
 	//visualize2Dfields(viewer, inputNFields, Eigen::RowVector3d(0.1, 0.2, 0.2), 1.0);
 	//createNRoSyFromVectors(inputNFields, nRoSy);
@@ -2107,20 +2124,25 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Working with eigenvectors of n-RoSy fields*/
 
-	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_25_NRoSy_Ref";
-	computeEigenFields_generalized(25, fieldsfile);
+	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
+	computeEigenFields_generalized(50, fieldsfile);
 	//computeEigenFields_regular(50, fileEigen);
 	NRoSy nRoSy_eigenFields;
-	convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
-	visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
+	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
+	//visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
 	//visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
+	Xf = eigFieldsNRoSyRef.col(0);
+
 	/* Build reduced space */
-	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_NRoSy_2000_Eigfields_40sup";
+	numSupport = 40.0;
+	numSample = 500;
+	constructSamples(numSample);
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_2000_Eigfields_40sup";
 	//constructBasis();
 	//storeBasis(basisFile);
-	//retrieveBasis(basisFile);
-	//visualizeBasis(viewer, 0);
+	retrieveBasis(basisFile);
+	visualizeBasis(viewer, 0);
 
 
 	/* Constrained fields (biharmonic) */
@@ -2134,6 +2156,72 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//visualizeConstrainedFields_Reduced(viewer);
 	//visualizeConstraints(viewer);
 	//measureAccuracy();
+
+	/* Projection */
+	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver(B_NR);
+	Eigen::VectorXd										Xred = Basis.transpose()*MF*Xf;
+	double error;
+	testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, Xred, Xf, error);
+	
 }
 
 
+/* PROJECTION ON REDUCED FIELDS */
+void NRoSyFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& v, double &error)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> [Testing basis 2D of arbitrary field without regularizer...]\n";	
+
+	Eigen::VectorXd w = sparseSolver.solve(a);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}	
+	wb = Basis*w;
+
+	// Compare their L2-Norm
+	cout << "Computing L2-norm \n";
+	Eigen::VectorXd diff = v - wb;
+	double length1 = wb.transpose()*MF*wb;
+	double norm1 = diff.transpose()*MF*diff;
+	double norm2 = v.transpose()*MF*v;
+	double normL2 = sqrt(norm1 / norm2);
+	error = normL2;
+
+	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
+	
+	/* Measuring the 'length' of each vector */
+	cout << "ENERGY SYM \n";
+	double harm_energy1_sym = v.transpose()*SF*v;
+	double harm_energy2_sym = wb.transpose()*SF*wb;
+	double harm_relEnergy_sym = abs(harm_energy1_sym - harm_energy2_sym) / harm_energy1_sym;
+	cout << "____Harmonic Energy => Ref=" << harm_energy1_sym << ", Approx:" << harm_energy2_sym << endl;
+	cout << "____Relative energy: " << harm_relEnergy_sym << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+
+	bool writeToFile = false;
+	if (writeToFile) {
+		std::ofstream ofs;
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Arma43k_L2projection_eigenFields_" + to_string(nRot) + "_" + to_string(Basis.cols()) + "_40sup.txt";
+
+		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
+
+		ofs << globalConstraints.size() << "\t"
+			<< harm_energy1_sym << "\t" << "\t" << norm2 << "\t"	// reference (harmAsym, harmSym, biharmAsym, biharmSym)
+			<< harm_energy2_sym << "\t" << harm_relEnergy_sym << "\t"						// approx (harmAsym, harmRelEnergyAsym,harmSym, harmRelEnergySym)
+			<< length1 << "\t" << normL2 << "\n";																												// l2-norm
+
+		ofs.close();
+	}
+}

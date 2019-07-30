@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/272_bimba_clean_1Mf.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
@@ -148,6 +148,9 @@ int main(int argc, char *argv[])
 	bool showSmoothed = false; 
 	bool represent_tensor_in_voigt = false; 
 
+	/* N-RoSy stuff */
+	NRoSy nRoSy; 
+
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
 		int selectedFace;
@@ -159,6 +162,9 @@ int main(int argc, char *argv[])
 		double yMouse;
 		int fid;
 		Eigen::Vector3f bc;
+
+
+
 		switch (key)
 		{
 		case '-':
@@ -183,8 +189,11 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				nRoSyFields.visualizeConstrainedFields(viewer);
-				nRoSyFields.visualizeConstraints(viewer);
+				//nRoSyFields.visualizeConstrainedFields(viewer);
+				//nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
+				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.1, 0.1, 0.8));
+
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -203,8 +212,10 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
-				nRoSyFields.visualizeConstraints(viewer);
+				//nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+				//nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
+				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.8, 0.1, 0.1));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{

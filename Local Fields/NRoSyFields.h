@@ -90,6 +90,9 @@ public:
 	/* Testing stuff */
 	void TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
 
+	/* PROJECTION ON REDUCED FIELDS */
+	void testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& inputFields, double &error);
+
 public:
 	NRoSy							nRoSy;
 	Eigen::MatrixXd					V, FC;
@@ -100,6 +103,7 @@ public:
 	vector<int>						FaceToDraw;
 	double							avgEdgeLength;
 	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::SparseMatrix<double>		MF2DhNeg, MF2DhPos;		// M^(-1/2)
 	Eigen::SparseMatrix<double>		SF;						//  Harmonic/Dirichlet Energy
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
@@ -130,6 +134,8 @@ public:
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		CBar;										// selector matrix
 	
+	/* Variable on projection */
+	Eigen::VectorXd					wb;											// projected representation fields
 
 	/* Testing variables */
 	int								testID = 10;
