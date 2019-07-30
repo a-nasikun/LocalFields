@@ -765,20 +765,20 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 		/* (Geometric) Laplace matrix from A (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight*1.0 / 3.0));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TA + i, weight*1.0));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, -weight*Rot(i, j) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TA + i, 2 * TB + j, -weight*Rot(i, j)));
 			}
 		}
 
 		/* (Geometric) Laplace matrix from B (first triangle) perspective */
 		for (int i = 0; i < 2; i++)
 		{
-			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight / 3.0));
+			STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TB + i, weight));
 			for (int j = 0; j < 2; j++)
 			{
-				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, -weight*Rot(j, i) / 3.0));
+				STriplet.push_back(Eigen::Triplet<double>(2 * TB + i, 2 * TA + j, -weight*Rot(j, i) ));
 			}
 		}
 	}
@@ -786,9 +786,9 @@ void NRoSyFields::buildStiffnessMatrix_Geometric()
 
 	string model = "Brezel1920";
 	string fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_SF_NRoSy_Geom3";
-	WriteSparseMatrixToMatlab(SF, fileLaplace);
+	//WriteSparseMatrixToMatlab(SF, fileLaplace);
 	fileLaplace = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "_M_NRoSy_Geom2";
-	WriteSparseMatrixToMatlab(MF, fileLaplace);
+	//WriteSparseMatrixToMatlab(MF, fileLaplace);
 }
 
 void NRoSyFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
@@ -2084,7 +2084,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	constructMassMatrixMF3D();
 	computeFrameRotation(viewer);
 	buildStiffnessMatrix_Geometric();
-	buildStiffnessMatrix_Combinatorial();
+	//buildStiffnessMatrix_Combinatorial();
 
 	selectFaceToDraw(5000);
 	//selectFaceToDraw(F.rows());
