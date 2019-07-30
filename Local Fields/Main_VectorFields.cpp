@@ -189,10 +189,11 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				//nRoSyFields.visualizeConstrainedFields(viewer);
-				//nRoSyFields.visualizeConstraints(viewer);
-				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
-				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.1, 0.1, 0.8));
+				nRoSyFields.visualizeConstrainedFields(viewer);
+				nRoSyFields.visualizeConstraints(viewer);
+				
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
+				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.1, 0.1, 0.8));
 
 			}
 			else if (fieldsType == FieldsType::TENSOR)
@@ -205,6 +206,7 @@ int main(int argc, char *argv[])
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
 				//vectorFields.visualizeApproxResult(viewer);
+				
 				vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
@@ -214,7 +216,9 @@ int main(int argc, char *argv[])
 			{
 				//nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 				//nRoSyFields.visualizeConstraints(viewer);
+
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.8, 0.1, 0.1));
 			}
 			else if (fieldsType == FieldsType::TENSOR)

@@ -1371,9 +1371,9 @@ void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
 	//viewer.data().line_width = 1.0f;
 	
 	NRoSy nRoSy_;
-	visualizeRepVectorFields(viewer, Xf, color);
-	//convertRepVectorsToNRoSy(Xf, nRoSy_);
-	//visualizeNRoSyFields(viewer, nRoSy_, color);
+	//visualizeRepVectorFields(viewer, Xf, color);
+	convertRepVectorsToNRoSy(Xf, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, color);
 }
 
 void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer)
@@ -2125,14 +2125,14 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Working with eigenvectors of n-RoSy fields*/
 
 	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
-	computeEigenFields_generalized(50, fieldsfile);
+	computeEigenFields_generalized(5, fieldsfile);
 	//computeEigenFields_regular(50, fileEigen);
 	NRoSy nRoSy_eigenFields;
 	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
 	//visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
 	//visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
-	Xf = eigFieldsNRoSyRef.col(0);
+	Xf = eigFieldsNRoSyRef.col(2);
 
 	/* Build reduced space */
 	numSupport = 40.0;
@@ -2142,15 +2142,15 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//constructBasis();
 	//storeBasis(basisFile);
 	retrieveBasis(basisFile);
-	visualizeBasis(viewer, 0);
+	//visualizeBasis(viewer, 0);
 
 
-	/* Constrained fields (biharmonic) */
+	///* Constrained fields (biharmonic) */
 	//nRoSyFieldsDesignRef();
 	//visualizeConstraints(viewer);
 	//visualizeConstrainedFields(viewer);
-
-	/* Reduced Constrained fields (biharmonic)--hard constraints */
+	//
+	///* Reduced Constrained fields (biharmonic)--hard constraints */
 	//constructRandomHardConstraints(C, c);
 	//nRoSyFieldsDesign_Reduced();
 	//visualizeConstrainedFields_Reduced(viewer);
@@ -2160,10 +2160,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Projection */
 	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver(B_NR);
-	Eigen::VectorXd										Xred = Basis.transpose()*MF*Xf;
+	XfBar = Basis.transpose()*MF*Xf;
 	double error;
-	testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, Xred, Xf, error);
-	
+	testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, XfBar, Xf, error);	
+	//measureAccuracy();
 }
 
 

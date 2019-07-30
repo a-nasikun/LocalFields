@@ -138,7 +138,7 @@ public:
 	Eigen::VectorXd					wb;											// projected representation fields
 
 	/* Testing variables */
-	int								testID = 10;
+	int								testID = 5;
 
 };
 
