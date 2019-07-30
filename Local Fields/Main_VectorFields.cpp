@@ -15,6 +15,7 @@ int vfSaveId = 0;
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::TENSOR;
 
+
 int main(int argc, char *argv[])
 {
 	/* TEST MATLAB DATA C++ */
@@ -109,12 +110,6 @@ int main(int argc, char *argv[])
 		break;
 	}
 	
-	viewer.data().set_mesh(V, F);
-	viewer.append_mesh();
-	viewer.data().set_mesh(V, F);
-	viewer.data().show_lines = false;
-	viewer.selected_data_index = 0;
-
 	Eigen::MatrixXd inputTensor = tensorFields.Tensor;
 	Eigen::MatrixXd outputTensor;
 	Eigen::MatrixXd inputTensorRed = tensorFields.Tensor;
@@ -170,7 +165,7 @@ int main(int argc, char *argv[])
 			//vectorFields.projectionTest();
 			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);	
-			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 3.0, false);
+			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 300.0, false);
 			//vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
 		case '`':			
@@ -200,7 +195,8 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-				vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeApproxResult(viewer);
+				vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
 				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
