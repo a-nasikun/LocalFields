@@ -1,5 +1,26 @@
 #include "EigenSolver.h"
 
+/* For spectra*/
+#include <GenEigsSolver.h>
+#include <SymEigsSolver.h>
+#include <SymEigsShiftSolver.h>
+#include <GenEigsRealShiftSolver.h>
+#include <SymGEigsSolver.h>
+#include <MatOp/SparseGenMatProd.h>
+#include <MatOp/SparseSymMatProd.h>
+#include <MatOp/SparseCholesky.h>
+#include <MatOp/SparseSymShiftSolve.h>
+#include <MatOp/SparseSymShiftPardisoSolve.h>
+#include <MatOp/SparseGenRealShiftSolve.h>
+
+#include <Eigen/Core>
+#include <Eigen/Sparse>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseCholesky>
+#include <Eigen/PardisoSupport>
+#include <Eigen/CholmodSupport>
+
+
 ///#include "viennacl/scalar.hpp"
 ///#include "viennacl/vector.hpp"
 ///#include "viennacl/matrix.hpp"
@@ -584,7 +605,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
-		///engEvalString(ep, approxFile.c_str());
+		engEvalString(ep, approxFile.c_str());
 	}
 	t4 = chrono::high_resolution_clock::now();
 
@@ -916,42 +937,155 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 }
 
 /* Computing Eigenstructure in Spectra */
-//void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
-//{
-//	/* Getting the inverse of M*/
-//	vector<Eigen::Triplet<double>> MTrip;
-//	MTrip.reserve(M.rows());
-//	Eigen::SparseMatrix<double> Minv_(M.rows(), M.cols());
-//	for (int i = 0; i < M.outerSize(); i++) {
-//		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
-//			MTrip.push_back(Eigen::Triplet<double>(it.row(), it.col(), 1.0 / it.value()));
-//		}
-//	}
-//	Minv_.setFromTriplets(MTrip.begin(), MTrip.end());
-//
-//	/* Computing the local laplace*/
-//	Eigen::SparseMatrix<double> L = Minv_*S;
-//
-//	/* Computing the eigenvectors */
-//	//Spectra::SparseGenMatProd<double> op(S);
-//	Spectra::SparseSymShiftSolve<double> op(L);
-//	//Spectra::SparseSymMatProd<double> op(L);
-//	//Spectra::SparseCholesky<double> op(L);
-//	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, numEigs, 2*numEigs, 0.0);
-//	eigs.init();
-//	int nconv = eigs.compute();
-//	cout << "Result: " << eigs.info() << endl; 
-//	if (eigs.info() == Spectra::SUCCESSFUL) {
-//		EigVal = eigs.eigenvalues().real();
-//		EigVec = eigs.eigenvectors().real();
-//		cout << "I can compute the eigenproblem \n";
-//		cout << "Eigenvalues \n " <<  EigVal << endl; 
-//	}
-//	else {
-//		cout << "This results in a wrong system to solve\n";
-//	}
-//}
-//
+void computeEigenSpectra(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	/* Getting the inverse of M*/
+	vector<Eigen::Triplet<double>> MTrip;
+	MTrip.reserve(M.rows());
+	Eigen::SparseMatrix<double> Minv_(M.rows(), M.cols());
+	for (int i = 0; i < M.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(M, i); it; ++it) {
+			MTrip.push_back(Eigen::Triplet<double>(it.row(), it.col(), 1.0 / it.value()));
+		}
+	}
+	Minv_.setFromTriplets(MTrip.begin(), MTrip.end());
+
+	/* Computing the local laplace*/
+	Eigen::SparseMatrix<double> L = Minv_*S;
+
+	/* Computing the eigenvectors */
+	//Spectra::SparseGenMatProd<double> op(S);
+	Spectra::SparseSymShiftSolve<double> op(L);
+	//Spectra::SparseSymMatProd<double> op(L);
+	//Spectra::SparseCholesky<double> op(L);
+	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eigs(&op, numEigs, 2*numEigs, 0.0);
+	eigs.init();
+	int nconv = eigs.compute();
+	cout << "Result: " << eigs.info() << endl; 
+	if (eigs.info() == Spectra::SUCCESSFUL) {
+		EigVal = eigs.eigenvalues().real();
+		EigVec = eigs.eigenvectors().real();
+		cout << "I can compute the eigenproblem \n";
+		cout << "Eigenvalues \n " <<  EigVal << endl; 
+	}
+	else {
+		cout << "This results in a wrong system to solve\n";
+	}
+}
+
+void computeEigenSpectra_GenSym(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &M, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					time_span;
+
+	t1 = chrono::high_resolution_clock::now();
+
+	Spectra::SparseSymMatProd<double> Sop(S);
+	Spectra::SparseCholesky<double> Mop(M);
+
+	Spectra::SymGEigsSolver<double, Spectra::SMALLEST_ALGE, Spectra::SparseSymMatProd<double>, Spectra::SparseCholesky<double>, Spectra::GEIGS_CHOLESKY> eig_solver(&Sop, &Mop, numEigs, 2 * numEigs);
+
+	eig_solver.init();
+	int nconv = eig_solver.compute();
+
+	EigVec = eig_solver.eigenvectors();
+	EigVal = eig_solver.eigenvalues();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+
+	WriteDenseMatrixToMatlab(EigVec, filename);
+	cout << "Eigenvalues (Spectra): \n" << EigVal << endl << endl; 
+}
+
+void computeEigenSpectra_RegNSym(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<double> &Minv, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					time_span;
+
+	t1 = chrono::high_resolution_clock::now();
+
+	Eigen::SparseMatrix<double> L = Minv*S;
+
+	Spectra::SparseGenRealShiftSolve<double> Lop(L);
+	//Spectra::SparseGenMatProd<double> Lop(L);
+
+	//Spectra::GenEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseGenMatProd<double>> eig_solver(&Lop, numEigs, 2 * numEigs);
+	Spectra::GenEigsRealShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseGenRealShiftSolve<double>> eig_solver(&Lop, numEigs, 2 * numEigs, 0.0);
+
+	//Spectra::SparseSymMatProd<double> Sop(S);
+	//Spectra::SparseCholesky<double> Mop(M);
+	//
+	//Spectra::SymGEigsSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymMatProd<double>, Spectra::SparseCholesky<double>, Spectra::GEIGS_CHOLESKY> eig_solver(&Sop, &Mop, numEigs, 2 * numEigs);
+
+	eig_solver.init();
+	eig_solver.compute();
+
+	EigVec = eig_solver.eigenvectors().real();
+	EigVal = eig_solver.eigenvalues().real();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+
+	//WriteDenseMatrixToMatlab(eig_solver.eigenvectors(), filename);
+	///cout << "Eigenvalues (Spectra): \n" << EigVal << endl << endl;
+}
+
+void computeEigenSpectra_RegSym_Transf(Eigen::SparseMatrix<double> &Sh, Eigen::SparseMatrix<double> &Mh, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					time_span;
+
+	t1 = chrono::high_resolution_clock::now();
+	
+	Spectra::SparseSymShiftSolve<double> Sop(Sh);
+	//Spectra::SparseGenMatProd<double> Lop(L);
+
+	//Spectra::GenEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseGenMatProd<double>> eig_solver(&Lop, numEigs, 2 * numEigs);
+	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftSolve<double>> eig_solver(&Sop, numEigs, 2 * numEigs, 0.0);
+
+	eig_solver.init();
+	eig_solver.compute();
+
+	EigVec = eig_solver.eigenvectors();	
+	EigVec = Mh * EigVec;
+	EigVal = eig_solver.eigenvalues();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+}
+
+void computeEigenSpectra_RegSym_Custom(Eigen::SparseMatrix<double> &Sh, Eigen::SparseMatrix<double> &Mh, const int& numEigs, Eigen::MatrixXd &EigVec, Eigen::VectorXd &EigVal, const string& filename)
+{
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					time_span;
+
+	t1 = chrono::high_resolution_clock::now();
+
+
+	Eigen::AMDOrdering<int> ordering;
+	Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic, int> perm;
+	ordering(Sh, perm);
+
+	Spectra::SparseSymShiftPardisoSolve<double> Sop(Sh);
+	//Spectra::SparseSymShiftSolve<double> Sop(Sh);
+	//Spectra::SparseGenMatProd<double> Lop(L);
+
+	//Spectra::GenEigsSolver<double, Spectra::SMALLEST_MAGN, Spectra::SparseGenMatProd<double>> eig_solver(&Lop, numEigs, 2 * numEigs);
+	//Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftPardisoSolve<double>> eig_solver(&Sop, numEigs, 2 * numEigs, 0.0);
+	Spectra::SymEigsShiftSolver<double, Spectra::LARGEST_MAGN, Spectra::SparseSymShiftPardisoSolve<double>> eig_solver(&Sop, numEigs, 2 * numEigs, 0.0);
+
+	eig_solver.init();
+	eig_solver.compute();
+
+	EigVec = eig_solver.eigenvectors();
+	EigVec = Mh * EigVec;
+	EigVal = eig_solver.eigenvalues();
+
+	t2 = chrono::high_resolution_clock::now();
+	time_span = chrono::duration_cast<chrono::duration<double>>(t2 - t1);
+}
+
 //void testViennaCL2()
 //{
 //	 // If you GPU does not support double precision, use `float` instead of `double`:

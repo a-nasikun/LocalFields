@@ -1852,7 +1852,7 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -2065,6 +2065,12 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	nRot = 1;
 	readMesh(meshFile);
 	scaleMesh();
+
+	viewer.data().set_mesh(V, F);
+	viewer.append_mesh();
+	viewer.data().set_mesh(V, F);
+	viewer.data().show_lines = false;
+	viewer.selected_data_index = 0;
 	
 	computeAverageEdgeLength();
 	computeFaceCenter();

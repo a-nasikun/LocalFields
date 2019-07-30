@@ -712,15 +712,26 @@ void VectorFields::constructMassMatrixMF2D()
 	igl::doublearea(V, F, doubleArea);
 
 	MF2D.resize(2 * F.rows(), 2 * F.rows());
-	vector<Eigen::Triplet<double>> MFTriplet;
+	MF2DhNeg.resize(2 * F.rows(), 2 * F.rows());
+	MF2DhPos.resize(2 * F.rows(), 2 * F.rows());
+	vector<Eigen::Triplet<double>> MFTriplet, MhPosTriplet, MhNegTriplet;
 	MFTriplet.reserve(2 * F.rows());
+	MhPosTriplet.reserve(2 * F.rows());
+	MhNegTriplet.reserve(2 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2.0;
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, area));
 		MFTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, area));
+		double sqrt_area = sqrt(area);
+		MhPosTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, sqrt_area));
+		MhPosTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, sqrt_area));
+		MhNegTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, 1.0/sqrt_area));
+		MhNegTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, 1.0/sqrt_area));
 	}
 	MF2D.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
+	MF2DhPos.setFromTriplets(MhPosTriplet.begin(), MhPosTriplet.end());
+	MF2DhNeg.setFromTriplets(MhNegTriplet.begin(), MhNegTriplet.end());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -901,6 +912,7 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 
 
 	//Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
+
 	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Brezel1920_Vector_";
 	//WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix + "_Stiffness_Asym");
 	WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix + "_Stiffness_Sym");
