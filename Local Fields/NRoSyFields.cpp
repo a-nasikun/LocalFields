@@ -1475,11 +1475,53 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	viewer.data().line_width = 1.0;
 }
 
+void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
+{
+	/* Color */
+	Eigen::RowVector3d color(0.1, 0.1, 0.1);
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 5.0;
+	const double EDGE_RATIO = 2.0;
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	Eigen::RowVector3d f, h1, h2, e, c;
+	Eigen::Vector2d v;
+	Eigen::MatrixXd ALoc(3, 2);
+	int face;
+	for (int i = 0; i < constraintVect2D.size(); i++)
+	{
+		for (int j = 0; j < constraintVect2D[i].size(); j++)
+		{
+			face = curvesConstraints[i][j];
+			c = FC.row(face);
+			//f = VectorBlock.row(i);
+			v = constraintVect2D[i][j];
+			ALoc = A.block(3 * face, 2 * face, 3, 2);
+			f = (ALoc * v).transpose();
+			h1 = (ALoc* (rotMat1*v)).transpose();
+			h2 = (ALoc* (rotMat2*v)).transpose();
+			e = c + f*lengthScale;
+			//cout << "c: " << c << "e: " << e << endl; 
+			viewer.data().add_edges(c, e, color);
+			viewer.data().add_edges(e, e + h1*lengthScale / HEAD_RATIO, color);
+			viewer.data().add_edges(e, e + h2*lengthScale / HEAD_RATIO, color);
+		}
+	}
+}
+
 /* ============================= N-FIELDS DESIGN ============================= */
 
 void NRoSyFields::nRoSyFieldsDesignRef()
 {
-	nRoSyFieldsDesignRef_HardConstraints();
+	//nRoSyFieldsDesignRef_HardConstraints();
+	nRoSyFieldsDesignRef_SoftConstraints();
 }
 
 void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
@@ -1729,6 +1771,354 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+/* ============================= SOFT CONSTRAINTS ============================= */
+
+void NRoSyFields::nRoSyFieldsDesignRef_SoftConstraints()
+{
+	Eigen::VectorXd					b, g, h, vEst;
+	Eigen::SparseMatrix<double>		A_LHS;
+
+	constructSoftConstraints();
+
+	Eigen::Vector3d lambda; 
+	lambda(0) = 0.1;
+	lambda(1) = 0.1;
+	lambda(2) = 1.0;
+	setupRHSGlobalProblemSoftConstraints(lambda, b);
+	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);	
+	solveGlobalSystemMappedLDLTSoftConstraints(vEst, A_LHS, b);
+}
+
+void NRoSyFields::constructSoftConstraints()
+{
+	const int NUM_CURVES = 8;
+	curvesConstraints.resize(NUM_CURVES);
+
+	srand(time(NULL));
+	int init_, end_;
+	vector<int> aCurve;
+	/* Automatic random set up */
+	//for (int i = 0; i < NUM_CURVES; i++) {
+	//	init_ = rand() % F.rows();
+	//	//end_ = rand() % F.rows();
+	//	end_ = init_ + 40;
+	//	constructCurvesAsConstraints(init_, end_, aCurve);
+	//	curvesConstraints[i] = aCurve; 
+	//}
+
+
+	int constCounter = 0;
+	/* Manual set-up for Chinese Dragon */
+	// Face
+	constructCurvesAsConstraints(152474, 51474, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// Back
+	constructCurvesAsConstraints(44109, 68907, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// body - bottom
+	constructCurvesAsConstraints(13471, 195817, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// body - right
+	constructCurvesAsConstraints(123036, 247143, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// body - left
+	constructCurvesAsConstraints(234815, 232296, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// front_right_leg
+	constructCurvesAsConstraints(75468, 7716, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// front_left_leg
+	constructCurvesAsConstraints(231495, 77171, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	// tail
+	constructCurvesAsConstraints(230301, 113500, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+
+	/* Manual set-up for Armadillo */
+	///// Head
+	///constructCurvesAsConstraints(68818,6278, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Stomach
+	///constructCurvesAsConstraints(56965, 41616, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Leg/Foot (R then L)
+	///constructCurvesAsConstraints(28590, 16119, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///constructCurvesAsConstraints(25037, 571, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Arm/Hand
+	///constructCurvesAsConstraints(55454, 6877, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///constructCurvesAsConstraints(49059, 36423, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Back
+	///constructCurvesAsConstraints(68331, 72522, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///// Tail
+	///constructCurvesAsConstraints(24056, 1075, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+
+	/* Project elements to local frame */
+	projectCurvesToFrame();
+
+	/* Get the number of constraints */
+	int numConstraints = 0;
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		for (int j = 0; j < curvesConstraints[i].size() - 1; j++)
+		{
+			numConstraints++;
+		}
+	}
+
+	/* Setup to constraint matrix */
+	Eigen::VectorXd cTemp(2 * numConstraints);
+	C.resize(2 * numConstraints, SF.cols());
+
+	int counter = 0;
+	int elem;
+	vector<Eigen::Triplet<double>> CTriplet;
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		for (int j = 0; j < curvesConstraints[i].size() - 1; j++)
+		{
+			elem = curvesConstraints[i][j];
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * elem + 0, 1.0));
+			cTemp(counter++) = constraintVect2D[i][j](0);
+			CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * elem + 1, 1.0));
+			cTemp(counter++) = constraintVect2D[i][j](1);
+		}
+	}
+
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+
+	/* representing c as representation vectors */
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(cTemp, nRoSy_);
+	convertNRoSyToRepVectors(nRoSy_, c);
+
+	printf("Size of selector matrix C: %dx%d \n", C.rows(), C.cols());
+	printf("Size of constraint vector c: %d\n", c.rows());
+}
+
+void NRoSyFields::constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve)
+{
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
+	Eigen::VectorXd D(F.rows());
+	Eigen::VectorXi prev(F.rows());
+
+	// Computing distance for initial sample points S
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+		prev(i) = -1;
+	}
+
+	D(end) = 0.0f;
+	VertexPair vp{ end, D(end) };
+	DistPQueue.push(vp);
+
+	curve.resize(0);
+	curve.shrink_to_fit();
+	curve.reserve(F.rows() / 2);
+
+	// For other vertices in mesh
+	//double distFromCenter;
+	int neigh;
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		//distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		for (auto it = 0; it != F.cols(); ++it) {
+			/* Regular Dikjstra */
+			neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = FC.row(neigh);
+			double dist = (c2 - c1).norm();
+			//double tempDist = D(elem) + dist;
+			double tempDist = (FC.row(end) - FC.row(neigh)).norm();
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+				prev(neigh) = vp1.vId;
+			}
+		}
+	} while (!DistPQueue.empty());
+
+	// Obtaining the path <reverse>
+	int u = init;
+	while (prev[u] != -1 && u != end) {
+		curve.push_back(u);
+		u = prev(u);
+	}
+
+	printf("Path from %d to %d has %d elements.\n", init, end, curve.size());
+
+
+	curve.shrink_to_fit();
+}
+
+void NRoSyFields::measureSoftConstraintError(const Eigen::Vector3d& lambda)
+{
+	///setupGlobalProblem(lambda);
+	///setAndSolveUserSystem(lambda);
+
+	Eigen::VectorXd diff = (Xf - XfBar);
+	double error = diff.transpose()*MF*diff;
+	double ref = Xf.transpose()*MF*Xf;
+	double relError = sqrt(error / ref);
+	cout << "The l2-norm error is " << relError << endl;
+	cout << "__The rel error is: " << error / ref << endl;
+	cout << "__The apprxo length is: " << XfBar.transpose()*MF*XfBar << endl;
+	cout << "__The difference length is: " << error << endl;
+	cout << "__The reference length is: " << ref << endl;
+
+	error = diff.transpose()*SF*diff;
+	ref = Xf.transpose()*SF*Xf;
+	relError = sqrt(error / ref);
+	cout << "The rel. energy error is " << relError << endl;
+	cout << "__The rel energy is: " << error / ref << endl;
+	cout << "__The apprxo energy is: " << XfBar.transpose()*SF*XfBar << endl;
+	cout << "__The difference energy is: " << error << endl;
+	cout << "__The reference energy is: " << ref << endl;
+	cout << "__The apprxo energy is: " << XfBar.transpose()*SF*XfBar << endl;
+}
+
+void NRoSyFields::projectCurvesToFrame()
+{
+	Eigen::MatrixXd ALoc(3, 2);
+	Eigen::Vector2d vec2D;
+	Eigen::Vector3d vec3D;
+	int face1, face2, face3;
+
+	constraintVect2D.resize(curvesConstraints.size());
+	for (int i = 0; i < curvesConstraints.size(); i++)
+	{
+		const int curveSize = curvesConstraints[i].size() - 1;
+		constraintVect2D[i].resize(curveSize);
+		for (int j = 0; j < curvesConstraints[i].size() - 1; j++)
+		{
+			face1 = curvesConstraints[i][j];
+			face2 = curvesConstraints[i][j + 1];
+			ALoc = A.block(3 * face1, 2 * face1, 3, 2);
+			if (j < curvesConstraints[i].size() - 2)
+			{
+				face3 = curvesConstraints[i][j + 2];
+				//face3 = curvesConstraints[i][curveSize-1];
+				vec3D = (FC.row(face3) - FC.row(face1)).transpose();
+			}
+			else
+			{
+				vec3D = (FC.row(face2) - FC.row(face1)).transpose();
+			}
+
+			vec2D = ALoc.transpose() * vec3D;
+			vec2D.normalize();
+			constraintVect2D[i][j] = vec2D;
+			//cout << "vec2D= " << vec2D << endl; 
+		}
+	}
+
+	cout << "Fields are projected to 2d frame " << endl;
+}
+
+void NRoSyFields::setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Setting up the RHS of the system... ";
+
+	Eigen::SparseMatrix<double> Mconst = C*MF*C.transpose();
+
+	b = lambda(2) * C.transpose() * Mconst * c;
+	//b = lambda(2) * C.transpose() * c;
+
+	printf("Size of b: %d. \n", b.rows());
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void NRoSyFields::setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Setting up the LHS of the system... ";
+
+	//const double lambda_1 = 10000 / B2D.coeff(0, 0);
+
+	Eigen::SparseMatrix<double> Mconst = C*MF*C.transpose();
+
+	//A_LHS = lambda(0)*SF2DAsym + lambda(1)*B2D + lambda(2)*C.transpose()*C;
+	A_LHS = lambda(0)*SF + lambda(2)*C.transpose()*Mconst*C;
+	//A_LHS = lambda(0)*SF2DAsym + lambda(2)*C.transpose()*C;
+	//A_LHS = lambda(0)*SF2DAsym + lambda_1*B2D + lambda(2)*C.transpose()*C;
+
+	printf("Size of LHS: %dx%d. \n", A_LHS.rows(), A_LHS.cols());
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void NRoSyFields::solveGlobalSystemMappedLDLTSoftConstraints(const Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Solving the global system (Pardiso LDLT)... \n";
+
+
+	//cout << "Starting to solve problem." << endl;
+	Xf.resize(SF.rows());
+
+	// Setting up the solver
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	//Eigen::CholmodSupernodalLLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
+
+	// FIRST BASIS
+	cout << "....Solving first problem (first frame)..." << endl;
+	Xf = sparseSolver.solve(b);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		if (sparseSolver.info() == Eigen::InvalidInput)
+			cout << "Input is Invalid. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	//Xf = x;
+
+	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
 
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
 void NRoSyFields::constructBasis()
@@ -2081,7 +2471,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	nRot = 2;
 	readMesh(meshFile);
 	scaleMesh();
-	string model = "Arma43k_";
+	string model = "CDragon_";
 
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
@@ -2106,7 +2496,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	selectFaceToDraw(5000);
 	//selectFaceToDraw(F.rows());
 	Eigen::VectorXd inputNFields;
-	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"Arma_InputFields";
+	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"_InputFields";
 	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
 	//visualize2Dfields(viewer, inputNFields, Eigen::RowVector3d(0.1, 0.2, 0.2), 1.0);
 	//createNRoSyFromVectors(inputNFields, nRoSy);
@@ -2125,31 +2515,31 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Working with eigenvectors of n-RoSy fields*/
 
 	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
-	computeEigenFields_generalized(5, fieldsfile);
+	//computeEigenFields_generalized(5, fieldsfile);
 	//computeEigenFields_regular(50, fileEigen);
 	NRoSy nRoSy_eigenFields;
 	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
 	//visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
 	//visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
-	Xf = eigFieldsNRoSyRef.col(2);
+	//Xf = eigFieldsNRoSyRef.col(2);
 
 	/* Build reduced space */
-	numSupport = 40.0;
-	numSample = 500;
-	constructSamples(numSample);
-	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_2000_Eigfields_40sup";
-	//constructBasis();
-	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	///numSupport = 40.0;
+	///numSample = 1000;
+	///constructSamples(numSample);
+	///string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	///constructBasis();
+	///storeBasis(basisFile);
+	//retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 
-	///* Constrained fields (biharmonic) */
+	/* Constrained fields (biharmonic) */
 	//nRoSyFieldsDesignRef();
 	//visualizeConstraints(viewer);
 	//visualizeConstrainedFields(viewer);
-	//
+	
 	///* Reduced Constrained fields (biharmonic)--hard constraints */
 	//constructRandomHardConstraints(C, c);
 	//nRoSyFieldsDesign_Reduced();
@@ -2157,12 +2547,17 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//visualizeConstraints(viewer);
 	//measureAccuracy();
 
+	/* Constrained fields (SOFT constraints) */
+	nRoSyFieldsDesignRef();
+	visualizeSoftConstraints(viewer);
+	visualizeConstrainedFields(viewer);
+
 	/* Projection */
-	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver(B_NR);
-	XfBar = Basis.transpose()*MF*Xf;
-	double error;
-	testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, XfBar, Xf, error);	
+	//Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver(B_NR);
+	//Eigen::VectorXd inputFields = Basis.transpose()*MF*Xf;
+	//double error;
+	//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, inputFields, Xf, error);	
 	//measureAccuracy();
 }
 

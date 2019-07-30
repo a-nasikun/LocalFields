@@ -62,6 +62,7 @@ public:
 	void visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer);
 	void visualizeConstraints(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer);
 
 	/* N-FIELDS DESIGN */
 	void nRoSyFieldsDesignRef();
@@ -70,6 +71,15 @@ public:
 	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
+		// Soft constraints
+	void nRoSyFieldsDesignRef_SoftConstraints();
+	void constructSoftConstraints();
+	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
+	void measureSoftConstraintError(const Eigen::Vector3d& lambda);
+	void projectCurvesToFrame();
+	void setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b);
+	void setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS);
+	void solveGlobalSystemMappedLDLTSoftConstraints(const Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
@@ -80,11 +90,13 @@ public:
 
 	/* REDUCED N-FIELDS DESIGN */
 	void nRoSyFieldsDesign_Reduced();
+			// Hard constraints
 	void nRoSyFieldsDesign_Reduced_HardConstraints();
 	void constructRandomHardConstraints_Reduced();
 	void setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, const Eigen::SparseMatrix<double>& A_LHSBar, const Eigen::VectorXd& bBar);
+
 	void measureAccuracy();
 
 	/* Testing stuff */
@@ -136,6 +148,8 @@ public:
 	
 	/* Variable on projection */
 	Eigen::VectorXd					wb;											// projected representation fields
+	vector<vector<int>>				curvesConstraints;
+	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 
 	/* Testing variables */
 	int								testID = 5;
