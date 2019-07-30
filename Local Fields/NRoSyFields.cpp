@@ -1045,6 +1045,7 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy
 		v = repVect.block(2 * i, 0, 2, 1);
 
 		nRoSyFields.magnitude(i) = v.norm();
+		//nRoSyFields.magnitude(i) = 1.0;		// normalizing the n-fields
 		v.normalize();
 		
 		double dotP = b.dot(v);
@@ -1139,18 +1140,12 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	double scale = 1.0;
+	//double scale = 1.0;
 	//double scale = 2.5;
 	//double scale = 0.25;
+	double scale = 50.0; 
 	Eigen::Vector2d b(1, 0);
-	//Eigen::RowVector3d color(0.1, 0.1, 0.9);
-	//Eigen::VectorXd col(nRot);
-	//Eigen::MatrixXd color;
-	//for (int i = 0; i < nRot; i++)
-	//{
-	//	col(i) = i*(1.0 / nRot);
-	//}
-	//igl::jet(col, true, color);
+	
 
 	for (int i = 0; i < nRot; i++)
 	{
@@ -1775,18 +1770,21 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 
 void NRoSyFields::nRoSyFieldsDesignRef_SoftConstraints()
 {
+	cout << "NFIelds design\n";
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
 
-	constructSoftConstraints();
+	//constructSoftConstraints();
 
-	Eigen::Vector3d lambda; 
-	lambda(0) = 0.1;
-	lambda(1) = 0.1;
+	Eigen::Vector3d lambda; 	
+	lambda(0) = 1000 * MF.diagonal().sum() / SF.diagonal().sum();
+	lambda(1) = 0;
 	lambda(2) = 1.0;
 	setupRHSGlobalProblemSoftConstraints(lambda, b);
 	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);	
 	solveGlobalSystemMappedLDLTSoftConstraints(vEst, A_LHS, b);
+
+	cout << "Lambda 0 is " << lambda(0) << endl; 
 }
 
 void NRoSyFields::constructSoftConstraints()
@@ -2359,7 +2357,8 @@ void NRoSyFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>
 /* ============================= REDUCED N-FIELDS DESIGN ============================= */
 void NRoSyFields::nRoSyFieldsDesign_Reduced()
 {
-	nRoSyFieldsDesign_Reduced_HardConstraints();
+	//nRoSyFieldsDesign_Reduced_HardConstraints();
+	nRoSyFieldsDesign_Reduced_SoftConstraints();
 }
 
 void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
@@ -2439,6 +2438,113 @@ void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, cons
 	XfBar = Basis * XLowDim;
 }
 
+// SOFT Constraints
+void NRoSyFields::nRoSyFieldsDesign_Reduced_SoftConstraints()
+{
+	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
+	Eigen::SparseMatrix<double>		A_LHSBar;
+
+	Eigen::Vector3d lambda;
+	lambda(0) = 1000 * MF.diagonal().sum() / SF.diagonal().sum();
+	lambda(1) = 0;
+	lambda(2) = 1.0;
+
+	constructSoftConstraints_Reduced();
+	setupRHSSoftConstraints_Reduced(lambda, bBar);
+	setupLHSSoftConstraints_Reduced(lambda, A_LHSBar);
+	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+}
+
+void NRoSyFields::constructSoftConstraints_Reduced()
+{
+	//userConstraints = globalConstraints; 
+	CBar = C * Basis;
+	cBar = c;
+}
+
+void NRoSyFields::setupRHSSoftConstraints_Reduced(const Eigen::Vector3d& lambda, Eigen::VectorXd& bBar)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Constructing RHS (mapped)...";
+
+	/* Mass matrix of the selected faces (on constraints) */
+	Eigen::SparseMatrix<double> Mconst = C*MF*C.transpose();
+
+	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
+	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());
+
+	//bBar = lambda(2)*CBar.transpose() * cBar; 
+	bBar = lambda(2)*CBar.transpose() * Mconst * cBar;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void NRoSyFields::setupLHSSoftConstraints_Reduced(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Constructing LHS (mapped)...";
+
+	Eigen::SparseMatrix<double> SF2DBar = Basis.transpose() * SF* Basis;
+	//Eigen::SparseMatrix<double> B2DBar = Basis.transpose() * B2D * Basis;
+	//A_LHSBar = SF2DBar + lambda*CBar.transpose()*CBar; 
+
+
+	//const double lambda_1 = 10000 / B2D.coeff(0, 0);
+	cout << "lambda_2 " << lambda(2) << endl;
+
+	/* Local matrix */
+	Eigen::SparseMatrix<double> Mconst = C*MF*C.transpose();
+
+	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
+	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());
+
+	//A_LHSBar = lambda(0)*SF2DBar +  lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
+	A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*Mconst*CBar;
+	//A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*CBar;
+	//A_LHSBar = lambda(0)*SF2DBar + lambda_1*B2DBar + lambda(2)*CBar.transpose()*CBar;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "in " << duration.count() << " seconds." << endl;
+}
+
+void NRoSyFields::solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Solving reduced system...\n";
+
+	XfBar.resize(Basis.rows());
+	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
+
+	cout << "....Solving for the first frame.\n";
+	Eigen::VectorXd XLowDim = sparseSolver.solve(bBar);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}	
+
+	XfBar = Basis * XLowDim;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << "..in Total of " << duration.count() << " seconds." << endl;
+}
+
 void NRoSyFields::measureAccuracy()
 {
 	if (Xf.size() < 1 || XfBar.size() < 1)
@@ -2471,6 +2577,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	nRot = 2;
 	readMesh(meshFile);
 	scaleMesh();
+	igl::doublearea(V, F, doubleArea);
 	string model = "CDragon_";
 
 	viewer.data().set_mesh(V, F);
@@ -2514,24 +2621,27 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Working with eigenvectors of n-RoSy fields*/
 
-	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
+	//string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
 	//computeEigenFields_generalized(5, fieldsfile);
-	//computeEigenFields_regular(50, fileEigen);
-	NRoSy nRoSy_eigenFields;
-	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
+	////computeEigenFields_regular(50, fileEigen);
+	//NRoSy nRoSy_eigenFields;
+	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(1), nRoSy_eigenFields);
 	//visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
-	//visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
+	////visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
-	//Xf = eigFieldsNRoSyRef.col(2);
+	//Xf = eigFieldsNRoSyRef.col(1);
+
+	//string fileNRoSy= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_eigenfields.txt";
+	//writeNRoSyFieldsToFile(nRoSy_eigenFields, fileNRoSy);
 
 	/* Build reduced space */
-	///numSupport = 40.0;
-	///numSample = 1000;
-	///constructSamples(numSample);
-	///string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	numSupport = 40.0;
+	numSample = 1000;
+	constructSamples(numSample);
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	///constructBasis();
 	///storeBasis(basisFile);
-	//retrieveBasis(basisFile);
+	retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 
@@ -2548,9 +2658,13 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//measureAccuracy();
 
 	/* Constrained fields (SOFT constraints) */
+	constructSoftConstraints();
 	nRoSyFieldsDesignRef();
-	visualizeSoftConstraints(viewer);
-	visualizeConstrainedFields(viewer);
+	//visualizeSoftConstraints(viewer);
+	//visualizeConstrainedFields(viewer);
+
+	
+	nRoSyFieldsDesign_Reduced();
 
 	/* Projection */
 	//Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
@@ -2558,9 +2672,66 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//Eigen::VectorXd inputFields = Basis.transpose()*MF*Xf;
 	//double error;
 	//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, inputFields, Xf, error);	
-	//measureAccuracy();
+	measureAccuracy();
 }
 
+void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename)
+{
+
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	for (int i = 0; i < nRot; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+		cout << "Drawing the " << i << " fields \n";
+
+		/* Construct rotation matrix*/
+		//for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+			if (j == 0)
+			{
+				printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
+			}
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			//nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+		}		
+	}
+
+	vector<Eigen::VectorXd> nFields3d(nRot);
+	for (int j = 0; j < nRot; j++)
+	{
+		nFields3d[j] = A*nFields[j];
+	}
+
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Writing vector fields to file to text \n";
+		printf("__|F|=%d  | vfields=%d\n", F.rows(), nFields3d[0].size());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			for (int j = 0; j < nRot; j++)
+			{
+				myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+			}			
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+
+	cout << "Writing to file doen!!!!\n";
+}
 
 /* PROJECTION ON REDUCED FIELDS */
 void NRoSyFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& v, double &error)

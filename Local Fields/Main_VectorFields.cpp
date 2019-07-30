@@ -189,8 +189,9 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
+				nRoSyFields.visualizeSoftConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields(viewer);
-				nRoSyFields.visualizeConstraints(viewer);
+				//nRoSyFields.visualizeConstraints(viewer);
 				
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
 				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.1, 0.1, 0.8));
@@ -214,12 +215,13 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				//nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+				nRoSyFields.visualizeSoftConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 				//nRoSyFields.visualizeConstraints(viewer);
 
-				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
-				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.8, 0.1, 0.1));
+				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.8, 0.1, 0.1));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
