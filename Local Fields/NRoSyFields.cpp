@@ -1140,10 +1140,10 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	//double scale = 1.0;
+	double scale = 1.0;
 	//double scale = 2.5;
 	//double scale = 0.25;
-	double scale = 50.0; 
+	//double scale = 50.0; 
 	Eigen::Vector2d b(1, 0);
 	
 
@@ -2578,7 +2578,7 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 1;
+	nRot = 4;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
@@ -2625,8 +2625,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Working with eigenvectors of n-RoSy fields*/
 
-	//string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
-	//computeEigenFields_generalized(1, fieldsfile);
+	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
+	computeEigenFields_generalized(100, fieldsfile);
 	//computeEigenFields_regular(50, fileEigen);
 	NRoSy nRoSy_eigenFields;
 	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
@@ -2644,7 +2644,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	//retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 	/* Projection */
@@ -2668,23 +2668,23 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//measureAccuracy();
 
 	/* Constrained fields (SOFT constraints) */
-	constructSoftConstraints();
-	nRoSyFieldsDesignRef();
+	//constructSoftConstraints();
+	//nRoSyFieldsDesignRef();
 	//visualizeSoftConstraints(viewer);
 	//visualizeConstrainedFields(viewer);
 
 	
-	nRoSyFieldsDesign_Reduced();
-	measureAccuracy();
-
-	NRoSy nRoSy_temp; 
-	convertRepVectorsToNRoSy(Xf, nRoSy_temp);
-	string fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_reference.txt";
-	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRef);
-
-	convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
-	string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_approximation.txt";
-	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
+	//nRoSyFieldsDesign_Reduced();
+	//measureAccuracy();
+	//
+	//NRoSy nRoSy_temp; 
+	//convertRepVectorsToNRoSy(Xf, nRoSy_temp);
+	//string fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_reference.txt";
+	//writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRef);
+	//
+	//convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
+	//string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_approximation.txt";
+	//writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
 }
 
 void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename)
