@@ -1807,61 +1807,61 @@ void NRoSyFields::constructSoftConstraints()
 
 	int constCounter = 0;
 	/* Manual set-up for Chinese Dragon */
-	// Face
-	constructCurvesAsConstraints(152474, 51474, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// Back
-	constructCurvesAsConstraints(44109, 68907, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// body - bottom
-	constructCurvesAsConstraints(13471, 195817, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// body - right
-	constructCurvesAsConstraints(123036, 247143, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// body - left
-	constructCurvesAsConstraints(234815, 232296, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// front_right_leg
-	constructCurvesAsConstraints(75468, 7716, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// front_left_leg
-	constructCurvesAsConstraints(231495, 77171, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	
-	// tail
-	constructCurvesAsConstraints(230301, 113500, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
+	//// Face
+	//constructCurvesAsConstraints(152474, 51474, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// Back
+	//constructCurvesAsConstraints(44109, 68907, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// body - bottom
+	//constructCurvesAsConstraints(13471, 195817, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// body - right
+	//constructCurvesAsConstraints(123036, 247143, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// body - left
+	//constructCurvesAsConstraints(234815, 232296, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// front_right_leg
+	//constructCurvesAsConstraints(75468, 7716, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// front_left_leg
+	//constructCurvesAsConstraints(231495, 77171, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
+	//
+	//// tail
+	//constructCurvesAsConstraints(230301, 113500, aCurve);
+	//curvesConstraints[constCounter++] = aCurve;
 
 	/* Manual set-up for Armadillo */
-	//// Head
-	//constructCurvesAsConstraints(68818,6278, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//// Stomach
-	//constructCurvesAsConstraints(56965, 41616, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//// Leg/Foot (R then L)
-	//constructCurvesAsConstraints(28590, 16119, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//constructCurvesAsConstraints(25037, 571, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//// Arm/Hand
-	//constructCurvesAsConstraints(55454, 6877, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//constructCurvesAsConstraints(49059, 36423, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//// Back
-	//constructCurvesAsConstraints(68331, 72522, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
-	//// Tail
-	//constructCurvesAsConstraints(24056, 1075, aCurve);
-	//curvesConstraints[constCounter++] = aCurve;
+	// Head
+	constructCurvesAsConstraints(68818,6278, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Stomach
+	constructCurvesAsConstraints(56965, 41616, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Leg/Foot (R then L)
+	constructCurvesAsConstraints(28590, 16119, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	constructCurvesAsConstraints(25037, 571, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Arm/Hand
+	constructCurvesAsConstraints(55454, 6877, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	constructCurvesAsConstraints(49059, 36423, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Back
+	constructCurvesAsConstraints(68331, 72522, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
+	// Tail
+	constructCurvesAsConstraints(24056, 1075, aCurve);
+	curvesConstraints[constCounter++] = aCurve;
 
 	/* Project elements to local frame */
 	projectCurvesToFrame();
@@ -2578,11 +2578,11 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 6;
+	nRot = 1;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "CDragon_";
+	string model = "Arma43k_";
 
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
@@ -2626,34 +2626,33 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Working with eigenvectors of n-RoSy fields*/
 
 	//string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
-	computeEigenFields_generalized(1, fieldsfile);
+	//computeEigenFields_generalized(1, fieldsfile);
 	//computeEigenFields_regular(50, fileEigen);
 	NRoSy nRoSy_eigenFields;
-	convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
+	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
 	//visualizeNRoSyFields(viewer, nRoSy_eigenFields, Eigen::RowVector3d(0.0, 0.1, 0.9));
 	////visualizeRepVectorFields(viewer, eigFieldsNRoSyRef.col(0));
 
-	Xf = eigFieldsNRoSyRef.col(0);
+	//Xf = eigFieldsNRoSyRef.col(0);
 
-	//string fileNRoSy= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_eigenfields.txt";
-	//writeNRoSyFieldsToFile(nRoSy_eigenFields, fileNRoSy);
+	
 
 	/* Build reduced space */
 	numSupport = 40.0;
 	numSample = 1000;
 	constructSamples(numSample);
-	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
-	constructBasis();
-	storeBasis(basisFile);
-	//retrieveBasis(basisFile);
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	//constructBasis();
+	//storeBasis(basisFile);
+	retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 	/* Projection */
-	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver(B_NR);
-	Eigen::VectorXd inputFields = Basis.transpose()*MF*Xf;
-	double error;
-	testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, inputFields, Xf, error);
+	//Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF * Basis;
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver(B_NR);
+	//Eigen::VectorXd inputFields = Basis.transpose()*MF*Xf;
+	//double error;
+	//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, inputFields, Xf, error);
 
 
 	/* Constrained fields (biharmonic) */
@@ -2677,6 +2676,15 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	
 	nRoSyFieldsDesign_Reduced();
 	measureAccuracy();
+
+	NRoSy nRoSy_temp; 
+	convertRepVectorsToNRoSy(Xf, nRoSy_temp);
+	string fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_reference.txt";
+	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRef);
+
+	convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
+	string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_approximation.txt";
+	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
 }
 
 void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename)
@@ -2687,6 +2695,7 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 
 	vector<Eigen::VectorXd> nFields(nRot);
 
+	const int FIELD_TO_WRITE = 1;
 	for (int i = 0; i < nRot; i++)
 	{
 		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
@@ -2725,7 +2734,7 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 		printf("__|F|=%d  | vfields=%d\n", F.rows(), nFields3d[0].size());
 		for (int i = 0; i < F.rows(); i++)
 		{
-			for (int j = 0; j < nRot; j++)
+			for (int j = 0; j < FIELD_TO_WRITE; j++)
 			{
 				myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
 			}			
