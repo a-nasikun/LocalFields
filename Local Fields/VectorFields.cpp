@@ -2239,7 +2239,7 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{10000};
+	vector<int> sampleSizeVect{5000, 1000, 500};
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
@@ -2247,7 +2247,7 @@ void VectorFields::constructMultiBasis()
 		constructSamples(sample);		
 		constructBasis();
 		///loadAndConstructBasis();		
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup_spectra";
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Neptune_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup_spectra";
 		//storeBasis(filename_basis);		
 	}
 }
@@ -2285,7 +2285,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	//Basis.resize(BasisTemp.rows(), BasisTemp.cols());
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
-	cout << "Transformign the dirichlet enregy \n";
+	cout << "Transforming the dirichlet enregy \n";
 	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
 	printf("Sh=%dx%d (%d) | Mh=%dx%d (%d nnzs) \n", Sh.rows(), Sh.cols(), Sh.nonZeros(), MF2DhNeg.rows(), MF2DhNeg.cols(), MF2DhNeg.nonZeros());
 
@@ -2303,11 +2303,11 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	}
 
 	/* Default color for the domain selected */
-	localSystem.resize(F.rows());
-	for (int fid = 0; fid < F.rows(); fid++) {
-		//localSystem(fid) = 1-0.3725;
-		localSystem(fid) = 0;
-	}
+	//localSystem.resize(F.rows());
+	//for (int fid = 0; fid < F.rows(); fid++) {
+	//	//localSystem(fid) = 1-0.3725;
+	//	localSystem(fid) = 0;
+	//}
 
 	int id, tid, ntids, ipts, istart, iproc;	
 
@@ -2315,8 +2315,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "Setup the timing parameters: \n";
 	//const int NUM_THREADS = omp_get_num_procs();
-	const int NUM_THREADS = omp_get_num_procs()/2;
-	//const int NUM_THREADS = 16;
+	//const int NUM_THREADS = omp_get_num_procs()/2;
+	const int NUM_THREADS = 8;
 	//const int NUM_THREADS = 1;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
@@ -2411,12 +2411,11 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
-			//printf("Starting engine %d for element %d\n", tid, id);
-			if(id%((int)(Sample.size()/4))==0)
-				cout << "[" << id << "] Constructing local eigen problem\n ";
-			///localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
-			///printf("Solving the %d eigen problem with %d entries.\n", id, localField.InnerElements.size());
-			///localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF2DAsym, MF2Dinv, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			if (id % 50 == 0)
+			printf("Running element %d on thread %d. \n", id, tid);
+			///if(id%((int)(Sample.size()/4))==0)
+			///	cout << "[" << id << "] Constructing local eigen problem\n ";
+
 			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);			
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);

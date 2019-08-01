@@ -517,7 +517,11 @@ void VectorFields::constructEVList()
 
 void VectorFields::constructEFList()
 {
-	cout << "Constructing F-E lists\n";
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+
+	cout << "Constructing F-E lists...";
 	FE.resize(F.rows(), 3);
 	EF.resize(E.rows(), 2);
 
@@ -535,10 +539,7 @@ void VectorFields::constructEFList()
 			else 
 				ip = (i - 1) % (int)F.cols();
 
-			//for (set<int>::iterator it = VENeighbors[ii].begin(); it != VENeighbors[ii].end(); ++it)
-			//{
-			//	int edge = 
-			//}
+			
 
 			/* Loop over all edges having element F(i,j) */
 			//printf("V=%d", ii);
@@ -564,7 +565,9 @@ void VectorFields::constructEFList()
 		}
 	}
 
-
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 
 	/* For test */
 	//int ft = 264;
@@ -890,7 +893,12 @@ void VectorFields::constructStiffnessMatrices()
 }
 void VectorFields::constructStiffnessMatrices_Implicit()
 {
-	printf("> Computing stiffness matrix/Dirichlet Energy \n");
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+
+	printf("> Computing stiffness matrix/Dirichlet Energy...");
 	/* ALL VARIANT OF DIRICHLET ENERGY */
 	// Proper - Asymmetry - Conforming Divergent and Non-conforming Curl (Vertex-Edge)
 	//SF3D = MF3D * (GF3D*MVinv*GF3D.transpose() - J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D) *MF3D;
@@ -899,24 +907,25 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	Eigen::SparseMatrix<double> LapDiv_NonConform;		// edge-based
 	Eigen::SparseMatrix<double> LapCurl_Conform;		// vertex-based
 	Eigen::SparseMatrix<double> LapDiv_Conform;			// vertex-based
-
-	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D *MF3D;
-	LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
+		
+	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D*MF3D;
+	//LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
 	//LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
 	LapDiv_Conform = MF3D * GF3D * MVinv * GF3D.transpose() * MF3D;
 		
-	SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
+	//SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
 	SF2DAsym = A.transpose()*(LapDiv_Conform + LapCurl_NonConform)*A;
 
-	printf("> Computing stiffness matrix/Dirichlet Energy DONE\n");
-
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "..in total of" << duration.count() << " seconds" << endl;
 
 	//Eigen::SparseMatrix<double> LapDiv3D = MF3D * (GFStar3D*MStarInv)*GFStar3D.transpose()*MF3D;
 
 	string file_stiffmatrix = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Brezel1920_Vector_";
 	//WriteSparseMatrixToMatlab(SF2DAsym, file_stiffmatrix + "_Stiffness_Asym");
-	WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix + "_Stiffness_Sym");
-	WriteSparseMatrixToMatlab(MF2D, file_stiffmatrix + "_Mass");
+	//WriteSparseMatrixToMatlab(SF2D, file_stiffmatrix + "_Stiffness_Sym");
+	//WriteSparseMatrixToMatlab(MF2D, file_stiffmatrix + "_Mass");
 }
 
 void VectorFields::loadStiffnessMatrices()
