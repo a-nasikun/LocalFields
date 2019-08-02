@@ -1179,9 +1179,9 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	//double scale = 1.0;
+	double scale = 1.0;
 	//double scale = 2.5;
-	double scale = 0.25;
+	//double scale = 0.25;
 	//double scale = 0.1;
 	//double scale = 50.0; 
 	Eigen::Vector2d b(1, 0);
@@ -1574,6 +1574,18 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 	solveBiharmSystemRef(vEst, A_LHS, b, Xf);
 }
 
+void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
+{
+	// Create alignment fields
+	// based on maximal curvature direction
+	Eigen::VectorXd PD, PV;
+	computeMaximalPrincipalCurvature(V, F, PD, PV);
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(PD, nRoSy_);
+	//nRoSy_.magnitude = PV;
+	convertNRoSyToRepVectors(nRoSy_, v);
+}
+
 void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
 {
 	// Define the constraints
@@ -1641,7 +1653,8 @@ void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C,
 		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
 
 		/* Creating random constraints */
-		std::uniform_int_distribution<> disConst(20, 50); // From 0 to F.rows()-1
+		//std::uniform_int_distribution<> disConst(20, 50); // From 0 to F.rows()-1
+		std::uniform_int_distribution<> disConst(1,5); // From 0 to F.rows()-1
 		int numConstraints = disConst(gen);
 		cout << "we gave you " << numConstraints << " number of constnraints. Good luck!\n";
 
@@ -1723,16 +1736,12 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 		vEst(i) = 0.5;
 	}
 
-	// Create alignment fields
-	// based on maximal curvature direction
-	Eigen::VectorXd PD, PV, repV;
-	computeMaximalPrincipalCurvature(V, F, PD, PV);
-	NRoSy nRoSy_;
-	createNRoSyFromVectors(PD, nRoSy_);
-	nRoSy_.magnitude = PV;
-	convertNRoSyToRepVectors(nRoSy_, repV);
+	// Create alignment fields based on maximal curvature direction
+	Eigen::VectorXd repV;
+	createAlignmentField(repV);
 
-	g = B2F * vEst + repV;
+	//g = (B2F+MF) * vEst +MF*repV;
+	g = (B2F) * vEst + MF*repV;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -2440,15 +2449,10 @@ void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 		vEstBar(i) = 0.5;
 	}
 
-	// Create alignment fields
-	// based on maximal curvature direction
-	Eigen::VectorXd PD, PV, repV,repVbar;
-	computeMaximalPrincipalCurvature(V, F, PD, PV);
-	NRoSy nRoSy_;
-	createNRoSyFromVectors(PD, nRoSy_);
-	nRoSy_.magnitude = PV;
-	convertNRoSyToRepVectors(nRoSy_, repV);
-	repVbar = Basis*repV;
+	// Create alignment fields based on maximal curvature direction
+	Eigen::VectorXd repV, repVbar;
+	createAlignmentField(repV);
+	repVbar = Basis*(MF*repV);
 
 	gBar = B2FBar * vEstBar + repVbar;
 	bBar.resize(B2FBar.rows() + cBar.rows());
@@ -2718,7 +2722,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	NRoSy nRoSy_;
 	createNRoSyFromVectors(PD, nRoSy_);
 	nRoSy_.magnitude = PV; 
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.5, 0.5, 0.1));
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(1.0, 0.75, 0.8));
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
 	/* Constrained fields (biharmonic) */
