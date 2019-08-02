@@ -2095,65 +2095,44 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-// RANK-2 TENSOR
-void VectorFields::constructMappingMatrix_TensorR2()
+// Alignment fields (Maximal curvature direction) 
+void VectorFields::computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV)
 {
-	// For Timing
-	chrono::high_resolution_clock::time_point	t1, t2;
-	chrono::duration<double>					duration;
-	t1 = chrono::high_resolution_clock::now();
-	cout << "> Constructing Mapping matrices (Global/World-Coord to Local Frame)... ";
+	cout << "Computing principal curvature\n";
+	Eigen::MatrixXd PD1, PD2, PDF;
+	Eigen::VectorXd PD2D;
+	Eigen::VectorXd PV1, PV2, PVF;
 
-
-	AT2R.resize(3 * F.rows(), 3 * F.rows());
-	vector<Eigen::Triplet<double>> ATriplet;
-	ATriplet.reserve(3 * 3 * F.rows());
-	Eigen::Vector3d e, f, n;
-	Eigen::Vector3d eeT, efT, feT, efTfeT, ffT;
-
-	for (int i = 0; i < F.rows(); i++) {
-		/* Computing the basic elements */
-		e = V.row(F(i, 1)) - V.row(F(i, 0));
-		e.normalize();
-
-		n = NF.row(i);
-		n.normalize();
-
-		f = n.cross(e);
-		f.normalize();
-
-		/* Computing the values for tensor */
-
-
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, e(0)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, e(1)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, e(2)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, f(0)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, f(1)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, f(2)));
+	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
+	
+	cout << "Mapping to space of triangles \n";
+	PDF.resize(F.rows(), F.cols());
+	PVF.resize(F.rows());
+	for (int i = 0; i < F.rows(); i++)
+	{
+		PDF.row(i) = (PD1.row(F(i, 0)) + PD1.row(F(i, 1)) + PD1.row(F(i, 2))) / 3.0;
+		PVF(i) = (PV1(F(i, 0)) + PV1(F(i, 1)) + PV1(F(i, 2))) / 3.0;
 	}
 
-	A.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	PV = PVF; 
 
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
+	printf("Dim of PDF: %dx%d | A=%dx%d \n", PDF.rows(), PDF.cols(), A.rows(), A.cols());
+	cout << "Converting to local coordinates \n";
+
+	PDF.transposeInPlace();
+	PD2D = Eigen::Map<Eigen::VectorXd>(PDF.data(), PDF.cols()*PDF.rows());
+	//PD2D = Eigen::Map<Eigen::VectorXd>(PDF.data(), 1);
+
+	printf("Dim of PD2D: %dx%d \n", PD2D.rows(), PD2D.cols());
+	printf("Size of PV: %d \n", PV.size());
+
+	PD = A.transpose()*PD2D;	
+	printf("Dim of PD (per face, to draw) : %dx%d \n", PD.rows(), PD.cols());
+
+	cout << "Matrix rep: " << PDF.block(0, 0, 3, 3) << endl << endl;
+	cout << "Vector rep: " << PD2D.block(0, 0, 1, 9) << endl << endl;
 }
 
-void VectorFields::constructStiffnessMatrixSF2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
-{
-
-}
-
-void VectorFields::constructStiffnessMatrixCurlPart2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D)
-{
-
-}
-
-void VectorFields::constructStiffnessMatrixDivPart2D_TensorR2(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
-{
-
-}
 
 // APPLICATIONS ON GLOBAL SYSTEM
 void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)

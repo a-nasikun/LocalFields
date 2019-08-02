@@ -1339,7 +1339,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	selectFaceToDraw(15000); 
+	selectFaceToDraw(5000); 
 	///selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1420,16 +1420,16 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	numSupport = 40.0;
 	string model = "Bimba_";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample*2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	constructSamples(numSample);
+	//constructSamples(numSample);
 	///constructBasis();	
 	///storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	retrieveBasis(filename_basis);	
+	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSubdomain(viewer);
 
 
-	setupReducedBiLaplacian();
+	///setupReducedBiLaplacian();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
@@ -1470,6 +1470,14 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//projectionTest();
 	///convergenceTest();
 	//compareModalBasis_SameStorage();
+
+	/* Alignment using (maximal/) principal curvature */
+	Eigen::MatrixXd CCol;
+	Eigen::VectorXd PD, PV;
+	computeMaximalPrincipalCurvature(V, F, PD, PV);
+	visualize2Dfields(viewer, PD, Eigen::RowVector3d(0.0, 0.1, 0.9), 1.0);
+	igl::jet(PV, true, CCol);
+	viewer.data().set_colors(CCol);
 
 	/* _____ Vector fields design test __________________________*/
 	//vectorFieldsDesignTest();
