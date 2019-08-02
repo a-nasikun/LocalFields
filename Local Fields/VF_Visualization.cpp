@@ -439,8 +439,8 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 3, false);
-	//visualize2Dfields(viewer, XFullDim, color, 2, true);
+	//visualize2Dfields(viewer, XFullDim, color, 3, false);
+	visualize2Dfields(viewer, XFullDim, color, 2, true);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 

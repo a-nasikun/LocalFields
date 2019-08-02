@@ -20,9 +20,9 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	constructRandomHardConstraints();
+	///constructRandomHardConstraints();
 	///constructSoftConstraints();
-	//constructInteractiveConstraints();
+	constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();
 
 	//constructSingularities();
@@ -3418,13 +3418,13 @@ void VectorFields::setAndSolveUserSystem(const Eigen::Vector3d& lambda)
 
 	//setupReducedBiLaplacian();
 	getUserConstraints();
-	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	//setupLHSUserProblemMapped(A_LHSBar);
-	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	setupLHSUserProblemMapped(A_LHSBar);
+	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
 	
-	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -3459,7 +3459,7 @@ void VectorFields::getUserConstraints()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Obtaining user constraints ";
 
-	//constructConstraints();
+	constructConstraints();
 
 	//userConstraints = globalConstraints; 
 	CBar			= C * Basis;
@@ -3661,6 +3661,10 @@ void VectorFields::mapSolutionToFullRes()
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << " in " << duration.count() << " seconds." << endl;
+
+	cout << "Fields \n";
+	cout << XFullDim.block(0, 0, 100, 1) << endl; 
+
 
 	printf("....XFull (%dx%d) =  Basis (%dx%d) * XLowDim (%dx%d) \n", XFullDim.rows(), XFullDim.cols(), Basis.rows(), Basis.cols(), XLowDim.rows(), XLowDim.cols());
 }

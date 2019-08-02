@@ -1525,8 +1525,10 @@ void VectorFields::constructMatrixB()
 
 	cout << "> Constructing Bi-Laplacian Matrix B... ";
 	t1 = chrono::high_resolution_clock::now();
-	B2D = SF2D * MF2Dinv * SF2D;
+	//B2D = SF2D * MF2Dinv * SF2D;
+	//B2DAsym = SF2DAsym * MF2Dinv * SF2DAsym;
 	B2DAsym = SF2DAsym * MF2Dinv * SF2DAsym;
+	B2D = B2DAsym;
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
