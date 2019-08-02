@@ -46,6 +46,9 @@ public:
 	void constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& NFields);
 	void constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F);
 
+	/* Creating 2 fields from 2 (maximal) curvature vector fields */
+	void computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV);
+
 	/* Rep. Vectors and N-RoSy Fields interface */
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NRoSy& nRoSyFields);

@@ -1,5 +1,7 @@
 #include "NRoSyFields.h"
 
+#include <igl/principal_curvature.h>
+
 #include <random>
 
 /* Reading data*/
@@ -1005,6 +1007,43 @@ void NRoSyFields::constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& 
 	constructFrameBasis();
 }
 
+void NRoSyFields::computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV)
+{
+	cout << "Computing principal curvature\n";
+	Eigen::MatrixXd PD1, PD2, PDF;
+	Eigen::VectorXd PD2D;
+	Eigen::VectorXd PV1, PV2, PVF;
+
+	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
+
+	cout << "Mapping to space of triangles \n";
+	PDF.resize(F.rows(), F.cols());
+	PVF.resize(F.rows());
+	for (int i = 0; i < F.rows(); i++)
+	{
+		PDF.row(i) = (PD1.row(F(i, 0)) + PD1.row(F(i, 1)) + PD1.row(F(i, 2))) / 3.0;
+		PVF(i) = (PV1(F(i, 0)) + PV1(F(i, 1)) + PV1(F(i, 2))) / 3.0;
+	}
+
+	PV = PVF;
+
+	printf("Dim of PDF: %dx%d | A=%dx%d \n", PDF.rows(), PDF.cols(), A.rows(), A.cols());
+	cout << "Converting to local coordinates \n";
+
+	PDF.transposeInPlace();
+	PD2D = Eigen::Map<Eigen::VectorXd>(PDF.data(), PDF.cols()*PDF.rows());
+	//PD2D = Eigen::Map<Eigen::VectorXd>(PDF.data(), 1);
+
+	printf("Dim of PD2D: %dx%d \n", PD2D.rows(), PD2D.cols());
+	printf("Size of PV: %d \n", PV.size());
+
+	PD = A.transpose()*PD2D;
+	printf("Dim of PD (per face, to draw) : %dx%d \n", PD.rows(), PD.cols());
+
+	cout << "Matrix rep: " << PDF.block(0, 0, 3, 3) << endl << endl;
+	cout << "Vector rep: " << PD2D.block(0, 0, 1, 9) << endl << endl;
+}
+
 /* Rep. Vectors and N-RoSy Fields interface */
 void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::VectorXd& repVect)
 {
@@ -1140,9 +1179,10 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	double scale = 1.0;
+	//double scale = 1.0;
 	//double scale = 2.5;
-	//double scale = 0.25;
+	double scale = 0.25;
+	//double scale = 0.1;
 	//double scale = 50.0; 
 	Eigen::Vector2d b(1, 0);
 	
@@ -1170,7 +1210,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 			TempFields.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 		}
 
-		visualize2Dfields(viewer, TempFields, color, scale, false);
+		visualize2Dfields(viewer, TempFields, color, scale, true);
 	}
 }
 
@@ -1515,8 +1555,8 @@ void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void NRoSyFields::nRoSyFieldsDesignRef()
 {
-	//nRoSyFieldsDesignRef_HardConstraints();
-	nRoSyFieldsDesignRef_SoftConstraints();
+	nRoSyFieldsDesignRef_HardConstraints();
+	//nRoSyFieldsDesignRef_SoftConstraints();
 }
 
 void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
@@ -1537,7 +1577,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
 {
 	// Define the constraints
-	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
+	const bool readFromFile = false;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
@@ -1683,7 +1723,16 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 		vEst(i) = 0.5;
 	}
 
-	g = B2F * vEst;
+	// Create alignment fields
+	// based on maximal curvature direction
+	Eigen::VectorXd PD, PV, repV;
+	computeMaximalPrincipalCurvature(V, F, PD, PV);
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(PD, nRoSy_);
+	nRoSy_.magnitude = PV;
+	convertNRoSyToRepVectors(nRoSy_, repV);
+
+	g = B2F * vEst + repV;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -2391,7 +2440,17 @@ void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 		vEstBar(i) = 0.5;
 	}
 
-	gBar = B2FBar * vEstBar;
+	// Create alignment fields
+	// based on maximal curvature direction
+	Eigen::VectorXd PD, PV, repV,repVbar;
+	computeMaximalPrincipalCurvature(V, F, PD, PV);
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(PD, nRoSy_);
+	nRoSy_.magnitude = PV;
+	convertNRoSyToRepVectors(nRoSy_, repV);
+	repVbar = Basis*repV;
+
+	gBar = B2FBar * vEstBar + repVbar;
 	bBar.resize(B2FBar.rows() + cBar.rows());
 
 	// Constructing b
@@ -2578,7 +2637,7 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 4;
+	nRot = 2;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
@@ -2626,7 +2685,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Working with eigenvectors of n-RoSy fields*/
 
 	string fileEigen = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + to_string(nRot) + "-fields_25_Ref";
-	computeEigenFields_generalized(100, fieldsfile);
+	//computeEigenFields_generalized(100, fieldsfile);
 	//computeEigenFields_regular(50, fileEigen);
 	NRoSy nRoSy_eigenFields;
 	//convertRepVectorsToNRoSy(eigFieldsNRoSyRef.col(0), nRoSy_eigenFields);
@@ -2640,7 +2699,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Build reduced space */
 	numSupport = 40.0;
 	numSample = 1000;
-	constructSamples(numSample);
+	//constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
@@ -2654,11 +2713,18 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//double error;
 	//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, inputFields, Xf, error);
 
+	Eigen::VectorXd PD, PV;
+	computeMaximalPrincipalCurvature(V, F, PD, PV);
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(PD, nRoSy_);
+	nRoSy_.magnitude = PV; 
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.5, 0.5, 0.1));
 
+	/* =========== N-ROSY FIELDS DESIGN ===============*/
 	/* Constrained fields (biharmonic) */
-	//nRoSyFieldsDesignRef();
-	//visualizeConstraints(viewer);
-	//visualizeConstrainedFields(viewer);
+	nRoSyFieldsDesignRef();
+	visualizeConstraints(viewer);
+	visualizeConstrainedFields(viewer);
 	
 	///* Reduced Constrained fields (biharmonic)--hard constraints */
 	//constructRandomHardConstraints(C, c);
