@@ -77,8 +77,8 @@ public:
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 
 	void nRoSyFieldsDesignRef_Splines();
-	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
-	void setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS);
+	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
+	void setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 		// Soft constraints
 	void nRoSyFieldsDesignRef_SoftConstraints();
@@ -89,6 +89,10 @@ public:
 	void setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS);
 	void solveGlobalSystemMappedLDLTSoftConstraints(const Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
+		// user interactive constraints
+	void pushNewUserConstraints(const int& fInit, const int& fEnd);
+	void constructInteractiveConstraints();
+	void resetInteractiveConstraints();
 
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
@@ -155,7 +159,7 @@ public:
 	Eigen::VectorXd					Xf;
 	Eigen::VectorXd					c;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		C;										// selector matrix
-	vector<int>						reducedConstraints, globalConstraints;
+	vector<int>						reducedConstraints, globalConstraints, userVisualConstraints;
 
 	/* Variable related to REDUCED n-RoSy fields design */
 	Eigen::VectorXd					XfBar;

@@ -1834,13 +1834,18 @@ void NRoSyFields::nRoSyFieldsDesignRef_Splines()
 	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
 	B2F = SF * MFinv * SF;
 
-	constructRandomHardConstraints(C, c);
-	setupRHSBiharmSystemRef_Chris(B2F, c, g, h, b);
-	setupLHSBiharmSystemRef_Chris(B2F, C, A_LHS);
+	vector<double> lambda(2);
+	lambda[0] = 1.0;
+	lambda[1] = 0.5;
+
+	//constructRandomHardConstraints(C, c);
+	constructInteractiveConstraints();
+	setupRHSBiharmSystemRef_Chris(B2F, lambda, c, g, h, b);
+	setupLHSBiharmSystemRef_Chris(B2F, lambda, C, A_LHS);
 	solveBiharmSystemRef_Chris(A_LHS, b, Xf);
 }
 
-void NRoSyFields::setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b)
+void NRoSyFields::setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b)
 {
 	// Create alignment fields based on maximal curvature direction
 	Eigen::VectorXd repV;
@@ -1848,12 +1853,12 @@ void NRoSyFields::setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double
 	
 	b.resize(B2F.nonZeros() + c.rows(), c.cols());
 
-	g = MF*repV;
+	g = lambda[1]*MF*repV;
 	h = c;
 	b << g, h; 
 
 }
-void NRoSyFields::setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS)
+void NRoSyFields::setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS)
 {
 	A_LHS.resize(B2F.rows() + C.rows(), B2F.cols() + C.rows());
 
@@ -1861,14 +1866,18 @@ void NRoSyFields::setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double
 	ATriplet.reserve(10 * B2F.rows());		// It should be #rows x 4 blocks @ 2 elements (8) + #constraints,
 											// but made it 10 for safety + simplicity
 
+	Eigen::SparseMatrix<double> BM = lambda[0]*B2F + lambda[1]*MF;
+
 	// From B and M matrices
-	for (int k = 0; k < B2F.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(B2F, k); it; ++it) {
+	//for (int k = 0; k < B2F.outerSize(); ++k) {
+	//	for (Eigen::SparseMatrix<double>::InnerIterator it(B2F, k); it; ++it) {
+	//		ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));			
+	//	}
+	//}
+
+	for (int k = 0; k < BM.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BM, k); it; ++it) {
 			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
-			if (it.row() == it.col())
-			{
-				ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.row(), MF.coeff(it.row(), it.row())));
-			}
 		}
 	}
 
@@ -2260,6 +2269,65 @@ void NRoSyFields::solveGlobalSystemMappedLDLTSoftConstraints(const Eigen::Vector
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+// user interactive constraints
+void NRoSyFields::pushNewUserConstraints(const int& fInit, const int& fEnd)
+{
+	userVisualConstraints.push_back(fInit);
+	userVisualConstraints.push_back(fEnd);
+}
+
+void NRoSyFields::constructInteractiveConstraints()
+{
+	/* Define the constraints */
+	const int numConstraints = userVisualConstraints.size() / 2;
+	globalConstraints.resize(numConstraints);
+	vector<Eigen::Vector2d> constraintValues(numConstraints);
+
+	/* Global constraints from user input */
+	for (int i = 0; i < userVisualConstraints.size(); i += 2)
+	{
+		/* Location of constraints */
+		globalConstraints[i / 2] = userVisualConstraints[i];
+
+		/* Getting the constraints + making them into local coordinates */
+		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i + 1]) - FC.row(userVisualConstraints[i]);
+		Eigen::MatrixXd ALoc(3, 2);
+		ALoc = A.block(3 * userVisualConstraints[i], 2 * userVisualConstraints[i], 3, 2);
+		Eigen::Vector2d normDir = ALoc.transpose() * dir.transpose();
+		normDir.normalize();
+		//cout << "___ constraint in 2D: " << normDir << endl;
+		constraintValues[i / 2] = normDir;
+	}
+
+	/* Setting up matrix C and column vector c */
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+	//c.resize(2 * globalConstraints.size());
+	Eigen::VectorXd cTemp(2 * globalConstraints.size());
+
+	/* Putting the constraints into action */
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * globalConstraints[i] + 0, 1.0));
+		cTemp(2 * i + 0) = constraintValues[i](0);
+
+		CTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * globalConstraints[i] + 1, 1.0));
+		cTemp(2 * i + 1) = constraintValues[i](1);
+	}
+	C.resize(2 * globalConstraints.size(), SF.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+
+	NRoSy nRoSy_;
+	createNRoSyFromVectors(cTemp, nRoSy_);
+	convertNRoSyToRepVectors(nRoSy_, c);
+}
+
+void NRoSyFields::resetInteractiveConstraints()
+{
+	userVisualConstraints.clear();
+	userVisualConstraints.shrink_to_fit();
 }
 
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
@@ -2809,9 +2877,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
 	/* Constrained fields (biharmonic) */
-	nRoSyFieldsDesignRef();
-	visualizeConstraints(viewer);
-	visualizeConstrainedFields(viewer);
+	//nRoSyFieldsDesignRef();
+	//visualizeConstraints(viewer);
+	//visualizeConstrainedFields(viewer);
 	
 	///* Reduced Constrained fields (biharmonic)--hard constraints */
 	//constructRandomHardConstraints(C, c);

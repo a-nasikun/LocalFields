@@ -474,14 +474,27 @@ int main(int argc, char *argv[])
 		case ' ':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-			//vectorFields.setupGlobalProblem();			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-			vectorFields.setAndSolveUserSystem(lambda);
-			vectorFields.visualizeApproxResult(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
-			
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				//vectorFields.setupGlobalProblem();			
+				//vectorFields.visualizeApproximatedFields(viewer);
+				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				vectorFields.setAndSolveUserSystem(lambda);
+				vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				cout << "\n========================= N-ROSY FIELDS =============================\n";
+				nRoSyFields.nRoSyFieldsDesignRef();
+				nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields(viewer);				
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				
+			}
 			break; 
 		case 'Z':
 		case 'z':
@@ -500,7 +513,7 @@ int main(int argc, char *argv[])
 
 	
 	viewer.callback_mouse_move =
-		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
+		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields, &nRoSyFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
 		int fid;
 		Eigen::Vector3f bc;
@@ -531,10 +544,25 @@ int main(int argc, char *argv[])
 			if (constraintSize > 0)
 			{
 				//printf("Size of the contraints vector is %d\n", constraintSize);
-				constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize-1]) - vectorFields.FC.row(ChosenFaces[0]);
-				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
-				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
-				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				if (fieldsType == FieldsType::VECTOR)
+				{
+					constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
+					viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+					vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				}
+				else if (fieldsType == FieldsType::NROSY)
+				{
+					constraintDir = nRoSyFields.FC.row(ChosenFaces[constraintSize - 1]) - nRoSyFields.FC.row(ChosenFaces[0]);
+					viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				}
+				else if (fieldsType == FieldsType::TENSOR)
+				{
+					
+				}
+								
 	
 				/* UPdating the mesh information */
 				viewer.data().clear();
