@@ -169,11 +169,14 @@ public:
 	Eigen::VectorXd					c;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		C;										// selector matrix
 	vector<int>						reducedConstraints, globalConstraints, userVisualConstraints;
+	Eigen::VectorXd					alignFields;
+	Eigen::SparseMatrix<double>		BF, BM;
 
 	/* Variable related to REDUCED n-RoSy fields design */
 	Eigen::VectorXd					XfBar;
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		CBar;										// selector matrix
+	Eigen::SparseMatrix<double>		BFBar, BMBar;
 	
 	/* Variable on projection */
 	Eigen::VectorXd					wb;											// projected representation fields
