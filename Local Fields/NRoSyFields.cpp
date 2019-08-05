@@ -1555,8 +1555,9 @@ void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void NRoSyFields::nRoSyFieldsDesignRef()
 {
-	nRoSyFieldsDesignRef_HardConstraints();
+	//nRoSyFieldsDesignRef_HardConstraints();
 	//nRoSyFieldsDesignRef_SoftConstraints();
+	nRoSyFieldsDesignRef_Splines();
 }
 
 void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
@@ -1654,7 +1655,7 @@ void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C,
 
 		/* Creating random constraints */
 		//std::uniform_int_distribution<> disConst(20, 50); // From 0 to F.rows()-1
-		std::uniform_int_distribution<> disConst(1,5); // From 0 to F.rows()-1
+		std::uniform_int_distribution<> disConst(5,10); // From 0 to F.rows()-1
 		int numConstraints = disConst(gen);
 		cout << "we gave you " << numConstraints << " number of constnraints. Good luck!\n";
 
@@ -1822,6 +1823,88 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void NRoSyFields::nRoSyFieldsDesignRef_Splines()
+{
+	Eigen::VectorXd					b, g, h, vEst;
+	Eigen::SparseMatrix<double>		A_LHS;
+	Eigen::SparseMatrix<double>		B2F;
+	if (MF.rows() < 1) constructMassMatrixMF3D();
+	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
+	B2F = SF * MFinv * SF;
+
+	constructRandomHardConstraints(C, c);
+	setupRHSBiharmSystemRef_Chris(B2F, c, g, h, b);
+	setupLHSBiharmSystemRef_Chris(B2F, C, A_LHS);
+	solveBiharmSystemRef_Chris(A_LHS, b, Xf);
+}
+
+void NRoSyFields::setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b)
+{
+	// Create alignment fields based on maximal curvature direction
+	Eigen::VectorXd repV;
+	createAlignmentField(repV);
+	
+	b.resize(B2F.nonZeros() + c.rows(), c.cols());
+
+	g = MF*repV;
+	h = c;
+	b << g, h; 
+
+}
+void NRoSyFields::setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS)
+{
+	A_LHS.resize(B2F.rows() + C.rows(), B2F.cols() + C.rows());
+
+	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(10 * B2F.rows());		// It should be #rows x 4 blocks @ 2 elements (8) + #constraints,
+											// but made it 10 for safety + simplicity
+
+	// From B and M matrices
+	for (int k = 0; k < B2F.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(B2F, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+			if (it.row() == it.col())
+			{
+				ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.row(), MF.coeff(it.row(), it.row())));
+			}
+		}
+	}
+
+	// From the constraint matrix C
+	for (int k = 0; k < C.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(C, k); it; ++it) {
+			ATriplet.push_back(Eigen::Triplet<double>(B2F.rows() + it.row(), it.col(), it.value()));
+			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2F.cols() + it.row(), it.value()));
+		}
+	}
+	A_LHS.setFromTriplets(ATriplet.begin(), ATriplet.end());
+
+}
+void NRoSyFields::solveBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf)
+{
+	Xf.resize(SF.rows());
+
+	// Setting up the solver
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
+
+	// FIRST BASIS
+	cout << "....Solving first problem (first frame)..." << endl;
+	Eigen::VectorXd x = sparseSolver.solve(b);
+
+	if (sparseSolver.info() != Eigen::Success) {
+		cout << "Cannot solve the linear system. " << endl;
+		if (sparseSolver.info() == Eigen::NumericalIssue)
+			cout << "NUMERICAL ISSUE. " << endl;
+		if (sparseSolver.info() == Eigen::InvalidInput)
+			cout << "Input is Invalid. " << endl;
+		cout << sparseSolver.info() << endl;
+		return;
+	}
+
+	Xf = x.block(0, 0, SF.rows(), 1);
 }
 
 /* ============================= SOFT CONSTRAINTS ============================= */

@@ -75,6 +75,11 @@ public:
 	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
+
+	void nRoSyFieldsDesignRef_Splines();
+	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
+	void setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS);
+	void solveBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 		// Soft constraints
 	void nRoSyFieldsDesignRef_SoftConstraints();
 	void constructSoftConstraints();
