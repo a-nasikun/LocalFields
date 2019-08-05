@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
+	const string model = "Arma43k_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -151,6 +152,7 @@ int main(int argc, char *argv[])
 
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
+	int nCounter = 0;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -468,9 +470,22 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 		case 'S':
-			filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_" + std::to_string(vfSaveId) + ".txt";
-			vfSaveId++;
-			WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_" + std::to_string(vfSaveId) + ".txt";
+				vfSaveId++;
+				WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_approx" + to_string(nCounter++)+ ".txt";
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
+				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
 			break;
 		case ' ':
 			viewer.data().clear();

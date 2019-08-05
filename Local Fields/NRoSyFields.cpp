@@ -2679,7 +2679,8 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
 
 	vector<double> lambda(2);
 	lambda[0] = 1.0;
-	lambda[1] = 0.001 / weight;
+	//lambda[1] = 0.001 / weight;
+	lambda[1] = 0.5; 
 	
 	cout << "Getting the constraints \n";
 	getReducedConstraints();
@@ -3100,8 +3101,8 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 			RotM(1, 0) = sin(angle);
 			RotM(1, 1) = cos(angle);
 
-			//nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
-			nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
 		}		
 	}
 
