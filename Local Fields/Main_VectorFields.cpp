@@ -44,14 +44,14 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
@@ -564,12 +564,18 @@ int main(int argc, char *argv[])
 					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
-					if (F.rows() < 50000)
-					{
-						nRoSyFields.nRoSyFieldsDesignRef();
-						nRoSyFields.visualizeConstraints(viewer);
-						nRoSyFields.visualizeConstrainedFields(viewer);
-					}
+					//if (F.rows() < 50000)
+					//{
+					//	nRoSyFields.nRoSyFieldsDesignRef();
+					//	nRoSyFields.visualizeConstraints(viewer);
+					//	nRoSyFields.visualizeConstrainedFields(viewer);
+					//}
+					nRoSyFields.constructInteractiveConstraints();
+					nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+
+					nRoSyFields.visualizeConstraints(viewer);
+					nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+
 				}
 				else if (fieldsType == FieldsType::TENSOR)
 				{
