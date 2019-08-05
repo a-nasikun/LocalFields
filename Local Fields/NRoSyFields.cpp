@@ -1179,9 +1179,9 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
 	//double scale = 250.0;
-	double scale = 1.0;
+	//double scale = 1.0;
 	//double scale = 2.5;
-	//double scale = 0.25;
+	double scale = 0.25;
 	//double scale = 0.1;
 	//double scale = 50.0; 
 	Eigen::Vector2d b(1, 0);
@@ -1210,7 +1210,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 			TempFields.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 		}
 
-		visualize2Dfields(viewer, TempFields, color, scale, true);
+		visualize2Dfields(viewer, TempFields, color, scale, false);
 	}
 }
 
@@ -1834,9 +1834,15 @@ void NRoSyFields::nRoSyFieldsDesignRef_Splines()
 	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
 	B2F = SF * MFinv * SF;
 
+	double weight = 0;
+	for (int i = 0; i < userVisualConstraints.size(); i += 2)
+	{
+		weight += doubleArea(userVisualConstraints[i]);
+	}
+
 	vector<double> lambda(2);
 	lambda[0] = 1.0;
-	lambda[1] = 0.5;
+	lambda[1] = 0.001/weight;
 
 	//constructRandomHardConstraints(C, c);
 	constructInteractiveConstraints();

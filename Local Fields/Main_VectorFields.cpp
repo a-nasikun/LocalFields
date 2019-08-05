@@ -336,6 +336,7 @@ int main(int argc, char *argv[])
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//vectorFields.visualizeSingularitiesConstraints(viewer);
 			vectorFields.resetInteractiveConstraints();
+			nRoSyFields.resetInteractiveConstraints();
 			break;
 		case '0':			
 			viewer.selected_data_index = 0;
@@ -542,7 +543,12 @@ int main(int argc, char *argv[])
 			/* Getting the length + direction of the constraints*/
 			const int constraintSize = ChosenFaces.size();
 			if (constraintSize > 0)
-			{
+			{				
+	
+				/* UPdating the mesh information */
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+
 				//printf("Size of the contraints vector is %d\n", constraintSize);
 				if (fieldsType == FieldsType::VECTOR)
 				{
@@ -557,16 +563,19 @@ int main(int argc, char *argv[])
 					viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+
+					if (F.rows() < 50000)
+					{
+						nRoSyFields.nRoSyFieldsDesignRef();
+						nRoSyFields.visualizeConstraints(viewer);
+						nRoSyFields.visualizeConstrainedFields(viewer);
+					}
 				}
 				else if (fieldsType == FieldsType::TENSOR)
 				{
 					
 				}
-								
-	
-				/* UPdating the mesh information */
-				viewer.data().clear();
-				viewer.data().set_mesh(V, F);
+				
 				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
 				//vectorFields.setupGlobalProblem(lambda);			
 				//vectorFields.visualizeApproximatedFields(viewer);

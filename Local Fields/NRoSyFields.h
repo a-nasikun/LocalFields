@@ -76,10 +76,15 @@ public:
 	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 
+	// Interactive constraints for spline editing
 	void nRoSyFieldsDesignRef_Splines();
+	void pushNewUserConstraints(const int& fInit, const int& fEnd);
+	void constructInteractiveConstraints();
+	void resetInteractiveConstraints();
 	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
 	void setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
+
 		// Soft constraints
 	void nRoSyFieldsDesignRef_SoftConstraints();
 	void constructSoftConstraints();
@@ -89,10 +94,7 @@ public:
 	void setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS);
 	void solveGlobalSystemMappedLDLTSoftConstraints(const Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
-		// user interactive constraints
-	void pushNewUserConstraints(const int& fInit, const int& fEnd);
-	void constructInteractiveConstraints();
-	void resetInteractiveConstraints();
+
 
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
