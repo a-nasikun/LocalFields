@@ -649,7 +649,7 @@ void NRoSyFields::buildStiffnessMatrix_Combinatorial()
 	}
 	SF.setFromTriplets(STriplet.begin(), STriplet.end());
 	string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Arma_Lap_NRoSy_Comb";
-	WriteSparseMatrixToMatlab(SF, filename);
+	//WriteSparseMatrixToMatlab(SF, filename);
 }
 //void NRoSyFields::buildStiffnessMatrix_Geometric()
 //{
@@ -2722,7 +2722,7 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
 	vector<double> lambda(2);
 	lambda[0] = 1.0;
 	//lambda[1] = 0.001 / weight;
-	lambda[1] = 0.5; 
+	lambda[1] = 0.000005; 
 	
 	cout << "Getting the constraints \n";
 	getReducedConstraints();
@@ -2985,7 +2985,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "CDragon_";
+	string model = "Fertility_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3043,9 +3043,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 1000;
+	numSample = 5000;
 	constructSamples(numSample);
-	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
 	retrieveBasis(basisFile);
