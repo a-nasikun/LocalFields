@@ -48,6 +48,7 @@ public:
 
 	/* Creating 2 fields from 2 (maximal) curvature vector fields */
 	void computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV);
+	void smoothNRoSyFields(double lambda, Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>& sparseSolver, const Eigen::VectorXd& inputFields, Eigen::VectorXd& outputFields);
 
 	/* Rep. Vectors and N-RoSy Fields interface */
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);

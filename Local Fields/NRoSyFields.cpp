@@ -1044,6 +1044,19 @@ void NRoSyFields::computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, con
 	cout << "Vector rep: " << PD2D.block(0, 0, 1, 9) << endl << endl;
 }
 
+void NRoSyFields::smoothNRoSyFields(double lambda, Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>& sparseSolver, const Eigen::VectorXd& inputFields, Eigen::VectorXd& outputFields)
+{
+	/* Re-Scale the Lambda */
+	
+
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//Eigen::SparseMatrix<double>						LHS = MF + mu*SF;
+	Eigen::VectorXd									rhs = MF*inputFields;
+	//sparseSolver.analyzePattern(LHS);
+	//sparseSolver.factorize(LHS);
+	outputFields = sparseSolver.solve(rhs);
+}
+
 /* Rep. Vectors and N-RoSy Fields interface */
 void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::VectorXd& repVect)
 {
@@ -1581,12 +1594,40 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 {
 	// Create alignment fields
 	// based on maximal curvature direction
-	Eigen::VectorXd PD, PV;
+	Eigen::VectorXd PD, PV, v1;
 	computeMaximalPrincipalCurvature(V, F, PD, PV);
+
+	
+
 	NRoSy nRoSy_;
 	createNRoSyFromVectors(PD, nRoSy_);
+
+	printf("PD size=%d | PV=%d |n-RoSy: %d and %d \n", PD.size(), PV.size(), nRoSy_.magnitude.size(), nRoSy_.theta.size());
+
 	//nRoSy_.magnitude = PV;
-	convertNRoSyToRepVectors(nRoSy_, v);
+	convertNRoSyToRepVectors(nRoSy_, v1);
+
+	Eigen::VectorXd id(MF.rows());
+	id.setConstant(1.0);
+	double factor1 = id.transpose()*MF*id;
+	double factor2 = id.transpose()*SF*id;
+	double lambda = 50;
+	double mu = lambda * factor1 / factor2;
+
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	Eigen::SparseMatrix<double>						LHS = MF + mu*SF;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+
+	/* Smoothing the curvature fields */
+	smoothNRoSyFields(mu, sparseSolver, v1, v);	
+	
+
+	for(int i=0; i<5; i++)
+		smoothNRoSyFields(mu, sparseSolver, v, v);
+
+	convertRepVectorsToNRoSy(v, nRoSy_);
+	
 }
 
 void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
@@ -2967,8 +3008,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
 
-	selectFaceToDraw(20000);
-	//selectFaceToDraw(F.rows());
+	//selectFaceToDraw(20000);
+	selectFaceToDraw(F.rows()/3.0);
 	Eigen::VectorXd inputNFields;
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"_InputFields";
 	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
@@ -3017,29 +3058,34 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//double error;
 	//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver, MF, inputFields, Xf, error);
 
+	/* Test on smoothing of the n-RoSy fields */
 	//Eigen::VectorXd PD, PV;
+	//Eigen::VectorXd inputF, outputF;
 	//computeMaximalPrincipalCurvature(V, F, PD, PV);
 	//createNRoSyFromVectors(PD, nRoSy_);
 	//nRoSy_.magnitude = PV; 
-	//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(1.0, 0.75, 0.8));
+	//convertNRoSyToRepVectors(nRoSy_, inputF);
+	//smoothNRoSyFields(100, inputF, outputF);
+	//Xf = inputF;
+	//XfBar = outputF;
 
 	/* Prepare for n-fields design */
 	double weight = 0;
 	for (int i = 0; i < userVisualConstraints.size(); i += 2){
 		weight += doubleArea(userVisualConstraints[i]);
 	}
-
+	
 	vector<double> lambda(2);
 	lambda[0] = 1.0;
 	if (userVisualConstraints.size() < 1)	lambda[1] = 0.0;
 	else									lambda[1] = 0.001 / weight;
-
+	
 	createAlignmentField(alignFields);
 	BF = SF*MFinv*SF;
 	BM = lambda[0] * BF;
 	BFBar = Basis.transpose()*BF*Basis;
 	BMBar = BFBar;
-
+	
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	XfBar = alignFields;
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.0, 0.8, 0.1));
@@ -3165,7 +3211,7 @@ void NRoSyFields::writeConstraintsToFile(const string& filename)
 				//c2.block(2 * i, 0, 2, 1) = RotA*id;
 				v2 = RotA*id;
 				v3 = ALoc * v2;
-				printf("v2=[%.3f, %.3f] and v3=[%.3f, %.3f, %.3f] || Rot = [%.3f, %.3f, %.3f, %.3f. \n", v2(0), v2(1), v3(0), v3(1), v3(2), cosA, -sinA, sinA, cosA);
+				//printf("v2=[%.3f, %.3f] and v3=[%.3f, %.3f, %.3f] || Rot = [%.3f, %.3f, %.3f, %.3f. \n", v2(0), v2(1), v3(0), v3(1), v3(2), cosA, -sinA, sinA, cosA);
 				cout << "ALoc: " << ALoc << endl; 
 
 				myfile << globalConstraints[i] << " " << v3(0) << " " << v3(1) << " " << v3(2) << "\n";
