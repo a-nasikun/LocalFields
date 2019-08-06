@@ -153,6 +153,7 @@ public:
 	void retrieveEigenFields(const string& filename);
 
 	// LOCAL SYSTEM
+	void selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer);
 	void constructSamples(const int &n);
 	void farthestPointSampling();
 	void constructMultiBasis();
@@ -330,6 +331,7 @@ protected:
 	vector<chrono::duration<double>>durations;
 	int								numSample;
 	double							numSupport; 
+	Eigen::VectorXd					faceScale;
 
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;

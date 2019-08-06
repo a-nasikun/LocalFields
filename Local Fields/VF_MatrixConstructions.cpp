@@ -387,7 +387,7 @@ void VectorFields::computeDijkstraDistanceFaceForSampling(const int &source, Eig
 			/* Regular Dikjstra */
 			const int neigh = AdjMF3N(elem, it);
 			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
-			double dist = (c2 - c1).norm();
+			double dist = faceScale(neigh)*(c2 - c1).norm();
 			double tempDist = distFromCenter + dist;
 
 			/* updating the distance */
@@ -909,11 +909,11 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	Eigen::SparseMatrix<double> LapDiv_Conform;			// vertex-based
 		
 	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D*MF3D;
-	//LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
+	LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
 	//LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
 	LapDiv_Conform = MF3D * GF3D * MVinv * GF3D.transpose() * MF3D;
 		
-	//SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
+	SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
 	SF2DAsym = A.transpose()*(LapDiv_Conform + LapCurl_NonConform)*A;
 
 	t2 = chrono::high_resolution_clock::now();

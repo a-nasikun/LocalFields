@@ -108,7 +108,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	} while (distFromCenter < maxDist);
 }
 
-void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const vector<set<int>>& AdjMF2Ring, const double& distRatio)
+void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const Eigen::VectorXd& faceScale, const vector<set<int>>& AdjMF2Ring, const double& distRatio)
 {
 	int center = sampleID;
 	this->sampleID = sampleID;
@@ -146,7 +146,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 			/* Regular Dikjstra */
 			//const int neigh = AdjMF3N(elem, it);
 			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
-			double dist = (c2 - c1).norm();
+			double dist = faceScale(neigh) * (c2 - c1).norm();
 			double tempDist = distFromCenter + dist;
 
 			/* updating the distance */

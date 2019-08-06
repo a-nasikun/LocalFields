@@ -133,17 +133,17 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
 
-	bool writeToFile = false;
+	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_eigenFields_" + to_string(Basis.cols()) + "_160sup.txt";
+		string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup_adaptive.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigenFields_40sup.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_optAlg.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigFields10.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigPatch.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_grad.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_grad.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -230,9 +230,9 @@ void VectorFields::testProjection_EigenBasis_NoRegularizer(const Eigen::MatrixXd
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_modalBasis.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_L2projection_modalBasis_sameStorage.txt";
-		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_modalBasis_500.txt";
+		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_modalBasis_500.txt";
 
 		ofs.open(resultFile, std::ofstream::out | std::ofstream::app);
 
@@ -1068,8 +1068,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	}
 	
 	/* Fields and perturbed Fields */
-	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_DesignedFields";
-	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_PerturbedFields";
+	string desFieldsFile  = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_DesignedFields";
+	string pertFieldsFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_PerturbedFields";
 	if (readDesFieldsFromFile) {
 		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
 	}
@@ -1114,13 +1114,13 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		/* Reference results */
 		Eigen::VectorXd										a_Ref = MF2D*Xf;
 		Eigen::VectorXd										a_NR = (Basis.transpose()*a_Ref);
-		//testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
+		testProjection_MyBasis_NoRegularizer(Basis, sparseSolver_NR, B_NR, a_NR, Xf, errors1(i-start));
 		//testProjection_MyBasis_WithRegularizer(Basis, pertFields, SF2DAsym, errors2(i-start));
 		//testProjection_MyBasis_WithRegularizer(Basis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, sparseSolver_WR_Red[i%NUM_SOLVER], BRed_Sp[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors1(i - start));
 	
 		
-		a_NR = (EigenBasis.transpose()*(MF2D*Xf));
-		testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
+		//a_NR = (EigenBasis.transpose()*(MF2D*Xf));
+		//testProjection_EigenBasis_NoRegularizer(EigenBasis, denseSolver_NR, a_NR, Xf, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, pertFields, SF2DAsym, errors2(i-start));
 		//testProjection_EigenBasis_WithRegularizer(EigenBasis, sparseSolver_WR_Ref[i%NUM_SOLVER], BRef[i%NUM_SOLVER], a_Ref, denseSolver_WR_Red[i%NUM_SOLVER], BRed_Dn[i%NUM_SOLVER], a_NR, pertFields, SF2DAsym, errors2(i - start));
 	
@@ -1176,13 +1176,13 @@ void VectorFields::convergenceTest()
 	/* For the projection tests */
 	bool readDesFields  = true;
 	bool readPertFields = true;
-	bool useEigenBasis  = true;
+	bool useEigenBasis  = false;
 	int idStart = 0;
-	int NUM_TEST = 100;
+	int NUM_TEST = 50;
 
 	for (string file_ : basisFile)
 	{
-		retrieveBasis(file_);
+		//retrieveBasis(file_);
 		projectionTest(readDesFields, readPertFields, useEigenBasis, idStart, NUM_TEST);
 	}
 }
@@ -1349,11 +1349,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructMappingMatrix();
 
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
+	//constructStiffnessMatrices();
+	//loadStiffnessMatrices();
 	constructGradient3D();
 	constructGradientStar3D();
-	//constructStiffnessMatrices();
-	constructStiffnessMatrices_Implicit();
-	//loadStiffnessMatrices();
+	constructStiffnessMatrices_Implicit();	
 	constructMatrixB();
 	//constructConstraints();
 	//checkB2DStructure();
@@ -1416,15 +1416,18 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 5000; 
+	numSample = 500; 
 	numSupport = 40.0;
-	string model = "Bimba_";
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample*2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	//constructSamples(numSample);
-	///constructBasis();	
-	///storeBasis(filename_basis);			// Binary, Eigen-base
+	string model = "Arma_";
+	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptive_Spectra";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
+	selectAdaptiveRegions(viewer);
+	constructSamples(numSample);
+	visualizeSamples(viewer);
+	//constructBasis();	
+	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	//retrieveBasis(filename_basis);	
+	retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSubdomain(viewer);
 
@@ -1468,16 +1471,16 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	///convergenceTest();
+	convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* Alignment using (maximal/) principal curvature */
-	Eigen::MatrixXd CCol;
-	Eigen::VectorXd PD, PV;
-	computeMaximalPrincipalCurvature(V, F, PD, PV);
-	visualize2Dfields(viewer, PD, Eigen::RowVector3d(0.0, 0.1, 0.9), 1.0);
-	igl::jet(PV, true, CCol);
-	viewer.data().set_colors(CCol);
+	//Eigen::MatrixXd CCol;
+	//Eigen::VectorXd PD, PV;
+	//computeMaximalPrincipalCurvature(V, F, PD, PV);
+	//visualize2Dfields(viewer, PD, Eigen::RowVector3d(0.0, 0.1, 0.9), 1.0);
+	//igl::jet(PV, true, CCol);
+	//viewer.data().set_colors(CCol);
 
 	/* _____ Vector fields design test __________________________*/
 	//vectorFieldsDesignTest();

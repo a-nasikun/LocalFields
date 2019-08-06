@@ -5,6 +5,9 @@
 void VectorFields::selectFaceToDraw(const int& numFaces)
 {
 	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
+	faceScale.resize(F.rows());
+	faceScale.setConstant(1.0);
+
 
 	if (numFaces < F.rows())
 	{
@@ -897,15 +900,15 @@ void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 	Eigen::RowVector3d c;
 
 	/* Point based */
-	//for (int i : Sample) {
-	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-	//	viewer.data().add_points(c, color);
-	//}
+	for (int i : Sample) {
+		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
+		viewer.data().add_points(c, color);
+	}
 
 	/* Color based */
-	Eigen::MatrixXd FColor;
-	igl::jet(-sampleDistance, true, FColor);
-	viewer.data().set_colors(FColor);
+	//Eigen::MatrixXd FColor;
+	//igl::jet(-sampleDistance, true, FColor);
+	//viewer.data().set_colors(FColor);
 }
 
 void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)

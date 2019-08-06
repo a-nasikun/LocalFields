@@ -190,12 +190,12 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = false;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
+	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
-	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
+	string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -2166,6 +2166,37 @@ void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_i
 	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
 }
 
+void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Dealing with adaptivity\n";
+	const int face_id1 = 5213;
+	const int face_id2 = 44893;
+	Eigen::VectorXd dist;
+	faceScale.resize(F.rows());	
+	dist.resize(F.rows());
+
+	cout << "COmputing the dijkstra distance \n";
+	computeDijkstraDistanceFace(face_id1, dist);
+
+	double upBound = (FC.row(face_id1) - FC.row(face_id2)).norm();
+
+	for(int i=0; i<F.rows(); i++)
+	{
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
+		if (dist(i) < upBound) {
+			faceScale(i) = 2.0;
+		}
+		else {
+			faceScale(i) = 1.0;
+		}
+	
+	}
+
+	Eigen::MatrixXd fCol;
+	igl::jet(faceScale, true, fCol);
+	viewer.data().set_colors(fCol);
+}
+
 void VectorFields::constructSamples(const int &n)
 {
 	numSample = n; 
@@ -2250,7 +2281,10 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
-	
+
+	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
+
 	// Setup sizes of each element to construct basis
 	try {
 		Basis.resize(1, 1);
@@ -2365,8 +2399,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[0] += t2 - t1;
@@ -2578,7 +2612,7 @@ void VectorFields::constructBasis_OptProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -2919,7 +2953,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
