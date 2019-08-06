@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Arma43k_";
+	const string model = "CDragon_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/272_bimba_clean_1Mf.obj";	
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -478,9 +478,10 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_approx" + to_string(nCounter++)+ ".txt";
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
-				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields);
+				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields+".txt");
+				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -503,9 +504,24 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::NROSY)
 			{
 				cout << "\n========================= N-ROSY FIELDS =============================\n";
-				nRoSyFields.nRoSyFieldsDesignRef();
+				/* Full res*/
+				//if (F.rows() < 50000)
+				//{
+				//	nRoSyFields.nRoSyFieldsDesignRef();
+				//	nRoSyFields.visualizeConstraints(viewer);
+				//	nRoSyFields.visualizeConstrainedFields(viewer);
+				//}
+
+
+				/* Reduced */
+				nRoSyFields.constructInteractiveConstraints();
+				nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+				
 				nRoSyFields.visualizeConstraints(viewer);
-				nRoSyFields.visualizeConstrainedFields(viewer);				
+				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
+				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -561,8 +577,8 @@ int main(int argc, char *argv[])
 			{				
 	
 				/* UPdating the mesh information */
-				viewer.data().clear();
-				viewer.data().set_mesh(V, F);
+				///viewer.data().clear();
+				///viewer.data().set_mesh(V, F);
 
 				//printf("Size of the contraints vector is %d\n", constraintSize);
 				if (fieldsType == FieldsType::VECTOR)
@@ -579,17 +595,21 @@ int main(int argc, char *argv[])
 					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
+					/* Full res*/
 					//if (F.rows() < 50000)
 					//{
 					//	nRoSyFields.nRoSyFieldsDesignRef();
 					//	nRoSyFields.visualizeConstraints(viewer);
 					//	nRoSyFields.visualizeConstrainedFields(viewer);
 					//}
-					nRoSyFields.constructInteractiveConstraints();
-					nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
 
-					nRoSyFields.visualizeConstraints(viewer);
-					nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+					
+					/* Reduced */
+					///nRoSyFields.constructInteractiveConstraints();
+					///nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+					///
+					///nRoSyFields.visualizeConstraints(viewer);
+					///nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
 				}
 				else if (fieldsType == FieldsType::TENSOR)

@@ -1437,8 +1437,8 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	const double ARRAW_RATIO = 4.0;
 	const double EDGE_RATIO = 1.5;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
-	Eigen::RowVector3d color2(0.4, 0.8, 0.2);
-	Eigen::RowVector3d color(0.7, 0.0, 0.2);
+	Eigen::RowVector3d color2(0.2, 0.8, 0.1);
+	Eigen::RowVector3d color(0.1, 0.1, 0.1);
 
 	cout << "Getting face normals \n";
 	Eigen::MatrixXd NF;
@@ -1460,6 +1460,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	NRoSy nRoSy_;
 	convertRepVectorsToNRoSy(c, nRoSy_);
 	Eigen::VectorXd c2(c.size());
+
 
 	Eigen::MatrixXd ALoc(3, 2);
 	for (int j = 0; j < nRot; j++)
@@ -2943,7 +2944,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Arma43k_";
+	string model = "CDragon_";
+	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
@@ -2965,7 +2967,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
 
-	selectFaceToDraw(5000);
+	selectFaceToDraw(20000);
 	//selectFaceToDraw(F.rows());
 	Eigen::VectorXd inputNFields;
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"_InputFields";
@@ -3017,7 +3019,6 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	//Eigen::VectorXd PD, PV;
 	//computeMaximalPrincipalCurvature(V, F, PD, PV);
-	//NRoSy nRoSy_;
 	//createNRoSyFromVectors(PD, nRoSy_);
 	//nRoSy_.magnitude = PV; 
 	//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(1.0, 0.75, 0.8));
@@ -3038,6 +3039,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	BM = lambda[0] * BF;
 	BFBar = Basis.transpose()*BF*Basis;
 	BMBar = BFBar;
+
+	convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	XfBar = alignFields;
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.0, 0.8, 0.1));
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
 	/* Constrained fields (biharmonic) */
@@ -3127,6 +3132,47 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 		myfile.close();
 	}
 	else cout << "Unable to open file";
+
+	cout << "Writing to file doen!!!!\n";
+}
+
+void NRoSyFields::writeConstraintsToFile(const string& filename)
+{
+	ofstream myfile(filename.c_str());
+
+	Eigen::MatrixXd ALoc(3, 2);
+	NRoSy nRoSy_;
+	convertRepVectorsToNRoSy(c, nRoSy_);
+	Eigen::VectorXd c2(c.size());
+	Eigen::Vector2d id, v2;
+	Eigen::Vector3d v3;
+
+	if (myfile.is_open())
+	{
+		cout << "Writing constraints to file \n";
+		//for (int j = 0; j < nRot; j++)
+		for (int j = 0; j < 1; j++)
+		{
+			for (int i = 0; i < globalConstraints.size(); i++)
+			{
+				ALoc = A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2);
+
+				id << 1.0, 0.0;
+				double angle = nRoSy_.theta(i) + ((double)j*2.0*M_PI / (double)nRot);
+				double cosA = cos(angle);
+				double sinA = sin(angle);
+				Eigen::Matrix2d RotA; RotA << cosA, -sinA, sinA, cosA;
+				//c2.block(2 * i, 0, 2, 1) = RotA*id;
+				v2 = RotA*id;
+				v3 = ALoc * v2;
+				printf("v2=[%.3f, %.3f] and v3=[%.3f, %.3f, %.3f] || Rot = [%.3f, %.3f, %.3f, %.3f. \n", v2(0), v2(1), v3(0), v3(1), v3(2), cosA, -sinA, sinA, cosA);
+				cout << "ALoc: " << ALoc << endl; 
+
+				myfile << globalConstraints[i] << " " << v3(0) << " " << v3(1) << " " << v3(2) << "\n";
+			}
+		}
+		myfile.close();
+	} else cout << "Unable to open file";
 
 	cout << "Writing to file doen!!!!\n";
 }
