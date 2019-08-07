@@ -1866,8 +1866,8 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 {	
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
-	Eigen::SparseMatrix<double>		tempB2D = B2D;
-	B2D = B2DAsym;
+	//Eigen::SparseMatrix<double>		tempB2D = B2D;
+	//B2D = B2DAsym;
 
 	// lambda 0: dirichlet
 	// lambda 1: bilaplacian
@@ -1885,7 +1885,7 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
 	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 
-	B2D = tempB2D;
+	//B2D = tempB2D;
 }
 void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda, Eigen::MatrixXd& M)
 {

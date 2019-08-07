@@ -1422,11 +1422,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveFullCurvature2_Spectra";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
 	//selectAdaptiveRegions(viewer);
-	selectAdaptiveRegions_Curvature(viewer);
-	constructSamples(numSample);
-	visualizeSamples(viewer);
-	constructBasis();	
-	storeBasis(filename_basis);			// Binary, Eigen-base
+	//selectAdaptiveRegions_Curvature(viewer);
+	//constructSamples(numSample);
+	//visualizeSamples(viewer);
+	//constructBasis();	
+	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	///retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
@@ -1472,7 +1472,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	convergenceTest();
+	//convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* Alignment using (maximal/) principal curvature */
