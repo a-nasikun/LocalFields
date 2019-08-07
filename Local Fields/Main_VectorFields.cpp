@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int vfSaveId = 0;
+int vfSaveId = 4;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
-	string meshFile = "../LocalFields/Models/Thorus/torus.obj";
+	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
@@ -472,12 +472,13 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 		case 'S':
-
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_" + std::to_string(vfSaveId) + ".txt";
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_" + std::to_string(vfSaveId);
 				vfSaveId++;
-				WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+				vectorFields.writeVectorFieldsToFile(vectorFields.arbField2D, filename_vfields + ".txt");
+				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
+				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{

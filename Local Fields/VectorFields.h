@@ -294,7 +294,8 @@ public:
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 
 	void writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const string& filename);
-	
+	void writeConstraintsToFile(const string& filename);
+
 	// GETTER AND SETTER of IMPORTANT ELEMENTS
 	Eigen::VectorXd getRefFields() const; 
 

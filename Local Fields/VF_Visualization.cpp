@@ -706,6 +706,23 @@ void VectorFields::writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const
 	else cout << "Unable to open file";
 }
 
+void VectorFields::writeConstraintsToFile(const string& filename)
+{
+	cout << "Trying to write the constraint to file \n";
+	ofstream myfile(filename.c_str());
+
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < globalConstraints.size(); i++)
+		{
+			myfile << globalConstraints[i] << " " << c(2 * i) << " " << c(2 * i + 1) << endl; 
+		}
+	}
+	else { cout << "Cannot open the file\n"; }
+
+	cout << "Writing is done! \n"; 
+}
+
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());
