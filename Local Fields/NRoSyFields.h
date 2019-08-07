@@ -46,6 +46,10 @@ public:
 	void constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& NFields);
 	void constructNRoSyFields(const int& nRoSy, const Eigen::MatrixXd& V, const Eigen::MatrixXi& F);
 
+	/* Creating 2 fields from 2 (maximal) curvature vector fields */
+	void computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV);
+	void smoothNRoSyFields(double lambda, Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>& sparseSolver, const Eigen::VectorXd& inputFields, Eigen::VectorXd& outputFields);
+
 	/* Rep. Vectors and N-RoSy Fields interface */
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields);
 	void createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NRoSy& nRoSyFields);
@@ -62,14 +66,36 @@ public:
 	void visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer);
 	void visualizeConstraints(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer);
 
 	/* N-FIELDS DESIGN */
 	void nRoSyFieldsDesignRef();
 	void nRoSyFieldsDesignRef_HardConstraints();
+	void createAlignmentField(Eigen::VectorXd& v);
 	void constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c);
 	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
+
+	// Interactive constraints for spline editing
+	void nRoSyFieldsDesignRef_Splines();
+	void pushNewUserConstraints(const int& fInit, const int& fEnd);
+	void constructInteractiveConstraints();
+	void resetInteractiveConstraints();
+	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
+	void setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS);
+	void solveBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
+
+		// Soft constraints
+	void nRoSyFieldsDesignRef_SoftConstraints();
+	void constructSoftConstraints();
+	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
+	void measureSoftConstraintError(const Eigen::Vector3d& lambda);
+	void projectCurvesToFrame();
+	void setupRHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& b);
+	void setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHS);
+	void solveGlobalSystemMappedLDLTSoftConstraints(const Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
+
 
 	/* SUBSPACE CONSTRUCTION */
 	void constructBasis();
@@ -80,15 +106,35 @@ public:
 
 	/* REDUCED N-FIELDS DESIGN */
 	void nRoSyFieldsDesign_Reduced();
+			// Hard constraints
 	void nRoSyFieldsDesign_Reduced_HardConstraints();
 	void constructRandomHardConstraints_Reduced();
 	void setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, const Eigen::SparseMatrix<double>& A_LHSBar, const Eigen::VectorXd& bBar);
+	
+	void nRoSyFieldsDesign_Reduced_Splines();
+	void getReducedConstraints();
+	void setupRHSSplines_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const vector<double>& lambda, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& bBar);
+	void setupLHSSplines_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
+	void solveSplines_Reduced(const Eigen::SparseMatrix<double>& A_LHSBar, const Eigen::VectorXd& bBar);
+	
+	// SOFT Constraints
+	void nRoSyFieldsDesign_Reduced_SoftConstraints();
+	void constructSoftConstraints_Reduced();
+	void setupRHSSoftConstraints_Reduced(const Eigen::Vector3d& lambda, Eigen::VectorXd& bBar);
+	void setupLHSSoftConstraints_Reduced(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
+	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
+
 	void measureAccuracy();
 
 	/* Testing stuff */
 	void TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
+	void writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename);
+	void writeConstraintsToFile(const string& filename);
+
+	/* PROJECTION ON REDUCED FIELDS */
+	void testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& inputFields, double &error);
 
 public:
 	NRoSy							nRoSy;
@@ -100,6 +146,7 @@ public:
 	vector<int>						FaceToDraw;
 	double							avgEdgeLength;
 	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::SparseMatrix<double>		MF2DhNeg, MF2DhPos;		// M^(-1/2)
 	Eigen::SparseMatrix<double>		SF;						//  Harmonic/Dirichlet Energy
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
@@ -123,16 +170,23 @@ public:
 	Eigen::VectorXd					Xf;
 	Eigen::VectorXd					c;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		C;										// selector matrix
-	vector<int>						reducedConstraints, globalConstraints;
+	vector<int>						reducedConstraints, globalConstraints, userVisualConstraints;
+	Eigen::VectorXd					alignFields;
+	Eigen::SparseMatrix<double>		BF, BM;
 
 	/* Variable related to REDUCED n-RoSy fields design */
 	Eigen::VectorXd					XfBar;
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		CBar;										// selector matrix
+	Eigen::SparseMatrix<double>		BFBar, BMBar;
 	
+	/* Variable on projection */
+	Eigen::VectorXd					wb;											// projected representation fields
+	vector<vector<int>>				curvesConstraints;
+	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 
 	/* Testing variables */
-	int								testID = 10;
+	int								testID = 5;
 
 };
 

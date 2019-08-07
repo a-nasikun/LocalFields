@@ -16,6 +16,7 @@ enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
 
 
+
 int main(int argc, char *argv[])
 {
 	/* TEST MATLAB DATA C++ */
@@ -32,6 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
+	const string model = "Fertility_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -47,10 +49,11 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
@@ -61,8 +64,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -149,6 +152,10 @@ int main(int argc, char *argv[])
 	bool showSmoothed = false; 
 	bool represent_tensor_in_voigt = false; 
 
+	/* N-RoSy stuff */
+	NRoSy nRoSy; 
+	int nCounter = 0;
+
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
 		int selectedFace;
@@ -160,6 +167,9 @@ int main(int argc, char *argv[])
 		double yMouse;
 		int fid;
 		Eigen::Vector3f bc;
+
+
+
 		switch (key)
 		{
 		case '-':
@@ -184,8 +194,13 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				nRoSyFields.visualizeConstrainedFields(viewer);
+				//nRoSyFields.visualizeSoftConstraints(viewer);
 				nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields(viewer);				
+				
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
+				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.1, 0.1, 0.8));
+
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -197,6 +212,7 @@ int main(int argc, char *argv[])
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
 				//vectorFields.visualizeApproxResult(viewer);
+				
 				vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
@@ -204,8 +220,13 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
+				//nRoSyFields.visualizeSoftConstraints(viewer);
+				//nRoSyFields.visualizeConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
-				nRoSyFields.visualizeConstraints(viewer);
+
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
+				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.8, 0.1, 0.1));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -319,6 +340,7 @@ int main(int argc, char *argv[])
 			//vectorFields.visualizeGlobalConstraints(viewer);
 			//vectorFields.visualizeSingularitiesConstraints(viewer);
 			vectorFields.resetInteractiveConstraints();
+			nRoSyFields.resetInteractiveConstraints();
 			break;
 		case '0':			
 			viewer.selected_data_index = 0;
@@ -450,21 +472,65 @@ int main(int argc, char *argv[])
 			break;
 		case 's':
 		case 'S':
-			filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_" + std::to_string(vfSaveId) + ".txt";
-			vfSaveId++;
-			WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_constraintFields_user_Asym_" + std::to_string(vfSaveId) + ".txt";
+				vfSaveId++;
+				WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
+				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields+".txt");
+				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
 			break;
 		case ' ':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			//cout << "\n========================= GLOBAL PROBLEM =============================\n";
-			//vectorFields.setupGlobalProblem();			
-			//vectorFields.visualizeApproximatedFields(viewer);
-			cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-			vectorFields.setAndSolveUserSystem(lambda);
-			vectorFields.visualizeApproxResult(viewer);
-			vectorFields.visualizeGlobalConstraints(viewer);
-			
+
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				//vectorFields.setupGlobalProblem();			
+				//vectorFields.visualizeApproximatedFields(viewer);
+				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				vectorFields.setAndSolveUserSystem(lambda);
+				vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				cout << "\n========================= N-ROSY FIELDS =============================\n";
+				/* Full res*/
+				//if (F.rows() < 50000)
+				//{
+				//	nRoSyFields.nRoSyFieldsDesignRef();
+				//	nRoSyFields.visualizeConstraints(viewer);
+				//	nRoSyFields.visualizeConstrainedFields(viewer);
+				//}
+
+
+				/* Reduced */
+				nRoSyFields.constructInteractiveConstraints();
+				nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+				
+				nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
+				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				
+			}
 			break; 
 		case 'Z':
 		case 'z':
@@ -483,7 +549,7 @@ int main(int argc, char *argv[])
 
 	
 	viewer.callback_mouse_move =
-		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
+		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields, &nRoSyFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
 		int fid;
 		Eigen::Vector3f bc;
@@ -512,16 +578,49 @@ int main(int argc, char *argv[])
 			/* Getting the length + direction of the constraints*/
 			const int constraintSize = ChosenFaces.size();
 			if (constraintSize > 0)
-			{
-				//printf("Size of the contraints vector is %d\n", constraintSize);
-				constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize-1]) - vectorFields.FC.row(ChosenFaces[0]);
-				viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
-				vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
-				printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+			{				
 	
 				/* UPdating the mesh information */
-				viewer.data().clear();
-				viewer.data().set_mesh(V, F);
+				///viewer.data().clear();
+				///viewer.data().set_mesh(V, F);
+
+				//printf("Size of the contraints vector is %d\n", constraintSize);
+				if (fieldsType == FieldsType::VECTOR)
+				{
+					constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
+					viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+					vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+				}
+				else if (fieldsType == FieldsType::NROSY)
+				{
+					constraintDir = nRoSyFields.FC.row(ChosenFaces[constraintSize - 1]) - nRoSyFields.FC.row(ChosenFaces[0]);
+					viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+
+					/* Full res*/
+					//if (F.rows() < 50000)
+					//{
+					//	nRoSyFields.nRoSyFieldsDesignRef();
+					//	nRoSyFields.visualizeConstraints(viewer);
+					//	nRoSyFields.visualizeConstrainedFields(viewer);
+					//}
+
+					
+					/* Reduced */
+					///nRoSyFields.constructInteractiveConstraints();
+					///nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+					///
+					///nRoSyFields.visualizeConstraints(viewer);
+					///nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+
+				}
+				else if (fieldsType == FieldsType::TENSOR)
+				{
+					
+				}
+				
 				//cout << "\n========================= GLOBAL PROBLEM =============================\n";
 				//vectorFields.setupGlobalProblem(lambda);			
 				//vectorFields.visualizeApproximatedFields(viewer);
