@@ -1,6 +1,8 @@
 #include "VectorFields.h"
 
 #include <igl/per_vertex_normals.h>
+#include <igl/gaussian_curvature.h>
+#include <igl/invert_diag.h>
 #include <Eigen/Eigenvalues>
 #include <random>
 #include <Eigen/OrderingMethods>
@@ -193,9 +195,9 @@ void VectorFields::constructRandomHardConstraints()
 	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
-	string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
-	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -226,10 +228,10 @@ void VectorFields::constructRandomHardConstraints()
 
 					while (oneWord != "") {
 						constraint.push_back(stod(oneWord));
-						cout << oneWord << "|";
+						//cout << oneWord << "|";
 						getline(iStream, oneWord, ',');
 					}
-					cout << endl;
+					//cout << endl;
 
 					globalConstraints.resize(constraint.size());
 
@@ -241,7 +243,7 @@ void VectorFields::constructRandomHardConstraints()
 					//return;
 				}
 
-				cout << "line =" << lineNow << endl; 
+				//cout << "line =" << lineNow << endl; 
 				lineNow++;
 			}
 		}
@@ -2169,31 +2171,102 @@ void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_i
 void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
 {
 	cout << "Dealing with adaptivity\n";
-	const int face_id1 = 5213;
-	const int face_id2 = 44893;
+	
+	//const int face_id1 = 5213; 	const int face_id2 = 44893;	// arma43k
+	const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
 	Eigen::VectorXd dist;
 	faceScale.resize(F.rows());	
 	dist.resize(F.rows());
 
+	Eigen::VectorXd faceColor(F.rows());
+
 	cout << "COmputing the dijkstra distance \n";
 	computeDijkstraDistanceFace(face_id1, dist);
 
-	double upBound = (FC.row(face_id1) - FC.row(face_id2)).norm();
+	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
 
 	for(int i=0; i<F.rows(); i++)
 	{
 		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
 		if (dist(i) < upBound) {
-			faceScale(i) = 2.0;
+			faceScale(i) = 2.5;
+			faceColor(i) = 0.7;
 		}
 		else {
 			faceScale(i) = 1.0;
+			faceColor(i) = 0.3;
 		}
 	
 	}
 
 	Eigen::MatrixXd fCol;
-	igl::jet(faceScale, true, fCol);
+	igl::jet(faceColor, false, fCol);
+	viewer.data().set_colors(fCol);
+}
+
+void VectorFields::selectAdaptiveRegions_Curvature(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Dealing with adaptivity\n";
+
+	//const int face_id1 = 5213; 	const int face_id2 = 44893;	// arma43k
+	const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
+	Eigen::VectorXd dist;
+	faceScale.resize(F.rows());
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+
+	/* Computing the distance */
+	cout << "COmputing the dijkstra distance \n";
+	computeDijkstraDistanceFace(face_id1, dist);
+	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+
+	/* Computing curvature */
+	Eigen::VectorXd kV, kF;
+	Eigen::SparseMatrix<double> M_, Minv_;
+	igl::gaussian_curvature(V, F, kV);
+	igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_BARYCENTRIC, M_);
+	igl::invert_diag(M_, Minv_);
+	kV = (Minv_*kV).eval();
+	kF.resize(F.rows());
+
+	for (int i = 0; i < F.rows(); i++)
+	{
+		kF(i) = (kV(F(i, 0)) + kV(F(i, 1)) + kV(F(i, 2))) / 3.0;
+	}
+
+	int counterN = 0;
+	for (int i = 0; i<F.rows(); i++)
+	{
+		
+		//if (dist(i) < upBound) {
+			double val = exp(abs(kF(i))/25.0);
+			// substract by 0.5 to make it from 0.0 - 0.5
+			// mult by 2 to make it from 0.0 to 1.0
+			// mult by 2.5 to scale toward desired result in this non-uniform sampling
+			// add by 1 to scale everything from 1.0 to 3.5
+			val = ((val / (val + 1.0))-0.5)*2*2.5 + 1.0;
+			//printf("ID=%d | curv=%.3f | sigm: %.4f \n", i, kF(i), val);
+			faceScale(i) = val;
+			faceColor(i) = 0.7;
+			counterN++;
+		//}
+		//else {
+		//	faceScale(i) = 1.0;
+		//	faceColor(i) = 0.3;
+		//}
+
+	}
+
+	cout << "There are " << counterN << " entries in the domain\n";
+
+	cout << "(curv Vert) Min: " << kV.minCoeff() << " | max: " << kV.maxCoeff() << endl;
+	cout << "(curv Face) Min: " << kF.minCoeff() << " | max: " << kF.maxCoeff() << endl;
+	cout << "(scale Face) Min: " << faceScale.minCoeff() << " | max: " << faceScale.maxCoeff() << endl;
+
+	Eigen::MatrixXd fCol;
+	igl::jet(faceColor, false, fCol);
+	//igl::jet(kV, true, fCol);
 	viewer.data().set_colors(fCol);
 }
 
@@ -2282,7 +2355,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = sqrt(pow(1.3, 2) + pow(1.1, 2));
+	double	coef = 1.25*sqrt(pow(1.7, 2) + pow(1.9, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis

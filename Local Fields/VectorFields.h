@@ -154,6 +154,7 @@ public:
 
 	// LOCAL SYSTEM
 	void selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer);
+	void selectAdaptiveRegions_Curvature(igl::opengl::glfw::Viewer &viewer);
 	void constructSamples(const int &n);
 	void farthestPointSampling();
 	void constructMultiBasis();

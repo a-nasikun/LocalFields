@@ -1537,7 +1537,7 @@ void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C,
 					//return;
 				}
 
-				cout << "line =" << lineNow << endl;
+				//cout << "line =" << lineNow << endl;
 				lineNow++;
 			}
 		}

@@ -57,10 +57,10 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> [Testing basis 2D of arbitrary field without regularizer...]\n";
+	//cout << "> [Testing basis 2D of arbitrary field without regularizer...]\n";
 
 	// Construct matrices for Test
-	cout << "____Assigning variables\n";
+	//cout << "____Assigning variables\n";
 	//Eigen::SparseMatrix<double> U = Basis;// BasisTemp;
 	//Eigen::VectorXd				v = inputFields; 
 	//Eigen::VectorXd				a = (U.transpose()*(MF2D*v));
@@ -82,11 +82,11 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	//Eigen::VectorXd wb;
 	//wb.resize(U.rows());
 
-	cout << "____Getting total SUM(wi*bi) \n";
+	//cout << "____Getting total SUM(wi*bi) \n";
 	wb = U*w; 
 
 	// Compare their L2-Norm
-	cout << "____Computing L2-norm \n";
+	//cout << "____Computing L2-norm \n";
 	Eigen::VectorXd diff = v - wb; 
 	double length1 = wb.transpose()*MF2D*wb;
 	double norm1 = diff.transpose()*MF2D*diff;
@@ -94,7 +94,7 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	double normL2 = sqrt(norm1 / norm2); 
 	error = normL2; 
 
-	cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
+	//cout << "____The L2 Norm is << " << normL2 << ": sqrt(" << norm1 << "/" << norm2 << ")" << endl;
 
 	/* Measuring the 'length' of each vector */
 	cout << "ENERGY ASYM \n";
@@ -102,41 +102,41 @@ void VectorFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatri
 	double harm_energy2 = wb.transpose()*SF2DAsym*wb;
 	double harm_relEnergy = abs(harm_energy1 - harm_energy2) / harm_energy1;
 
-	cout << "____Harmonic Energy => Ref=" << harm_energy1 << ", Approx:" << harm_energy2 << endl;
-	cout << "____Relative energy: " << harm_relEnergy << endl;
+	//cout << "____Harmonic Energy => Ref=" << harm_energy1 << ", Approx:" << harm_energy2 << endl;
+	//cout << "____Relative energy: " << harm_relEnergy << endl;
 
 	/* Measuring the 'length' of each vector */
-	cout << "ENERGY SYM \n";
+	//cout << "ENERGY SYM \n";
 	double harm_energy1_sym = v.transpose()*SF2D*v;
 	double harm_energy2_sym = wb.transpose()*SF2D*wb;
 	double harm_relEnergy_sym = abs(harm_energy1_sym - harm_energy2_sym) / harm_energy1_sym;
-	cout << "____Harmonic Energy => Ref=" << harm_energy1_sym << ", Approx:" << harm_energy2_sym << endl;
-	cout << "____Relative energy: " << harm_relEnergy_sym << endl;
+	//cout << "____Harmonic Energy => Ref=" << harm_energy1_sym << ", Approx:" << harm_energy2_sym << endl;
+	//cout << "____Relative energy: " << harm_relEnergy_sym << endl;
 	
 	/* Measuring the energy */	
 	double biharm_energy1 = v.transpose()*B2DAsym*v;
 	double biharm_energy2 = wb.transpose()*B2DAsym*wb;
 	double biharm_relEnergy = abs(biharm_energy1 - biharm_energy2) / biharm_energy1;
-	cout << "____Bi-Harmonic ENERGY => Ref=" << biharm_energy1 << ", Approx:" << biharm_energy2 << endl;
-	cout << "____aRelative energy: " << biharm_relEnergy << endl;
+	//cout << "____Bi-Harmonic ENERGY => Ref=" << biharm_energy1 << ", Approx:" << biharm_energy2 << endl;
+	//cout << "____aRelative energy: " << biharm_relEnergy << endl;
 
 	/* Measuring the 'length' of each vector */
-	cout << "ENERGY SYM \n";
+	//cout << "ENERGY SYM \n";
 	double biharm_energy1_sym = v.transpose()*B2D*v;
 	double biharm_energy2_sym = wb.transpose()*B2D*wb;
 	double biharm_relEnergy_sym = abs(biharm_energy1_sym - biharm_energy2_sym) / biharm_energy1_sym;
-	cout << "____Harmonic Energy => Ref=" << biharm_energy1_sym << ", Approx:" << biharm_energy2_sym << endl;
-	cout << "____Relative energy: " << biharm_relEnergy_sym << endl;
+	//cout << "____Harmonic Energy => Ref=" << biharm_energy1_sym << ", Approx:" << biharm_energy2_sym << endl;
+	//cout << "____Relative energy: " << biharm_relEnergy_sym << endl;
 
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
-	cout << "in " << duration.count() << " seconds." << endl;
+	//cout << "in " << duration.count() << " seconds." << endl;
 
 	bool writeToFile = true;
 	if (writeToFile) {
 		std::ofstream ofs;
-		string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup_adaptive.txt";
+		string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigenFields_" + to_string(Basis.cols()) + "_40sup_adaptive.txt";
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_L2projection_eigenFields_" + to_string(Basis.cols()) + ".txt";
 		
 		//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_L2projection_eigenFields_40sup.txt";
@@ -1068,8 +1068,8 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	}
 	
 	/* Fields and perturbed Fields */
-	string desFieldsFile  = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_DesignedFields";
-	string pertFieldsFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Arma_PerturbedFields";
+	string desFieldsFile  = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_DesignedFields";
+	string pertFieldsFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_PerturbedFields";
 	if (readDesFieldsFromFile) {
 		ReadDenseMatrixFromMatlab(DesignedFields, desFieldsFile, 2 * F.rows(), NUM_TEST);
 	}
@@ -1128,7 +1128,7 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 		duration = t2 - t1;
 		//printf("[%d] run => Error=%.10f (in %.3f seconds) \n", i, errors1(i), duration.count());		
 		printf("[%d] run => [No. Reg.]  Error=%.10f\n", i, errors1(i));
-		printf("            [with Reg.] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
+		//printf("            [with Reg.] Error=%.10f (in %.3f seconds) \n", errors2(i), duration.count());
 	}
 	
 	if (!readPertFieldsFromFile && !readDesFieldsFromFile)
@@ -1178,7 +1178,7 @@ void VectorFields::convergenceTest()
 	bool readPertFields = true;
 	bool useEigenBasis  = false;
 	int idStart = 0;
-	int NUM_TEST = 50;
+	int NUM_TEST = 100;
 
 	for (string file_ : basisFile)
 	{
@@ -1416,18 +1416,19 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 500; 
+	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Arma_";
-	string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptive_Spectra";
+	string model = "CDragon_";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveFullCurvature2_Spectra";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	selectAdaptiveRegions(viewer);
+	//selectAdaptiveRegions(viewer);
+	selectAdaptiveRegions_Curvature(viewer);
 	constructSamples(numSample);
 	visualizeSamples(viewer);
-	//constructBasis();	
-	//storeBasis(filename_basis);			// Binary, Eigen-base
+	constructBasis();	
+	storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	retrieveBasis(filename_basis);	
+	///retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSubdomain(viewer);
 
@@ -1467,7 +1468,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* _____ Projection Test ___________________________________*/
 	//constructArbitraryField();
 	//constructArbitraryField2D();
-	///WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
+	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
