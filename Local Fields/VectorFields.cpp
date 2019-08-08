@@ -2966,6 +2966,42 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());	
 }
 
+void VectorFields::constructBasis_Coarsening(igl::opengl::glfw::Viewer &viewer)
+{
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
+	Eigen::MatrixXd V2;
+	Eigen::MatrixXi F2;
+
+	/* Loading small scale mesh */
+	cout << "Reading the 2nd mesh "; 
+	if (meshFile.substr(meshFile.find_last_of(".") + 1) == "off") {
+		igl::readOFF(meshFile, V2, F2);
+	}
+	else if (meshFile.substr(meshFile.find_last_of(".") + 1) == "obj") {
+		igl::readOBJ(meshFile, V2, F2);
+	}
+	else {
+		cout << "Error! File type can be either .OFF or .OBJ only." << endl;
+		cout << "Program will exit in 2 seconds." << endl;
+		Sleep(2000);
+		exit(10);
+	}
+	printf(" with %d faces and %d vertices \n", F2.rows(), V2.rows());
+
+	/* Loading the mesh */
+	scaleMesh(V2, F2);
+	viewer.append_mesh();
+	//viewer.load_mesh_from_file(meshFile);	
+	for (int i = 0; i < V2.rows(); i++)
+	{
+		V2.row(i) = V2.row(i) + Eigen::RowVector3d(1.0, 0.0, 0.0);
+	}
+	viewer.data().set_mesh(V2, F2);
+	viewer.selected_data_index = 1;
+
+	viewer.selected_data_index = 0;
+}
+
 void VectorFields::constructBasis_LocalEigenProblem10()
 {
 	// For Timing
@@ -4457,7 +4493,7 @@ void VectorFields::readMesh(const string &meshFile)
 
 }
 
-void VectorFields::scaleMesh()
+void VectorFields::scaleMesh(Eigen::MatrixXd& V, Eigen::MatrixXi& F)
 {
 	Eigen::RowVectorXd minV(V.rows(), 3);
 	Eigen::RowVectorXd maxV(V.rows(), 3);

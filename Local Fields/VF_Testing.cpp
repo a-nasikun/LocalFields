@@ -1356,13 +1356,14 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* ========================= PRE-PROCESS ==============================*/
 	cout << "========================= PRE-PROCESS ==============================\n";
 	readMesh(meshFile);
-	scaleMesh();
+	scaleMesh(V, F);
 
 	viewer.data().set_mesh(V, F);
-	viewer.append_mesh();
-	viewer.data().set_mesh(V, F);
-	viewer.data().show_lines = false;
-	viewer.selected_data_index = 0;
+	//viewer.append_mesh();
+	//viewer.selected_data_index = 1;
+	//viewer.data().set_mesh(V, F);
+	//viewer.data().show_lines = false;
+	//viewer.selected_data_index = 0;
 
 	//Eigen::SparseMatrix<double> ChrisSparseMat;
 	//ReadChristopherStiffnessMatrix("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Local Fields/Models/hodgeLaplace.txt", ChrisSparseMat);
@@ -1464,14 +1465,14 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	string model = "Fertility_";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	selectAdaptiveRegions(viewer);
+	//selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
-	constructSamples(numSample);
+	//constructSamples(numSample);
 	//visualizeSamples(viewer);
 	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	retrieveBasis(filename_basis);	
+	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSubdomain(viewer);
 
@@ -1592,6 +1593,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	///cout << "[2] Projection using regular/isotropic basis \n";
 	///projectionSimpleL2Test();
 
+	/* Basis via Coarsening */
+	constructBasis_Coarsening(viewer);
 
 }
 

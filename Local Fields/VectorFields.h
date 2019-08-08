@@ -43,7 +43,7 @@ class VectorFields
 public:
 	// MESH-related Functions
 	void readMesh(const string &meshFile);
-	void scaleMesh();
+	void scaleMesh(Eigen::MatrixXd& V, Eigen::MatrixXi& F);
 	void readArrowMesh(const string &meshFile);
 	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void computeFaceCenter();
@@ -172,6 +172,9 @@ public:
 	void normalizeBasisAbs(const int& stride);
 	void storeBasis(const string& filename);
 	void retrieveBasis(const string& filename);
+
+	// Basis using coarsening
+	void constructBasis_Coarsening(igl::opengl::glfw::Viewer &viewer);
 
 	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
 	void setAndSolveUserSystem(const Eigen::Vector3d& lambda);

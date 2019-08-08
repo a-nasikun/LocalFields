@@ -469,10 +469,10 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color(0.0, 0.0, 0.2);
 	
-	viewer.selected_data_index = 1; 
+	//viewer.selected_data_index = 1; 
 	viewer.data().line_width = 5.0;
 	viewer.data().point_size = 5.0;
-	viewer.data().show_lines = false;
+	//viewer.data().show_lines = false;
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
