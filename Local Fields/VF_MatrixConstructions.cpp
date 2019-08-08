@@ -909,11 +909,11 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	Eigen::SparseMatrix<double> LapDiv_Conform;			// vertex-based
 		
 	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D*MF3D;
-	LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
+	//LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
 	//LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
 	LapDiv_Conform = MF3D * GF3D * MVinv * GF3D.transpose() * MF3D;
 		
-	SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
+	//SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
 	SF2DAsym = A.transpose()*(LapDiv_Conform + LapCurl_NonConform)*A;
 
 	t2 = chrono::high_resolution_clock::now();

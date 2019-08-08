@@ -2173,12 +2173,14 @@ void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
 	cout << "Dealing with adaptivity\n";
 	
 	//const int face_id1 = 5213; 	const int face_id2 = 44893;	// arma43k
-	const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
+	//const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
+	const int face_id1 = 421007; 	const int face_id2 = 397117;	// arma43k
 	Eigen::VectorXd dist;
 	faceScale.resize(F.rows());	
 	dist.resize(F.rows());
 
 	Eigen::VectorXd faceColor(F.rows());
+	Eigen::MatrixXd fCol(F.rows(),3);
 
 	cout << "COmputing the dijkstra distance \n";
 	computeDijkstraDistanceFace(face_id1, dist);
@@ -2189,18 +2191,20 @@ void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
 	{
 		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
 		if (dist(i) < upBound) {
-			faceScale(i) = 2.5;
+			faceScale(i) = 7.5;
 			faceColor(i) = 0.7;
+			fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
 		}
 		else {
 			faceScale(i) = 1.0;
 			faceColor(i) = 0.3;
+			fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
 		}
 	
 	}
 
-	Eigen::MatrixXd fCol;
-	igl::jet(faceColor, false, fCol);
+	//Eigen::MatrixXd fCol;
+	//igl::jet(faceColor, false, fCol);
 	viewer.data().set_colors(fCol);
 }
 
@@ -2355,7 +2359,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = 1.25*sqrt(pow(1.7, 2) + pow(1.9, 2));
+	double	coef = 1.5*sqrt(pow(1.7, 2) + pow(1.9, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2401,8 +2405,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "Setup the timing parameters: \n";
 	//const int NUM_THREADS = omp_get_num_procs();
-	//const int NUM_THREADS = omp_get_num_procs()/2;
-	const int NUM_THREADS = 8;
+	const int NUM_THREADS = omp_get_num_procs()/2;
+	//const int NUM_THREADS = 8;
 	//const int NUM_THREADS = 1;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);

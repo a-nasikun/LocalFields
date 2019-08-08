@@ -176,7 +176,10 @@ int main(int argc, char *argv[])
 			//vectorFields.projectionTest();
 			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);	
-			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 300.0, false);
+			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 3.0, false);
+			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(180.0/255.0, 173.0/255.0, 234.0 / 255.0), 3.0, false);
+			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
+			vectorFields.selectAdaptiveRegions(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
 		case '`':			
@@ -191,6 +194,7 @@ int main(int argc, char *argv[])
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
 				vectorFields.visualizeApproximatedFields(viewer);
 				//vectorFields.visualizeGlobalConstraints(viewer);
+				
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -217,6 +221,7 @@ int main(int argc, char *argv[])
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
 				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
+				vectorFields.selectAdaptiveRegions(viewer);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{

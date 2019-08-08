@@ -198,6 +198,7 @@ public:
 	//void testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver_Ref, const Eigen::SparseMatrix<double>& B_Ref, const Eigen::VectorXd& a_Ref, const Eigen::LDLT<Eigen::MatrixXd>& denseSolver_Red, const Eigen::MatrixXd& B_Red, const Eigen::VectorXd& a_Red, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
 	void projectionTest();
 	void projectionTest(bool &readDesFieldsFromFile, bool &readPertFieldsFromFile, bool &useEigenBasis, int start, int nTests);
+	void projectionSimpleL2Test();
 	void compareModalBasis_SamePerformance();
 	void compareModalBasis_SameStorage();
 	void convergenceTest();

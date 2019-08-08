@@ -1146,6 +1146,48 @@ void VectorFields::projectionTest(bool &readDesFieldsFromFile, bool &readPertFie
 	cout << "ERRORS: \n" << errors1 << endl << "ERRORS2 \n" << errors2 << endl;
 }
 
+void VectorFields::projectionSimpleL2Test()
+{
+	Eigen::VectorXd										a_NR = (Basis.transpose()*(MF2D*Xf));
+	Eigen::SparseMatrix<double>							B_NR = Basis.transpose() * MF2D * Basis;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>>		sparseSolver_NR(B_NR);
+	double error; 
+
+	Eigen::VectorXd w = sparseSolver_NR.solve(a_NR);
+	wb = Basis*w;
+
+	// Compare their L2-Norm
+	//cout << "____Computing L2-norm \n";
+	Eigen::VectorXd diff = Xf - wb;
+	double length1 = wb.transpose()*MF2D*wb;
+	double norm1 = diff.transpose()*MF2D*diff;
+	double norm2 = Xf.transpose()*MF2D*Xf;
+	double normL2 = sqrt(norm1 / norm2);
+	error = normL2;
+	printf("The L-2 norm is: %.5f(sqrt(%.5f/%.5f)). \n", normL2, norm1, norm2);
+
+	/* Construct a scaled mass matrix */
+	vector<Eigen::Triplet<double>> MTriplet;
+	Eigen::SparseMatrix<double> M2(2 * F.rows(), 2 * F.rows());
+	for (int i = 0; i < F.rows(); i++)
+	{
+		MTriplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, faceScale(i)*doubleArea(i) / 2.0));
+		MTriplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, faceScale(i)*doubleArea(i) / 2.0));
+	}
+	M2.setFromTriplets(MTriplet.begin(), MTriplet.end());
+	length1 = wb.transpose()*M2*wb;
+	norm1 = diff.transpose()*M2*diff;
+	norm2 = Xf.transpose()*M2*Xf;
+	normL2 = sqrt(norm1 / norm2);
+	printf("The scaled L-2 norm is: %.5f(sqrt(%.5f/%.5f)). \n", normL2, norm1, norm2);
+
+	/* Measuring the 'length' of each vector */
+	double harm_energy1 = Xf.transpose()*SF2DAsym*Xf;
+	double harm_energy2 = wb.transpose()*SF2DAsym*wb;
+	double harm_relEnergy = sqrt(abs(harm_energy1 - harm_energy2) / harm_energy1);
+	printf("The relative energy is: %.5f((%.5f/%.5f)). \n", harm_relEnergy, abs(harm_energy1 - harm_energy2), harm_energy1);
+}
+
 void VectorFields::convergenceTest()
 {
 	const int NUM_DIFF_BASIS = 6;
@@ -1351,10 +1393,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	//constructStiffnessMatrices();
 	//loadStiffnessMatrices();
-	///constructGradient3D();
-	///constructGradientStar3D();
-	///constructStiffnessMatrices_Implicit();	
+	constructGradient3D();
+	constructGradientStar3D();
+	constructStiffnessMatrices_Implicit();	
 	///constructMatrixB();
+	
 	//constructConstraints();
 	//checkB2DStructure();
 
@@ -1418,17 +1461,17 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "CDragon_";
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveFullCurvature2_Spectra";
+	string model = "Fertility_";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	//selectAdaptiveRegions(viewer);
+	selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
-	//constructSamples(numSample);
+	constructSamples(numSample);
 	//visualizeSamples(viewer);
 	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	///retrieveBasis(filename_basis);	
+	retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSubdomain(viewer);
 
@@ -1531,9 +1574,23 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7.txt";
 	loadVectorFieldsFromFile(filename_vfields, Xf);
 	visualizeApproximatedFields(viewer);
-	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
-	loadConstraintsFromFile(filename_vfields);
-	visualizeGlobalConstraints(viewer);
+	///filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
+	///loadConstraintsFromFile(filename_vfields);
+	///visualizeGlobalConstraints(viewer);
+
+	/* PRojection on adaptive basis */
+	cout << "[1] Projection using adaptive basis \n";
+	projectionSimpleL2Test();
+	wbEigen = wb; 
+
+	/* PRojection on uniform basis */
+	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
+	retrieveBasis(filename_basis);
+	
+	cout << "[2] Projection using regular/isotropic basis \n";
+	projectionSimpleL2Test();
+
+
 }
 
 void VectorFields::constructParallelTransport()
