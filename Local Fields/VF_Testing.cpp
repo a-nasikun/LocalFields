@@ -1339,8 +1339,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	selectFaceToDraw(5000); 
-	///selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
+	//selectFaceToDraw(5000); 
+	selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
 	//selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
@@ -1351,10 +1351,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* =========== Test on PROBLEM SOLVING-related functionalities ================*/
 	//constructStiffnessMatrices();
 	//loadStiffnessMatrices();
-	constructGradient3D();
-	constructGradientStar3D();
-	constructStiffnessMatrices_Implicit();	
-	constructMatrixB();
+	///constructGradient3D();
+	///constructGradientStar3D();
+	///constructStiffnessMatrices_Implicit();	
+	///constructMatrixB();
 	//constructConstraints();
 	//checkB2DStructure();
 
@@ -1527,6 +1527,13 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/* MEASURE ACCURACY */
 	//.measureApproxAccuracyL2Norm();
+
+	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7.txt";
+	loadVectorFieldsFromFile(filename_vfields, Xf);
+	visualizeApproximatedFields(viewer);
+	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
+	loadConstraintsFromFile(filename_vfields);
+	visualizeGlobalConstraints(viewer);
 }
 
 void VectorFields::constructParallelTransport()

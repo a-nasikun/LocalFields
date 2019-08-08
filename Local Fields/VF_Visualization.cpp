@@ -723,6 +723,73 @@ void VectorFields::writeConstraintsToFile(const string& filename)
 	cout << "Writing is done! \n"; 
 }
 
+void VectorFields::loadVectorFieldsFromFile(const string& filename, Eigen::VectorXd &vfields)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	Eigen::VectorXd fields3d;
+	vector<double> fieldsVector;
+	fieldsVector.reserve(3 * F.rows());
+
+	double v;
+	
+	if (file.is_open())
+	{
+		
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+		}
+	}
+	file.close();
+
+	fields3d = Eigen::Map<Eigen::VectorXd>(fieldsVector.data(), 3 * F.rows());
+	vfields = A.transpose()*fields3d;
+}
+
+void VectorFields::loadConstraintsFromFile(const string& filename)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	globalConstraints.reserve(300);
+	vector<double> constraintValues;
+	
+	double	val2;
+	int		val1; 
+
+	if (file.is_open())
+	{
+
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			val1 = stoi(oneWord);
+			globalConstraints.push_back(val1);
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			constraintValues.push_back(val2);
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			constraintValues.push_back(val2);
+		}
+	}
+	file.close();
+
+	c = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());
+}
+
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
 void VectorFields::visualizeFaceNeighbors(igl::opengl::glfw::Viewer &viewer, const int &idx) {
 	Eigen::VectorXd z(F.rows());

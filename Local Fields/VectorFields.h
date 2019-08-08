@@ -295,6 +295,9 @@ public:
 
 	void writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const string& filename);
 	void writeConstraintsToFile(const string& filename);
+	void loadVectorFieldsFromFile(const string& filename, Eigen::VectorXd &vfields);
+	void loadConstraintsFromFile(const string& filename);
+
 
 	// GETTER AND SETTER of IMPORTANT ELEMENTS
 	Eigen::VectorXd getRefFields() const; 

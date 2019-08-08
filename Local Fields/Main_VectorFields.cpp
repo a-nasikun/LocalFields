@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int vfSaveId = 4;
+int vfSaveId = 6;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
