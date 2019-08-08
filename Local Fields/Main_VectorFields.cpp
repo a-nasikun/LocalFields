@@ -185,7 +185,8 @@ int main(int argc, char *argv[])
 		case '`':			
 			//vectorFields.visualizeSubdomain(viewer);
 			///vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.1, 0.1, 0.8), 3.0, false);			
-			vectorFields.visualizeSoftConstraints(viewer);
+			//vectorFields.visualizeSoftConstraints(viewer);
+			vectorFields.visualizeSamples(viewer);
 			break;
 		case '1':
 			if (fieldsType == FieldsType::VECTOR)

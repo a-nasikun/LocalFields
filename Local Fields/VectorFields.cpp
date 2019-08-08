@@ -2289,6 +2289,20 @@ void VectorFields::constructSamples(const int &n)
 	cout << duration.count() << "seconds" << endl;	
 
 	///testViennaCL2(SF2DAsym, MF2Dinv, eigFieldFull2D, eigValuesFull);
+
+	/* Counting samples inside and outside the regions */
+	int counterB = 0, counterNB = 0;
+	for (int sample : Sample)
+	{
+		if (faceScale(sample) > 1.01)
+		{
+			counterB++;
+		}
+		else {
+			counterNB++;
+		}
+	}
+	printf("From %d samples, %d are inside the region and %d are outside \n", Sample.size(), counterB, counterNB);
 }
 
 void VectorFields::farthestPointSampling()

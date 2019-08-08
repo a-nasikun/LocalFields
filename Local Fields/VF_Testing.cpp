@@ -1571,24 +1571,26 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* MEASURE ACCURACY */
 	//.measureApproxAccuracyL2Norm();
 
+	/* PROJECTION ON ADAPTIVE SAMPLING */
+
 	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7.txt";
-	loadVectorFieldsFromFile(filename_vfields, Xf);
-	visualizeApproximatedFields(viewer);
+	///loadVectorFieldsFromFile(filename_vfields, Xf);
+	///visualizeApproximatedFields(viewer);
 	///filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
 	///loadConstraintsFromFile(filename_vfields);
 	///visualizeGlobalConstraints(viewer);
 
 	/* PRojection on adaptive basis */
-	cout << "[1] Projection using adaptive basis \n";
-	projectionSimpleL2Test();
-	wbEigen = wb; 
-
-	/* PRojection on uniform basis */
-	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	retrieveBasis(filename_basis);
-	
-	cout << "[2] Projection using regular/isotropic basis \n";
-	projectionSimpleL2Test();
+	///cout << "[1] Projection using adaptive basis \n";
+	///projectionSimpleL2Test();
+	///wbEigen = wb; 
+	///
+	////* PRojection on uniform basis */
+	///filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
+	///retrieveBasis(filename_basis);
+	///
+	///cout << "[2] Projection using regular/isotropic basis \n";
+	///projectionSimpleL2Test();
 
 
 }
