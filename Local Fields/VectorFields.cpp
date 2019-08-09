@@ -197,7 +197,8 @@ void VectorFields::constructRandomHardConstraints()
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -2968,7 +2969,7 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 
 void VectorFields::constructBasis_Coarsening(igl::opengl::glfw::Viewer &viewer)
 {
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_500.obj";
 	Eigen::MatrixXd V2;
 	Eigen::MatrixXi F2;
 
@@ -2982,24 +2983,204 @@ void VectorFields::constructBasis_Coarsening(igl::opengl::glfw::Viewer &viewer)
 	}
 	else {
 		cout << "Error! File type can be either .OFF or .OBJ only." << endl;
-		cout << "Program will exit in 2 seconds." << endl;
-		Sleep(2000);
-		exit(10);
+		Sleep(2000); exit(10);
 	}
 	printf(" with %d faces and %d vertices \n", F2.rows(), V2.rows());
 
 	/* Loading the mesh */
 	scaleMesh(V2, F2);
-	viewer.append_mesh();
-	//viewer.load_mesh_from_file(meshFile);	
-	for (int i = 0; i < V2.rows(); i++)
-	{
-		V2.row(i) = V2.row(i) + Eigen::RowVector3d(1.0, 0.0, 0.0);
-	}
-	viewer.data().set_mesh(V2, F2);
-	viewer.selected_data_index = 1;
+	//viewer.append_mesh();
+	//for (int i = 0; i < V2.rows(); i++)
+	//{
+	//	V2.row(i) = V2.row(i) + Eigen::RowVector3d(0.25, 0.0, 0.0);
+	//}
+	//viewer.data().set_mesh(V2, F2);
+	//viewer.selected_data_index = 1;
 
+	cout << "Creating the basis for each local frame \n";
+	/* Create the basis matrix for the 2nd mesh */
+	Eigen::SparseMatrix<double> A2;
+	A2.resize(3 * F2.rows(), 2 * F2.rows());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(3 * 2 * F2.rows());
+	Eigen::Vector3d e, f, n;
+	Eigen::MatrixXd NF2;
+	igl::per_face_normals(V2, F2, NF2);
+
+	for (int i = 0; i < F2.rows(); i++) {
+		e = V2.row(F2(i, 1)) - V2.row(F2(i, 0));
+		e.normalize();
+
+		n = NF2.row(i);
+		n.normalize();
+
+		f = n.cross(e);
+		f.normalize();
+
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, e(0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, e(1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, e(2)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, f(0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, f(1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, f(2)));
+	}
+	A2.setFromTriplets(ATriplet.begin(), ATriplet.end());
+
+	/* Computing the centroid of every triangle faces */
+	Eigen::MatrixXd FC2(F2.rows(), F2.cols());
+	for (int i = 0; i < F2.rows(); i++)
+	{
+		FC2.row(i) = (V2.row(F2(i, 0)) + V2.row(F2(i, 1)) + V2.row(F2(i, 2))) / 3.0; 
+	}
+
+	/* Creating the hash table */
+	cout << "Preparing the hash table\n";
+	const int hashSize = 20;
+	vector<vector<vector<vector<int>>>> hashTable(hashSize);	// z-size is 10
+	for (int i = 0; i < hashSize; i++)	{
+		hashTable[i].resize(hashSize);							// y-size is 10
+		for (int j = 0; j < hashSize; j++) {
+			hashTable[i][j].resize(hashSize);					// x-size is 10
+			for (int k = 0; k < hashSize; k++) {
+				hashTable[i][j][k].reserve(100);
+			}
+		}
+	}
+	
+	cout << "Max, min, length and grid \n";
+	Eigen::RowVectorXd minV(V2.rows(), 3);
+	Eigen::RowVectorXd maxV(V2.rows(), 3);
+	Eigen::RowVector3d length, grid;
+
+	/* Get the min and max coefficients */
+	for (int i = 0; i < V2.cols(); i++)
+	{
+		minV(i) = V2.col(i).minCoeff();
+		maxV(i) = V2.col(i).maxCoeff();
+		length(i) = maxV(i) - minV(i);
+	}
+	grid = length / (double)hashSize;
+
+	// populating the hash table
+	cout << "Populating hash table \n";
+	vector<int> ids(3);
+	for (int i = 0; i < F2.rows(); i++)	{
+		for(int j=0; j<3; j++)		ids[j] = (int)floor((FC2(i, j) - minV(j)) / grid(j));
+		hashTable[ids[2]][ids[1]][ids[0]].push_back(i);
+	}
+
+	// Traversing the hash table
+	//for (int z_ = 0; z_ < hashSize; z_++) {
+	//	for (int y_ = 0; y_ < hashSize; y_++) {
+	//		for (int x_ = 0; x_ < hashSize; x_++) {
+	//			if (hashTable[z_][y_][x_].size() > 0)	{
+	//				printf("The idx[%d][%d][%d] has %d entries: ", z_, y_, x_, hashTable[z_][y_][x_].size());
+	//				for (int k : hashTable[z_][y_][x_]) {
+	//					cout << k << " | ";
+	//				}
+	//				cout << endl; 
+	//			}
+	//		}
+	//	}
+	//}
+
+	/* Selecting the closest triangle on the 2nd mesh from the 1st mesh*/
+	cout << "Selecting closest entries \n"; 
+	vector<int> largeToSmallCorr(F.rows()); 
+	vector<set<int>> smallToLargeCorr(F2.rows());
+	Eigen::VectorXd corrColor(F.rows());
+	for (int i = 0; i < F.rows(); i++) {
+		for (int j = 0; j < 3; j++)
+		{
+			ids[j] = (int)floor((FC(i, j) - minV(j)) / grid(j));
+			if (ids[j] < 0) ids[j] = 0;
+			if (ids[j] >= hashSize) ids[j] = hashSize-1;
+		}
+
+		// if the table has a content, find the triangle (in mesh 2) minimum distance to mesh 1
+		vector<int> neigh;
+		if (hashTable[ids[2]][ids[1]][ids[0]].size() > 0) {
+			neigh.reserve(100);
+			for (int fID : hashTable[ids[2]][ids[1]][ids[0]])
+			{
+				neigh.push_back(fID);
+			}
+		}
+		else {
+			int m = 1;
+			do {
+				for (int k_ = -m; k_ <=m; k_++) {
+					if (ids[2] + k_ < 0 || ids[2] + k_ >= hashSize) continue;
+					for (int j_ = -m; j_ <= m; j_++) {
+						if (ids[1] + j_ < 0 || ids[1] + j_ >= hashSize) continue;
+						for (int i_ = -m; i_ <=m ; i_++) {
+							if (ids[0] + i_ < 0 || ids[0] + i_ >= hashSize) continue;
+
+							for (int fID : hashTable[ids[2] + k_][ids[1] + j_][ids[0] + i_])
+							{
+								neigh.push_back(fID);
+							}
+						}
+					}
+				}
+				m++;
+			} while (neigh.size() < 1);
+		}
+
+		double minDist = std::numeric_limits<double>::max();
+		int minID;
+		for (int fID : neigh)
+		{
+			double d_ = (FC.row(i) - FC2.row(fID)).norm();
+			if (d_ < minDist) {
+				minID = fID;
+				minDist = d_;
+			}
+		}
+
+		largeToSmallCorr[i] = minID;
+		smallToLargeCorr[minID].insert(i);
+		//corrColor(i) = (double) (50*minID % (int) F.rows());
+		corrColor(i) = FC(minID,0)*FC(minID, 1)*FC(minID, 2);
+
+		if (i == 147312 || i == 139270) {
+			printf("Face %d (in mesh 1) is closest to face %d (in mesh 2) \n", i, minID);
+		}
+
+		//printf("Face %d (in mesh 1) is closest to face %d (in mesh 2) \n", i, minID);
+		//printf("Face %d is located at hash[%d][%d][%d] with %d entries \n", i, ids[2], ids[1], ids[0], hashTable[ids[2]][ids[1]][ids[0]].size());		
+	}
+
+	Eigen::MatrixXd fCol;	
+	igl::jet(corrColor, true, fCol);
+	viewer.data().set_colors(fCol);
 	viewer.selected_data_index = 0;
+
+
+	/* Mapping from coarse to full resolution mesh */
+	Basis.resize(2 * F.rows(), 2 * F2.rows());
+	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(2 * F.rows());
+
+	for (int i = 0; i < F2.rows(); i++)	
+	{
+		Eigen::MatrixXd base(3,2);
+		Eigen::MatrixXd entry(2, 2);
+		base = A2.block(3 * i, 2 * i, 3, 2);
+		for (int face : smallToLargeCorr[i])
+		{
+			Eigen::MatrixXd ALoc(3, 2);
+			
+			ALoc = A.block(3 * face, 2 * face, 3, 2);
+			entry = ALoc.transpose()*base;
+
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 0, 2 * i + 0, entry(0, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 1, 2 * i + 0, entry(1, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 0, 2 * i + 1, entry(0, 1)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 1, 2 * i + 1, entry(1, 1)));
+		}
+	}
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
 }
 
 void VectorFields::constructBasis_LocalEigenProblem10()
@@ -3829,8 +4010,8 @@ void VectorFields::computeEigenFields(const int &numEigs, const string& filename
 	//computeEigenSpectra_RegNSym(SF2DAsym, MF2Dinv, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
 	//computeEigenSpectra_RegSym_Transf(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
-	computeEigenSpectra_RegSym_Custom(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
-	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
+	//computeEigenSpectra_RegSym_Custom(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
 

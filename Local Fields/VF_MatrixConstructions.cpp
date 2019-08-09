@@ -909,11 +909,11 @@ void VectorFields::constructStiffnessMatrices_Implicit()
 	Eigen::SparseMatrix<double> LapDiv_Conform;			// vertex-based
 		
 	LapCurl_NonConform = -MF3D * J3D*GFStar3D*MStarInv*GFStar3D.transpose()*J3D*MF3D;
-	//LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
+	LapDiv_NonConform = MF3D * GFStar3D*MStarInv*GFStar3D.transpose()*MF3D; 
 	//LapCurl_Conform = -MF3D * J3D * GF3D*MVinv*GF3D.transpose()*J3D*MF3D;
 	LapDiv_Conform = MF3D * GF3D * MVinv * GF3D.transpose() * MF3D;
 		
-	//SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
+	SF2D = A.transpose()*(LapDiv_NonConform + LapCurl_NonConform)*A;
 	SF2DAsym = A.transpose()*(LapDiv_Conform + LapCurl_NonConform)*A;
 
 	t2 = chrono::high_resolution_clock::now();
@@ -1486,8 +1486,7 @@ void VectorFields::constructMappingMatrix()
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Mapping matrices (Global/World-Coord to Local Frame)... ";
-
-
+	
 	A.resize(3 * F.rows(), 2 * F.rows());
 	vector<Eigen::Triplet<double>> ATriplet;
 	ATriplet.reserve(3 * 2 * F.rows());
