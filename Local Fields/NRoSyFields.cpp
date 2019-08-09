@@ -1781,11 +1781,7 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 	for (int i = 0; i < vEst.rows(); i++) {
 		vEst(i) = 0.5;
 	}	
-
-	// Create alignment fields based on maximal curvature direction
-	//Eigen::VectorXd repV;
-	//createAlignmentField(repV);
-
+	
 	//g = (B2F+MF) * vEst +MF*repV;
 	// g = (B2F) * vEst + MF*repV;
 	g = (lambda[0]*B2F + lambda[1]*MF)*vEst - lambda[1]*MF*alignFields;
@@ -2656,12 +2652,16 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced()
 void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
 {
 	Eigen::SparseMatrix<double>		B2FBar = Basis.transpose()*(SF*MFinv*SF)*Basis;
+	Eigen::SparseMatrix<double>		MFBar = Basis.transpose()*MF*Basis;
 	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
 	Eigen::SparseMatrix<double>		A_LHSBar;
+	vector<double> lambda;
+	double mu = 0.0001;
 
 	constructRandomHardConstraints_Reduced();
-	setupRHSBiharmSystem_Reduced(B2FBar, gBar, hBar, vEstBar, bBar);
-	setupLHSBiharmSystem_Reduced(B2FBar, A_LHSBar);
+	setupWeight(mu, lambda);
+	setupRHSBiharmSystem_Reduced(B2FBar, MFBar, gBar, hBar, vEstBar, lambda, bBar);
+	setupLHSBiharmSystem_Reduced(B2FBar, MFBar, lambda, A_LHSBar);
 	solveBiharmSystem_Reduced(vEstBar, A_LHSBar, bBar);
 }
 
@@ -2672,7 +2672,7 @@ void NRoSyFields::constructRandomHardConstraints_Reduced()
 	cBar = c;	
 }
 
-void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)
+void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, const vector<double>& lambda, Eigen::VectorXd& bBar)
 {
 	vEstBar.resize(B2FBar.rows());
 	for (int i = 0; i < vEstBar.rows(); i++) {
@@ -2680,11 +2680,12 @@ void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 	}
 
 	// Create alignment fields based on maximal curvature direction
-	Eigen::VectorXd repV, repVbar;
-	createAlignmentField(repV);
-	repVbar = Basis*(MF*repV);
+	//Eigen::VectorXd repV, repVbar;
+	//createAlignmentField(repV);
+	//repVbar = Basis*(MF*repV);
 
-	gBar = B2FBar * vEstBar + repVbar;
+	//gBar = B2FBar * vEstBar + repVbar;
+	gBar = (lambda[0] * B2FBar + lambda[1] * MFBar)*vEstBar - lambda[1] * MFBar*(Basis.transpose()*alignFields);
 	bBar.resize(B2FBar.rows() + cBar.rows());
 
 	// Constructing b
@@ -2692,14 +2693,16 @@ void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 	bBar << gBar, hBar;
 }
 
-void NRoSyFields::setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::SparseMatrix<double>& A_LHSBar)
+void NRoSyFields::setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHSBar)
 {
 	A_LHSBar.resize(B2FBar.rows() + CBar.rows(), B2FBar.cols() + CBar.rows());
 	vector<Eigen::Triplet<double>>	ATriplet;
 	ATriplet.reserve(B2FBar.nonZeros() + 2 * CBar.nonZeros());
 
-	for (int k = 0; k < B2FBar.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(B2FBar, k); it; ++it) {
+	Eigen::SparseMatrix<double> BMBar = lambda[0] * B2FBar + lambda[1] * MFBar;
+
+	for (int k = 0; k < BMBar.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BMBar, k); it; ++it) {
 			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
 		}
 	}

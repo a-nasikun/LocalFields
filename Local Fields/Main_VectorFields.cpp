@@ -542,7 +542,7 @@ int main(int argc, char *argv[])
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
-				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));
+				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));				
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
