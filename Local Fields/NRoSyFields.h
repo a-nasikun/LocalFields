@@ -180,7 +180,7 @@ public:
 	Eigen::VectorXd					XfBar;
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		CBar;										// selector matrix
-	Eigen::SparseMatrix<double>		BFBar, BMBar;
+	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar;
 	
 	/* Variable on projection */
 	Eigen::VectorXd					wb;											// projected representation fields

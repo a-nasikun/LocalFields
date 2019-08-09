@@ -1198,6 +1198,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 0.1;
 	//double scale = 50.0; 
 	//double scale = 0.001;
+	//double scale = 1.0 / 100000.0; 
 	Eigen::Vector2d b(1, 0);
 	
 
@@ -2394,9 +2395,17 @@ void NRoSyFields::setupWeight(double mu, vector<double>& lambda)
 		weight += doubleArea(userVisualConstraints[i]);
 	}
 
+	Eigen::VectorXd id(MF.rows());
+	id.setConstant(1.0);
+	double factor1 = id.transpose()*MF*id;
+	double factor2 = id.transpose()*BF*id;
+	//mu = mu * factor2 / factor1;
+
 	lambda.resize(2);
 	lambda[0] = 1.0;
 	lambda[1] = mu / weight;
+
+	cout << "Lambda 1: " << lambda[1] << endl; 
 }
 
 void NRoSyFields::resetInteractiveConstraints()
@@ -2651,17 +2660,19 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced()
 
 void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
 {
-	Eigen::SparseMatrix<double>		B2FBar = Basis.transpose()*(SF*MFinv*SF)*Basis;
-	Eigen::SparseMatrix<double>		MFBar = Basis.transpose()*MF*Basis;
+	//Eigen::SparseMatrix<double>		B2FBar = Basis.transpose()*(SF*MFinv*SF)*Basis;
+	//Eigen::SparseMatrix<double>		MFBar = Basis.transpose()*MF*Basis;
 	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
 	Eigen::SparseMatrix<double>		A_LHSBar;
 	vector<double> lambda;
-	double mu = 0.0001;
+	//double mu = 0.0000000000000000000000000000000000000000000000000000000000001;
+	double mu = std::numeric_limits<double>::epsilon();
+	//double mu = 100000.0; 
 
 	constructRandomHardConstraints_Reduced();
 	setupWeight(mu, lambda);
-	setupRHSBiharmSystem_Reduced(B2FBar, MFBar, gBar, hBar, vEstBar, lambda, bBar);
-	setupLHSBiharmSystem_Reduced(B2FBar, MFBar, lambda, A_LHSBar);
+	setupRHSBiharmSystem_Reduced(BFBar, MFBar, gBar, hBar, vEstBar, lambda, bBar);
+	setupLHSBiharmSystem_Reduced(BFBar, MFBar, lambda, A_LHSBar);
 	solveBiharmSystem_Reduced(vEstBar, A_LHSBar, bBar);
 }
 
@@ -2720,7 +2731,8 @@ void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, cons
 {
 	Eigen::VectorXd XLowDim(vEstBar.size());
 	XfBar.resize(Basis.rows());
-	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
 
 	cout << "....Solving for the first frame.\n";
 	Eigen::VectorXd x = sparseSolver.solve(bBar);
@@ -3015,7 +3027,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Bimba_";
+	string model = "CDragon_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3073,12 +3085,12 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 5000;
-	//constructSamples(numSample);
-	//string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	numSample = 1000;
+	constructSamples(numSample);
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
-	//retrieveBasis(basisFile);
+	retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 	/* Projection */
@@ -3113,8 +3125,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	createAlignmentField(alignFields);
 	BF = SF*MFinv*SF;
 	BM = lambda[0] * BF;
-	//BFBar = Basis.transpose()*BF*Basis;
+	BFBar = Basis.transpose()*BF*Basis;
 	//BMBar = BFBar;
+	MFBar = Basis.transpose()*MF*Basis;
 	
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	XfBar = alignFields;

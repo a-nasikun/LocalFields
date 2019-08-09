@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Heart_";
+	const string model = "CDragon_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -46,13 +46,13 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
+	string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
@@ -536,8 +536,9 @@ int main(int argc, char *argv[])
 
 				/* Reduced */
 				nRoSyFields.constructInteractiveConstraints();
-				nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+				nRoSyFields.nRoSyFieldsDesign_Reduced_HardConstraints();
 				
+				viewer.data().clear(); viewer.data().set_mesh(V, F);
 				nRoSyFields.visualizeConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
