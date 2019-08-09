@@ -1570,23 +1570,28 @@ void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
 
 void NRoSyFields::nRoSyFieldsDesignRef()
 {
-	//nRoSyFieldsDesignRef_HardConstraints();
+	nRoSyFieldsDesignRef_HardConstraints();
 	//nRoSyFieldsDesignRef_SoftConstraints();
-	nRoSyFieldsDesignRef_Splines();
+	//nRoSyFieldsDesignRef_Splines();
 }
 
 void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 {
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
+	double							mu = 0.0001;
+	vector<double>					lambda;
 	//Eigen::SparseMatrix<double>		B2F;
 	if (MF.rows() < 1) constructMassMatrixMF3D();
 	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
+
 	//B2F = SF * MFinv * SF;
 
-	constructRandomHardConstraints(C, c);
-	setupRHSBiharmSystemRef(BF, C, c, g, h, vEst, b);
-	setupLHSBiharmSystemRef(BF, C, c, A_LHS);
+	//constructRandomHardConstraints(C, c);
+	constructInteractiveConstraints();
+	setupWeight(mu, lambda);
+	setupRHSBiharmSystemRef(BF, C, c, g, h, vEst, lambda, b);
+	setupLHSBiharmSystemRef(BF, C, c, lambda, A_LHS);
 	solveBiharmSystemRef(vEst, A_LHS, b, Xf);
 }
 
@@ -1595,9 +1600,7 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	// Create alignment fields
 	// based on maximal curvature direction
 	Eigen::VectorXd PD, PV, v1;
-	computeMaximalPrincipalCurvature(V, F, PD, PV);
-
-	
+	computeMaximalPrincipalCurvature(V, F, PD, PV);	
 
 	NRoSy nRoSy_;
 	createNRoSyFromVectors(PD, nRoSy_);
@@ -1620,8 +1623,7 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	sparseSolver.factorize(LHS);
 
 	/* Smoothing the curvature fields */
-	smoothNRoSyFields(mu, sparseSolver, v1, v);	
-	
+	smoothNRoSyFields(mu, sparseSolver, v1, v);		
 
 	for(int i=0; i<5; i++)
 		smoothNRoSyFields(mu, sparseSolver, v, v);
@@ -1767,7 +1769,7 @@ void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C,
 	convertNRoSyToRepVectors(nRoSy_, c);
 }
 
-void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b)
+void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, const vector<double>& lambda, Eigen::VectorXd& b)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -1778,14 +1780,15 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 	vEst.resize(B2F.cols());
 	for (int i = 0; i < vEst.rows(); i++) {
 		vEst(i) = 0.5;
-	}
+	}	
 
 	// Create alignment fields based on maximal curvature direction
-	Eigen::VectorXd repV;
-	createAlignmentField(repV);
+	//Eigen::VectorXd repV;
+	//createAlignmentField(repV);
 
 	//g = (B2F+MF) * vEst +MF*repV;
-	g = (B2F) * vEst + MF*repV;
+	// g = (B2F) * vEst + MF*repV;
+	g = (lambda[0]*B2F + lambda[1]*MF)*vEst - lambda[1]*MF*alignFields;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -1796,7 +1799,7 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 }
-void NRoSyFields::setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS)
+void NRoSyFields::setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHS)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
@@ -1806,12 +1809,16 @@ void NRoSyFields::setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 
 	A_LHS.resize(B2F.rows() + C.rows(), B2F.cols() + C.rows());
 
+	
+
 	vector<Eigen::Triplet<double>>	ATriplet;
 	ATriplet.reserve(10 * B2F.rows());		// It should be #rows x 4 blocks @ 2 elements (8) + #constraints,
 											// but made it 10 for safety + simplicity
+											/* weighting*/	
+	Eigen::SparseMatrix<double> BM = lambda[0] * B2F + lambda[1] * MF;
 
-	for (int k = 0; k < B2F.outerSize(); ++k) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(B2F, k); it; ++it) {
+	for (int k = 0; k < BM.outerSize(); ++k) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BM, k); it; ++it) {
 			ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
 		}
 	}
@@ -1831,7 +1838,7 @@ void NRoSyFields::setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf)
 {
 	// For Timing
-	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	cout << "> Solving the global system (Pardiso LDLT)... \n";
@@ -1845,9 +1852,18 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
 	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
 
-	// FIRST BASIS
-	cout << "....Solving first problem (first frame)..." << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "___factorizing in  " << duration.count() << " seconds" << endl;
+
+	/* Solving the linear system */
+	t2 = chrono::high_resolution_clock::now();
+	cout << "___Solving the linear problem ";
 	Eigen::VectorXd x = sparseSolver.solve(b);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "in  " << duration.count() << " seconds" << endl;
 
 	if (sparseSolver.info() != Eigen::Success) {
 		cout << "Cannot solve the linear system. " << endl;
@@ -1861,7 +1877,6 @@ void NRoSyFields::solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen:
 
 	Xf = -x.block(0, 0, SF.rows(), 1) + vEst;
 
-	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -1878,8 +1893,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_Splines()
 	//B2F = SF * MFinv * SF;
 
 	double weight = 0;
-	for (int i = 0; i < userVisualConstraints.size(); i += 2)
-	{
+	for (int i = 0; i < userVisualConstraints.size(); i += 2)	{
 		weight += doubleArea(userVisualConstraints[i]);
 	}
 
@@ -2374,6 +2388,19 @@ void NRoSyFields::constructInteractiveConstraints()
 	createNRoSyFromVectors(cTemp, nRoSy_);
 	convertNRoSyToRepVectors(nRoSy_, c);
 
+}
+
+void NRoSyFields::setupWeight(double mu, vector<double>& lambda)
+{
+	/* weighting*/
+	double weight = 0;
+	for (int i = 0; i < userVisualConstraints.size(); i += 2) {
+		weight += doubleArea(userVisualConstraints[i]);
+	}
+
+	lambda.resize(2);
+	lambda[0] = 1.0;
+	lambda[1] = mu / weight;
 }
 
 void NRoSyFields::resetInteractiveConstraints()
@@ -2985,7 +3012,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Fertility_";
+	string model = "Bimba_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3044,11 +3071,11 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Build reduced space */
 	numSupport = 40.0;
 	numSample = 5000;
-	constructSamples(numSample);
-	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	//constructSamples(numSample);
+	//string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	//retrieveBasis(basisFile);
 	//visualizeBasis(viewer, 0);
 
 	/* Projection */
@@ -3078,13 +3105,13 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	vector<double> lambda(2);
 	lambda[0] = 1.0;
 	if (userVisualConstraints.size() < 1)	lambda[1] = 0.0;
-	else									lambda[1] = 0.001 / weight;
+	else									lambda[1] = 10 / weight;
 	
 	createAlignmentField(alignFields);
 	BF = SF*MFinv*SF;
 	BM = lambda[0] * BF;
-	BFBar = Basis.transpose()*BF*Basis;
-	BMBar = BFBar;
+	//BFBar = Basis.transpose()*BF*Basis;
+	//BMBar = BFBar;
 	
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	XfBar = alignFields;

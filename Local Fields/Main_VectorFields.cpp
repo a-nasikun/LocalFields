@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Fertility_";
+	const string model = "Heart_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -48,11 +48,11 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
@@ -463,10 +463,29 @@ int main(int argc, char *argv[])
 			break;
 		case 'r':
 		case 'R':
-			cout << "\n========================= GLOBAL PROBLEM =============================\n";
-			vectorFields.setupGlobalProblem(lambda);
-			vectorFields.visualizeApproximatedFields(viewer);
-			//vectorFields.visualizeGlobalConstraints(viewer);
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				vectorFields.setupGlobalProblem(lambda);
+				vectorFields.visualizeApproximatedFields(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
+
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.nRoSyFieldsDesignRef();
+				viewer.data().clear(); viewer.data().set_mesh(V, F);
+				nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields(viewer);
+
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
+				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.7, 0.0));
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
 			break;
 		case 's':
 		case 'S':
@@ -478,10 +497,12 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields+".txt");
 				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
+
+
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
