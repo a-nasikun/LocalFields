@@ -536,7 +536,8 @@ int main(int argc, char *argv[])
 
 				/* Reduced */
 				nRoSyFields.constructInteractiveConstraints();
-				nRoSyFields.nRoSyFieldsDesign_Reduced_HardConstraints();
+				//nRoSyFields.nRoSyFieldsDesign_Reduced_HardConstraints();
+				nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
 				
 				viewer.data().clear(); viewer.data().set_mesh(V, F);
 				nRoSyFields.visualizeConstraints(viewer);

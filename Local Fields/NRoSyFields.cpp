@@ -2666,9 +2666,11 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
 	Eigen::SparseMatrix<double>		A_LHSBar;
 	vector<double> lambda;
 	//double mu = 0.0000000000000000000000000000000000000000000000000000000000001;
-	double mu = std::numeric_limits<double>::epsilon();
+	//double mu = std::numeric_limits<double>::epsilon();
 	//double mu = 100000.0; 
+	double mu = 0.0000075;
 
+	//constructInteractiveConstraints();
 	constructRandomHardConstraints_Reduced();
 	setupWeight(mu, lambda);
 	setupRHSBiharmSystem_Reduced(BFBar, MFBar, gBar, hBar, vEstBar, lambda, bBar);
@@ -2686,21 +2688,35 @@ void NRoSyFields::constructRandomHardConstraints_Reduced()
 void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, const vector<double>& lambda, Eigen::VectorXd& bBar)
 {
 	vEstBar.resize(B2FBar.rows());
-	for (int i = 0; i < vEstBar.rows(); i++) {
-		vEstBar(i) = 0.5;
+	Eigen::VectorXd vT(BF.rows());
+	for (int i = 0; i < BF.rows(); i++)
+	{
+		vT(i) = 0.5;
 	}
+	vEstBar = Basis.transpose()*vT;
+
+	//for (int i = 0; i < vEstBar.rows(); i++) {
+	//	vEstBar(i) = 0.5;
+	//}
 
 	// Create alignment fields based on maximal curvature direction
 	//Eigen::VectorXd repV, repVbar;
 	//createAlignmentField(repV);
 	//repVbar = Basis*(MF*repV);
 
+	/*
 	//gBar = B2FBar * vEstBar + repVbar;
 	gBar = (lambda[0] * B2FBar + lambda[1] * MFBar)*vEstBar - lambda[1] * MFBar*(Basis.transpose()*alignFields);
 	bBar.resize(B2FBar.rows() + cBar.rows());
 
 	// Constructing b
 	hBar = CBar * vEstBar - cBar;
+	bBar << gBar, hBar;
+	*/
+
+	gBar = Basis.transpose()*(SF*MFinv*SF + lambda[1] * MF)*Basis * vEstBar + lambda[1] * (Basis.transpose()*MF*Basis)*(Basis.transpose()*alignFields);
+	hBar = C*Basis*vEstBar - cBar; 
+	bBar.resize(B2FBar.rows() + cBar.rows());
 	bBar << gBar, hBar;
 }
 
@@ -2710,7 +2726,8 @@ void NRoSyFields::setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 	vector<Eigen::Triplet<double>>	ATriplet;
 	ATriplet.reserve(B2FBar.nonZeros() + 2 * CBar.nonZeros());
 
-	Eigen::SparseMatrix<double> BMBar = lambda[0] * B2FBar + lambda[1] * MFBar;
+	//Eigen::SparseMatrix<double> BMBar = lambda[0] * B2FBar + lambda[1] * MFBar;
+	Eigen::SparseMatrix<double> BMBar = Basis.transpose()*(lambda[0] * BF + lambda[1] * MF)*Basis;
 
 	for (int k = 0; k < BMBar.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BMBar, k); it; ++it) {
@@ -2760,11 +2777,25 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
 	{
 		weight += doubleArea(userVisualConstraints[i]);
 	}
+	
+	// Scale to make B and M in the quite similar scale
+	Eigen::VectorXd id(BF.rows());
+	id.setConstant(1.0);
+	double b_scale = id.transpose()*BF*id;
+	double m_scale = id.transpose()*MF*id;
+	double btom_scale = b_scale / m_scale; 
 
+
+	// Scale for ratio between B and M
 	vector<double> lambda(2);
-	lambda[0] = 1.0;
+	lambda[0] = 20000;
 	//lambda[1] = 0.001 / weight;
-	lambda[1] = 0.000005; 
+	lambda[1] = 0.0005; 
+	lambda[1] = lambda[1] * btom_scale / weight; 
+
+	// printing out the values:
+	printf("lambda_0:%0.4f | lambda_1:%0.6f | b/m scale: %.4f | weight: %.8f | orig lambda: %.4f \n",
+		lambda[0], lambda[1], btom_scale, weight, lambda[1] / btom_scale*weight);
 	
 	cout << "Getting the constraints \n";
 	getReducedConstraints();
