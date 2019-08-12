@@ -576,7 +576,7 @@ void VectorFields::write2DFieldsForVTK(const Eigen::VectorXd &field2D, const str
 			file << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << "\n";
 		}
 
-		cout << "Converting to world space \n";
+		//cout << "Converting to world space \n";
 		/* Print eigenfields*/
 		Eigen::VectorXd field3D;
 		Eigen::MatrixXd Fields3D;
@@ -612,7 +612,7 @@ void VectorFields::write2DFieldsForVTK(const Eigen::VectorXd &field2D, const str
 		//	file << NF(i, 0) << " " << NF(i, 1) << " " << NF(i, 2) << "\n";
 		//}
 
-		cout << "VERTEX-based Mode\n"; 
+		//cout << "VERTEX-based Mode\n"; 
 		/* VERTEX-based DATA */
 		Eigen::VectorXd vFields3D;
 		vFields3D.setZero(3 * V.rows());
