@@ -397,7 +397,7 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	//{
 		printf("Showing the %d Basis field\n", bId);
 		//visualize2DfieldsScaled(viewer, Basis, bId, color);
-		visualize2Dfields(viewer, Basis.col(bId), color, 1.0);
+		visualize2Dfields(viewer, Basis.col(bId), color, 0.08);
 	//}
 }
 
@@ -959,12 +959,14 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 		{
 			//cout << "This does happen\n";
 			vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
+			
 		}
 		else
 		{
 			//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
 			//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
-			vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);			
+			//vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);	
+			vColor.row(i) = Eigen::RowVector3d(223.0/255.0, 180.0/255.0, 240.0/255.0);
 		}
 	}
 

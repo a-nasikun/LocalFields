@@ -1385,8 +1385,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	//selectFaceToDraw(5000); 
-	selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
-	//selectFaceToDraw(F.rows());
+	//selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
+	selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1464,19 +1464,19 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Fertility_";
+	string model = "Arma43k_";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
 	//selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
-	//constructSamples(numSample);
-	//visualizeSamples(viewer);
-	//constructBasis();	
+	constructSamples(numSample);
+	constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
-	//visualizeSubdomain(viewer);
+	//visualizeSamples(viewer);
+	visualizeSubdomain(viewer);
 
 
 	///setupReducedBiLaplacian();
@@ -1596,9 +1596,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	///projectionSimpleL2Test();
 
 	/* Basis via Coarsening */
-	constructBasis_Coarsening(viewer);
-	printf("Basis =%dx%d \n", Basis.rows(), Basis.cols());
-	projectionTest();
+	///constructBasis_Coarsening(viewer);
+	///printf("Basis =%dx%d \n", Basis.rows(), Basis.cols());
+	///projectionTest();
 
 	//computeEigenFields(eigsToCompute, filename_refField);		
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);

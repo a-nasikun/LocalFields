@@ -2319,8 +2319,9 @@ void VectorFields::farthestPointSampling()
 
 	srand(time(NULL));
 	//Sample[0] = rand() % F.rows();
-	Sample[0] = 0;
+	//Sample[0] = 0;
 	//Sample[0] = 70267; // Arma 43k
+	Sample[0] = 69298; // Arma 43k
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
@@ -2374,7 +2375,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	double	coef = 1.5*sqrt(pow(1.7, 2) + pow(1.9, 2));
+	//double	coef = sqrt(pow(1.7, 2) + pow(1.9, 2));			// regular
+	//double	coef = 1.5*sqrt(pow(1.7, 2) + pow(1.9, 2));			// adaptive
+	double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2408,11 +2411,11 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	}
 
 	/* Default color for the domain selected */
-	//localSystem.resize(F.rows());
-	//for (int fid = 0; fid < F.rows(); fid++) {
-	//	//localSystem(fid) = 1-0.3725;
-	//	localSystem(fid) = 0;
-	//}
+	localSystem.resize(F.rows());
+	for (int fid = 0; fid < F.rows(); fid++) {
+		//localSystem(fid) = 1-0.3725;
+		localSystem(fid) = 0;
+	}
 
 	int id, tid, ntids, ipts, istart, iproc;	
 
@@ -2539,20 +2542,19 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//}
 
 			// To get local elements for visualizing subdomain
-			//if (id == 0 || id == 46) {
-			//	cout << "Getting element of ID " << id << endl;
-			//
-			//	for (int fid : localField.SubDomain) {
-			//		localSystem(fid) = 0.3;
-			//	}
-			//
-			//	for (int fid : localField.Boundary) {
-			//		localSystem(fid) = 0.7;
-			//	}
-			//
-			//	localSystem(localField.sampleID) = 1.0;			
-			//
-			//}
+			if (id == 0 || id == 46) {
+				cout << "Getting element of ID " << id << endl;
+			
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
+			
+				//for (int fid : localField.Boundary) {
+				//	localSystem(fid) = 0.7;
+				//}			
+				//localSystem(localField.sampleID) = 1.0;			
+			
+			}
 
 			/* Localized eigenproblems */
 			//if (id == 15)

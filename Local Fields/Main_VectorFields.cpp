@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Kitten_";
+	const string model = "Arma43k_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
@@ -266,10 +266,14 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeBasis(viewer, basisId);
 			break;
 		case '5':
-			basisId = max(basisId - 1, 0);
+			if(basisId%2==0)
+				basisId = max(basisId - 92, 0);
+			else 
+				basisId = max(basisId - 1, 0);
 
 			if (fieldsType == FieldsType::VECTOR)
 			{
+				vectorFields.visualizeSubdomain(viewer);
 				vectorFields.visualizeBasisNormalized(viewer, basisId);
 				printf("Showing the %d-th basis \n", basisId);
 			}
@@ -286,9 +290,13 @@ int main(int argc, char *argv[])
 			
 			break;
 		case '6':
-			basisId = min(basisId + 1, 2 * numSample - 1);
+			if(basisId%2==1)
+				basisId = min(basisId + 92, 2 * numSample - 1);
+			else 
+				basisId = min(basisId + 1, 2 * numSample - 1);
 			if (fieldsType == FieldsType::VECTOR)
 			{
+				vectorFields.visualizeSubdomain(viewer);
 				vectorFields.visualizeBasisNormalized(viewer, basisId);
 				printf("Showing the %d-th basis \n", basisId);
 			}
@@ -652,7 +660,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.0f; 
+	viewer.data().line_width = 2.0f; 
 
 	return viewer.launch();
 
