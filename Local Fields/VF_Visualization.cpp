@@ -443,7 +443,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
 	//visualize2Dfields(viewer, XFullDim, color, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 2, true);
+	visualize2Dfields(viewer, XFullDim, color, 2, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 
@@ -470,7 +470,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	Eigen::RowVector3d color(0.0, 0.0, 0.2);
 	
 	//viewer.selected_data_index = 1; 
-	viewer.data().line_width = 5.0;
+	viewer.data().line_width = 2.0;
 	viewer.data().point_size = 5.0;
 	//viewer.data().show_lines = false;
 
@@ -503,7 +503,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	}
 	 
 	viewer.selected_data_index = 0; 	
-
+	viewer.data().line_width = 1.0;
 }
 
 void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -699,7 +699,7 @@ void VectorFields::writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const
 		printf("__|F|=%d  | vfields=%d\n", F.rows(), vfields3D.size());
 		for (int i = 0; i < F.rows(); i++)
 		{
-			myfile << vfields3D(3*i) << ", " << vfields3D(3*i+1) << ", " << vfields3D(3*i+2) << "\n";
+			myfile << vfields3D(3*i) << " " << vfields3D(3*i+1) << " " << vfields3D(3*i+2) << "\n";
 		}
 		myfile.close();
 	}

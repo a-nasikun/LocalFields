@@ -1459,7 +1459,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 
 	cout << "Drawing on the overlay mesh \n";
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 5.0;
+	viewer.data().line_width = 2.0;
 	viewer.data().point_size = 5.0;
 	viewer.data().show_lines = false;
 

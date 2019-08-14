@@ -2319,9 +2319,9 @@ void VectorFields::farthestPointSampling()
 
 	srand(time(NULL));
 	//Sample[0] = rand() % F.rows();
-	//Sample[0] = 0;
+	Sample[0] = 0;
 	//Sample[0] = 70267; // Arma 43k
-	Sample[0] = 69298; // Arma 43k
+	//Sample[0] = 69298; // Arma 43k
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
@@ -2375,9 +2375,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
 
-	//double	coef = sqrt(pow(1.7, 2) + pow(1.9, 2));			// regular
+	double	coef = sqrt(pow(1.7, 2) + pow(1.9, 2));			// regular
 	//double	coef = 1.5*sqrt(pow(1.7, 2) + pow(1.9, 2));			// adaptive
-	double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
+	//double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2494,8 +2494,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
-			//localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[0] += t2 - t1;

@@ -1384,9 +1384,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	//selectFaceToDraw(5000); 
-	//selectFaceToDraw(max((int) round(0.1*F.rows()), 5000));
-	selectFaceToDraw(F.rows());
+	selectFaceToDraw(7500); 
+	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
+	//selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1464,19 +1464,20 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Arma43k_";
+	string model = "Wolf500k_";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
 	//selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
+	faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 	constructSamples(numSample);
-	constructBasis();	
+	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	//retrieveBasis(filename_basis);	
+	retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSamples(viewer);
-	visualizeSubdomain(viewer);
+	//visualizeSubdomain(viewer);
 
 
 	///setupReducedBiLaplacian();
@@ -1572,7 +1573,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 
 	/* MEASURE ACCURACY */
-	//.measureApproxAccuracyL2Norm();
+	//measureApproxAccuracyL2Norm();
 
 	/* PROJECTION ON ADAPTIVE SAMPLING */
 
@@ -1602,6 +1603,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//computeEigenFields(eigsToCompute, filename_refField);		
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
+
+
+	setupReducedBiLaplacian();
 
 }
 

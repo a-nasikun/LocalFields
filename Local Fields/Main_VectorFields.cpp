@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int vfSaveId = 6;
+int vfSaveId = 4;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Arma43k_";
+	const string model = "Wolf500k_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -488,9 +489,9 @@ int main(int argc, char *argv[])
 		case 'S':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_" + std::to_string(vfSaveId);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(vfSaveId);
 				vfSaveId++;
-				vectorFields.writeVectorFieldsToFile(vectorFields.arbField2D, filename_vfields + ".txt");
+				vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 			}
@@ -516,9 +517,10 @@ int main(int argc, char *argv[])
 				//vectorFields.setupGlobalProblem();			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
+				vectorFields.constructInteractiveConstraints();
 				vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
-				//vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualizeGlobalConstraints(viewer);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -660,7 +662,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 2.0f; 
+	viewer.data().line_width = 1.0f; 
 
 	return viewer.launch();
 
