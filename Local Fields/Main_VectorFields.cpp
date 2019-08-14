@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
-	int nCounter = 0;
+	int nCounter = 11;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -500,12 +500,21 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
+				/* Saving the file */
 				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields+".txt");
 				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 
 
+				/* Load and display the fields */
+				//cout << "========================================== \n";
+				//cout << "Loading the " << nCounter-1 << " fields \n";
+				//nRoSyFields.loadConstraintsFromFile(filename_vfields + "_constraints.txt");
+				//nRoSyFields.loadNRoSyFieldsFromFile(filename_vfields + ".txt", nRoSy);
+				//
+				////nRoSyFields.visualizeConstraints(viewer);
+				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.9, 0.1, 0.1));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -546,8 +555,8 @@ int main(int argc, char *argv[])
 				nRoSyFields.visualizeConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
-				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
-				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));				
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
+				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));				
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{

@@ -1509,7 +1509,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0;
-	const double EDGE_RATIO = 1.5;
+	const double EDGE_RATIO = 5.0;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color2(0.2, 0.8, 0.1);
 	Eigen::RowVector3d color(0.1, 0.1, 0.1);
@@ -2850,7 +2850,7 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
 	vector<double> lambda(2);
 	lambda[0] = 1.0;
 	//lambda[1] = 0.001 / weight;
-	lambda[1] = 0.5; 
+	lambda[1] = 0.005; 
 	lambda[1] = lambda[1] * btom_scale / weight; 
 
 	// printing out the values:
@@ -3203,6 +3203,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//XfBar = outputF;
 
 	/* Prepare for n-fields design */
+	
 	double weight = 0;
 	for (int i = 0; i < userVisualConstraints.size(); i += 2){
 		weight += doubleArea(userVisualConstraints[i]);
@@ -3223,6 +3224,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	XfBar = alignFields;
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.0, 0.8, 0.1));
+	
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
 	/* Constrained fields (biharmonic) */
@@ -3255,6 +3257,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
 	//string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_approximation.txt";
 	//writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
+
 }
 
 void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename)
@@ -3355,6 +3358,81 @@ void NRoSyFields::writeConstraintsToFile(const string& filename)
 	} else cout << "Unable to open file";
 
 	cout << "Writing to file doen!!!!\n";
+}
+
+
+void NRoSyFields::loadNRoSyFieldsFromFile(const string& filename, NRoSy& nRoSy)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	Eigen::VectorXd fields3d;
+	vector<double> fieldsVector;
+	fieldsVector.reserve(3 * F.rows());
+
+	double v;
+
+	if (file.is_open())
+	{
+
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+		}
+	}
+	file.close();
+
+	fields3d = Eigen::Map<Eigen::VectorXd>(fieldsVector.data(), 3 * F.rows());
+	Eigen::VectorXd fields2d = A.transpose()*fields3d;
+	createNRoSyFromVectors(fields2d, nRoSy);
+
+	printf("Load fields of size %d .\n", fields2d.size());
+}
+
+void NRoSyFields::loadConstraintsFromFile(const string& filename)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	globalConstraints.reserve(300);
+	vector<double> constraintValues;
+
+	double	val2;
+	int		val1;
+
+	if (file.is_open())
+	{
+
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			val1 = stoi(oneWord);
+			globalConstraints.push_back(val1);
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			constraintValues.push_back(val2);
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			constraintValues.push_back(val2);
+		}
+	}
+	file.close();
+
+	Eigen::VectorXd cTemp = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());
+	NRoSy cNRoSy; createNRoSyFromVectors(cTemp);
+	convertNRoSyToRepVectors(cNRoSy, c);
+
+	printf("Load %d constraints \n", globalConstraints.size());
 }
 
 /* PROJECTION ON REDUCED FIELDS */
