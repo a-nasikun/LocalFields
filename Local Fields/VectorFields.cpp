@@ -22,7 +22,7 @@ void VectorFields::constructConstraints()
 	//construct1CentralConstraint();
 	//constructRingConstraints();
 	//constructSpecifiedHardConstraints();
-	///constructRandomHardConstraints();
+	constructRandomHardConstraints();
 	///constructSoftConstraints();
 	constructInteractiveConstraints();
 	//constructInteractiveConstraintsWithLaplacian();

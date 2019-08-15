@@ -755,6 +755,8 @@ void VectorFields::loadVectorFieldsFromFile(const string& filename, Eigen::Vecto
 
 	fields3d = Eigen::Map<Eigen::VectorXd>(fieldsVector.data(), 3 * F.rows());
 	vfields = A.transpose()*fields3d;
+
+	cout << "Loads data of vector fields " << vfields.rows() << " entries \n";
 }
 
 void VectorFields::loadConstraintsFromFile(const string& filename)
@@ -786,8 +788,38 @@ void VectorFields::loadConstraintsFromFile(const string& filename)
 		}
 	}
 	file.close();
+	for (int i : globalConstraints)
+	{
+		printf("constraint: %d \n", i);
+	}
 
-	c = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());
+	c = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());	
+	cout << "Loading the constraints and setting up matrix C\n";
+	// Setting up matrix C
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+	c.resize(2 * globalConstraints.size());
+	Eigen::Vector2d cRand;
+
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		//cRand(0) = (double)(rand() % F.rows()) / (double) F.rows();
+		//cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand << 1.0, 0.0;
+		cRand.normalize();
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		//c(counter, 0) = cRand(0);
+		counter++;
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		//c(counter, 0) = cRand(1);
+		counter++;
+	}
+	C.resize(2 * globalConstraints.size(), SF2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	cout << "C: \n" << C.block(0, 0, 2 * globalConstraints.size(), 20) << endl; 
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/

@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int vfSaveId = 4;
+int vfSaveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
@@ -217,9 +217,9 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-				//vectorFields.visualizeApproxResult(viewer);
+				vectorFields.visualizeApproxResult(viewer);
 				
-				vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
 				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
@@ -493,7 +493,12 @@ int main(int argc, char *argv[])
 				vfSaveId++;
 				vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
-				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+				WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+
+				//vectorFields.loadVectorFieldsFromFile(filename_vfields + ".txt", vectorFields.XFullDim);
+				//vectorFields.visualize2Dfields(viewer, vectorFields.XFullDim, Eigen::RowVector3d(0.9, 0.1, 0.1), 4.0, false);
+				//vectorFields.loadConstraintsFromFile(filename_vfields + "_constraints.txt");
+				//vectorFields.visualizeGlobalConstraints(viewer);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -501,6 +506,31 @@ int main(int argc, char *argv[])
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields+".txt");
 				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
+			break;
+		case 'k':
+		case 'K':
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(vfSaveId);
+				//vfSaveId++;
+				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
+				//vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
+				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+
+				vectorFields.loadVectorFieldsFromFile(filename_vfields + ".txt", vectorFields.XFullDim);
+				vectorFields.visualize2Dfields(viewer, vectorFields.XFullDim, Eigen::RowVector3d(0.9, 0.1, 0.1), 4.0, false);
+				vectorFields.loadConstraintsFromFile(filename_vfields + "_constraints.txt");
+				vectorFields.visualizeGlobalConstraints(viewer);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
+			;
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -517,7 +547,7 @@ int main(int argc, char *argv[])
 				//vectorFields.setupGlobalProblem();			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.constructInteractiveConstraints();
+				//vectorFields.constructInteractiveConstraints();				
 				vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
