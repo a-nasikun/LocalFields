@@ -1384,7 +1384,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	selectFaceToDraw(10000); 
+	selectFaceToDraw(5000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1399,7 +1399,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructGradient3D();
 	constructGradientStar3D();
 	constructStiffnessMatrices_Implicit();	
-	constructMatrixB();
+	///constructMatrixB();
 	
 	//constructConstraints();
 	//checkB2DStructure();
@@ -1471,16 +1471,16 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//selectAdaptiveRegions_Curvature(viewer);
 	faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 	constructSamples(numSample);
-	//constructBasis();	
+	constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	retrieveBasis(filename_basis);	
+	//retrieveBasis(filename_basis);	
 	//normalizeBasisAbs(2);
 	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);
 
 
-	setupReducedBiLaplacian();
+	//setupReducedBiLaplacian();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);

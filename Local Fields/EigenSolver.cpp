@@ -467,7 +467,8 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engPutVariable(ep, "MM", MM);
 
 	t3 = chrono::high_resolution_clock::now();
-	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,2,'smallestabs');");
+	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM,2,'smallestabs');");
+	engEvalString(ep, "[EigVec, EigVal]=eigs(MS,2,'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
 	engEvalString(ep, "hold on; plot(1:2, EigVal(1:2),'LineWidth',1.5);"); // has to do it this way for "correct" plot

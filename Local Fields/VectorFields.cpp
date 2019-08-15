@@ -2502,14 +2502,15 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			subdom_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructBoundary(F, visitedFaces, AdjMF3N, AdjMF2Ring);
+			//localField.constructBoundary(F, visitedFaces, AdjMF3N, AdjMF2Ring);
+			localField.constructSelectorMatrix(F, doubleArea);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[1] += t2 - t1;
 			boundary_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(Num_fields, F);
+			//localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[2] += t2 - t1;	
@@ -2524,7 +2525,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			///if(id%((int)(Sample.size()/4))==0)
 			///	cout << "[" << id << "] Constructing local eigen problem\n ";
 
-			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);			
+			//localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);			
+			localField.constructLocalEigenProblemWithSelectorMatrix(Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);

@@ -319,6 +319,29 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, vector<bool>& visi
 		visitedFaces[i] = false;
 	}
 }
+void LocalFields::constructSelectorMatrix(const Eigen::MatrixXi& F, const Eigen::VectorXd& doubleArea)
+{
+	vector<Eigen::Triplet<double>> UTriplet;
+	UTriplet.reserve(2 * F.rows());
+
+	U.resize(2 * F.rows(), 2 * SubDomain.size());
+	InnerElements.resize(SubDomain.size());
+	int counter = 0;
+	for (int face : SubDomain) {
+		InnerElements[counter] = face;
+		counter++;
+	}
+
+	for (int i = 0; i < InnerElements.size(); i++)
+	{
+		double area = doubleArea(InnerElements[i]) / 2.0;
+		double area_sqrt = 1.0 / sqrt(area);
+		UTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * i + 0, area_sqrt));
+		UTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * i + 1, area_sqrt));
+	}
+	U.setFromTriplets(UTriplet.begin(), UTriplet.end());
+	//printf("Selector matrix U %dx%d is created, with %d nnz \n", U.rows(), U.cols(), U.nonZeros());
+}
 
 void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::MatrixXi &F)
 {
@@ -1448,6 +1471,31 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	}
 }
 
+void LocalFields::constructLocalEigenProblemWithSelectorMatrix(const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
+{
+	Eigen::SparseMatrix<double> SF2DLoc, J2DRed;
+	Eigen::VectorXd eigValsLoc;
+	Eigen::MatrixXd EigVectLoc;
+
+	SF2DLoc = U.transpose()*SF2D*U;
+
+	computeEigenSpectra_RegSym_Custom(SF2DLoc, SF2DLoc, NUM_EIG, EigVectLoc, eigValsLoc, "");
+	//computeEigenMatlab(SF2DLoc, SF2DLoc, EigVectLoc, eigValsLoc);
+
+	/* Mapping to larger matrix */
+	for (int i = 0; i < InnerElements.size(); i++)
+	{
+		// First column ==> First basis (2 elements per-local frame)
+		for (int j = 0; j < NUM_EIG; j++)
+		{
+			for (int k = 0; k < NUM_FIELDS; k++)
+			{
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
+			}
+		}
+	}
+
+}
 
 void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, const int tid, const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
 {
