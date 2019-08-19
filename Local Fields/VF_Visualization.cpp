@@ -443,7 +443,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
 	//visualize2Dfields(viewer, XFullDim, color, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 2, false);
+	visualize2Dfields(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 
@@ -465,12 +465,12 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0; 
-	const double EDGE_RATIO = 4.0;
+	const double EDGE_RATIO = 10.0;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color(0.0, 0.0, 0.2);
 	
 	//viewer.selected_data_index = 1; 
-	viewer.data().line_width = 2.0;
+	viewer.data().line_width = 4.0;
 	viewer.data().point_size = 5.0;
 	//viewer.data().show_lines = false;
 
@@ -503,6 +503,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	}
 	 
 	viewer.selected_data_index = 0; 	
+	viewer.data().line_width = 4.0;
 	viewer.data().line_width = 1.0;
 }
 
@@ -761,17 +762,22 @@ void VectorFields::loadVectorFieldsFromFile(const string& filename, Eigen::Vecto
 
 void VectorFields::loadConstraintsFromFile(const string& filename)
 {
+	/*Reset the global constraints and constraint-related matrices */
+	globalConstraints.clear(); globalConstraints.shrink_to_fit();
+	c.resize(0);
+	C.resize(0, 0); C.data().clear();
+
 	ifstream file(filename);
 	string oneLine, oneWord;
 	globalConstraints.reserve(300);
 	vector<double> constraintValues;
+	constraintValues.reserve(2 * globalConstraints.size());
 	
 	double	val2;
 	int		val1; 
 
 	if (file.is_open())
 	{
-
 		/* Obtain each member elements */
 		while (getline(file, oneLine))
 		{
@@ -779,27 +785,35 @@ void VectorFields::loadConstraintsFromFile(const string& filename)
 			getline(iStream, oneWord, ' ');
 			val1 = stoi(oneWord);
 			globalConstraints.push_back(val1);
+			///cout << "val1: " << val1;
+
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			//printf("Reading %d as constraints with values of %.4f ", val1, val2);
+			constraintValues.push_back(val2);
+			///cout << " val2: " << val2; 
+
 			getline(iStream, oneWord, ' ');
 			val2 = stod(oneWord);
 			constraintValues.push_back(val2);
-			getline(iStream, oneWord, ' ');
-			val2 = stod(oneWord);
-			constraintValues.push_back(val2);
+			//printf(" and %.4f \n", val2);
+			///cout << " val3: " << val2 << endl; 
 		}
 	}
 	file.close();
 	for (int i : globalConstraints)
 	{
-		printf("constraint: %d \n", i);
+		//printf("constraint: %d \n", i);
 	}
 
 	c = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());	
+	//c = Eigen::Map<Eigen::VectorXd>(constraintValues.data());
 	cout << "Loading the constraints and setting up matrix C\n";
 	// Setting up matrix C
 	Eigen::SparseMatrix<double> CTemp;
 	vector<Eigen::Triplet<double>> CTriplet;
 	CTriplet.reserve(2 * globalConstraints.size());
-	c.resize(2 * globalConstraints.size());
+	//c.resize(2 * globalConstraints.size());
 	Eigen::Vector2d cRand;
 
 	int counter = 0;
@@ -816,8 +830,13 @@ void VectorFields::loadConstraintsFromFile(const string& filename)
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
 		//c(counter, 0) = cRand(1);
 		counter++;
+
+		//printf("Inserting %d and %d as constraint, with value of %.3f and %.3f \n", 2*globalConstraints[i], 2*globalConstraints[i]+1, c(2*globalConstraints[i]), c(2*globalConstraints[i]+1) );				
+		printf("Inserting %d and %d as constraint, with value of %.3f and %.3f \n", 2 * globalConstraints[i], 2 * globalConstraints[i] + 1, c(2 *i), c(2 * i + 1));
 	}
-	C.resize(2 * globalConstraints.size(), SF2D.rows());
+	printf("B2D=%dx%%d | C=%dx%d | c=%d | triplet=%d | const = %d | \n",
+		B2D.rows(), B2D.cols(), C.rows(), C.cols(), c.size(), CTriplet.size(), globalConstraints.size());
+	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	cout << "C: \n" << C.block(0, 0, 2 * globalConstraints.size(), 20) << endl; 
 }

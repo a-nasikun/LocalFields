@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int vfSaveId = 0;
+int vfSaveId = 7;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Arma43k_";
+	const string model = "Wolf_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -517,13 +517,13 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(vfSaveId);
-				//vfSaveId++;
+				vfSaveId++;
 				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				//vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 
-				vectorFields.loadVectorFieldsFromFile(filename_vfields + ".txt", vectorFields.XFullDim);
-				vectorFields.visualize2Dfields(viewer, vectorFields.XFullDim, Eigen::RowVector3d(0.9, 0.1, 0.1), 4.0, false);
+				//vectorFields.loadVectorFieldsFromFile(filename_vfields + ".txt", vectorFields.XFullDim);
+				//vectorFields.visualize2Dfields(viewer, vectorFields.XFullDim, Eigen::RowVector3d(0.9, 0.1, 0.1), 4.0, false);
 				vectorFields.loadConstraintsFromFile(filename_vfields + "_constraints.txt");
 				vectorFields.visualizeGlobalConstraints(viewer);
 			}
@@ -547,7 +547,7 @@ int main(int argc, char *argv[])
 				//vectorFields.setupGlobalProblem();			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				//vectorFields.constructInteractiveConstraints();				
+				vectorFields.constructInteractiveConstraints();				
 				vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
@@ -694,9 +694,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.0f; 
 
-	//return viewer.launch();
+	return viewer.launch();
 
 	/* Trick for remote desktop */
-	getchar();
-	return 1;
+	//getchar();
+	//return 1;
 }
