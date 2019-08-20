@@ -189,6 +189,12 @@ public:
 	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
 
+	// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
+	void setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda);
+	void obtainConstraints();
+	void preComputeReducedElements();
+	void solveInteractiveSystem();
+
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
 	void measureDirichletEnergy();
@@ -334,7 +340,7 @@ protected:
 	set<int>						SubDomain, Boundary;
 
 	// Variable related to subspace construction
-	Eigen::SparseMatrix<double>		BasisTemp, Basis;
+	Eigen::SparseMatrix<double>		BasisTemp, Basis, BasisT;
 	Eigen::MatrixXd					BasisSum, BasisSumN;
 	vector<int>						Sample;
 	vector<chrono::duration<double>>durations;
@@ -346,6 +352,8 @@ protected:
 	Eigen::MatrixXd					cBar;
 	//Eigen::VectorXd					XLowDim, XFullDim;
 	Eigen::SparseMatrix<double>		CBar, B2DBar;
+	Eigen::VectorXd					vAdd, BvBar;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
 
 	// Variables related to Applications
 	Eigen::MatrixXd					CurvatureTensorField2D;

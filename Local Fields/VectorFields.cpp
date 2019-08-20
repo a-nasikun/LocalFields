@@ -3778,6 +3778,7 @@ void VectorFields::setupReducedBiLaplacian()
 }
 void VectorFields::getUserConstraints()
 {	
+	//Eigen::SparseMatrix<double> BasisT = Basis.transpose();
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
@@ -3787,8 +3788,36 @@ void VectorFields::getUserConstraints()
 	//constructConstraints();
 
 	//userConstraints = globalConstraints; 
-	CBar			= C * Basis;
+	//CBar			= C * Basis;
 	cBar			= c;
+
+	/* Alternative of CBar construction */
+	//printf("C nnz=%d | CBar nnz=%d \n", C.nonZeros(), CBar.nonZeros());
+	//cout << "Cbar(1): \n" << CBar.block(0,0, 2, 50) << endl << endl; 
+
+	//printf("Basis: %dx%d | BasisT: %dx%d \n", Basis.rows(), Basis.cols(), BasisT.rows(), BasisT.cols());
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(40 * 2*globalConstraints.size());
+	vector<double> constraints_(2 * globalConstraints.size());
+	for (int i = 0; i < globalConstraints.size(); i++) { 
+		constraints_[2 * i]   = 2*globalConstraints[i]; 
+		constraints_[2 * i+1] = 2*globalConstraints[i]+1;
+	}
+	//for(int k=0; k<Basis.transpose().outerSize(); ++k)
+	for(int k=0; k<constraints_.size(); k++)
+	{
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
+		{
+			//if (it.row() > ( 2 * globalConstraints.size())) break; 
+			//if(it.row()<2*globalConstraints.size())
+			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
+			//printf("[%d, %d]=%.4f \n", k, it.row(), it.value());
+		}
+	}
+	CBar.resize(0, 0);
+	CBar.resize(2 * globalConstraints.size(), Basis.cols());
+	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	//cout << "Cbar(1): \n" << CBar.block(0, 0, 2, 50) << endl << endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3987,8 +4016,8 @@ void VectorFields::mapSolutionToFullRes()
 	duration = t2 - t0;
 	cout << " in " << duration.count() << " seconds." << endl;
 
-	cout << "Fields \n";
-	cout << XFullDim.block(0, 0, 100, 1) << endl; 
+	//cout << "Fields \n";
+	//cout << XFullDim.block(0, 0, 100, 1) << endl; 
 
 
 	printf("....XFull (%dx%d) =  Basis (%dx%d) * XLowDim (%dx%d) \n", XFullDim.rows(), XFullDim.cols(), Basis.rows(), Basis.cols(), XLowDim.rows(), XLowDim.cols());
@@ -3998,6 +4027,31 @@ void VectorFields::obtainUserVectorFields()
 {
 
 	cout << "Hello there \n" << endl; 
+}
+
+// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
+void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
+{
+
+}
+
+void VectorFields::obtainConstraints()
+{
+
+}
+
+void VectorFields::preComputeReducedElements()
+{
+	// Factorization of B2DBar;
+	B2DBarFactor.analyzePattern(B2DBar);
+	B2DBarFactor.factorize(B2DBar);
+
+
+}
+
+void VectorFields::solveInteractiveSystem()
+{
+
 }
 
 void VectorFields::computeEigenFields(const int &numEigs, const string& filename)
