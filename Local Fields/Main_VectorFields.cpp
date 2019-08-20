@@ -548,7 +548,8 @@ int main(int argc, char *argv[])
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 				vectorFields.constructInteractiveConstraints();				
-				vectorFields.setAndSolveUserSystem(lambda);
+				//vectorFields.setAndSolveUserSystem(lambda);
+				vectorFields.setAndSolveInteractiveSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
 			}
@@ -638,6 +639,13 @@ int main(int argc, char *argv[])
 					viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 					vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+
+					viewer.data().clear();
+					viewer.data().set_mesh(V, F);
+					vectorFields.constructInteractiveConstraints();
+					vectorFields.setAndSolveInteractiveSystem(lambda);
+					vectorFields.visualizeApproxResult(viewer);
+					vectorFields.visualizeGlobalConstraints(viewer);
 				}
 				else if (fieldsType == FieldsType::NROSY)
 				{

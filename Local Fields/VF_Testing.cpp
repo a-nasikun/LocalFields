@@ -1482,6 +1482,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 
 	setupReducedBiLaplacian();
+	preComputeReducedElements();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);

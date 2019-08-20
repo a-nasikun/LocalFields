@@ -3777,8 +3777,7 @@ void VectorFields::setupReducedBiLaplacian()
 
 }
 void VectorFields::getUserConstraints()
-{	
-	//Eigen::SparseMatrix<double> BasisT = Basis.transpose();
+{		
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
@@ -3792,10 +3791,6 @@ void VectorFields::getUserConstraints()
 	cBar			= c;
 
 	/* Alternative of CBar construction */
-	//printf("C nnz=%d | CBar nnz=%d \n", C.nonZeros(), CBar.nonZeros());
-	//cout << "Cbar(1): \n" << CBar.block(0,0, 2, 50) << endl << endl; 
-
-	//printf("Basis: %dx%d | BasisT: %dx%d \n", Basis.rows(), Basis.cols(), BasisT.rows(), BasisT.cols());
 	vector<Eigen::Triplet<double>> CTriplet;
 	CTriplet.reserve(40 * 2*globalConstraints.size());
 	vector<double> constraints_(2 * globalConstraints.size());
@@ -3808,16 +3803,12 @@ void VectorFields::getUserConstraints()
 	{
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
 		{
-			//if (it.row() > ( 2 * globalConstraints.size())) break; 
-			//if(it.row()<2*globalConstraints.size())
 			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
-			//printf("[%d, %d]=%.4f \n", k, it.row(), it.value());
 		}
 	}
 	CBar.resize(0, 0);
 	CBar.resize(2 * globalConstraints.size(), Basis.cols());
 	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
-	//cout << "Cbar(1): \n" << CBar.block(0, 0, 2, 50) << endl << endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -4032,26 +4023,91 @@ void VectorFields::obtainUserVectorFields()
 // INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
 void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
 {
-
+	obtainConstraints();
+	solveInteractiveSystem();
 }
 
 void VectorFields::obtainConstraints()
 {
-
+	getUserConstraints();
 }
 
 void VectorFields::preComputeReducedElements()
 {
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "Precompute B2D, vEst, and B2D*vEst ...";
+
+
 	// Factorization of B2DBar;
 	B2DBarFactor.analyzePattern(B2DBar);
 	B2DBarFactor.factorize(B2DBar);
 
+	// Set up the estimation variable vAdd
+	vAdd.resize(B2DBar.rows());
+	for (int i = 0; i < vAdd.rows(); i++) {
+		vAdd(i) = 0.5;
+	}
 
+	// setup the Bv
+	BvBar = B2DBar * vAdd;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
 }
 
 void VectorFields::solveInteractiveSystem()
 {
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "Solve interactive system ...";
 
+	/* ================== 1. Setting up LHS ================== */
+	Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
+	Eigen::MatrixXd LHS;
+	Eigen::VectorXd bc;
+	for (int i = 0; i < BC.cols(); i++)
+	{
+		bc = CBar.row(i);
+		bc.transposeInPlace();
+		BC.col(i) = B2DBarFactor.solve(bc);
+	}
+	LHS = CBar*BC;
+
+	/* ================== 1. Setting up RHS ================== */
+	Eigen::VectorXd bbv = B2DBarFactor.solve(BvBar);
+	Eigen::VectorXd cbbv = CBar*bbv;
+	Eigen::VectorXd cvc = CBar*vAdd - cBar; 
+	Eigen::VectorXd rhs = cbbv - cvc;
+
+	/* ================== 1. Solve the 1st System  ================== */
+	Eigen::LDLT<Eigen::MatrixXd> LHS_Fact;
+	LHS_Fact.compute(LHS);
+	Eigen::VectorXd lambda = LHS_Fact.solve(rhs);
+
+	/* ================== 2. Setting up LHS ================== */
+
+
+	/* ================== 2. Setting up RHS ================== */
+	rhs = CBar.transpose()*lambda - BvBar;
+
+	/* ================== 2. Solve the 2nd System  ================== */
+	Eigen::VectorXd x = B2DBarFactor.solve(rhs);
+
+	/* ================== 3. Map x to xStar  ================== */
+	XLowDim = x + vAdd;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 4. Map to full resolution  ================== */
+	mapSolutionToFullRes();
 }
 
 void VectorFields::computeEigenFields(const int &numEigs, const string& filename)
