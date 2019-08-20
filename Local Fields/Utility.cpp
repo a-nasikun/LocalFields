@@ -576,7 +576,7 @@ void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd
 	in.close();
 }
 
-void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b)
+void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double, Eigen::RowMajor> &S, Eigen::VectorXd& a, Eigen::VectorXd& b)
 {
 	{
 		cout << "Toying around with sparse matrix";
@@ -618,7 +618,11 @@ void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double> &S, Eige
 	cout << "Setting up the handle in GPU \n";
 	cudaError_t			cudaStat1 = cudaSuccess;
 	cusparseHandle_t	handle;
-	cusparseMatDescr_t descrA = 0;
+	cusparseMatDescr_t descrA;
+	cusparseCreateMatDescr(&descrA);
+	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&handle);
 	
 	S.makeCompressed();
 	const int nnz = S.nonZeros();
@@ -635,23 +639,25 @@ void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double> &S, Eige
 	h_csrVal = S.valuePtr();
 	h_csrRowPtr = S.outerIndexPtr();
 	h_csrColInd = S.innerIndexPtr();
-	double* h_a = (double*)malloc(m * sizeof(double));
+	double* h_a = (double*)malloc(n * sizeof(double));
 	h_a = a.data();
-	double* h_b = (double*)malloc(n * sizeof(double));
-	for (int i = 0; i < n; i++) h_b[i] = 0.5;
-	//for (int i = 0; i < nnz; i++) {
-	//	if(i%1000==0)
-	//	printf("[%d]=>[%.3f]\n", h_csrColInd[i], h_csrVal[i]);
-	//}
-	///for (int i = 0; i < (m+1); i++) {
-	///	//if(i%1000==0)
-	///		printf("[%d/%d]\n", h_csrRowPtr[i], m+1);
-	///}
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+	for (int i = 0; i < nnz; i++) {
+		//if(i%1000==0)
+		if(h_csrColInd[i]<0)
+			printf("[%d]=>[%.3f]\n", h_csrColInd[i], h_csrVal[i]);
+	}
+	for (int i = 0; i < (m+1); i++) {
+		//if(i%1000==0)
+		if(h_csrRowPtr[i]<0)
+			printf("[%d/%d]\n", h_csrRowPtr[i], m+1);
+	}
 
 	cout << "Allocating memory and setup in GPU \n";
 	// Allocating memory in device/GPU
-	double *d_a;  cudaStat1 = cudaMalloc(&d_a, m * sizeof(double)); cout << "__alloc_status:" << cudaStat1 << endl;
-	double *d_b;  cudaStat1 = cudaMalloc(&d_b, n * sizeof(double)); cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double)); cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double)); cout << "__alloc_status:" << cudaStat1 << endl;
 	int *d_csrColInd; cudaStat1 = cudaMalloc(&d_csrColInd, nnz * sizeof(int));   cout << "__col:alloc_status:" << cudaStat1 << endl;
 	int *d_csrRowPtr; cudaStat1 = cudaMalloc(&d_csrRowPtr, (m+1) * sizeof(int)); cout << "__row:alloc_status:" << cudaStat1 << endl;
 	double *d_csrVal; cudaStat1 = cudaMalloc(&d_csrVal, nnz * sizeof(double));   cout << "__val:alloc_status:" << cudaStat1 << endl;
@@ -662,8 +668,8 @@ void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double> &S, Eige
 	
 	cout << "Copying to GPU \n";
 	// Copying data to CUDA
-	cudaStat1 = cudaMemcpy(d_a, h_a, m * sizeof(double), cudaMemcpyHostToDevice); cout << "__alloc_status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_b, h_b, n * sizeof(double), cudaMemcpyHostToDevice); cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice); cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice); cout << "__alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_csrRowPtr, h_csrRowPtr, (m+1) * sizeof(int), cudaMemcpyHostToDevice); cout << "__rows: status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_csrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);   cout << "__col: status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_csrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);      cout << "__val: status:" << cudaStat1 << endl;
@@ -681,14 +687,14 @@ void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double> &S, Eige
 	// The multiciplication
 	double alpha = 1.0; 
 	double beta = 0.0;
-	cusparseCreate(&handle);
-	cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, n, m, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	
+	cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
 	cout << "__status:" << cusparseStat1 << endl;
 	
 	cout << "Copying to CPU \n";
-	cudaMemcpy(h_b, d_b, n * sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
 	for (int i = 0; i < 10; i++) printf("%d: %.4f \n", i, h_b[i]);
-	b = Eigen::Map<Eigen::VectorXd>(h_b, n);
+	b = Eigen::Map<Eigen::VectorXd>(h_b, m);
 	//cout << b.block(0, 0, 10, 1) << endl;
 
 }

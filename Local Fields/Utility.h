@@ -89,7 +89,7 @@ void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd
 
 /* Matrix multiplication in Cuda */
 void SparseMatrix_Vector_Multiplication(const Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b);
-void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b);
+void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double, Eigen::RowMajor> &S, Eigen::VectorXd& a, Eigen::VectorXd& b);
 
 /*
 namespace Eigen {

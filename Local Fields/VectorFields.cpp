@@ -4002,7 +4002,8 @@ void VectorFields::mapSolutionToFullRes()
 
 	//XFullDim = Basis * XLowDim;
 	//SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
-	SparseMatrix_Vector_Multiplication_CSR(BasisT, XLowDim, XFullDim);
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow = Basis; 
+	SparseMatrix_Vector_Multiplication_CSR(BasisRow, XLowDim, XFullDim);
 
 
 	t2 = chrono::high_resolution_clock::now();
