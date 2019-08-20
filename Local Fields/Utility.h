@@ -87,6 +87,10 @@ void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseM
 void writeEigenDenseMatrixToBinary(Eigen::MatrixXd M, const std::string &filename);
 void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd M);
 
+/* Matrix multiplication in Cuda */
+void SparseMatrix_Vector_Multiplication(const Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b);
+
+/*
 namespace Eigen {
 	template<class Matrix>
 	void write_binary(const char* filename, const Matrix& matrix) {
@@ -107,11 +111,11 @@ namespace Eigen {
 		in.read((char *)matrix.data(), rows*cols * sizeof(typename Matrix::Scalar));
 		in.close();
 	}
-} // Eigen::
+} // Eigen:: */
 
 
 //template<typename Scalar>
-void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
+//void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M);
 
 
 //#include "MatlabDataArray.hpp"

@@ -1,5 +1,6 @@
 #include "Utility.h"
 #include <fstream>
+#include <cusparse_v2.h>
 
 double SparseMatrixMaxValue(const Eigen::SparseMatrix<double> &M)
 {
@@ -573,6 +574,89 @@ void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd
 	M.resize(rows, cols);
 	in.read((char *)M.data(), rows*cols * sizeof(double));
 	in.close();
+}
+
+/* Matrix multiplication in Cuda b = S*a */
+void SparseMatrix_Vector_Multiplication(const Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b)
+{
+	// --- Initialize cuSPARSE
+	cusparseHandle_t	handle;
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	const int m = S.rows();
+	const int n = S.cols();
+	const int lda = m;
+	printf("Input S=%dx%d | a=%d | m=%d, n=%d, lda=%d \n", S.rows(), S.cols(), a.size(), m, n, lda);
+
+	cout << "allocating memory in the host/CPU \n";
+	// --- host-size matrices
+	double *h_S = (double*)malloc(m*n * sizeof(double));
+	double *h_a = (double*)malloc(n * sizeof(double));
+	double *h_b = (double*)malloc(m * sizeof(double));
+	Eigen::MatrixXd Snew(S);
+	h_S = Snew.data();
+	h_a = a.data();
+
+	cout << "allocating memory in the device/GPU \n";
+	// --- Create device arrays and copy host arrays to them
+	double *d_S;  cudaStat1 = cudaMalloc(&d_S, m*n*sizeof(double));
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n*sizeof(double));
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m*sizeof(double));
+	cout << cudaStat1 << ": copying data from CPU to GPU \n";
+	cudaStat1 = cudaMemcpy(d_S, h_S, m*n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);
+
+	// --- Descriptor for sparse matrix A
+	cusparseMatDescr_t descrA;     
+	cusparseCreateMatDescr(&descrA);
+	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ONE);
+
+	cout << cudaStat1 << "Analyzing sparsity pattern in input matrix S : ";
+	int nnzS = 0;	
+	// --- Device side number of nonzero elements per row of matrix A
+	int *d_nnzPerVectorA;   
+	cudaMalloc(&d_nnzPerVectorA, n * sizeof(*d_nnzPerVectorA));
+	cusparseDnnz(handle, CUSPARSE_DIRECTION_ROW, m, n, descrA, d_S, lda, d_nnzPerVectorA, &nnzS);
+	cout << "with " << nnzS << " non-zero entries \n";
+
+	// --- Host side number of nonzero elements per row of matrix A
+	int *h_nnzPerVectorA = (int *)malloc(m * sizeof(*h_nnzPerVectorA));
+	cudaMemcpy(h_nnzPerVectorA, d_nnzPerVectorA, m * sizeof(*h_nnzPerVectorA), cudaMemcpyDeviceToHost);
+
+	cout << "Creating a sparse matrix S in GPU \n";
+	// --- Device side sparse matrix
+	double *d_S_sp;            
+	cudaMalloc(&d_S_sp, nnzS * sizeof(*d_S_sp));
+
+	int *d_S_RowIndices;    
+	cudaMalloc(&d_S_RowIndices, (m + 1) * sizeof(*d_S_RowIndices));
+	int *d_S_ColIndices;    
+	cudaMalloc(&d_S_ColIndices, nnzS * sizeof(*d_S_ColIndices));
+
+	cout << "Converting from Dense to Sparse \n";
+	cusparseDdense2csr(handle, m, n, descrA, d_S, lda, d_nnzPerVectorA, d_S_sp, d_S_RowIndices, d_S_ColIndices);
+
+	// --- Host side sparse matrices
+	cout << "allocating memory in the device/GPU \n";
+	double *h_S_sp = (double *)malloc(nnzS * sizeof(*h_S));
+	int *h_S_RowIndices = (int *)malloc((m + 1) * sizeof(*h_S_RowIndices));
+	int *h_S_ColIndices = (int *)malloc(nnzS * sizeof(*h_S_ColIndices));
+	cout << "copying data from CPU to GPU \n";
+	cudaMemcpy(h_S_sp, d_S_sp, nnzS * sizeof(*h_S_sp), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_S_RowIndices, d_S_RowIndices, (m + 1) * sizeof(*h_S_RowIndices), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_S_ColIndices, d_S_ColIndices, nnzS * sizeof(*h_S_ColIndices), cudaMemcpyDeviceToHost);
+
+	cout << "Performing multiplication \n";
+	const double alpha = 1.;
+	const double beta = 0.;
+	cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnzS, &alpha, descrA, d_S_sp, d_S_RowIndices, d_S_ColIndices, d_a ,&beta, d_b);
+	
+	cout << "Returning results to CPU \n";
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+
 }
 
 //template<typename Scalar>
