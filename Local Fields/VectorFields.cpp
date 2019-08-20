@@ -4001,7 +4001,8 @@ void VectorFields::mapSolutionToFullRes()
 	cout << "> Mapping to full-resolution...";
 
 	//XFullDim = Basis * XLowDim;
-	SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
+	//SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
+	SparseMatrix_Vector_Multiplication_CSR(BasisT, XLowDim, XFullDim);
 
 
 	t2 = chrono::high_resolution_clock::now();
