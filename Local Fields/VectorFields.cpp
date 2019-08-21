@@ -4295,29 +4295,91 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 	}
 	else {		
-		t1 = chrono::high_resolution_clock::now();
 		cout << "> Computing restricted eigenproblem (in Matlab)...\n ";
 
 		cout << "____Computing reduced system... ";
+		t1 = chrono::high_resolution_clock::now();
 		Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 		Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
-
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
 		cout << "in " << duration.count() << " seconds" << endl;
 
+		cout << "____Computing restricted eigenproblem ... ";
 		t1 = chrono::high_resolution_clock::now();
 		//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 		//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 		//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		cout << "in " << duration.count() << " seconds" << endl;
 		//WriteSparseMatrixToMatlab(Basis, "hello");
 	}
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "____Computing the eigenproblem in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::computeApproxEigenFields_Mult()
+{
+	vector<string> modelFile;
+	vector<string> basisFile;
+
+	// populating the model File
+	modelFile.push_back("../LocalFields/Models/Armadillo/Armadillo_43243.obj");
+	modelFile.push_back("../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj");
+	modelFile.push_back("../LocalFields/Models/AIM_fertility_watertight/fertility.obj");
+	modelFile.push_back("../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off");
+	modelFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off");
+
+	// populating the model File
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Eigfields_40sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_2000_Eigfields_40sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Ramses_2000_Eigfields_40sup_spectra");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Neptune_2000_Eigfields_40sup_spectra");
+	for (int i = 0; i < modelFile.size(); i++)
+	{
+		readMesh(modelFile[i]);
+		scaleMesh(V, F);
+
+		computeEdges();
+		computeAverageEdgeLength();
+		computeFaceCenter();
+		computeFaceNormal();
+		constructVFNeighbors();
+
+		constructVertexAdjacencyMatrix();
+		constructFaceAdjacency3NMatrix();
+		constructFaceAdjacency2RingMatrix();
+		constructEVList();
+		constructEFList();
+		selectFaceToDraw(2000);
+
+		/* MATRIX CONSTRUCTIONS */
+		constructMassMatrices();
+		constructRotationMatrix();
+		constructMappingMatrix();
+
+		constructGradient3D();
+		constructGradientStar3D();
+		constructStiffnessMatrices_Implicit();
+
+		/* Construct sample */
+		numSample = 1000;
+		faceScale.resize(F.rows()); 
+		faceScale.setConstant(1.0);
+		constructSamples(numSample);
+
+		/* Retrive basis*/
+		retrieveBasis(basisFile[i]);
+
+		const int eigsToCompute = 500;
+		computeApproxEigenFields(eigsToCompute, "hello");
+	}
 }
 
 void VectorFields::retrieveApproxEigenFields() 

@@ -224,6 +224,7 @@ public:
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
 	void computeApproxEigenFields(const int &numEigs, const string& filename);
+	void computeApproxEigenFields_Mult();
 	void retrieveApproxEigenFields();
 	void ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 	void ComputeCurvatureFields();

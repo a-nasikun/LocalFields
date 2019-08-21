@@ -98,7 +98,8 @@ int main(int argc, char *argv[])
 	{
 	case FieldsType::VECTOR:
 		cout << "\n========================= VECTOR FIELDS =============================\n";
-		vectorFields.TEST_VECTOR(viewer, meshFile);
+		//vectorFields.TEST_VECTOR(viewer, meshFile);
+		vectorFields.computeApproxEigenFields_Mult();
 		vectorFields.getVF(V, F);
 		break;
 	case FieldsType::NROSY:
@@ -703,9 +704,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.0f; 
 
-	return viewer.launch();
+	//return viewer.launch();
 
 	/* Trick for remote desktop */
-	//getchar();
-	//return 1;
+	getchar();
+	return 1;
 }

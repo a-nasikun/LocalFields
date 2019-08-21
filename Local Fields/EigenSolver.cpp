@@ -521,6 +521,8 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	chrono::high_resolution_clock::time_point	t1, t2, t3, t4;
 	chrono::duration<double>					time_span, ts2;
 
+	t1 = chrono::high_resolution_clock::now();
+
 	const int NNZ_S = S.nonZeros();
 	const int NNZ_M = M.nonZeros();
 	double *eigVal, *eigVec;
@@ -549,7 +551,7 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	int nnzSCounter = 0;
 	int nnzMCounter = 0;
 
-	t1 = chrono::high_resolution_clock::now();
+	
 
 	// Getting matrix S
 	jcs[0] = nnzSCounter;
@@ -601,8 +603,8 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engEvalString(ep, "EigVal=diag(EigVal);");
 	if (numEigs > 2)
 	{
-		engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
-		string approxFile = "save('" + filename + "_eigFields','data','EigVal');";		
+		///engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
+		///string approxFile = "save('" + filename + "_eigFields','data','EigVal');";		
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
