@@ -31,6 +31,8 @@
 #include "engine.h"
 #include "mex.h"
 
+#include <cusparse_v2.h>
+
 #include "TestSolver.h"
 
 using namespace std;
@@ -186,8 +188,10 @@ public:
 	void setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
-	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
+	void mapSolutionToFullRes();
+	void initializeParametersForLifting();
+	void performLifting();
 
 	// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
 	void setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda);
@@ -341,6 +345,7 @@ protected:
 
 	// Variable related to subspace construction
 	Eigen::SparseMatrix<double>		BasisTemp, Basis, BasisT;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow;
 	Eigen::MatrixXd					BasisSum, BasisSumN;
 	vector<int>						Sample;
 	vector<chrono::duration<double>>durations;
@@ -351,9 +356,14 @@ protected:
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;
 	//Eigen::VectorXd					XLowDim, XFullDim;
-	Eigen::SparseMatrix<double>		CBar, B2DBar;
+	Eigen::SparseMatrix<double>		CBar, CBarT, B2DBar;
 	Eigen::VectorXd					vAdd, BvBar;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
+	cusparseHandle_t handle;		/* Entries for lifting using CUDA */
+	cusparseMatDescr_t descrA;
+	double* d_csrVal;
+	int* d_csrRowPtr; 
+	int* d_csrColInd;
 
 	// Variables related to Applications
 	Eigen::MatrixXd					CurvatureTensorField2D;

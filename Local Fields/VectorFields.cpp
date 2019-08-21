@@ -10,6 +10,7 @@
 #include <suitesparse/cholmod.h>
 
 
+
 /* ====================== SETTING UP MATRICES ============================*/
 void VectorFields::constructConstraints()
 {
@@ -3809,6 +3810,7 @@ void VectorFields::getUserConstraints()
 	CBar.resize(0, 0);
 	CBar.resize(2 * globalConstraints.size(), Basis.cols());
 	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	CBarT = CBar.transpose();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -4002,9 +4004,9 @@ void VectorFields::mapSolutionToFullRes()
 
 	//XFullDim = Basis * XLowDim;
 	//SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
-	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow = Basis; 
-	SparseMatrix_Vector_Multiplication_CSR(BasisRow, XLowDim, XFullDim);
-
+	//Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow = Basis; 
+	//SparseMatrix_Vector_Multiplication_CSR(BasisRow, XLowDim, XFullDim);
+	performLifting();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -4014,8 +4016,80 @@ void VectorFields::mapSolutionToFullRes()
 	//cout << XFullDim.block(0, 0, 100, 1) << endl; 
 
 
-	printf("....XFull (%dx%d) =  Basis (%dx%d) * XLowDim (%dx%d) \n", XFullDim.rows(), XFullDim.cols(), Basis.rows(), Basis.cols(), XLowDim.rows(), XLowDim.cols());
+	//printf("....XFull (%dx%d) =  Basis (%dx%d) * XLowDim (%dx%d) \n", XFullDim.rows(), XFullDim.cols(), Basis.rows(), Basis.cols(), XLowDim.rows(), XLowDim.cols());
 }
+
+void VectorFields::initializeParametersForLifting()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&descrA);
+	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&handle);
+
+	// Matrix variables
+	BasisRow = Basis; 
+	BasisRow.makeCompressed();
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating the matrix in CPU
+	double* h_csrVal	= (double*)malloc(nnz * sizeof(double));
+	int* h_csrRowPtr	= (int*)malloc((m + 1) * sizeof(int));
+	int* h_csrColInd	= (int*)malloc(nnz * sizeof(int));
+	h_csrVal			= BasisRow.valuePtr();
+	h_csrRowPtr			= BasisRow.outerIndexPtr();
+	h_csrColInd			= BasisRow.innerIndexPtr();	
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_csrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_csrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_csrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_csrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+
+}
+
+void VectorFields::performLifting()
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating data in CPU
+	double* h_a = (double*)malloc(n * sizeof(double));
+	h_a = XLowDim.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+	// Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+	// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+ 	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	XFullDim = Eigen::Map<Eigen::VectorXd>(h_b, m);
+}
+
 
 void VectorFields::obtainUserVectorFields()
 {
@@ -4068,42 +4142,71 @@ void VectorFields::solveInteractiveSystem()
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "Solve interactive system ...";
+	cout << "Solve interactive system ...\n";
 
 	/* ================== 1. Setting up LHS ================== */
+	cout << "__Create LHS: ";
+	t1 = chrono::high_resolution_clock::now();
 	Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
 	Eigen::MatrixXd LHS;
 	Eigen::VectorXd bc;
 	for (int i = 0; i < BC.cols(); i++)
 	{
-		bc = CBar.row(i);
-		bc.transposeInPlace();
+		bc = CBarT.col(i);
+		//bc.transposeInPlace();
 		BC.col(i) = B2DBarFactor.solve(bc);
 	}
 	LHS = CBar*BC;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 1. Setting up RHS ================== */
+	cout << "__Create rhs: ";
+	t1 = chrono::high_resolution_clock::now();
 	Eigen::VectorXd bbv = B2DBarFactor.solve(BvBar);
 	Eigen::VectorXd cbbv = CBar*bbv;
 	Eigen::VectorXd cvc = CBar*vAdd - cBar; 
 	Eigen::VectorXd rhs = cbbv - cvc;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 1. Solve the 1st System  ================== */
+	cout << "__Solve Schur-complement system: ";
+	t1 = chrono::high_resolution_clock::now();
 	Eigen::LDLT<Eigen::MatrixXd> LHS_Fact;
 	LHS_Fact.compute(LHS);
 	Eigen::VectorXd lambda = LHS_Fact.solve(rhs);
-
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds." << endl;
 	/* ================== 2. Setting up LHS ================== */
 
 
 	/* ================== 2. Setting up RHS ================== */
+	cout << "__dense rhs: ";
+	t1 = chrono::high_resolution_clock::now();
 	rhs = CBar.transpose()*lambda - BvBar;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 2. Solve the 2nd System  ================== */
+	cout << "__solve 2nd system: ";
+	t1 = chrono::high_resolution_clock::now();
 	Eigen::VectorXd x = B2DBarFactor.solve(rhs);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 3. Map x to xStar  ================== */
+	cout << "__map x to x*: ";
+	t1 = chrono::high_resolution_clock::now();
 	XLowDim = x + vAdd;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds." << endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
