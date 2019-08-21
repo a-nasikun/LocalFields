@@ -2458,8 +2458,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		if (tid == ntids - 1) ipts = Sample.size() - istart;
 		if (ipts <= 0) ipts = 0;
 		
-		std::vector<Engine*> ep;
-		ep.resize(ntids);
+		//std::vector<Engine*> ep;
+		//ep.resize(ntids);
 		for (int i = 0; i < ntids; i++) 
 		{
 			//ep[i] = engOpen(NULL);
@@ -3783,7 +3783,7 @@ void VectorFields::getUserConstraints()
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Obtaining user constraints ";
+	//cout << "> Obtaining user constraints ";
 
 	//constructConstraints();
 
@@ -3814,10 +3814,10 @@ void VectorFields::getUserConstraints()
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
-	cout << "in " << duration.count() << " seconds." << endl;
+	//cout << "in " << duration.count() << " seconds." << endl;
 
-	printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
-	printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
+	//printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
+	//printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
 }
 
 void VectorFields::setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)

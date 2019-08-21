@@ -239,12 +239,38 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
 	viewer.data().lines.resize(3 * FaceToDraw.size(), 9);
-	for (int i = 0; i < FaceToDraw.size(); i++)
+	//for (int i = 0; i < FaceToDraw.size(); i++)
+	//{
+	//	viewer.data().lines.row(i)							<< FCLoc.row(i), FCLoc.row(i) + TFields.row(i)*lengthScale, color;
+	//	viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	//	viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	//}
+
+
+	// Drawing in parallel
+	int id, tid, ntids, ipts, istart, iproc;
+	const int NUM_THREADS = omp_get_num_procs();
+	omp_set_num_threads(NUM_THREADS);
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
-		viewer.data().lines.row(i)							<< FCLoc.row(i), FCLoc.row(i) + TFields.row(i)*lengthScale, color;
-		viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
-		viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+		iproc = omp_get_num_procs();
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		ipts = (int)ceil(1.00*(double)FaceToDraw.size() / (double)ntids);
+		istart = tid * ipts;
+		if (tid == ntids - 1) ipts = FaceToDraw.size() - istart;
+		if (ipts <= 0) ipts = 0;
+
+		for (id = istart; id < (istart + ipts); id++) {
+			if (id >= FaceToDraw.size()) break; 
+
+			viewer.data().lines.row(id) << FCLoc.row(id), FCLoc.row(id) + TFields.row(id)*lengthScale, color;
+			viewer.data().lines.row(id+ FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head1Fields.row(id)*lengthScale / HEAD_RATIO, color;
+			viewer.data().lines.row(id+ 2*FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head2Fields.row(id)*lengthScale / HEAD_RATIO, color;
+
+		}
 	}
+
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -478,7 +504,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
 	//visualize2Dfields(viewer, XFullDim, color, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 3, false);
+	visualize2Dfields(viewer, XFullDim, color, 5, false);
 	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
