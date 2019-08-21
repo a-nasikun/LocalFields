@@ -289,6 +289,7 @@ public:
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
 	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
+	void visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces);
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &scale);
@@ -359,6 +360,7 @@ protected:
 	Eigen::SparseMatrix<double>		CBar, CBarT, B2DBar;
 	Eigen::VectorXd					vAdd, BvBar;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
+	Eigen::MatrixXd					BC; 
 	cusparseHandle_t handle;		/* Entries for lifting using CUDA */
 	cusparseMatDescr_t descrA;
 	double* d_csrVal;

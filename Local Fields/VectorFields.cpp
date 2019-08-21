@@ -3997,10 +3997,10 @@ void VectorFields::solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<
 void VectorFields::mapSolutionToFullRes()
 {
 	// For Timing
-	chrono::high_resolution_clock::time_point	t0, t1, t2;
-	chrono::duration<double>					duration;
-	t0 = chrono::high_resolution_clock::now();
-	cout << "> Mapping to full-resolution...";
+	///chrono::high_resolution_clock::time_point	t0, t1, t2;
+	///chrono::duration<double>					duration;
+	///t0 = chrono::high_resolution_clock::now();
+	///cout << "> Mapping to full-resolution...";
 
 	//XFullDim = Basis * XLowDim;
 	//SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
@@ -4008,9 +4008,9 @@ void VectorFields::mapSolutionToFullRes()
 	//SparseMatrix_Vector_Multiplication_CSR(BasisRow, XLowDim, XFullDim);
 	performLifting();
 
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t0;
+	///cout << " in " << duration.count() << " seconds." << endl;
 
 	//cout << "Fields \n";
 	//cout << XFullDim.block(0, 0, 100, 1) << endl; 
@@ -4100,8 +4100,18 @@ void VectorFields::obtainUserVectorFields()
 // INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
 void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
 {
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	cout << "Set constraint, set system, solve system, and lift it up in :";
+	t0 = chrono::high_resolution_clock::now();
+
 	obtainConstraints();
 	solveInteractiveSystem();
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
 }
 
 void VectorFields::obtainConstraints()
@@ -4139,78 +4149,82 @@ void VectorFields::preComputeReducedElements()
 void VectorFields::solveInteractiveSystem()
 {
 	// Timing
-	chrono::high_resolution_clock::time_point	t0, t1, t2;
-	chrono::duration<double>					duration;
-	t0 = chrono::high_resolution_clock::now();
-	cout << "Solve interactive system ...\n";
-
-	/* ================== 1. Setting up LHS ================== */
-	cout << "__Create LHS: ";
-	t1 = chrono::high_resolution_clock::now();
-	Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
+	///chrono::high_resolution_clock::time_point	t0, t1, t2;
+	///chrono::duration<double>					duration;
+	///cout << "Solve interactive system ...\n";
+	///
+	////* ================== 1. Setting up LHS ================== */
+	///cout << "__Create LHS: ";
+	///t0 = chrono::high_resolution_clock::now();
+	///t1 = chrono::high_resolution_clock::now();
+	//Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
+	if (CBar.rows() == 2)
+		BC.resize(CBar.cols(), CBar.rows());
+	else
+		BC.conservativeResize(Eigen::NoChange, BC.cols() + 2);
 	Eigen::MatrixXd LHS;
 	Eigen::VectorXd bc;
-	for (int i = 0; i < BC.cols(); i++)
+	for (int i = 2; i > 0; i--)
 	{
-		bc = CBarT.col(i);
+		bc = CBarT.col(BC.cols()-i);
 		//bc.transposeInPlace();
-		BC.col(i) = B2DBarFactor.solve(bc);
+		BC.col(BC.cols()-i) = B2DBarFactor.solve(bc);
 	}
 	LHS = CBar*BC;
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds." << endl;
-
-	/* ================== 1. Setting up RHS ================== */
-	cout << "__Create rhs: ";
-	t1 = chrono::high_resolution_clock::now();
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	////* ================== 1. Setting up RHS ================== */
+	///cout << "__Create rhs: ";
+	///t1 = chrono::high_resolution_clock::now();
 	Eigen::VectorXd bbv = B2DBarFactor.solve(BvBar);
 	Eigen::VectorXd cbbv = CBar*bbv;
 	Eigen::VectorXd cvc = CBar*vAdd - cBar; 
 	Eigen::VectorXd rhs = cbbv - cvc;
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds." << endl;
-
-	/* ================== 1. Solve the 1st System  ================== */
-	cout << "__Solve Schur-complement system: ";
-	t1 = chrono::high_resolution_clock::now();
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	////* ================== 1. Solve the 1st System  ================== */
+	///cout << "__Solve Schur-complement system: ";
+	///t1 = chrono::high_resolution_clock::now();
 	Eigen::LDLT<Eigen::MatrixXd> LHS_Fact;
 	LHS_Fact.compute(LHS);
 	Eigen::VectorXd lambda = LHS_Fact.solve(rhs);
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds." << endl;
-	/* ================== 2. Setting up LHS ================== */
-
-
-	/* ================== 2. Setting up RHS ================== */
-	cout << "__dense rhs: ";
-	t1 = chrono::high_resolution_clock::now();
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	////* ================== 2. Setting up LHS ================== */
+	///
+	///
+	////* ================== 2. Setting up RHS ================== */
+	///cout << "__dense rhs: ";
+	///t1 = chrono::high_resolution_clock::now();
 	rhs = CBar.transpose()*lambda - BvBar;
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds." << endl;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 2. Solve the 2nd System  ================== */
-	cout << "__solve 2nd system: ";
-	t1 = chrono::high_resolution_clock::now();
+	///cout << "__solve 2nd system: ";
+	///t1 = chrono::high_resolution_clock::now();
 	Eigen::VectorXd x = B2DBarFactor.solve(rhs);
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds." << endl;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 3. Map x to xStar  ================== */
-	cout << "__map x to x*: ";
-	t1 = chrono::high_resolution_clock::now();
+	///cout << "__map x to x*: ";
+	///t1 = chrono::high_resolution_clock::now();
 	XLowDim = x + vAdd;
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds." << endl;
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t0;
+	///cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 4. Map to full resolution  ================== */
 	mapSolutionToFullRes();

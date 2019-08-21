@@ -148,7 +148,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
 	chrono::duration<double>					duration, da, de;
 	t1 = chrono::high_resolution_clock::now();
-	//cout << "> Adding edges... ";
+	cout << "> Adding edges... ";
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
@@ -235,13 +235,48 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	}
 
 	/* Draw the fields in MATRIX format (much faster then looping over each face and draw them) */
-	viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
-	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
-	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
+	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+	viewer.data().lines.resize(3 * FaceToDraw.size(), 9);
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		viewer.data().lines.row(i)							<< FCLoc.row(i), FCLoc.row(i) + TFields.row(i)*lengthScale, color;
+		viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
+		viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	}
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	//cout << "in " << duration.count() << " seconds" << endl;
+	cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
+{
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Setting edges... ";
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = scale;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	//>>>>>>> master
+
+	Eigen::VectorXd fields3d = A*field2D;
+	//viewer.data().set_edges(FC, fields3d*lengthScale, color);
+	viewer.data().lines.resize(F.rows(), 9);
+	for (int i = 0; i < F.rows(); i++)
+	{
+		viewer.data().lines.row(i) << FC.row(i), FC.row(i) + fields3d.block(3 * i, 0, 3, 1).transpose(), color;
+	}
+
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
@@ -444,6 +479,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
 	//visualize2Dfields(viewer, XFullDim, color, 3, false);
 	visualize2Dfields(viewer, XFullDim, color, 3, false);
+	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 
