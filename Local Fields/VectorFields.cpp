@@ -2401,7 +2401,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	/* Set-UP Laplace Matrix */
 	//Eigen::SparseMatrix<double> LapForBasis = MF2Dinv * SF2DAsym;
 
-	cout << "....Constructing and solving local systems...";
+	///cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
 	durations.resize(NUM_PROCESS);
 	const int Num_fields = 2;
@@ -4307,9 +4307,9 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 
 		cout << "____Computing restricted eigenproblem ... ";
 		t1 = chrono::high_resolution_clock::now();
-		//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+		computeEigenGPU(SFAsymbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 		//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
+		//computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 		//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
 		t2 = chrono::high_resolution_clock::now();
@@ -4370,15 +4370,31 @@ void VectorFields::computeApproxEigenFields_Mult()
 
 		/* Construct sample */
 		numSample = 1000;
+		numSupport = 40.0;
 		faceScale.resize(F.rows()); 
 		faceScale.setConstant(1.0);
 		constructSamples(numSample);
 
 		/* Retrive basis*/
-		retrieveBasis(basisFile[i]);
+		if(i<3)
+			constructBasis();
+		else 
+			retrieveBasis(basisFile[i]);
 
 		const int eigsToCompute = 500;
 		computeApproxEigenFields(eigsToCompute, "hello");
+
+		/* Lifting to full res */
+		chrono::high_resolution_clock::time_point	t1, t2;
+		chrono::duration<double>					duration;
+		cout << "Lifting to the full resolution...";
+		t1 = chrono::high_resolution_clock::now();
+
+		Eigen::MatrixXd Eig_Full = Basis*eigFieldReduced2D.block(0,0, Basis.cols(), eigsToCompute);
+
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		cout << "in " << duration.count() << " seconds" << endl;
 	}
 }
 
