@@ -73,14 +73,16 @@ public:
 	void nRoSyFieldsDesignRef_HardConstraints();
 	void createAlignmentField(Eigen::VectorXd& v);
 	void constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c);
-	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
-	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
+	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst,  const vector<double>& lambda, Eigen::VectorXd& b);
+	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 
 	// Interactive constraints for spline editing
 	void nRoSyFieldsDesignRef_Splines();
 	void pushNewUserConstraints(const int& fInit, const int& fEnd);
 	void constructInteractiveConstraints();
+	void setupWeight(double mu, vector<double>& lambda);
+
 	void resetInteractiveConstraints();
 	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
 	void setupLHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::SparseMatrix<double>& C, Eigen::SparseMatrix<double>& A_LHS);
@@ -109,8 +111,8 @@ public:
 			// Hard constraints
 	void nRoSyFieldsDesign_Reduced_HardConstraints();
 	void constructRandomHardConstraints_Reduced();
-	void setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
-	void setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, Eigen::SparseMatrix<double>& A_LHSBar);
+	void setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, const vector<double>& lambda, Eigen::VectorXd& bBar);
+	void setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, const Eigen::SparseMatrix<double>& A_LHSBar, const Eigen::VectorXd& bBar);
 	
 	void nRoSyFieldsDesign_Reduced_Splines();
@@ -130,8 +132,12 @@ public:
 
 	/* Testing stuff */
 	void TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
+
+	/* Write and Load fields */
 	void writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename);
 	void writeConstraintsToFile(const string& filename);
+	void loadNRoSyFieldsFromFile(const string& filename, NRoSy& nRoSy);
+	void loadConstraintsFromFile(const string& filename);
 
 	/* PROJECTION ON REDUCED FIELDS */
 	void testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& inputFields, double &error);
@@ -178,7 +184,7 @@ public:
 	Eigen::VectorXd					XfBar;
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		CBar;										// selector matrix
-	Eigen::SparseMatrix<double>		BFBar, BMBar;
+	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar;
 	
 	/* Variable on projection */
 	Eigen::VectorXd					wb;											// projected representation fields
