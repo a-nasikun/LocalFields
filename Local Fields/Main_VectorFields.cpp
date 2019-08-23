@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int vfSaveId = 7;
+int saveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::NROSY;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Arma43k_";
+	const string model = "RockerArm_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/raptor.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_270k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
@@ -159,7 +159,6 @@ int main(int argc, char *argv[])
 
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
-	int nCounter = 11;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -512,8 +511,8 @@ int main(int argc, char *argv[])
 		case 'S':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(vfSaveId);
-				vfSaveId++;
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"constraintFields_user_" + std::to_string(saveId);
+				saveId++;
 				vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 				WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
@@ -526,7 +525,7 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::NROSY)
 			{
 				/* Saving the file */
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(saveId++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields+".txt");
 				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
@@ -550,8 +549,8 @@ int main(int argc, char *argv[])
 		case 'K':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(vfSaveId);
-				vfSaveId++;
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(saveId);
+				saveId++;
 				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				//vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
@@ -563,7 +562,7 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(nCounter++);
+				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(saveId++);
 			;
 			}
 			else if (fieldsType == FieldsType::TENSOR)

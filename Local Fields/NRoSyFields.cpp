@@ -3379,9 +3379,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 {
 	nRot = 2;
 	readMesh(meshFile);
-	//scaleMesh();
+	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Arma43k_";
+	string model = "RockerArm_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3476,7 +3476,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	
 	lambda.resize(2);
 	lambda[0] = 1.0;
-	lambda[1] = 0.00000005 / weight;
+	//lambda[1] = 0.00000005 / weight;	// perfect for armadillo (not-scaled)
+	//lambda[1] = 0.005 / weight;			// perfect for scaled bunny
+	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
+	lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
 
 	BF = SF*MFinv*SF;
 
@@ -3498,7 +3501,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	XfBar = alignFields;
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.0, 0.8, 0.1));
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
 
 	preComputeReducedElements();
 	initializeParametersForLifting();
