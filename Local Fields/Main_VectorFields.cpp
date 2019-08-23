@@ -13,7 +13,7 @@ int eigsToCompute = 500;
 int vfSaveId = 7;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::VECTOR;
+FieldsType fieldsType = FieldsType::NROSY;
 
 
 
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -61,10 +61,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/raptor.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
 	{
 	case FieldsType::VECTOR:
 		cout << "\n========================= VECTOR FIELDS =============================\n";
-		//vectorFields.TEST_VECTOR(viewer, meshFile);
-		vectorFields.computeApproxEigenFields_Mult();
+		vectorFields.TEST_VECTOR(viewer, meshFile);
+		//vectorFields.computeApproxEigenFields_Mult();
 		vectorFields.getVF(V, F);
 		break;
 	case FieldsType::NROSY:
@@ -602,9 +602,10 @@ int main(int argc, char *argv[])
 				/* Reduced */
 				nRoSyFields.constructInteractiveConstraints();
 				//nRoSyFields.nRoSyFieldsDesign_Reduced_HardConstraints();
-				nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+				//nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
+				nRoSyFields.setAndSolveInteractiveSystem();
 				
-				viewer.data().clear(); viewer.data().set_mesh(V, F);
+				//viewer.data().clear(); viewer.data().set_mesh(V, F);
 				nRoSyFields.visualizeConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
@@ -691,6 +692,12 @@ int main(int argc, char *argv[])
 					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
+					nRoSyFields.constructInteractiveConstraints();
+					nRoSyFields.setAndSolveInteractiveSystem();
+
+					nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+					nRoSyFields.visualizeConstraints(viewer);
+
 					/* Full res*/
 					//if (F.rows() < 50000)
 					//{
@@ -739,9 +746,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.0f; 
 
-	//return viewer.launch();
+	return viewer.launch();
 
 	/* Trick for remote desktop */
-	getchar();
-	return 1;
+	//getchar();
+	//return 1;
 }

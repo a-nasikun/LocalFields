@@ -128,6 +128,14 @@ public:
 	void setupLHSSoftConstraints_Reduced(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 
+	// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
+	void setAndSolveInteractiveSystem();
+	void obtainConstraints();
+	void preComputeReducedElements();
+	void solveInteractiveSystem();
+	void initializeParametersForLifting();
+	void performLifting();
+
 	void measureAccuracy();
 
 	/* Testing stuff */
@@ -164,7 +172,8 @@ public:
 	Eigen::VectorXd					eigValuesNRoSyRef;
 
 	// Variable related to subspace construction
-	Eigen::SparseMatrix<double>		Basis;
+	Eigen::SparseMatrix<double>		Basis, BasisT;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow;
 	vector<int>						Sample;
 	int								numSample;
 	double							numSupport;
@@ -181,10 +190,20 @@ public:
 	Eigen::SparseMatrix<double>		BF, BM;
 
 	/* Variable related to REDUCED n-RoSy fields design */
-	Eigen::VectorXd					XfBar;
+	bool							useAlignment; 
+	vector<double>					lambda;
+	Eigen::VectorXd					XfBar, XfRed;
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
-	Eigen::SparseMatrix<double>		CBar;										// selector matrix
-	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar;
+	Eigen::SparseMatrix<double>		CBar, CBarT, B2DBar;										// selector matrix
+	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar; 
+	Eigen::VectorXd					vAdd, BvBar;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
+	Eigen::MatrixXd					BC;
+	cusparseHandle_t				handle;		/* Entries for lifting using CUDA */
+	cusparseMatDescr_t				descrA;
+	double*							d_csrVal;
+	int*							d_csrRowPtr;
+	int*							d_csrColInd;
 	
 	/* Variable on projection */
 	Eigen::VectorXd					wb;											// projected representation fields
