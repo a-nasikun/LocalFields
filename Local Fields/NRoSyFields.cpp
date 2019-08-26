@@ -1256,8 +1256,8 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 0.001;
 	//double scale = 0.1;
 	//double scale = 0.25;
-	double scale = 1.0;
-	//double scale = 2.5;
+	//double scale = 1.0;
+	double scale = 2.5;
 	//double scale = 5.0; 
 	//double scale = 50.0;
 	//double scale = 250.0; 
@@ -1711,7 +1711,7 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 50;
+	double lambda =150;
 	double mu = lambda * factor1 / factor2;
 
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
@@ -1725,8 +1725,7 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	for(int i=0; i<5; i++)
 		smoothNRoSyFields(mu, sparseSolver, v, v);
 
-	convertRepVectorsToNRoSy(v, nRoSy_);
-	
+	convertRepVectorsToNRoSy(v, nRoSy_);	
 }
 
 void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
@@ -3381,7 +3380,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "RockerArm_";
+	string model = "Blade125k_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3479,7 +3478,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.00000005 / weight;	// perfect for armadillo (not-scaled)
 	//lambda[1] = 0.005 / weight;			// perfect for scaled bunny
 	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
-	lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
+	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
+	lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
 
 	BF = SF*MFinv*SF;
 
@@ -3499,9 +3499,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//BFBar = Basis.transpose()*BF*Basis;
 	//BMBar = BFBar;
 	
-	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	XfBar = alignFields;
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+	convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+	visualizeConstrainedFields_Reduced(viewer);
 
 	preComputeReducedElements();
 	initializeParametersForLifting();
