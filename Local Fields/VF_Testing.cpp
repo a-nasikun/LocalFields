@@ -1463,8 +1463,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	numSample = 1000; 
-	numSupport = 35.0;
-	string model = "Arma_";
+	numSupport = 40.0;
+	string model = "Kitten_";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 	//selectAdaptiveRegions(viewer);
@@ -1494,7 +1494,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testSpectra();
 	//testViennaCL2();
 
-	int eigsToCompute = 100;
+	int eigsToCompute = 10;
 	string    filename_refField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_2k_50_eigVectorFields_Spectra_Ref";
 	string filename_approxField = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/Kitten_25_Approx_EigenBasis_2000dim_30sup";
 	//computeEigenFields(eigsToCompute, filename_refField);	
@@ -1556,6 +1556,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizeSharedEdges(viewer);
 
 	/* LOCAL  */
+	//XFullDim = eigFieldFull2D.col(0);
 	//visualizeApproxResult(viewer);	
 	//visualizeUserConstraints(viewer);
 	//visualizeSamples(viewer);

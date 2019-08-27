@@ -10,10 +10,10 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 50;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int saveId = 2;
+int saveId = 10;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::NROSY;
+FieldsType fieldsType = FieldsType::VECTOR;
 
 
 
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Blade125k_";
+	const string model = "Kitten_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_270k.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
@@ -198,8 +198,8 @@ int main(int argc, char *argv[])
 			{				
 				//vectorFields.visualizeSubdomain(viewer);
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-				vectorFields.visualizeApproximatedFields(viewer);
-				//vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualizeApproximatedFields(viewer);				
 				
 			}
 			else if (fieldsType == FieldsType::NROSY)
@@ -221,10 +221,10 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-				vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
-				//vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
 				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 				//vectorFields.selectAdaptiveRegions(viewer);
@@ -487,11 +487,12 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				cout << "\n========================= GLOBAL PROBLEM =============================\n";
+				vectorFields.constructInteractiveConstraints();
 				vectorFields.setupGlobalProblem(lambda);
 				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
 
-				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
+				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -512,11 +513,14 @@ int main(int argc, char *argv[])
 		case 'S':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"constraintFields_user_" + std::to_string(saveId);
+				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"constraintFields_user_" + std::to_string(saveId);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "constraintFields_Local_user_" + std::to_string(saveId);
 				saveId++;
-				vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
-				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
-				WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
+				//vectorFields.writeVectorFieldsToFile_Local(vectorFields.XFullDim, filename_vfields + ".txt");
+				vectorFields.writeVectorFieldsToFile_Local(vectorFields.XFullDim, filename_vfields + "_red.txt");
+				vectorFields.writeVectorFieldsToFile_Local(vectorFields.Xf, filename_vfields + "_ref.txt");
+				vectorFields.writeConstraintsToFile_Local(filename_vfields + "_constraints.txt");
+				//WriteEigenVectorToTxtFile(vectorFields.arbField2D, filename_vfields);
 
 				//vectorFields.loadVectorFieldsFromFile(filename_vfields + ".txt", vectorFields.XFullDim);
 				//vectorFields.visualize2Dfields(viewer, vectorFields.XFullDim, Eigen::RowVector3d(0.9, 0.1, 0.1), 4.0, false);
@@ -550,7 +554,8 @@ int main(int argc, char *argv[])
 		case 'K':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Wolf_constraintFields_user_" + std::to_string(saveId);
+				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_user_" + std::to_string(saveId);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_Local_user_" + std::to_string(saveId);
 				saveId++;
 				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				//vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
@@ -682,8 +687,8 @@ int main(int argc, char *argv[])
 					vectorFields.constructInteractiveConstraints();
 					vectorFields.setAndSolveInteractiveSystem(lambda);
 					//vectorFields.setAndSolveUserSystem(lambda);
-					vectorFields.visualizeGlobalConstraints(viewer);
 					vectorFields.visualizeApproxResult(viewer);
+					vectorFields.visualizeGlobalConstraints(viewer);
 				}
 				else if (fieldsType == FieldsType::NROSY)
 				{

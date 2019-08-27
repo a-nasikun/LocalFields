@@ -308,17 +308,22 @@ public:
 	// VISUALIZATION of APPLICATIONs
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
-
+		// In Global coordinate
 	void writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const string& filename);
 	void writeConstraintsToFile(const string& filename);
 	void loadVectorFieldsFromFile(const string& filename, Eigen::VectorXd &vfields);
 	void loadConstraintsFromFile(const string& filename);
-
+		// In Local coordinate
+	void writeVectorFieldsToFile_Local(const Eigen::VectorXd &vfields, const string& filename);
+	void writeConstraintsToFile_Local(const string& filename);
+	void loadVectorFieldsFromFile_Local(const string& filename, Eigen::VectorXd &vfields);
+	void loadConstraintsFromFile_Local(const string& filename);
 
 	// GETTER AND SETTER of IMPORTANT ELEMENTS
 	Eigen::VectorXd getRefFields() const; 
 
-protected:
+//protected:
+public:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
 	//Eigen::MatrixXd					V, FC, NF;
 	Eigen::MatrixXd					V, NF, VArrow;
