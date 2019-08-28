@@ -246,6 +246,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//	viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
 	//}
 
+	viewer.data().line_width = 1.0;
 
 	// Drawing in parallel
 	int id, tid, ntids, ipts, istart, iproc;
@@ -275,6 +276,8 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	viewer.data().line_width = 4.;
 }
 
 void VectorFields::visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)

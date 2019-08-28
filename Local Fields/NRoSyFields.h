@@ -143,12 +143,17 @@ public:
 
 	/* Write and Load fields */
 	void writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filename);
+	void writeNRoSyFieldsToFile_Local(const NRoSy& nRoSy, const string& filename);
 	void writeConstraintsToFile(const string& filename);
 	void loadNRoSyFieldsFromFile(const string& filename, NRoSy& nRoSy);
+	void loadNRoSyFieldsFromFile_Local(const string& filename, NRoSy& nRoSy);
 	void loadConstraintsFromFile(const string& filename);
 
 	/* PROJECTION ON REDUCED FIELDS */
 	void testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver, const Eigen::SparseMatrix<double>& B, const Eigen::VectorXd& a, const Eigen::VectorXd& inputFields, double &error);
+
+	/* COMMUNICATION VIA MAILSLOT */
+	void sendFieldsToMailSlot(const NRoSy& nRoSy);
 
 public:
 	NRoSy							nRoSy;

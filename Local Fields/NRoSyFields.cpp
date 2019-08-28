@@ -3,6 +3,8 @@
 #include <igl/principal_curvature.h>
 
 #include <random>
+#include <Windows.h>
+#include <stdio.h>
 
 /* Reading data*/
 void NRoSyFields::readMesh(const string &filename)
@@ -1556,7 +1558,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 
 	cout << "Drawing on the overlay mesh \n";
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 2.0;
+	viewer.data().line_width = 4.0;
 	viewer.data().point_size = 5.0;
 	viewer.data().show_lines = false;
 
@@ -1619,7 +1621,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 1.0;
+	viewer.data().line_width = 4.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1677,7 +1679,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
 	double							mu = 0.0001;
-	vector<double>					lambda;
+	//vector<double>					lambda;
 	//Eigen::SparseMatrix<double>		B2F;
 	if (MF.rows() < 1) constructMassMatrixMF3D();
 	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
@@ -1686,7 +1688,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 
 	//constructRandomHardConstraints(C, c);
 	constructInteractiveConstraints();
-	setupWeight(mu, lambda);
+	//setupWeight(mu, lambda);
 	setupRHSBiharmSystemRef(BF, C, c, g, h, vEst, lambda, b);
 	setupLHSBiharmSystemRef(BF, C, c, lambda, A_LHS);
 	solveBiharmSystemRef(vEst, A_LHS, b, Xf);
@@ -1880,7 +1882,8 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 	
 	//g = (B2F+MF) * vEst +MF*repV;
 	// g = (B2F) * vEst + MF*repV;
-	g = (lambda[0]*B2F + lambda[1]*MF)*vEst - lambda[1]*MF*alignFields;
+	//g = (lambda[0]*B2F + lambda[1]*MF)*vEst - lambda[1]*MF*alignFields;
+	g = BF*vEst - lambda[1] * MF*alignFields;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -3380,7 +3383,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Blade125k_";
+	string model = "Brezel_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3438,7 +3441,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 1000;
+	numSample = 100;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
@@ -3478,8 +3481,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.00000005 / weight;	// perfect for armadillo (not-scaled)
 	//lambda[1] = 0.005 / weight;			// perfect for scaled bunny
 	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
-	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
-	lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
+	lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
+	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
 
 	BF = SF*MFinv*SF;
 
@@ -3500,6 +3503,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//BMBar = BFBar;
 	
 	XfBar = alignFields;
+	Xf = alignFields;
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
 	visualizeConstrainedFields_Reduced(viewer);
@@ -3554,17 +3558,17 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 	for (int i = 0; i < nRot; i++)
 	{
 		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
-		cout << "Drawing the " << i << " fields \n";
+		//cout << "Drawing the " << i << " fields \n";
 
 		/* Construct rotation matrix*/
 		//for (int j = 0; j < F.rows(); j++)
 		for (int j = 0; j<F.rows(); j++)
 		{
 			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
-			if (j == 0)
-			{
-				printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
-			}
+			//if (j == 0)
+			//{
+			//	printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
+			//}
 			Eigen::Matrix2d RotM;
 			RotM(0, 0) = cos(angle);
 			RotM(0, 1) = -sin(angle);
@@ -3593,6 +3597,58 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 			{
 				myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
 			}			
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+
+	cout << "Writing to file doen!!!!\n";
+}
+
+void NRoSyFields::writeNRoSyFieldsToFile_Local(const NRoSy& nRoSy, const string& filename)
+{
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	const int FIELD_TO_WRITE = 1;
+	for (int i = 0; i < nRot; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+		cout << "Drawing the " << i << " fields \n";
+
+		/* Construct rotation matrix*/
+		//for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+			if (j == 0)
+			{
+				printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
+			}
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			//nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;			// 'normalized fields'
+		}
+	}
+
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Writing vector fields to file to text \n";
+		printf("__|F|=%d  | vfields=%d\n", F.rows(), nFields[0].size()); for (int j = 0; j < FIELD_TO_WRITE; j++)
+		{
+			for (int i = 0; i < F.rows(); i++)
+			{
+				myfile << nFields[j](2 * i) << "\n";
+				myfile << nFields[j](2*i + 1) << "\n";
+			}
 		}
 		myfile.close();
 	}
@@ -3631,7 +3687,7 @@ void NRoSyFields::writeConstraintsToFile(const string& filename)
 				v2 = RotA*id;
 				v3 = ALoc * v2;
 				//printf("v2=[%.3f, %.3f] and v3=[%.3f, %.3f, %.3f] || Rot = [%.3f, %.3f, %.3f, %.3f. \n", v2(0), v2(1), v3(0), v3(1), v3(2), cosA, -sinA, sinA, cosA);
-				cout << "ALoc: " << ALoc << endl; 
+				//cout << "ALoc: " << ALoc << endl; 
 
 				myfile << globalConstraints[i] << " " << v3(0) << " " << v3(1) << " " << v3(2) << "\n";
 			}
@@ -3680,6 +3736,35 @@ void NRoSyFields::loadNRoSyFieldsFromFile(const string& filename, NRoSy& nRoSy)
 	printf("Load fields of size %d .\n", fields2d.size());
 }
 
+void NRoSyFields::loadNRoSyFieldsFromFile_Local(const string& filename, NRoSy& nRoSy)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	Eigen::VectorXd fields;
+	vector<double> fieldsVector;
+	fieldsVector.reserve(2 * F.rows());
+
+	double v;
+
+	if (file.is_open())
+	{
+
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			v = stod(oneLine);
+			fieldsVector.push_back(v);
+		}
+	}
+	file.close();
+
+	fields = Eigen::Map<Eigen::VectorXd>(fieldsVector.data(), 2 * F.rows());	
+	createNRoSyFromVectors(fields, nRoSy);
+
+	printf("Load fields of size %d .\n", fields.size());
+}
+
 void NRoSyFields::loadConstraintsFromFile(const string& filename)
 {
 	ifstream file(filename);
@@ -3711,7 +3796,7 @@ void NRoSyFields::loadConstraintsFromFile(const string& filename)
 	file.close();
 
 	Eigen::VectorXd cTemp = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());
-	NRoSy cNRoSy; createNRoSyFromVectors(cTemp);
+	NRoSy cNRoSy; createNRoSyFromVectors(cTemp, cNRoSy);
 	convertNRoSyToRepVectors(cNRoSy, c);
 
 	printf("Load %d constraints \n", globalConstraints.size());
@@ -3774,4 +3859,114 @@ void NRoSyFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix
 
 		ofs.close();
 	}
+}
+
+
+/* COMMUNICATION VIA MAILSLOT */
+void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
+{
+	/* COnverting the n-Rosy to collection of fields */
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	const int FIELD_TO_WRITE = 1;
+	for (int i = 0; i < nRot; i++)
+	//for (int i = 0; i < FIELD_TO_WRITE; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+		//cout << "Drawing the " << i << " fields \n";
+
+		/* Construct rotation matrix*/
+		//for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+			
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+		}
+	}
+
+	vector<Eigen::VectorXd> nFields3d(nRot);
+	for (int j = 0; j < nRot; j++)
+	{
+		nFields3d[j] = A*nFields[j];
+	}
+
+	/* Interpolate on vertices (for the FIRST vector only) */
+	cout << "Converting to vertex coordinates \n";
+	Eigen::VectorXd nFieldsVert(3 * V.rows()); nFieldsVert.setZero();
+	for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < F.cols(); j++)
+		{
+			nFieldsVert.block(3 * F(i, j), 0, 3, 1) += nFields3d[0].block(3 * i, 0, 3, 1)*2.0/doubleArea(i);
+		}
+	}
+
+	//cout << "Trying to write to a mail slot (1) \n";
+
+	string mailslot_address = "\\\\.\\mailslot\\sandy";
+
+	HANDLE msHandle;
+	msHandle = CreateFile(mailslot_address.c_str(),	GENERIC_WRITE,	FILE_SHARE_READ,(LPSECURITY_ATTRIBUTES)NULL,OPEN_EXISTING,	FILE_ATTRIBUTE_NORMAL,	(HANDLE)NULL);
+	
+	if (msHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("CreateMailslot failed: %d\n", GetLastError());
+	}
+	else {
+		printf("Successfully create the handle\n");
+	}
+
+	static LPTSTR message = "1.0";
+	BOOL     err;
+	DWORD    numWritten;
+	//WriteFile(msHandle, message, sizeof(message), &numWritten, 0);
+
+	const int data_size = sizeof(float);
+	char *myMessage = (char*)malloc(3 * V.rows() * data_size);	
+
+	///* Writing to mailslot */
+	//string mailslot_address = "\\\\.\\mailslot\\sandy";
+	//
+	//ofstream myfile(mailslot_address.c_str());
+	//if (myfile.is_open())
+	//{
+		//cout << "Trying to write to a mail slot (2) \n";
+		printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFieldsVert.size(), data_size);
+		for (int i = 0; i < V.rows(); i++)
+		{
+			for (int j = 0; j < FIELD_TO_WRITE; j++)
+			{
+				float data2[3] = {1.0, 0.0, 0.0};
+				for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
+				{					
+					char data[data_size];
+					memcpy(data, &nFieldsVert(3 * i + k), data_size*sizeof(float));
+					//memcpy(data, &data2[k], data_size * sizeof(float));
+					for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
+					{
+						//myMessage[data_size*(3 * i + k) + l] = data[data_size-l-1];
+						myMessage[3 * data_size*i + data_size*k + l] = data[l];
+					}
+				}
+				//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+			}
+		}
+
+		WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+		printf("Data written %d \n", numWritten);
+		CloseHandle(msHandle);
+		cout << "Can write to mailslot \n";
+	//	myfile.close();
+	//}
 }
