@@ -3908,7 +3908,7 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 	{
 		for (int j = 0; j < F.cols(); j++)
 		{
-			nFieldsVert.block(3 * F(i, j), 0, 3, 1) += nFields3d[0].block(3 * i, 0, 3, 1)*2.0/doubleArea(i);
+			nFieldsVert.block(3 * F(i, j), 0, 3, 1) += nFields3d[0].block(3 * i, 0, 3, 1) *2.0 / doubleArea(i);
 		}
 	}
 
@@ -3934,11 +3934,13 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 
 	const int data_size = sizeof(float);
 	char *myMessage = (char*)malloc(3 * V.rows() * data_size);	
+	vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
 
 	///* Writing to mailslot */
 	//string mailslot_address = "\\\\.\\mailslot\\sandy";
 	//
 	//ofstream myfile(mailslot_address.c_str());
+	
 	//if (myfile.is_open())
 	//{
 		//cout << "Trying to write to a mail slot (2) \n";
@@ -3957,14 +3959,20 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 					{
 						//myMessage[data_size*(3 * i + k) + l] = data[data_size-l-1];
 						myMessage[3 * data_size*i + data_size*k + l] = data[l];
+						//messageArray.push_back(data[l]);
 					}
 				}
 				//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
 			}
 		}
 
-		WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
-		printf("Data written %d \n", numWritten);
+		//for (int i = 0; i < messageArray.size(); i++) myMessage[i] = messageArray[i];
+
+		//myMessage = messageArray.data();
+
+		int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+		printf("[%d] Data written %d \n", retWrite, numWritten);
+	
 		CloseHandle(msHandle);
 		cout << "Can write to mailslot \n";
 	//	myfile.close();
