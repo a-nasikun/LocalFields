@@ -7,7 +7,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 50;
+int numSample = 100;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
 int vfSaveId = 7;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Brezel_";
+	const string model = "Fertility_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
-	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
+	string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -271,16 +271,18 @@ int main(int argc, char *argv[])
 			vectorFields.visualizeBasis(viewer, basisId);
 			break;
 		case '5':
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
 			if(basisId%2==0)
-				basisId = max(basisId - 92, 0);
+				basisId = max(basisId - 1, 0);
 			else 
 				basisId = max(basisId - 1, 0);
 
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				vectorFields.visualizeSubdomain(viewer);
-				vectorFields.visualizeBasisNormalized(viewer, basisId);
+				//vectorFields.visualizeSubdomain(viewer);
 				printf("Showing the %d-th basis \n", basisId);
+				vectorFields.visualizeBasisNormalized(viewer, basisId);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -295,15 +297,17 @@ int main(int argc, char *argv[])
 			
 			break;
 		case '6':
+			viewer.data().clear();
+			viewer.data().set_mesh(V, F);
 			if(basisId%2==1)
-				basisId = min(basisId + 92, 2 * numSample - 1);
+				basisId = min(basisId + 1, 2 * numSample - 1);
 			else 
 				basisId = min(basisId + 1, 2 * numSample - 1);
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				vectorFields.visualizeSubdomain(viewer);
-				vectorFields.visualizeBasisNormalized(viewer, basisId);
 				printf("Showing the %d-th basis \n", basisId);
+				//vectorFields.visualizeSubdomain(viewer);
+				vectorFields.visualizeBasisNormalized(viewer, basisId);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{

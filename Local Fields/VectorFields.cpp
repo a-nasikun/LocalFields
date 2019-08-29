@@ -2362,8 +2362,8 @@ void VectorFields::constructBasis()
 	Eigen::SparseMatrix<double> BasisFunctions;
 
 	//constructBasis_LocalEigenProblem();
-	//constructBasis_LocalEigenProblem10();
-	constructBasis_OptProblem();
+	constructBasis_LocalEigenProblem10();
+	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
 }
@@ -2503,15 +2503,15 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			subdom_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
-			//localField.constructBoundary(F, visitedFaces, AdjMF3N, AdjMF2Ring);
-			localField.constructSelectorMatrix(F, doubleArea);
+			localField.constructBoundary(F, visitedFaces, AdjMF3N, AdjMF2Ring);
+			//localField.constructSelectorMatrix(F, doubleArea);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[1] += t2 - t1;
 			boundary_dur[tid] += dur_;
 
 			t1 = chrono::high_resolution_clock::now();
-			//localField.constructLocalElements(Num_fields, F);
+			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[2] += t2 - t1;	
@@ -2526,8 +2526,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			///if(id%((int)(Sample.size()/4))==0)
 			///	cout << "[" << id << "] Constructing local eigen problem\n ";
 
-			//localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);			
-			localField.constructLocalEigenProblemWithSelectorMatrix(Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);			
+			//localField.constructLocalEigenProblemWithSelectorMatrix(Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -3197,7 +3197,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "> Constructing Basis...\n";
 
 	const int EIG_NUM = 10; 
-	double	coef = sqrt(pow(0.5, 2) + pow(0.7, 2));
+	double	coef = sqrt(pow(1.5, 2) + pow(1.7, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -3218,6 +3218,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
 	durations.resize(NUM_PROCESS);
+	const int Num_fields = 2;
 
 	for (int i = 0; i < NUM_PROCESS; i++) {
 		durations[i] = t1 - t1;
@@ -3233,7 +3234,9 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 
 	int id, tid, ntids, ipts, istart, iproc;
 
-	omp_set_num_threads(1);
+	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
+
+	omp_set_num_threads(16);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -3254,7 +3257,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			D(i) = numeric_limits<double>::infinity();
 		}
 
-		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * EIG_NUM * 10.0 * F.rows());
+		//UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * EIG_NUM * 10.0 * F.rows());
 
 		// Computing the values of each element
 		for (id = istart; id < (istart + ipts); id++) {
@@ -3266,47 +3269,54 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			//localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			localField.constructSelectorMatrix(F, doubleArea);
 			t2 = chrono::high_resolution_clock::now();
 			durations[1] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(2, F);
+			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;
 
+			printf("ID=%d has %d entries \n", id, localField.InnerElements.size());
+			UiTriplet[id].reserve(2 * localField.InnerElements.size());
+
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelectorMatrix(Num_fields, SF2DAsym, MF2D, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
 
 
-			if (id == 0)
-			{
-				SubDomain = localField.SubDomain;
-				Boundary = localField.Boundary;
-				//patchDijkstraDist = localField.dijksFaceDistMapped;
-			}
-
-			// To get local elements for visualizing subdomain
-			if (id == 0 || id == 46) {
-				cout << "Getting element of ID " << id << endl;
-
-				for (int fid : localField.SubDomain) {
-					localSystem(fid) = 0.3;
-				}
-
-				for (int fid : localField.Boundary) {
-					localSystem(fid) = 0.7;
-				}			
-
-			}
+			//if (id == 0)
+			//{
+			//	SubDomain = localField.SubDomain;
+			//	Boundary = localField.Boundary;
+			//	//patchDijkstraDist = localField.dijksFaceDistMapped;
+			//}
+			//
+			//// To get local elements for visualizing subdomain
+			//if (id == 0 || id == 46) {
+			//	cout << "Getting element of ID " << id << endl;
+			//
+			//	for (int fid : localField.SubDomain) {
+			//		localSystem(fid) = 0.3;
+			//	}
+			//
+			//	for (int fid : localField.Boundary) {
+			//		localSystem(fid) = 0.7;
+			//	}			
+			//
+			//}
 		}
 	}
 	t2 = chrono::high_resolution_clock::now();
@@ -3316,7 +3326,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	gatherBasisElements(UiTriplet, EIG_NUM);
-	Basis = BasisTemp;
+	printf("Basis 1st row nnz: %d \n", Basis.col(0).nonZeros());
 	//normalizeBasis();
 	//normalizeBasisAbs(EIG_NUM);
 
@@ -3338,7 +3348,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	printf("....[3] Solving local eigenvalue problems: %.8f seconds.\n", durations[3].count());
 
 	// Information about Basis
-	printf("> Basis Structure information \n");
+	printf("> Basis Structure information (%d nnz)\n", Basis.nonZeros());
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
 	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
 }
@@ -3512,7 +3522,31 @@ void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double
 		//std::copy(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
 		std::move(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
 	}	
+	//BTriplet.reserve(totalElements);
+	//for (int i = 0; i < Sample.size(); i++)
+	//{
+	//	for (int j = 0; j < UiTriplet[i].size(); j++)
+	//	{
+	//		BTriplet.push_back(UiTriplet[i][j]);
+	//	}
+	//	printf("Triplet %d has %d nnz \n", i, UiTriplet[i].size());
+	//}
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	printf("Basis space: %dx%d | BTriplet size: %d \n", Basis.rows(), Basis.cols(), BTriplet.size());
+	vector<int> checkPoint = { 1, 190000, 400000, 600000 };
+	for(int i : checkPoint)
+	printf("%d data: [%d,  %d]=%.4f \n", i,  BTriplet[i].row(), BTriplet[i].col(), BTriplet[i].value());
+
+	BTriplet.clear(); BTriplet.shrink_to_fit();
+	//for (int k = 0; k < Basis.outerSize(); ++k) {
+	//int k = 0;
+	//	for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
+	//		//if(it.row()<1000) 
+	//		printf("[%d,%d]=%.3f \n", it.row(), it.col(), it.value());
+	//		//ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+	//	}
+	//}
+
 
 	// empty the data
 	//BTriplet.clear();

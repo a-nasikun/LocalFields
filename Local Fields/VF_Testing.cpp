@@ -1384,7 +1384,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	selectFaceToDraw(5000); 
+	selectFaceToDraw(75000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1462,12 +1462,12 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 100; 
+	numSample = 200; 
 	numSupport = 40.0;
-	string model = "Brezel_";
+	string model = "Fertility_";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_OptAlg_" + to_string((int)numSupport) + "sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
 	//selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
 	faceScale.resize(F.rows()); faceScale.setConstant(1.0);

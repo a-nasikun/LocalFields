@@ -456,9 +456,9 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	//} 
 	//else
 	//{
-		printf("Showing the %d Basis field\n", bId);
-		//visualize2DfieldsScaled(viewer, Basis, bId, color);
-		visualize2Dfields(viewer, Basis.col(bId), color, 0.08);
+		printf("Showing the %d Basis field\n", id);
+		visualize2DfieldsScaled(viewer, Basis, bId, color);
+		//visualize2Dfields(viewer, Basis.col(id), color, 0.08);
 	//}
 }
 
