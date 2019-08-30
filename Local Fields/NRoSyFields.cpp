@@ -2,9 +2,12 @@
 
 #include <igl/principal_curvature.h>
 
-#include <random>
 #include <Windows.h>
+#include <tchar.h>
 #include <stdio.h>
+#include <strsafe.h>
+
+#include <random>
 
 /* Reading data*/
 void NRoSyFields::readMesh(const string &filename)
@@ -519,6 +522,7 @@ void NRoSyFields::constructMassMatrixMF3D()
 	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
 	MF2DhPos.setFromTriplets(MhPosTriplet.begin(), MhPosTriplet.end());
 	MF2DhNeg.setFromTriplets(MhNegTriplet.begin(), MhNegTriplet.end());
+	igl::massmatrix(V, F, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI, MV);
 }
 
 //void NRoSyFields::buildStiffnessMatrix_Combinatorial()
@@ -1258,8 +1262,8 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 0.001;
 	//double scale = 0.1;
 	//double scale = 0.25;
-	//double scale = 1.0;
-	double scale = 2.5;
+	double scale = 1.0;
+	//double scale = 2.5;
 	//double scale = 5.0; 
 	//double scale = 50.0;
 	//double scale = 250.0; 
@@ -1290,6 +1294,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 		}
 
 		visualize2Dfields(viewer, TempFields, color, scale, false);
+		visualize2DfieldsVertexInterpolated(viewer, TempFields, color, scale, false);
 	}
 }
 
@@ -1457,6 +1462,77 @@ void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eig
 	//cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void NRoSyFields::visualize2DfieldsVertexInterpolated(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
+{
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	//cout << "> Adding edges... ";
+
+	//=======
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = scale;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;	
+
+	/* Getting the local data from the population of data */
+	Eigen::SparseMatrix<double> ALoc(3 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(6 * FaceToDraw.size());
+	Eigen::VectorXd fieldLoc(2 * FaceToDraw.size()), fields3D(3 * FaceToDraw.size()), rot1Field, rot2Field;
+	Eigen::MatrixXd TFields(FaceToDraw.size(), F.cols()), Head1Fields(FaceToDraw.size(), F.cols()), Head2Fields(FaceToDraw.size(), F.cols());
+
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		/* Getting the selected ALoc from A */
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 1)));
+
+		/* Getting the selected face */
+		fieldLoc.block(2 * i, 0, 2, 1) = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+	}
+	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	fields3D = ALoc * fieldLoc;
+
+	/* Transform field to Matrix format */
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		TFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+		//Head1Fields.row(i) = (rot1Field.block(3 * i, 0, 3, 1)).transpose();
+		//Head2Fields.row(i) = (rot2Field.block(3 * i, 0, 3, 1)).transpose();
+	}
+
+	/* Interpolate over vertices */
+	Eigen::MatrixXd VFields(V.rows(), 3); VFields.setZero();
+	for (int i = 0; i < FaceToDraw.size(); i++)	{
+		for(int j=0; j<F.cols(); j++)
+			VFields.row(F(FaceToDraw[i], j)) += TFields.row(i) * (doubleArea(FaceToDraw[i])/2.0);
+	}
+
+
+	for (int i = 0; i < VFields.rows(); i++) VFields.row(i) /= 3.0*MV.coeff(i, i);
+
+
+	Eigen::RowVector3d color2(0.0, 0.1, 0.9);
+
+	int lineSize = viewer.data().lines.rows();
+	viewer.data().lines.conservativeResize(lineSize+VFields.rows(), 9);
+	//viewer.data().lines.resize(lineSize + VFields.rows(), 9);
+	//viewer.data().lines.resize(0, 9);
+	//viewer.data().lines.resize(FaceToDraw.size(), 9);
+	for (int i = 0; i < VFields.rows(); i++)
+	{
+		viewer.data().lines.row(lineSize+i)							<< V.row(i), V.row(i)+VFields.row(i)*lengthScale, color2;
+		//viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
+		//viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	}
+}
+
 void NRoSyFields::visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id)
 {
 	viewer.data().clear();
@@ -1621,7 +1697,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 4.0;
+	viewer.data().line_width = 1.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -3379,7 +3455,7 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 2;
+	nRot = 1;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
@@ -3912,9 +3988,11 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 		}
 	}
 
+	for (int i = 0; i < V.rows(); i++) nFieldsVert.block(3 * i, 0, 3, 1) /= MV.coeff(i, i);
+
 	//cout << "Trying to write to a mail slot (1) \n";
 
-	string mailslot_address = "\\\\.\\mailslot\\sandy";
+	string mailslot_address = "\\\\.\\mailslot\\sandy2";
 
 	HANDLE msHandle;
 	msHandle = CreateFile(mailslot_address.c_str(),	GENERIC_WRITE,	FILE_SHARE_READ,(LPSECURITY_ATTRIBUTES)NULL,OPEN_EXISTING,	FILE_ATTRIBUTE_NORMAL,	(HANDLE)NULL);
@@ -3935,30 +4013,36 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 	const int data_size = sizeof(float);
 	char *myMessage = (char*)malloc(3 * V.rows() * data_size);	
 	vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
+	//char *myMessage = (char*)malloc(3 * F.rows() * data_size);
+	//vector<char> messageArray; messageArray.reserve(3 * F.rows() * data_size);
 
 	///* Writing to mailslot */
 	//string mailslot_address = "\\\\.\\mailslot\\sandy";
 	//
 	//ofstream myfile(mailslot_address.c_str());
 	
-	//if (myfile.is_open())
-	//{
-		//cout << "Trying to write to a mail slot (2) \n";
+	
 		printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFieldsVert.size(), data_size);
 		for (int i = 0; i < V.rows(); i++)
+		//for (int i = 0; i < F.rows(); i++)
 		{
 			for (int j = 0; j < FIELD_TO_WRITE; j++)
 			{
 				float data2[3] = {1.0, 0.0, 0.0};
 				for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
-				{					
+				{
 					char data[data_size];
-					memcpy(data, &nFieldsVert(3 * i + k), data_size*sizeof(float));
+					
+					//float field = nFields3d[0](3 * i + k);
+					float field = (float) nFieldsVert(3 * i + k);
+					//memcpy(data, &nFieldsVert(3 * i + k), data_size*sizeof(float));
+					//memcpy(data, &nFieldsVert(3 * i + k), data_size * sizeof(float));
+					memcpy(data, &field, data_size * sizeof(char));
 					//memcpy(data, &data2[k], data_size * sizeof(float));
 					for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
 					{
-						//myMessage[data_size*(3 * i + k) + l] = data[data_size-l-1];
-						myMessage[3 * data_size*i + data_size*k + l] = data[l];
+						myMessage[data_size*(3 * i + k) + l] = data[data_size-l-1];
+						//myMessage[3 * data_size*i + data_size*k + l] = data[l];
 						//messageArray.push_back(data[l]);
 					}
 				}
@@ -3971,10 +4055,236 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 		//myMessage = messageArray.data();
 
 		int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+		printf("Size of the messgae: %d \n", lstrlen(myMessage));
+		//int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
 		printf("[%d] Data written %d \n", retWrite, numWritten);
 	
 		CloseHandle(msHandle);
 		cout << "Can write to mailslot \n";
 	//	myfile.close();
 	//}
+}
+
+void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
+{
+	/* COnverting the n-Rosy to collection of fields */
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	const int FIELD_TO_WRITE = 1;
+	for (int i = 0; i < nRot; i++)
+		//for (int i = 0; i < FIELD_TO_WRITE; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+										 //cout << "Drawing the " << i << " fields \n";
+
+										 /* Construct rotation matrix*/
+										 //for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+		}
+	}
+
+	vector<Eigen::VectorXd> nFields3d(nRot);
+	for (int j = 0; j < nRot; j++)
+	{
+		nFields3d[j] = A*nFields[j];
+	}
+		
+
+	string mailslot_address = "\\\\.\\mailslot\\sandy";
+
+	HANDLE msHandle;
+	
+	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+
+	if (msHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("CreateMailslot failed: %d\n", GetLastError());
+	}
+	else {
+		printf("Successfully create the handle\n");
+	}
+
+	static LPTSTR message = "1.0";
+	BOOL     err;
+	DWORD    numWritten;
+	//WriteFile(msHandle, message, sizeof(message), &numWritten, 0);
+
+	const int data_size = sizeof(float);
+	//char *myMessage = (char*)malloc(3 * V.rows() * data_size);
+	//vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
+	char *myMessage = (char*)malloc(3 * F.rows() * data_size);
+	vector<char> messageArray; messageArray.reserve(3 * F.rows() * data_size);
+
+	///* Writing to mailslot */
+	//string mailslot_address = "\\\\.\\mailslot\\sandy";
+	//
+	//ofstream myfile(mailslot_address.c_str());
+
+
+	printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFields3d[0].size(), data_size);
+	for (int i = 0; i < V.rows(); i++)
+		//for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < FIELD_TO_WRITE; j++)
+		{
+			float data2[3] = { 1.0, 0.0, 0.0 };
+			for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
+			{
+				char data[data_size];
+
+				float field = nFields3d[0](3 * i + k);
+				memcpy(data, &field, data_size * sizeof(char));
+				//memcpy(data, &data2[k], data_size * sizeof(float));
+				for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
+				{
+					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];
+					//myMessage[3 * data_size*i + data_size*k + l] = data[l];
+					//messageArray.push_back(data[l]);
+				}
+			}
+			//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+		}
+	}
+
+	//for (int i = 0; i < messageArray.size(); i++) myMessage[i] = messageArray[i];
+
+	//myMessage = messageArray.data();
+
+	//int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
+	printf("[%d] Data written %d \n", retWrite, numWritten);
+
+	CloseHandle(msHandle);
+	cout << "Can write to mailslot \n";
+	//	myfile.close();
+	//}
+}
+
+void NRoSyFields::readFieldsFromMailSlot(HANDLE &msHandle)
+{
+	
+	DWORD cbMessage, cMessage, cbRead;
+	BOOL fResult;
+	LPTSTR lpszBuffer;
+	TCHAR achID[80];
+	DWORD cAllMessages;
+	HANDLE hEvent;
+	OVERLAPPED ov;
+
+	cbMessage = cMessage = cbRead = 0;
+
+	hEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("ExampleSlot"));
+
+	if (NULL == hEvent) return; 
+		//return FALSE;
+	ov.Offset = 0;
+	ov.OffsetHigh = 0;
+	ov.hEvent = hEvent;
+
+	fResult = GetMailslotInfo(msHandle, // mailslot handle 
+		(LPDWORD)NULL,               // no maximum message size 
+		&cbMessage,                   // size of next message 
+		&cMessage,                    // number of messages 
+		(LPDWORD)NULL);              // no read time-out 
+
+	if (!fResult)
+	{
+		printf("GetMailslotInfo failed with %d.\n", GetLastError());
+		//return FALSE;
+		return;
+	} else cout << "There are " << cMessage << " message coming \n";
+
+	if (cbMessage == MAILSLOT_NO_MESSAGE)
+	{
+		printf("Waiting for a message...\n");
+		//return TRUE;
+		return;
+	}
+	else cout << "Retrieving the messages \n";
+
+	cAllMessages = cMessage;
+
+	while (cMessage != 0)  // retrieve all messages
+	{
+		// Create a message-number string. 
+
+		StringCchPrintf((LPTSTR)achID,
+			80,
+			TEXT("\nMessage #%d of %d\n"),
+			cAllMessages - cMessage + 1,
+			cAllMessages);
+
+		// Allocate memory for the message. 
+
+		lpszBuffer = (LPTSTR)GlobalAlloc(GPTR,
+			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage);
+		if (NULL == lpszBuffer) return; 
+			//return FALSE;
+		lpszBuffer[0] = '\0';
+
+		fResult = ReadFile(msHandle,
+			lpszBuffer,
+			cbMessage,
+			&cbRead,
+			&ov);
+
+		if (!fResult)
+		{
+			printf("ReadFile failed with %d.\n", GetLastError());
+			GlobalFree((HGLOBAL)lpszBuffer);
+			return;
+			//return FALSE;
+		}
+
+		// Concatenate the message and the message-number string. 
+
+		StringCbCat(lpszBuffer,
+			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage,
+			(LPTSTR)achID);
+
+		// Display the message. 
+
+		_tprintf(TEXT("Contents of the mailslot: %s\n"), lpszBuffer);
+
+		int messageLength = lstrlen(lpszBuffer);
+		int dataSize = 4;
+		char data[sizeof(float)];
+		float number;
+		printf("Size of this message = %d \n", lstrlen(lpszBuffer));
+		for (int i = 0; i < messageLength; i+=dataSize) {
+			for (int j = 0; j < dataSize; j++) data[dataSize-j-1] = lpszBuffer[i + j];
+			memcpy(&number, data, dataSize*sizeof(char));
+			printf("data %d/4: %.5f \n ", i, number);
+		}
+
+		GlobalFree((HGLOBAL)lpszBuffer);
+
+		fResult = GetMailslotInfo(msHandle,  // mailslot handle 
+			(LPDWORD)NULL,               // no maximum message size 
+			&cbMessage,                   // size of next message 
+			&cMessage,                    // number of messages 
+			(LPDWORD)NULL);              // no read time-out 
+
+		if (!fResult)
+		{
+			printf("GetMailslotInfo failed (%d)\n", GetLastError());
+			return; 
+			//return FALSE;
+		}
+	}
+	CloseHandle(hEvent);
 }

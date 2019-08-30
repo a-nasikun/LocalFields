@@ -25,6 +25,12 @@ int main(int argc, char *argv[])
 	bool selectFace = false;
 	Eigen::MatrixXd C;
 
+	HANDLE msHandle; 
+	LPTSTR slotName = TEXT("\\\\.\\mailslot\\sandy2");
+
+	msHandle = CreateMailslot(slotName, 0, MAILSLOT_WAIT_FOREVER, (LPSECURITY_ATTRIBUTES)NULL);
+	if (msHandle == INVALID_HANDLE_VALUE)  cout << "Cannto create mailslot\n"; else cout << "Creation of mailslot " << slotName << " is successful\n";
+
 	
 	igl::opengl::glfw::Viewer		viewer;
 	Eigen::MatrixXd					V;
@@ -468,6 +474,9 @@ int main(int argc, char *argv[])
 		case 'B':
 			v_in = vectorFields.arbField2D; 
 			represent_tensor_in_voigt = !represent_tensor_in_voigt;
+			if (fieldsType == FieldsType::NROSY) {				
+				nRoSyFields.readFieldsFromMailSlot(msHandle);
+			}
 			if (fieldsType == FieldsType::TENSOR)
 			{
 				if (represent_tensor_in_voigt)
@@ -754,6 +763,7 @@ int main(int argc, char *argv[])
 		}
 		return false;
 	};
+
 	viewer.callback_init = [&](igl::opengl::glfw::Viewer &viewer) {return false; };
 	//viewer.data().set_mesh(V, F);
 	viewer.callback_key_down = key_down;

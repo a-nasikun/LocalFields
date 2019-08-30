@@ -61,6 +61,7 @@ public:
 	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color);
 	void visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& repVector, const Eigen::RowVector3d& color);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
+	void visualize2DfieldsVertexInterpolated(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer);
@@ -154,7 +155,8 @@ public:
 
 	/* COMMUNICATION VIA MAILSLOT */
 	void sendFieldsToMailSlot(const NRoSy& nRoSy);
-
+	void sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy);
+	void readFieldsFromMailSlot(HANDLE &msHandle);
 public:
 	NRoSy							nRoSy;
 	Eigen::MatrixXd					V, FC;
@@ -164,7 +166,7 @@ public:
 	Eigen::SparseMatrix<double>		A; 
 	vector<int>						FaceToDraw;
 	double							avgEdgeLength;
-	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::SparseMatrix<double>		MF, MFinv, MV;				// Triangle/face-based mass matrices (3 values per face)
 	Eigen::SparseMatrix<double>		MF2DhNeg, MF2DhPos;		// M^(-1/2)
 	Eigen::SparseMatrix<double>		SF;						//  Harmonic/Dirichlet Energy
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
