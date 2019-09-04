@@ -108,7 +108,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	} while (distFromCenter < maxDist);
 }
 
-void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const vector<set<int>>& AdjMF2Ring, const double& distRatio)
+void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const Eigen::VectorXd& faceScale, const vector<set<int>>& AdjMF2Ring, const double& distRatio)
 {
 	int center = sampleID;
 	this->sampleID = sampleID;
@@ -146,7 +146,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 			/* Regular Dikjstra */
 			//const int neigh = AdjMF3N(elem, it);
 			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
-			double dist = (c2 - c1).norm();
+			double dist = faceScale(neigh) * (c2 - c1).norm();
 			double tempDist = distFromCenter + dist;
 
 			/* updating the distance */
@@ -165,7 +165,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	int center = sampleID;
 	this->sampleID = sampleID;
 
-	int numEntries = (int) round((numSupport*F.rows()) / (float) (2 * sampleSize));
+	int numEntries = (int) round((numSupport*F.rows()) / (float) (10 * sampleSize));
 
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 	//Eigen::VectorXd D(F.rows());
@@ -319,6 +319,29 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, vector<bool>& visi
 		visitedFaces[i] = false;
 	}
 }
+void LocalFields::constructSelectorMatrix(const Eigen::MatrixXi& F, const Eigen::VectorXd& doubleArea)
+{
+	vector<Eigen::Triplet<double>> UTriplet;
+	UTriplet.reserve(2 * F.rows());
+
+	U.resize(2 * F.rows(), 2 * SubDomain.size());
+	InnerElements.resize(SubDomain.size());
+	int counter = 0;
+	for (int face : SubDomain) {
+		InnerElements[counter] = face;
+		counter++;
+	}
+
+	for (int i = 0; i < InnerElements.size(); i++)
+	{
+		double area = doubleArea(InnerElements[i]) / 2.0;
+		double area_sqrt = 1.0 / sqrt(area);
+		UTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 0, 2 * i + 0, area_sqrt));
+		UTriplet.push_back(Eigen::Triplet<double>(2 * InnerElements[i] + 1, 2 * i + 1, area_sqrt));
+	}
+	U.setFromTriplets(UTriplet.begin(), UTriplet.end());
+	//printf("Selector matrix U %dx%d is created, with %d nnz \n", U.rows(), U.cols(), U.nonZeros());
+}
 
 void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::MatrixXi &F)
 {
@@ -354,6 +377,8 @@ void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::Matr
 		counter++;
 	}
 	SelectorA.setFromTriplets(SATriplet.begin(), SATriplet.end());
+	SATriplet.clear(); 
+	SATriplet.shrink_to_fit();
 
 	//std::copy(SubDomain.begin(), SubDomain.end(), InnerElements.begin());
 	//std::copy(SubDomain.begin(), SubDomain.end(), LocalElements.begin());
@@ -465,8 +490,8 @@ void LocalFields::obtainLocalMatrixPatch2D(const int NUM_FIELDS, const Eigen::Sp
 	MPatch.resize(NUM_FIELDS * localSize, NUM_FIELDS * localSize);
 	Eigen::SparseMatrix<double> MTemp;
 	vector<Eigen::Triplet<double>> MTriplet, MTempTriplet;
-	MTriplet.reserve(20 * NUM_FIELDS * localSize);
-	MTempTriplet.reserve(20 * MGlob.rows());
+	//MTempTriplet.reserve(20 * MGlob.rows());
+	MTempTriplet.reserve(2*localSize*MGlob.col(0).nonZeros());
 	//Eigen::MatrixXd MTempDense;
 	//MTempDense.setZero(MGlob.rows(), 2 * localSize);
 	
@@ -487,6 +512,9 @@ void LocalFields::obtainLocalMatrixPatch2D(const int NUM_FIELDS, const Eigen::Sp
 	}
 	MTemp.resize(NUM_FIELDS * localSize, MGlob.rows());
 	MTemp.setFromTriplets(MTempTriplet.begin(), MTempTriplet.end());
+	MTempTriplet.clear(); MTempTriplet.shrink_to_fit();
+	
+	MTriplet.reserve(20 * NUM_FIELDS * localSize);
 
 	// Create local patch of the global matrix M (MGlob -> MPatch);
 	//cout << id << "Creating the smaller chunk matrix\n";
@@ -504,6 +532,8 @@ void LocalFields::obtainLocalMatrixPatch2D(const int NUM_FIELDS, const Eigen::Sp
 	MPatch.setFromTriplets(MTriplet.begin(), MTriplet.end());
 	//visualizeSparseMatrixInMatlab(MPatch);
 	//cout << "[DONE!] Setting up local patch matrix\n";
+
+	MTriplet.clear(); MTriplet.shrink_to_fit();
 }
 
 /* Naive way, getting all values on the patch, then discarding the 0 elements/entries */
@@ -1427,12 +1457,51 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	/* Reduced matrices */
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
+
+	
 		
 
 	///computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 
-	EigVectLoc = SelectorA.transpose() * eigTemp;
+	EigVectLoc = SelectorA.transpose() * eigTemp * SelectorA;
+	
+	if (id < 10)
+		printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
+
+	/* Mapping to larger matrix */
+	for (int i = 0; i < InnerElements.size(); i++)
+	{
+		// First column ==> First basis (2 elements per-local frame)
+		for (int j = 0; j < NUM_EIG; j++)
+		{
+			for (int k = 0; k < NUM_FIELDS; k++)
+			{
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
+				//if (id == 10 && i<10)
+				//	printf("[%d,%d]=%5f \n", NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j));
+			}
+		}
+	}
+
+	if (id < 10)
+		printf(" | %d triplet \n", BTriplet.size());
+
+	if (id == 0) cout << "eig vector (0): \n" << eigTemp.block(0, 0, 20, 1) << endl; 
+	if (id == 0) cout << "eig vector (9): \n" << eigTemp.block(0, 9, 20, 1) << endl;
+}
+
+void LocalFields::constructLocalEigenProblemWithSelectorMatrix(const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
+{
+	Eigen::SparseMatrix<double> SF2DLoc, J2DRed;
+	Eigen::VectorXd eigValsLoc;
+	Eigen::MatrixXd EigVectLoc;
+
+	SF2DLoc = U.transpose()*SF2D*U;
+
+	computeEigenSpectra_RegSym_Custom(SF2DLoc, SF2DLoc, NUM_EIG, EigVectLoc, eigValsLoc, "");
+	//computeEigenMatlab(SF2DLoc, SF2DLoc, EigVectLoc, eigValsLoc);
 
 	/* Mapping to larger matrix */
 	for (int i = 0; i < InnerElements.size(); i++)
@@ -1446,8 +1515,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 			}
 		}
 	}
-}
 
+}
 
 void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, const int tid, const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)
 {

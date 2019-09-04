@@ -1,5 +1,6 @@
 #include "Utility.h"
 #include <fstream>
+#include <cusparse_v2.h>
 
 double SparseMatrixMaxValue(const Eigen::SparseMatrix<double> &M)
 {
@@ -574,6 +575,278 @@ void readEigenDenseMatrixFromBinary(const std::string &filename, Eigen::MatrixXd
 	in.read((char *)M.data(), rows*cols * sizeof(double));
 	in.close();
 }
+
+void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double, Eigen::RowMajor> &S, Eigen::VectorXd& a, Eigen::VectorXd& b)
+{
+	//{
+	//	cout << "Toying around with sparse matrix";
+	//	const int nRows = 10;
+	//	const int nCols = 8;
+	//	Eigen::SparseMatrix<double> K(nRows, nCols);
+	//	vector<Eigen::Triplet<double>> KTriplet; KTriplet.reserve(20);
+	//	srand(time(NULL));
+	//	for (int i = 0; i < nRows; i++)
+	//	{
+	//		KTriplet.push_back(Eigen::Triplet<double>(i, rand() % nCols, 1.0));
+	//		KTriplet.push_back(Eigen::Triplet<double>(i, rand() % nCols, 1.0));
+	//	}
+	//	K.setFromTriplets(KTriplet.begin(), KTriplet.end());
+	//	cout << "K \n" << K << endl << endl; 
+	//	K.makeCompressed();
+	//	K = K.transpose();
+	//
+	//	int nnzK = K.nonZeros();
+	//	int m = K.rows();
+	//	int n = K.cols();
+	//	printf("Rows=%d | cols=%d \n", m, n);
+	//
+	//	double* K_csrVal = (double*)malloc(nnzK * sizeof(double));
+	//	int* K_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//	int* K_csrColInd = (int*)malloc(nnzK * sizeof(int));
+	//	K_csrVal = K.valuePtr();
+	//	K_csrRowPtr = K.outerIndexPtr();
+	//	K_csrColInd = K.innerIndexPtr();
+	//
+	//	for (int i = 0; i < m + 1; i++) printf("%d |", K_csrRowPtr[i]); cout << endl;
+	//	for (int i = 0; i < nnzK; i++) printf("%d |", K_csrColInd[i]); cout << endl;
+	//	for (int i = 0; i < nnzK; i++) printf("%f |", K_csrVal[i]); cout << endl;
+	//
+	//}
+
+
+	S.makeCompressed();
+	//cout << "Setting up the handle in GPU \n";
+	cudaError_t			cudaStat1 = cudaSuccess;
+	cusparseHandle_t	handle;
+	cusparseMatDescr_t descrA;
+	cusparseCreateMatDescr(&descrA);
+	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&handle);
+	
+	S.makeCompressed();
+	const int nnz = S.nonZeros();
+	const int m = S.rows();
+	const int n = S.cols();
+	//printf("The data: S=%dx%d | nnzA:%d, rowsA:%d |\n", m, n, nnz, m+1);
+
+	/* Setting up the data for the vectors */
+	//cout << "Allocating memory and setup in CPU \n";
+	// Populating the matrix in CPU
+	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	h_csrVal = S.valuePtr();
+	h_csrRowPtr = S.outerIndexPtr();
+	h_csrColInd = S.innerIndexPtr();
+	double* h_a = (double*)malloc(n * sizeof(double));
+	h_a = a.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+	for (int i = 0; i < nnz; i++) {
+		//if(i%1000==0)
+		//if(h_csrColInd[i]<0)
+		//	printf("[%d]=>[%.3f]\n", h_csrColInd[i], h_csrVal[i]);
+	}
+	for (int i = 0; i < (m+1); i++) {
+		//if(i%1000==0)
+		//if(h_csrRowPtr[i]<0)
+		//	printf("[%d/%d]\n", h_csrRowPtr[i], m+1);
+	}
+
+	//cout << "Allocating memory and setup in GPU \n";
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	int *d_csrColInd; cudaStat1 = cudaMalloc(&d_csrColInd, nnz * sizeof(int));   //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	int *d_csrRowPtr; cudaStat1 = cudaMalloc(&d_csrRowPtr, (m+1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	double *d_csrVal; cudaStat1 = cudaMalloc(&d_csrVal, nnz * sizeof(double));   //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	// Getting the buffer size
+	cusparseStatus_t cusparseStat1;
+	
+	//cout << "Copying to GPU \n";
+	// Copying data to CUDA
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrRowPtr, h_csrRowPtr, (m+1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);    //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);       //cout << "__val: status:" << cudaStat1 << endl;
+	
+	//cout << "Checking the size\n";
+	//printf("__Size of h_a: %d \n", sizeof(h_a) / sizeof(double));
+	//printf("__Size of h_b: %d \n", sizeof(h_b) / sizeof(double));
+	//printf("__Size of h_csrRowPtr: %d \n", sizeof(h_csrRowPtr) / sizeof(int));
+	//printf("__Size of h_csrColInd: %d \n", sizeof(h_csrColInd) / sizeof(int));
+	//printf("__Size of h_csrVal: %d \n", sizeof(h_csrVal) / sizeof(double));
+	//printf("__rows: %d | cols: %d | nnz: %d \n", m, n, nnz);
+	//
+	//cout << "Doing the real multiplication \n";
+	
+	// The multiciplication
+	double alpha = 1.0; 
+	double beta = 0.0;
+	
+	cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+	
+	//cout << "Copying to CPU \n";
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+	//for (int i = 0; i < 10; i++) printf("%d: %.4f \n", i, h_b[i]);
+	b = Eigen::Map<Eigen::VectorXd>(h_b, m);
+	//cout << b.block(0, 0, 10, 1) << endl;
+
+}
+
+/* Matrix multiplication in Cuda b = S*a */
+void SparseMatrix_Vector_Multiplication(const Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b)
+{
+	cout << "Setting up the handle in GPU \n";
+	// --- Initialize cuSPARSE
+	cusparseHandle_t	handle;
+	cudaError_t			cudaStat1 = cudaSuccess;
+	cusparseDirection_t dirA = CUSPARSE_DIRECTION_COLUMN;
+
+	const int m = S.rows();
+	const int n = S.cols();
+	double alpha = 1.0;
+	double beta = 0.0; 
+	cusparseMatDescr_t descrA = 0, descrB = 0;
+	int nnzA = S.nonZeros();
+	int rowsA = m + 1;
+	printf("The data: S=%dx%d | nnzA:%d, rowsA:%d |\n", m, n, nnzA, rowsA);
+
+	/* Setting up the data for the vectors */
+	cout << "Allocating memory and setup in CPU + GPU \n";
+	double *h_a = (double*)malloc(n * sizeof(double));
+	double *h_b = (double*)malloc(m * sizeof(double));
+	h_a = a.data();
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n*sizeof(double)); cout << "__status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m*sizeof(double)); cout << "__status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);
+
+	cout << "Seting up the CSR data \n";
+	/* Setting up the data for the Matrix (CSR) */
+	double *h_csrVal = (double*)malloc(S.nonZeros() * sizeof(double));
+	int *h_csrColInd = (int*)malloc(nnzA * sizeof(int));
+	int *h_csrRowPtr = (int*)malloc(rowsA * sizeof(int));
+	int *d_csrColInd; cudaMalloc(&d_csrColInd, nnzA * sizeof(int));
+	int *d_csrRowPtr; cudaMalloc(&d_csrRowPtr, rowsA * sizeof(int));
+	double *d_csrVal; cudaMalloc(&d_csrVal, nnzA * sizeof(double));
+	cudaStat1 = cudaMemcpy(d_csrColInd, h_csrColInd, nnzA * sizeof(int), cudaMemcpyHostToDevice); cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrRowPtr, h_csrRowPtr, rowsA * sizeof(int), cudaMemcpyHostToDevice); cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrVal, h_csrVal, nnzA * sizeof(double), cudaMemcpyHostToDevice); cout << "__val: status:" << cudaStat1 << endl;
+	
+	cout << "Finding nnz |";
+	int *d_bsrRowPtr; cudaMalloc(&d_bsrRowPtr, rowsA * sizeof(int));
+	int *d_bsrColInd;
+	double *d_bsrVal;
+	int nnzb = nnzA;	
+	//cusparseXcsr2bsrNnz(handle, dirA, m, n,	descrA, d_csrRowPtr, d_csrColInd, 1, descrB, d_bsrRowPtr, &nnzb);	
+	cout << " with " << nnzb << " non zero entries \n";
+
+	cout << "Converting to BSR format \n";
+	cudaStat1 = cudaMalloc(&d_bsrColInd, nnzb * sizeof(int)); cout << "__status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_bsrVal, nnzb * sizeof(double)); cout << "__status:" << cudaStat1 << endl;
+
+	cusparseDcsr2bsr(handle, dirA, m, n, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, 1, descrB, d_bsrVal, d_bsrRowPtr, d_bsrColInd);
+	
+	
+	cout << "Doing the real multiplication \n";
+	//cusparseDbsrmv(handle, dirA, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, S.nonZeros(), &alpha, descrA, S.valuePtr(), S.outerIndexPtr(), S.innerIndexPtr(), 1, a.data(), &beta, b.data());
+	cusparseCreate(&handle);
+	int blockdim = 1; 
+	cusparseStatus_t cusparseStat1 = cusparseDbsrmv(handle, dirA, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnzb, &alpha, descrB, d_bsrVal, d_bsrRowPtr, d_bsrColInd, blockdim, d_a, &beta, d_b);
+	cout << "__status:" << cusparseStat1 << endl;
+
+	cout << "Copying to CPU \n";
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+	b = Eigen::Map<Eigen::VectorXd>(h_b, m);
+	cout << b.block(0, 0, 10, 1) << endl; 
+	//cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnzS, &alpha, descrA, d_S_sp, d_S_RowIndices, d_S_ColIndices, d_a, &beta, d_b);
+}
+//void SparseMatrix_Vector_Multiplication(const Eigen::SparseMatrix<double> &S, Eigen::VectorXd& a, Eigen::VectorXd& b)
+//{
+//	// --- Initialize cuSPARSE
+//	cusparseHandle_t	handle;
+//	cudaError_t			cudaStat1 = cudaSuccess;
+//
+//	const int m = S.rows();
+//	const int n = S.cols();
+//	const int lda = m;
+//	printf("Input S=%dx%d | a=%d | m=%d, n=%d, lda=%d \n", S.rows(), S.cols(), a.size(), m, n, lda);
+//
+//	cout << "allocating memory in the host/CPU \n";
+//	// --- host-size matrices
+//	double *h_S = (double*)malloc(m*n * sizeof(double));
+//	double *h_a = (double*)malloc(n * sizeof(double));
+//	double *h_b = (double*)malloc(m * sizeof(double));
+//	Eigen::MatrixXd Snew(S);
+//	h_S = Snew.data();
+//	h_a = a.data();
+//
+//	cout << "allocating memory in the device/GPU \n";
+//	// --- Create device arrays and copy host arrays to them
+//	double *d_S;  cudaStat1 = cudaMalloc(&d_S, m*n*sizeof(double));
+//	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n*sizeof(double));
+//	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m*sizeof(double));
+//	cout << cudaStat1 << ": copying data from CPU to GPU \n";
+//	cudaStat1 = cudaMemcpy(d_S, h_S, m*n * sizeof(double), cudaMemcpyHostToDevice);
+//	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);
+//	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);
+//
+//	// --- Descriptor for sparse matrix A
+//	cusparseMatDescr_t descrA;     
+//	cusparseCreateMatDescr(&descrA);
+//	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+//	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ONE);
+//
+//	cout << cudaStat1 << "Analyzing sparsity pattern in input matrix S : ";
+//	int nnzS = 0;	
+//	// --- Device side number of nonzero elements per row of matrix A
+//	int *d_nnzPerVectorA;   
+//	cudaMalloc(&d_nnzPerVectorA, m * sizeof(*d_nnzPerVectorA));
+//	cusparseDnnz(handle, CUSPARSE_DIRECTION_ROW, m, n, descrA, d_S, lda, d_nnzPerVectorA, &nnzS);
+//	cout << "with " << nnzS << " non-zero entries \n";
+//
+//	// --- Host side number of nonzero elements per row of matrix A
+//	int *h_nnzPerVectorA = (int *)malloc(m * sizeof(*h_nnzPerVectorA));
+//	cudaMemcpy(h_nnzPerVectorA, d_nnzPerVectorA, m * sizeof(*h_nnzPerVectorA), cudaMemcpyDeviceToHost);
+//
+//	cout << "Creating a sparse matrix S in GPU \n";
+//	// --- Device side sparse matrix
+//	double *d_S_sp;            
+//	cudaMalloc(&d_S_sp, nnzS * sizeof(*d_S_sp));
+//
+//	int *d_S_RowIndices;    
+//	cudaMalloc(&d_S_RowIndices, (m + 1) * sizeof(*d_S_RowIndices));
+//	int *d_S_ColIndices;    
+//	cudaMalloc(&d_S_ColIndices, nnzS * sizeof(*d_S_ColIndices));
+//
+//	cout << "Converting from Dense to Sparse \n";
+//	cusparseDdense2csr(handle, m, n, descrA, d_S, lda, d_nnzPerVectorA, d_S_sp, d_S_RowIndices, d_S_ColIndices);
+//
+//	// --- Host side sparse matrices
+//	cout << "allocating memory in the device/GPU \n";
+//	double *h_S_sp = (double *)malloc(nnzS * sizeof(*h_S));
+//	int *h_S_RowIndices = (int *)malloc((m + 1) * sizeof(*h_S_RowIndices));
+//	int *h_S_ColIndices = (int *)malloc(nnzS * sizeof(*h_S_ColIndices));
+//	cout << "copying data from CPU to GPU \n";
+//	cudaMemcpy(h_S_sp, d_S_sp, nnzS * sizeof(*h_S_sp), cudaMemcpyDeviceToHost);
+//	cudaMemcpy(h_S_RowIndices, d_S_RowIndices, (m + 1) * sizeof(*h_S_RowIndices), cudaMemcpyDeviceToHost);
+//	cudaMemcpy(h_S_ColIndices, d_S_ColIndices, nnzS * sizeof(*h_S_ColIndices), cudaMemcpyDeviceToHost);
+//
+//	cout << "Performing multiplication \n";
+//	const double alpha = 1.;
+//	const double beta = 0.;
+//	cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnzS, &alpha, descrA, d_S_sp, d_S_RowIndices, d_S_ColIndices, d_a ,&beta, d_b);
+//	
+//	cout << "Returning results to CPU \n";
+//	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+//
+//
+//}
 
 //template<typename Scalar>
 void manuallyDestroySparseMatrix(Eigen::SparseMatrix<double> &M)

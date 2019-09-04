@@ -31,6 +31,8 @@
 #include "engine.h"
 #include "mex.h"
 
+#include <cusparse_v2.h>
+
 #include "TestSolver.h"
 
 using namespace std;
@@ -43,7 +45,7 @@ class VectorFields
 public:
 	// MESH-related Functions
 	void readMesh(const string &meshFile);
-	void scaleMesh();
+	void scaleMesh(Eigen::MatrixXd& V, Eigen::MatrixXi& F);
 	void readArrowMesh(const string &meshFile);
 	void getVF(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
 	void computeFaceCenter();
@@ -143,12 +145,9 @@ public:
 	void solveGlobalSystemMappedLU_GPU(Eigen::VectorXd& vEst, Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 	void solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHS, Eigen::VectorXd& b);
 
-	// RANK-2 TENSOR
-	void constructMappingMatrix_TensorR2();
-	void constructStiffnessMatrixSF2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
-	void constructStiffnessMatrixCurlPart2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D);
-	void constructStiffnessMatrixDivPart2D_TensorR2(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D);
 	
+	// Alignment fields (Maximal curvature direction) 
+	void computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV);
 
 	// APPLICATIONS ON GLOBAL SYSTEM
 	void computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
@@ -156,6 +155,8 @@ public:
 	void retrieveEigenFields(const string& filename);
 
 	// LOCAL SYSTEM
+	void selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer);
+	void selectAdaptiveRegions_Curvature(igl::opengl::glfw::Viewer &viewer);
 	void constructSamples(const int &n);
 	void farthestPointSampling();
 	void constructMultiBasis();
@@ -174,6 +175,9 @@ public:
 	void storeBasis(const string& filename);
 	void retrieveBasis(const string& filename);
 
+	// Basis using coarsening
+	void constructBasis_Coarsening(igl::opengl::glfw::Viewer &viewer);
+
 	// REDUCED-GLOBAL SYSTEM BASED ON BASIS
 	void setAndSolveUserSystem(const Eigen::Vector3d& lambda);
 	void setupReducedBiLaplacian();
@@ -184,8 +188,16 @@ public:
 	void setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::SparseMatrix<double>& A_LHSBar);
 	void solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
 	void solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<double>& A_LHSBar, Eigen::VectorXd& bBar);
-	void mapSolutionToFullRes();
 	void obtainUserVectorFields();
+	void mapSolutionToFullRes();
+	void initializeParametersForLifting();
+	void performLifting();
+
+	// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
+	void setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda);
+	void obtainConstraints();
+	void preComputeReducedElements();
+	void solveInteractiveSystem();
 
 	// COMPARING RESULTS
 	void measureApproxAccuracyL2Norm();
@@ -199,6 +211,7 @@ public:
 	//void testProjection_MyBasis_WithRegularizer(const Eigen::SparseMatrix<double>& Basis, const Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> &sparseSolver_Ref, const Eigen::SparseMatrix<double>& B_Ref, const Eigen::VectorXd& a_Ref, const Eigen::LDLT<Eigen::MatrixXd>& denseSolver_Red, const Eigen::MatrixXd& B_Red, const Eigen::VectorXd& a_Red, const Eigen::VectorXd& inputFields, const Eigen::SparseMatrix<double>& MReg, double &error);
 	void projectionTest();
 	void projectionTest(bool &readDesFieldsFromFile, bool &readPertFieldsFromFile, bool &useEigenBasis, int start, int nTests);
+	void projectionSimpleL2Test();
 	void compareModalBasis_SamePerformance();
 	void compareModalBasis_SameStorage();
 	void convergenceTest();
@@ -211,6 +224,7 @@ public:
 	void computeSmoothingApprox(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out);
 
 	void computeApproxEigenFields(const int &numEigs, const string& filename);
+	void computeApproxEigenFields_Mult();
 	void retrieveApproxEigenFields();
 	void ConstructCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
 	void ComputeCurvatureFields();
@@ -276,6 +290,7 @@ public:
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
 	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
+	void visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces);
 	void visualize2DfieldsScaled(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double &scale);
@@ -293,13 +308,22 @@ public:
 	// VISUALIZATION of APPLICATIONs
 	void visualizeSmoothing(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd& v);
 	void visualizeCurvatureTensor(igl::opengl::glfw::Viewer &viewer);
-
+		// In Global coordinate
 	void writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const string& filename);
-	
+	void writeConstraintsToFile(const string& filename);
+	void loadVectorFieldsFromFile(const string& filename, Eigen::VectorXd &vfields);
+	void loadConstraintsFromFile(const string& filename);
+		// In Local coordinate
+	void writeVectorFieldsToFile_Local(const Eigen::VectorXd &vfields, const string& filename);
+	void writeConstraintsToFile_Local(const string& filename);
+	void loadVectorFieldsFromFile_Local(const string& filename, Eigen::VectorXd &vfields);
+	void loadConstraintsFromFile_Local(const string& filename);
+
 	// GETTER AND SETTER of IMPORTANT ELEMENTS
 	Eigen::VectorXd getRefFields() const; 
 
-protected:
+//protected:
+public:
 	// Variable (Matrix, Vector or regular variables) for Matrix construction
 	//Eigen::MatrixXd					V, FC, NF;
 	Eigen::MatrixXd					V, NF, VArrow;
@@ -327,17 +351,27 @@ protected:
 	set<int>						SubDomain, Boundary;
 
 	// Variable related to subspace construction
-	Eigen::SparseMatrix<double>		BasisTemp, Basis;
+	Eigen::SparseMatrix<double>		BasisTemp, Basis, BasisT;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow;
 	Eigen::MatrixXd					BasisSum, BasisSumN;
 	vector<int>						Sample;
 	vector<chrono::duration<double>>durations;
 	int								numSample;
 	double							numSupport; 
+	Eigen::VectorXd					faceScale;
 
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;
 	//Eigen::VectorXd					XLowDim, XFullDim;
-	Eigen::SparseMatrix<double>		CBar, B2DBar;
+	Eigen::SparseMatrix<double>		CBar, CBarT, B2DBar;
+	Eigen::VectorXd					vAdd, BvBar;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
+	Eigen::MatrixXd					BC; 
+	cusparseHandle_t handle;		/* Entries for lifting using CUDA */
+	cusparseMatDescr_t descrA;
+	double* d_csrVal;
+	int* d_csrRowPtr; 
+	int* d_csrColInd;
 
 	// Variables related to Applications
 	Eigen::MatrixXd					CurvatureTensorField2D;

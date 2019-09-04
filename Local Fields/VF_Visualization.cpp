@@ -5,6 +5,9 @@
 void VectorFields::selectFaceToDraw(const int& numFaces)
 {
 	/*Getting faces to draw, using farthest point sampling (could take some time, but still faster than drawing everything for huge mesh) */
+	faceScale.resize(F.rows());
+	faceScale.setConstant(1.0);
+
 
 	if (numFaces < F.rows())
 	{
@@ -145,7 +148,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
 	chrono::duration<double>					duration, da, de;
 	t1 = chrono::high_resolution_clock::now();
-	//cout << "> Adding edges... ";
+	cout << "> Adding edges... ";
 
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
@@ -232,13 +235,77 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	}
 
 	/* Draw the fields in MATRIX format (much faster then looping over each face and draw them) */
-	viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
-	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
-	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
+	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+	viewer.data().lines.resize(3 * FaceToDraw.size(), 9);
+	//for (int i = 0; i < FaceToDraw.size(); i++)
+	//{
+	//	viewer.data().lines.row(i)							<< FCLoc.row(i), FCLoc.row(i) + TFields.row(i)*lengthScale, color;
+	//	viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	//	viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	//}
+
+	viewer.data().line_width = 1.0;
+
+	// Drawing in parallel
+	int id, tid, ntids, ipts, istart, iproc;
+	const int NUM_THREADS = omp_get_num_procs();
+	omp_set_num_threads(NUM_THREADS);
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+	{
+		iproc = omp_get_num_procs();
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		ipts = (int)ceil(1.00*(double)FaceToDraw.size() / (double)ntids);
+		istart = tid * ipts;
+		if (tid == ntids - 1) ipts = FaceToDraw.size() - istart;
+		if (ipts <= 0) ipts = 0;
+
+		for (id = istart; id < (istart + ipts); id++) {
+			if (id >= FaceToDraw.size()) break; 
+
+			viewer.data().lines.row(id) << FCLoc.row(id), FCLoc.row(id) + TFields.row(id)*lengthScale, color;
+			viewer.data().lines.row(id+ FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head1Fields.row(id)*lengthScale / HEAD_RATIO, color;
+			viewer.data().lines.row(id+ 2*FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head2Fields.row(id)*lengthScale / HEAD_RATIO, color;
+
+		}
+	}
+
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	//cout << "in " << duration.count() << " seconds" << endl;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+	viewer.data().line_width = 4.;
+}
+
+void VectorFields::visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
+{
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Setting edges... ";
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = scale;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	//>>>>>>> master
+
+	Eigen::VectorXd fields3d = A*field2D;
+	//viewer.data().set_edges(FC, fields3d*lengthScale, color);
+	viewer.data().lines.resize(F.rows(), 9);
+	for (int i = 0; i < F.rows(); i++)
+	{
+		viewer.data().lines.row(i) << FC.row(i), FC.row(i) + fields3d.block(3 * i, 0, 3, 1).transpose(), color;
+	}
+
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void VectorFields::visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces)
@@ -392,9 +459,9 @@ void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, c
 	//} 
 	//else
 	//{
-		printf("Showing the %d Basis field\n", bId);
-		//visualize2DfieldsScaled(viewer, Basis, bId, color);
-		visualize2Dfields(viewer, Basis.col(bId), color, 1.0);
+		printf("Showing the %d Basis field\n", id);
+		visualize2DfieldsScaled(viewer, Basis, bId, color);
+		//visualize2Dfields(viewer, Basis.col(id), color, 0.08);
 	//}
 }
 
@@ -439,8 +506,9 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
+	//visualize2Dfields(viewer, XFullDim, color, 3, false);
 	visualize2Dfields(viewer, XFullDim, color, 3, false);
-	//visualize2Dfields(viewer, XFullDim, color, 2, true);
+	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
 
@@ -462,14 +530,14 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0; 
-	const double EDGE_RATIO = 4.0;
+	const double EDGE_RATIO = 10.0;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color(0.0, 0.0, 0.2);
 	
-	viewer.selected_data_index = 1; 
-	viewer.data().line_width = 5.0;
+	//viewer.selected_data_index = 1; 
+	viewer.data().line_width = 4.0;
 	viewer.data().point_size = 5.0;
-	viewer.data().show_lines = false;
+	//viewer.data().show_lines = false;
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
@@ -500,7 +568,8 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	}
 	 
 	viewer.selected_data_index = 0; 	
-
+	viewer.data().line_width = 4.0;
+	//viewer.data().line_width = 1.0;
 }
 
 void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -576,7 +645,7 @@ void VectorFields::write2DFieldsForVTK(const Eigen::VectorXd &field2D, const str
 			file << F.cols() << " " << F(i, 0) << " " << F(i, 1) << " " << F(i, 2) << "\n";
 		}
 
-		cout << "Converting to world space \n";
+		//cout << "Converting to world space \n";
 		/* Print eigenfields*/
 		Eigen::VectorXd field3D;
 		Eigen::MatrixXd Fields3D;
@@ -612,7 +681,7 @@ void VectorFields::write2DFieldsForVTK(const Eigen::VectorXd &field2D, const str
 		//	file << NF(i, 0) << " " << NF(i, 1) << " " << NF(i, 2) << "\n";
 		//}
 
-		cout << "VERTEX-based Mode\n"; 
+		//cout << "VERTEX-based Mode\n"; 
 		/* VERTEX-based DATA */
 		Eigen::VectorXd vFields3D;
 		vFields3D.setZero(3 * V.rows());
@@ -696,11 +765,189 @@ void VectorFields::writeVectorFieldsToFile(const Eigen::VectorXd &vfields, const
 		printf("__|F|=%d  | vfields=%d\n", F.rows(), vfields3D.size());
 		for (int i = 0; i < F.rows(); i++)
 		{
-			myfile << vfields3D(3*i) << ", " << vfields3D(3*i+1) << ", " << vfields3D(3*i+2) << "\n";
+			myfile << vfields3D(3*i) << " " << vfields3D(3*i+1) << " " << vfields3D(3*i+2) << "\n";
 		}
 		myfile.close();
 	}
 	else cout << "Unable to open file";
+}
+
+void VectorFields::writeConstraintsToFile(const string& filename)
+{
+	cout << "Trying to write the constraint to file \n";
+	ofstream myfile(filename.c_str());
+
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < globalConstraints.size(); i++)
+		{
+			myfile << globalConstraints[i] << " " << c(2 * i) << " " << c(2 * i + 1) << endl; 
+		}
+	}
+	else { cout << "Cannot open the file\n"; }
+
+	cout << "Writing is done! \n"; 
+}
+
+void VectorFields::loadVectorFieldsFromFile(const string& filename, Eigen::VectorXd &vfields)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	Eigen::VectorXd fields3d;
+	vector<double> fieldsVector;
+	fieldsVector.reserve(3 * F.rows());
+
+	double v;
+	
+	if (file.is_open())
+	{
+		
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+			getline(iStream, oneWord, ' ');
+			v = stod(oneWord);
+			fieldsVector.push_back(v);
+		}
+	}
+	file.close();
+
+	fields3d = Eigen::Map<Eigen::VectorXd>(fieldsVector.data(), 3 * F.rows());
+	vfields = A.transpose()*fields3d;
+
+	cout << "Loads data of vector fields " << vfields.rows() << " entries \n";
+}
+
+void VectorFields::loadConstraintsFromFile(const string& filename)
+{
+	/*Reset the global constraints and constraint-related matrices */
+	globalConstraints.clear(); globalConstraints.shrink_to_fit();
+	c.resize(0);
+	C.resize(0, 0); C.data().clear();
+
+	ifstream file(filename);
+	string oneLine, oneWord;
+	globalConstraints.reserve(300);
+	vector<double> constraintValues;
+	constraintValues.reserve(2 * globalConstraints.size());
+	
+	double	val2;
+	int		val1; 
+
+	if (file.is_open())
+	{
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			getline(iStream, oneWord, ' ');
+			val1 = stoi(oneWord);
+			globalConstraints.push_back(val1);
+			///cout << "val1: " << val1;
+
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			//printf("Reading %d as constraints with values of %.4f ", val1, val2);
+			constraintValues.push_back(val2);
+			///cout << " val2: " << val2; 
+
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			constraintValues.push_back(val2);
+			//printf(" and %.4f \n", val2);
+			///cout << " val3: " << val2 << endl; 
+		}
+	}
+	file.close();
+	for (int i : globalConstraints)
+	{
+		//printf("constraint: %d \n", i);
+	}
+
+	c = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());	
+	//c = Eigen::Map<Eigen::VectorXd>(constraintValues.data());
+	cout << "Loading the constraints and setting up matrix C\n";
+	// Setting up matrix C
+	Eigen::SparseMatrix<double> CTemp;
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+	//c.resize(2 * globalConstraints.size());
+	Eigen::Vector2d cRand;
+
+	int counter = 0;
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		//cRand(0) = (double)(rand() % F.rows()) / (double) F.rows();
+		//cRand(1) = (double)(rand() % F.rows()) / (double)F.rows();
+		cRand << 1.0, 0.0;
+		cRand.normalize();
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
+		//c(counter, 0) = cRand(0);
+		counter++;
+
+		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
+		//c(counter, 0) = cRand(1);
+		counter++;
+
+		//printf("Inserting %d and %d as constraint, with value of %.3f and %.3f \n", 2*globalConstraints[i], 2*globalConstraints[i]+1, c(2*globalConstraints[i]), c(2*globalConstraints[i]+1) );				
+		printf("Inserting %d and %d as constraint, with value of %.3f and %.3f \n", 2 * globalConstraints[i], 2 * globalConstraints[i] + 1, c(2 *i), c(2 * i + 1));
+	}
+	printf("B2D=%dx%d | C=%dx%d | c=%d | triplet=%d | const = %d | \n",
+		B2D.rows(), B2D.cols(), C.rows(), C.cols(), c.size(), CTriplet.size(), globalConstraints.size());
+	C.resize(2 * globalConstraints.size(), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	cout << "C: \n" << C.block(0, 0, 2 * globalConstraints.size(), 20) << endl; 
+}
+
+// In Local coordinate
+void VectorFields::writeVectorFieldsToFile_Local(const Eigen::VectorXd &vfields, const string& filename)
+{
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Writing vector fields to file to text \n";
+		printf("__|F|=%d  | vfields=%d\n", F.rows(), vfields.size());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			Eigen::Vector2d v = vfields.block(2 * i, 0, 2, 1);
+			v.normalize();
+			myfile << v(0) << "\n";
+			myfile << v(1) << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+}
+void VectorFields::writeConstraintsToFile_Local(const string& filename)
+{
+	cout << "Trying to write the constraint to file \n";
+	ofstream myfile(filename.c_str());
+
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < globalConstraints.size(); i++)
+		{
+			myfile << globalConstraints[i] << " " << c(2 * i) << " " << c(2 * i + 1) << endl;
+		}
+	}
+	else { cout << "Cannot open the file\n"; }
+
+	cout << "Writing is done! \n";
+}
+void VectorFields::loadVectorFieldsFromFile_Local(const string& filename, Eigen::VectorXd &vfields)
+{
+
+}
+void VectorFields::loadConstraintsFromFile_Local(const string& filename)
+{
+
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
@@ -872,12 +1119,14 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 		{
 			//cout << "This does happen\n";
 			vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
+			
 		}
 		else
 		{
 			//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
 			//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
-			vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);			
+			//vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);	
+			vColor.row(i) = Eigen::RowVector3d(223.0/255.0, 180.0/255.0, 240.0/255.0);
 		}
 	}
 
@@ -893,19 +1142,19 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::RowVector3d color(0.0, 0.8, 0.0);
+	Eigen::RowVector3d color(0.8, 0.1, 0.0);
 	Eigen::RowVector3d c;
 
 	/* Point based */
-	//for (int i : Sample) {
-	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-	//	viewer.data().add_points(c, color);
-	//}
+	for (int i : Sample) {
+		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
+		viewer.data().add_points(c, color);
+	}
 
 	/* Color based */
-	Eigen::MatrixXd FColor;
-	igl::jet(-sampleDistance, true, FColor);
-	viewer.data().set_colors(FColor);
+	//Eigen::MatrixXd FColor;
+	//igl::jet(-sampleDistance, true, FColor);
+	//viewer.data().set_colors(FColor);
 }
 
 void VectorFields::visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer)

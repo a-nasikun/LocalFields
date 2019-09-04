@@ -1,11 +1,14 @@
 #include "VectorFields.h"
 
 #include <igl/per_vertex_normals.h>
+#include <igl/gaussian_curvature.h>
+#include <igl/invert_diag.h>
 #include <Eigen/Eigenvalues>
 #include <random>
 #include <Eigen/OrderingMethods>
 #include <Eigen/CholmodSupport>
 #include <suitesparse/cholmod.h>
+
 
 
 /* ====================== SETTING UP MATRICES ============================*/
@@ -190,12 +193,13 @@ void VectorFields::constructSpecifiedHardConstraints()
 void VectorFields::constructRandomHardConstraints()
 {
 	// Define the constraints
-	const bool readFromFile = false;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
+	const bool readFromFile = true;			/// IMPORTANT!!!!!!!!!!!!!!!!!!!!
 	bool lineNotFound = true;
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_CDragon_Rand_20.txt";;
 	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Armadillo_randConstraints.txt";
-	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
-	string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	string resultFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Fertility_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/CDragon_randConstraints.txt";
+	//string resultFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Tests/Projections/Kitten_randConstraints.txt";
 	//string filename = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Constraints/Constraints_Cube_Rand_25.txt";
 
 	/* Reading the constraints from file */
@@ -226,10 +230,10 @@ void VectorFields::constructRandomHardConstraints()
 
 					while (oneWord != "") {
 						constraint.push_back(stod(oneWord));
-						cout << oneWord << "|";
+						//cout << oneWord << "|";
 						getline(iStream, oneWord, ',');
 					}
-					cout << endl;
+					//cout << endl;
 
 					globalConstraints.resize(constraint.size());
 
@@ -241,7 +245,7 @@ void VectorFields::constructRandomHardConstraints()
 					//return;
 				}
 
-				cout << "line =" << lineNow << endl; 
+				//cout << "line =" << lineNow << endl; 
 				lineNow++;
 			}
 		}
@@ -1864,14 +1868,14 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 {	
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
-	Eigen::SparseMatrix<double>		tempB2D = B2D;
-	B2D = B2DAsym;
+	//Eigen::SparseMatrix<double>		tempB2D = B2D;
+	//B2D = B2DAsym;
 
 	// lambda 0: dirichlet
 	// lambda 1: bilaplacian
 	// lambda 2: (soft-) constraint	
 
-	constructConstraints();
+	//constructConstraints();
 	setupRHSGlobalProblemMapped(g, h, vEst, b);
 	setupLHSGlobalProblemMapped(A_LHS);
 	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
@@ -1883,7 +1887,7 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	//setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
 	//solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 
-	B2D = tempB2D;
+	//B2D = tempB2D;
 }
 void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda, Eigen::MatrixXd& M)
 {
@@ -2095,65 +2099,44 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
-// RANK-2 TENSOR
-void VectorFields::constructMappingMatrix_TensorR2()
+// Alignment fields (Maximal curvature direction) 
+void VectorFields::computeMaximalPrincipalCurvature(const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &PD, Eigen::VectorXd& PV)
 {
-	// For Timing
-	chrono::high_resolution_clock::time_point	t1, t2;
-	chrono::duration<double>					duration;
-	t1 = chrono::high_resolution_clock::now();
-	cout << "> Constructing Mapping matrices (Global/World-Coord to Local Frame)... ";
+	cout << "Computing principal curvature\n";
+	Eigen::MatrixXd PD1, PD2, PDF;
+	Eigen::VectorXd PD2D;
+	Eigen::VectorXd PV1, PV2, PVF;
 
-
-	AT2R.resize(3 * F.rows(), 3 * F.rows());
-	vector<Eigen::Triplet<double>> ATriplet;
-	ATriplet.reserve(3 * 3 * F.rows());
-	Eigen::Vector3d e, f, n;
-	Eigen::Vector3d eeT, efT, feT, efTfeT, ffT;
-
-	for (int i = 0; i < F.rows(); i++) {
-		/* Computing the basic elements */
-		e = V.row(F(i, 1)) - V.row(F(i, 0));
-		e.normalize();
-
-		n = NF.row(i);
-		n.normalize();
-
-		f = n.cross(e);
-		f.normalize();
-
-		/* Computing the values for tensor */
-
-
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, e(0)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, e(1)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, e(2)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, f(0)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, f(1)));
-		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, f(2)));
+	igl::principal_curvature(V, F, PD1, PD2, PV1, PV2);
+	
+	cout << "Mapping to space of triangles \n";
+	PDF.resize(F.rows(), F.cols());
+	PVF.resize(F.rows());
+	for (int i = 0; i < F.rows(); i++)
+	{
+		PDF.row(i) = (PD1.row(F(i, 0)) + PD1.row(F(i, 1)) + PD1.row(F(i, 2))) / 3.0;
+		PVF(i) = (PV1(F(i, 0)) + PV1(F(i, 1)) + PV1(F(i, 2))) / 3.0;
 	}
 
-	A.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	PV = PVF; 
 
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
+	printf("Dim of PDF: %dx%d | A=%dx%d \n", PDF.rows(), PDF.cols(), A.rows(), A.cols());
+	cout << "Converting to local coordinates \n";
+
+	PDF.transposeInPlace();
+	PD2D = Eigen::Map<Eigen::VectorXd>(PDF.data(), PDF.cols()*PDF.rows());
+	//PD2D = Eigen::Map<Eigen::VectorXd>(PDF.data(), 1);
+
+	printf("Dim of PD2D: %dx%d \n", PD2D.rows(), PD2D.cols());
+	printf("Size of PV: %d \n", PV.size());
+
+	PD = A.transpose()*PD2D;	
+	printf("Dim of PD (per face, to draw) : %dx%d \n", PD.rows(), PD.cols());
+
+	cout << "Matrix rep: " << PDF.block(0, 0, 3, 3) << endl << endl;
+	cout << "Vector rep: " << PD2D.block(0, 0, 1, 9) << endl << endl;
 }
 
-void VectorFields::constructStiffnessMatrixSF2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D, Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
-{
-
-}
-
-void VectorFields::constructStiffnessMatrixCurlPart2D_TensorR2(Eigen::SparseMatrix<double>& LapCurl3D, Eigen::SparseMatrix<double>& LapCurl2D)
-{
-
-}
-
-void VectorFields::constructStiffnessMatrixDivPart2D_TensorR2(Eigen::SparseMatrix<double>& LapDiv3D, Eigen::SparseMatrix<double>& LapDiv2D)
-{
-
-}
 
 // APPLICATIONS ON GLOBAL SYSTEM
 void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_in, Eigen::VectorXd& v_out)
@@ -2187,6 +2170,112 @@ void VectorFields::computeSmoothing(const double& mu, const Eigen::VectorXd& v_i
 	printf("The energy is=%.4f ==> %.4f.\n", energy1, energy2);
 }
 
+void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Dealing with adaptivity\n";
+	
+	//const int face_id1 = 5213; 	const int face_id2 = 44893;	// arma43k
+	//const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
+	const int face_id1 = 421007; 	const int face_id2 = 397117;	// arma43k
+	Eigen::VectorXd dist;
+	faceScale.resize(F.rows());	
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+	Eigen::MatrixXd fCol(F.rows(),3);
+
+	cout << "COmputing the dijkstra distance \n";
+	computeDijkstraDistanceFace(face_id1, dist);
+
+	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+
+	for(int i=0; i<F.rows(); i++)
+	{
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
+		if (dist(i) < upBound) {
+			faceScale(i) = 7.5;
+			faceColor(i) = 0.7;
+			fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
+		}
+		else {
+			faceScale(i) = 1.0;
+			faceColor(i) = 0.3;
+			fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+		}
+	
+	}
+
+	//Eigen::MatrixXd fCol;
+	//igl::jet(faceColor, false, fCol);
+	viewer.data().set_colors(fCol);
+}
+
+void VectorFields::selectAdaptiveRegions_Curvature(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "Dealing with adaptivity\n";
+
+	//const int face_id1 = 5213; 	const int face_id2 = 44893;	// arma43k
+	const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
+	Eigen::VectorXd dist;
+	faceScale.resize(F.rows());
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+
+	/* Computing the distance */
+	cout << "COmputing the dijkstra distance \n";
+	computeDijkstraDistanceFace(face_id1, dist);
+	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+
+	/* Computing curvature */
+	Eigen::VectorXd kV, kF;
+	Eigen::SparseMatrix<double> M_, Minv_;
+	igl::gaussian_curvature(V, F, kV);
+	igl::massmatrix(V, F, igl::MASSMATRIX_TYPE_BARYCENTRIC, M_);
+	igl::invert_diag(M_, Minv_);
+	kV = (Minv_*kV).eval();
+	kF.resize(F.rows());
+
+	for (int i = 0; i < F.rows(); i++)
+	{
+		kF(i) = (kV(F(i, 0)) + kV(F(i, 1)) + kV(F(i, 2))) / 3.0;
+	}
+
+	int counterN = 0;
+	for (int i = 0; i<F.rows(); i++)
+	{
+		
+		//if (dist(i) < upBound) {
+			double val = exp(abs(kF(i))/25.0);
+			// substract by 0.5 to make it from 0.0 - 0.5
+			// mult by 2 to make it from 0.0 to 1.0
+			// mult by 2.5 to scale toward desired result in this non-uniform sampling
+			// add by 1 to scale everything from 1.0 to 3.5
+			val = ((val / (val + 1.0))-0.5)*2*2.5 + 1.0;
+			//printf("ID=%d | curv=%.3f | sigm: %.4f \n", i, kF(i), val);
+			faceScale(i) = val;
+			faceColor(i) = 0.7;
+			counterN++;
+		//}
+		//else {
+		//	faceScale(i) = 1.0;
+		//	faceColor(i) = 0.3;
+		//}
+
+	}
+
+	cout << "There are " << counterN << " entries in the domain\n";
+
+	cout << "(curv Vert) Min: " << kV.minCoeff() << " | max: " << kV.maxCoeff() << endl;
+	cout << "(curv Face) Min: " << kF.minCoeff() << " | max: " << kF.maxCoeff() << endl;
+	cout << "(scale Face) Min: " << faceScale.minCoeff() << " | max: " << faceScale.maxCoeff() << endl;
+
+	Eigen::MatrixXd fCol;
+	igl::jet(faceColor, false, fCol);
+	//igl::jet(kV, true, fCol);
+	viewer.data().set_colors(fCol);
+}
+
 void VectorFields::constructSamples(const int &n)
 {
 	numSample = n; 
@@ -2202,6 +2291,20 @@ void VectorFields::constructSamples(const int &n)
 	cout << duration.count() << "seconds" << endl;	
 
 	///testViennaCL2(SF2DAsym, MF2Dinv, eigFieldFull2D, eigValuesFull);
+
+	/* Counting samples inside and outside the regions */
+	int counterB = 0, counterNB = 0;
+	for (int sample : Sample)
+	{
+		if (faceScale(sample) > 1.01)
+		{
+			counterB++;
+		}
+		else {
+			counterNB++;
+		}
+	}
+	printf("From %d samples, %d are inside the region and %d are outside \n", Sample.size(), counterB, counterNB);
 }
 
 void VectorFields::farthestPointSampling()
@@ -2219,6 +2322,7 @@ void VectorFields::farthestPointSampling()
 	//Sample[0] = rand() % F.rows();
 	Sample[0] = 0;
 	//Sample[0] = 70267; // Arma 43k
+	//Sample[0] = 69298; // Arma 43k
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
@@ -2239,7 +2343,7 @@ void VectorFields::farthestPointSampling()
 void VectorFields::constructMultiBasis()
 {
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	vector<int> sampleSizeVect{10000};
+	vector<int> sampleSizeVect{5000, 1000, 500};
 	//vector<int> sampleSizeVect{250, 500, 1000, 2500, 5000, 10000, 25000};
 	numSupport = 40.0;
 	for (int sample : sampleSizeVect)
@@ -2247,7 +2351,7 @@ void VectorFields::constructMultiBasis()
 		constructSamples(sample);		
 		constructBasis();
 		///loadAndConstructBasis();		
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup_spectra";
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Neptune_" + to_string(2 * sample) + "_Eigfields_" + to_string((int)numSupport) + "sup_spectra";
 		//storeBasis(filename_basis);		
 	}
 }
@@ -2257,8 +2361,8 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	constructBasis_LocalEigenProblem();
-	//constructBasis_LocalEigenProblem10();
+	//constructBasis_LocalEigenProblem();
+	constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
@@ -2271,7 +2375,12 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
 	cout << "> Constructing Basis...\n";
-	
+
+	double	coef = sqrt(pow(1.7, 2) + pow(1.9, 2));			// regular
+	//double	coef = 1.5*sqrt(pow(1.7, 2) + pow(1.9, 2));			// adaptive
+	//double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
+	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
+
 	// Setup sizes of each element to construct basis
 	try {
 		Basis.resize(1, 1);
@@ -2285,14 +2394,14 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	//Basis.resize(BasisTemp.rows(), BasisTemp.cols());
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
-	cout << "Transformign the dirichlet enregy \n";
+	cout << "Transforming the dirichlet enregy \n";
 	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
 	printf("Sh=%dx%d (%d) | Mh=%dx%d (%d nnzs) \n", Sh.rows(), Sh.cols(), Sh.nonZeros(), MF2DhNeg.rows(), MF2DhNeg.cols(), MF2DhNeg.nonZeros());
 
 	/* Set-UP Laplace Matrix */
 	//Eigen::SparseMatrix<double> LapForBasis = MF2Dinv * SF2DAsym;
 
-	cout << "....Constructing and solving local systems...";
+	///cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
 	durations.resize(NUM_PROCESS);
 	const int Num_fields = 2;
@@ -2316,7 +2425,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	cout << "Setup the timing parameters: \n";
 	//const int NUM_THREADS = omp_get_num_procs();
 	const int NUM_THREADS = omp_get_num_procs()/2;
-	//const int NUM_THREADS = 16;
+	//const int NUM_THREADS = 8;
 	//const int NUM_THREADS = 1;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
@@ -2349,8 +2458,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		if (tid == ntids - 1) ipts = Sample.size() - istart;
 		if (ipts <= 0) ipts = 0;
 		
-		std::vector<Engine*> ep;
-		ep.resize(ntids);
+		//std::vector<Engine*> ep;
+		//ep.resize(ntids);
 		for (int i = 0; i < ntids; i++) 
 		{
 			//ep[i] = engOpen(NULL);
@@ -2386,7 +2495,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
 			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
@@ -2395,6 +2504,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructBoundary(F, visitedFaces, AdjMF3N, AdjMF2Ring);
+			//localField.constructSelectorMatrix(F, doubleArea);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[1] += t2 - t1;
@@ -2411,13 +2521,13 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
-			//printf("Starting engine %d for element %d\n", tid, id);
-			if(id%((int)(Sample.size()/4))==0)
-				cout << "[" << id << "] Constructing local eigen problem\n ";
-			///localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
-			///printf("Solving the %d eigen problem with %d entries.\n", id, localField.InnerElements.size());
-			///localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF2DAsym, MF2Dinv, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			if (id % 50 == 0)
+			printf("Running element %d on thread %d. \n", id, tid);
+			///if(id%((int)(Sample.size()/4))==0)
+			///	cout << "[" << id << "] Constructing local eigen problem\n ";
+
 			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);			
+			//localField.constructLocalEigenProblemWithSelectorMatrix(Num_fields, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -2435,20 +2545,19 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			//}
 
 			// To get local elements for visualizing subdomain
-			//if (id == 0 || id == 46) {
-			//	cout << "Getting element of ID " << id << endl;
-			//
-			//	for (int fid : localField.SubDomain) {
-			//		localSystem(fid) = 0.3;
-			//	}
-			//
-			//	for (int fid : localField.Boundary) {
-			//		localSystem(fid) = 0.7;
-			//	}
-			//
-			//	localSystem(localField.sampleID) = 1.0;			
-			//
-			//}
+			if (id == 0 || id == 46) {
+				cout << "Getting element of ID " << id << endl;
+			
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
+			
+				//for (int fid : localField.Boundary) {
+				//	localSystem(fid) = 0.7;
+				//}			
+				//localSystem(localField.sampleID) = 1.0;			
+			
+			}
 
 			/* Localized eigenproblems */
 			//if (id == 15)
@@ -2600,7 +2709,7 @@ void VectorFields::constructBasis_OptProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -2863,6 +2972,222 @@ void VectorFields::constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisF
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());	
 }
 
+void VectorFields::constructBasis_Coarsening(igl::opengl::glfw::Viewer &viewer)
+{
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_500.obj";
+	Eigen::MatrixXd V2;
+	Eigen::MatrixXi F2;
+
+	/* Loading small scale mesh */
+	cout << "Reading the 2nd mesh "; 
+	if (meshFile.substr(meshFile.find_last_of(".") + 1) == "off") {
+		igl::readOFF(meshFile, V2, F2);
+	}
+	else if (meshFile.substr(meshFile.find_last_of(".") + 1) == "obj") {
+		igl::readOBJ(meshFile, V2, F2);
+	}
+	else {
+		cout << "Error! File type can be either .OFF or .OBJ only." << endl;
+		Sleep(2000); exit(10);
+	}
+	printf(" with %d faces and %d vertices \n", F2.rows(), V2.rows());
+
+	/* Loading the mesh */
+	scaleMesh(V2, F2);
+	//viewer.append_mesh();
+	//for (int i = 0; i < V2.rows(); i++)
+	//{
+	//	V2.row(i) = V2.row(i) + Eigen::RowVector3d(0.25, 0.0, 0.0);
+	//}
+	//viewer.data().set_mesh(V2, F2);
+	//viewer.selected_data_index = 1;
+
+	cout << "Creating the basis for each local frame \n";
+	/* Create the basis matrix for the 2nd mesh */
+	Eigen::SparseMatrix<double> A2;
+	A2.resize(3 * F2.rows(), 2 * F2.rows());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(3 * 2 * F2.rows());
+	Eigen::Vector3d e, f, n;
+	Eigen::MatrixXd NF2;
+	igl::per_face_normals(V2, F2, NF2);
+
+	for (int i = 0; i < F2.rows(); i++) {
+		e = V2.row(F2(i, 1)) - V2.row(F2(i, 0));
+		e.normalize();
+
+		n = NF2.row(i);
+		n.normalize();
+
+		f = n.cross(e);
+		f.normalize();
+
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, e(0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, e(1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, e(2)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, f(0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, f(1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, f(2)));
+	}
+	A2.setFromTriplets(ATriplet.begin(), ATriplet.end());
+
+	/* Computing the centroid of every triangle faces */
+	Eigen::MatrixXd FC2(F2.rows(), F2.cols());
+	for (int i = 0; i < F2.rows(); i++)
+	{
+		FC2.row(i) = (V2.row(F2(i, 0)) + V2.row(F2(i, 1)) + V2.row(F2(i, 2))) / 3.0; 
+	}
+
+	/* Creating the hash table */
+	cout << "Preparing the hash table\n";
+	const int hashSize = 20;
+	vector<vector<vector<vector<int>>>> hashTable(hashSize);	// z-size is 10
+	for (int i = 0; i < hashSize; i++)	{
+		hashTable[i].resize(hashSize);							// y-size is 10
+		for (int j = 0; j < hashSize; j++) {
+			hashTable[i][j].resize(hashSize);					// x-size is 10
+			for (int k = 0; k < hashSize; k++) {
+				hashTable[i][j][k].reserve(100);
+			}
+		}
+	}
+	
+	cout << "Max, min, length and grid \n";
+	Eigen::RowVectorXd minV(V2.rows(), 3);
+	Eigen::RowVectorXd maxV(V2.rows(), 3);
+	Eigen::RowVector3d length, grid;
+
+	/* Get the min and max coefficients */
+	for (int i = 0; i < V2.cols(); i++)
+	{
+		minV(i) = V2.col(i).minCoeff();
+		maxV(i) = V2.col(i).maxCoeff();
+		length(i) = maxV(i) - minV(i);
+	}
+	grid = length / (double)hashSize;
+
+	// populating the hash table
+	cout << "Populating hash table \n";
+	vector<int> ids(3);
+	for (int i = 0; i < F2.rows(); i++)	{
+		for(int j=0; j<3; j++)		ids[j] = (int)floor((FC2(i, j) - minV(j)) / grid(j));
+		hashTable[ids[2]][ids[1]][ids[0]].push_back(i);
+	}
+
+	// Traversing the hash table
+	//for (int z_ = 0; z_ < hashSize; z_++) {
+	//	for (int y_ = 0; y_ < hashSize; y_++) {
+	//		for (int x_ = 0; x_ < hashSize; x_++) {
+	//			if (hashTable[z_][y_][x_].size() > 0)	{
+	//				printf("The idx[%d][%d][%d] has %d entries: ", z_, y_, x_, hashTable[z_][y_][x_].size());
+	//				for (int k : hashTable[z_][y_][x_]) {
+	//					cout << k << " | ";
+	//				}
+	//				cout << endl; 
+	//			}
+	//		}
+	//	}
+	//}
+
+	/* Selecting the closest triangle on the 2nd mesh from the 1st mesh*/
+	cout << "Selecting closest entries \n"; 
+	vector<int> largeToSmallCorr(F.rows()); 
+	vector<set<int>> smallToLargeCorr(F2.rows());
+	Eigen::VectorXd corrColor(F.rows());
+	for (int i = 0; i < F.rows(); i++) {
+		for (int j = 0; j < 3; j++)
+		{
+			ids[j] = (int)floor((FC(i, j) - minV(j)) / grid(j));
+			if (ids[j] < 0) ids[j] = 0;
+			if (ids[j] >= hashSize) ids[j] = hashSize-1;
+		}
+
+		// if the table has a content, find the triangle (in mesh 2) minimum distance to mesh 1
+		vector<int> neigh;
+		if (hashTable[ids[2]][ids[1]][ids[0]].size() > 0) {
+			neigh.reserve(100);
+			for (int fID : hashTable[ids[2]][ids[1]][ids[0]])
+			{
+				neigh.push_back(fID);
+			}
+		}
+		else {
+			int m = 1;
+			do {
+				for (int k_ = -m; k_ <=m; k_++) {
+					if (ids[2] + k_ < 0 || ids[2] + k_ >= hashSize) continue;
+					for (int j_ = -m; j_ <= m; j_++) {
+						if (ids[1] + j_ < 0 || ids[1] + j_ >= hashSize) continue;
+						for (int i_ = -m; i_ <=m ; i_++) {
+							if (ids[0] + i_ < 0 || ids[0] + i_ >= hashSize) continue;
+
+							for (int fID : hashTable[ids[2] + k_][ids[1] + j_][ids[0] + i_])
+							{
+								neigh.push_back(fID);
+							}
+						}
+					}
+				}
+				m++;
+			} while (neigh.size() < 1);
+		}
+
+		double minDist = std::numeric_limits<double>::max();
+		int minID;
+		for (int fID : neigh)
+		{
+			double d_ = (FC.row(i) - FC2.row(fID)).norm();
+			if (d_ < minDist) {
+				minID = fID;
+				minDist = d_;
+			}
+		}
+
+		largeToSmallCorr[i] = minID;
+		smallToLargeCorr[minID].insert(i);
+		//corrColor(i) = (double) (50*minID % (int) F.rows());
+		corrColor(i) = FC(minID,0)*FC(minID, 1)*FC(minID, 2);
+
+		if (i == 147312 || i == 139270) {
+			printf("Face %d (in mesh 1) is closest to face %d (in mesh 2) \n", i, minID);
+		}
+
+		//printf("Face %d (in mesh 1) is closest to face %d (in mesh 2) \n", i, minID);
+		//printf("Face %d is located at hash[%d][%d][%d] with %d entries \n", i, ids[2], ids[1], ids[0], hashTable[ids[2]][ids[1]][ids[0]].size());		
+	}
+
+	Eigen::MatrixXd fCol;	
+	igl::jet(corrColor, true, fCol);
+	viewer.data().set_colors(fCol);
+	viewer.selected_data_index = 0;
+
+
+	/* Mapping from coarse to full resolution mesh */
+	Basis.resize(2 * F.rows(), 2 * F2.rows());
+	vector<Eigen::Triplet<double>> BTriplet;
+	BTriplet.reserve(2 * F.rows());
+
+	for (int i = 0; i < F2.rows(); i++)	
+	{
+		Eigen::MatrixXd base(3,2);
+		Eigen::MatrixXd entry(2, 2);
+		base = A2.block(3 * i, 2 * i, 3, 2);
+		for (int face : smallToLargeCorr[i])
+		{
+			Eigen::MatrixXd ALoc(3, 2);
+			
+			ALoc = A.block(3 * face, 2 * face, 3, 2);
+			entry = ALoc.transpose()*base;
+
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 0, 2 * i + 0, entry(0, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 1, 2 * i + 0, entry(1, 0)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 0, 2 * i + 1, entry(0, 1)));
+			BTriplet.push_back(Eigen::Triplet<double>(2 * face + 1, 2 * i + 1, entry(1, 1)));
+		}
+	}
+	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+}
+
 void VectorFields::constructBasis_LocalEigenProblem10()
 {
 	// For Timing
@@ -2872,7 +3197,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "> Constructing Basis...\n";
 
 	const int EIG_NUM = 10; 
-	double	coef = sqrt(pow(0.5, 2) + pow(0.7, 2));
+	double	coef = sqrt(pow(1.5, 2) + pow(1.7, 2));
 	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
 
 	// Setup sizes of each element to construct basis
@@ -2893,6 +3218,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
 	durations.resize(NUM_PROCESS);
+	const int Num_fields = 2;
 
 	for (int i = 0; i < NUM_PROCESS; i++) {
 		durations[i] = t1 - t1;
@@ -2908,7 +3234,9 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 
 	int id, tid, ntids, ipts, istart, iproc;
 
-	omp_set_num_threads(1);
+	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
+
+	omp_set_num_threads(16);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -2929,7 +3257,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			D(i) = numeric_limits<double>::infinity();
 		}
 
-		UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * EIG_NUM * 10.0 * F.rows());
+		//UiTriplet[tid].reserve(2.0 * ((double)ipts / (double)Sample.size()) * EIG_NUM * 10.0 * F.rows());
 
 		// Computing the values of each element
 		for (id = istart; id < (istart + ipts); id++) {
@@ -2941,47 +3269,54 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			//localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
+			localField.constructSelectorMatrix(F, doubleArea);
 			t2 = chrono::high_resolution_clock::now();
 			durations[1] += t2 - t1;
 
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalElements(2, F);
+			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;
 
+			printf("ID=%d has %d entries \n", id, localField.InnerElements.size());
+			UiTriplet[id].reserve(2 * localField.InnerElements.size());
+
 			t1 = chrono::high_resolution_clock::now();
-			localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelectorMatrix(Num_fields, SF2DAsym, MF2D, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
+			//localField.constructLocalEigenProblemWithSelector(SF2DAsym, MF2D, AdjMF2Ring, EIG_NUM, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
 
 
-			if (id == 0)
-			{
-				SubDomain = localField.SubDomain;
-				Boundary = localField.Boundary;
-				//patchDijkstraDist = localField.dijksFaceDistMapped;
-			}
-
-			// To get local elements for visualizing subdomain
-			if (id == 0 || id == 46) {
-				cout << "Getting element of ID " << id << endl;
-
-				for (int fid : localField.SubDomain) {
-					localSystem(fid) = 0.3;
-				}
-
-				for (int fid : localField.Boundary) {
-					localSystem(fid) = 0.7;
-				}			
-
-			}
+			//if (id == 0)
+			//{
+			//	SubDomain = localField.SubDomain;
+			//	Boundary = localField.Boundary;
+			//	//patchDijkstraDist = localField.dijksFaceDistMapped;
+			//}
+			//
+			//// To get local elements for visualizing subdomain
+			//if (id == 0 || id == 46) {
+			//	cout << "Getting element of ID " << id << endl;
+			//
+			//	for (int fid : localField.SubDomain) {
+			//		localSystem(fid) = 0.3;
+			//	}
+			//
+			//	for (int fid : localField.Boundary) {
+			//		localSystem(fid) = 0.7;
+			//	}			
+			//
+			//}
 		}
 	}
 	t2 = chrono::high_resolution_clock::now();
@@ -2991,7 +3326,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
 	gatherBasisElements(UiTriplet, EIG_NUM);
-	Basis = BasisTemp;
+	printf("Basis 1st row nnz: %d \n", Basis.col(0).nonZeros());
 	//normalizeBasis();
 	//normalizeBasisAbs(EIG_NUM);
 
@@ -3013,7 +3348,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 	printf("....[3] Solving local eigenvalue problems: %.8f seconds.\n", durations[3].count());
 
 	// Information about Basis
-	printf("> Basis Structure information \n");
+	printf("> Basis Structure information (%d nnz)\n", Basis.nonZeros());
 	printf("....Size = %dx%d\n", Basis.rows(), Basis.cols());
 	printf("....NNZ per row = %.2f\n", (double)Basis.nonZeros() / (double)Basis.rows());
 }
@@ -3187,7 +3522,31 @@ void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double
 		//std::copy(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
 		std::move(UiTriplet[j].begin(), UiTriplet[j].end(), BTriplet.begin() + tripSize);
 	}	
+	//BTriplet.reserve(totalElements);
+	//for (int i = 0; i < Sample.size(); i++)
+	//{
+	//	for (int j = 0; j < UiTriplet[i].size(); j++)
+	//	{
+	//		BTriplet.push_back(UiTriplet[i][j]);
+	//	}
+	//	printf("Triplet %d has %d nnz \n", i, UiTriplet[i].size());
+	//}
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
+	printf("Basis space: %dx%d | BTriplet size: %d \n", Basis.rows(), Basis.cols(), BTriplet.size());
+	vector<int> checkPoint = { 1, 190000, 400000, 600000 };
+	for(int i : checkPoint)
+	printf("%d data: [%d,  %d]=%.4f \n", i,  BTriplet[i].row(), BTriplet[i].col(), BTriplet[i].value());
+
+	BTriplet.clear(); BTriplet.shrink_to_fit();
+	//for (int k = 0; k < Basis.outerSize(); ++k) {
+	//int k = 0;
+	//	for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, k); it; ++it) {
+	//		//if(it.row()<1000) 
+	//		printf("[%d,%d]=%.3f \n", it.row(), it.col(), it.value());
+	//		//ATriplet.push_back(Eigen::Triplet<double>(it.row(), it.col(), it.value()));
+	//	}
+	//}
+
 
 	// empty the data
 	//BTriplet.clear();
@@ -3419,13 +3778,13 @@ void VectorFields::setAndSolveUserSystem(const Eigen::Vector3d& lambda)
 
 	//setupReducedBiLaplacian();
 	getUserConstraints();
-	//setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	//setupLHSUserProblemMapped(A_LHSBar);
-	//solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	setupLHSUserProblemMapped(A_LHSBar);
+	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
 	
-	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -3453,25 +3812,46 @@ void VectorFields::setupReducedBiLaplacian()
 
 }
 void VectorFields::getUserConstraints()
-{	
+{		
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Obtaining user constraints ";
+	//cout << "> Obtaining user constraints ";
 
 	//constructConstraints();
 
 	//userConstraints = globalConstraints; 
-	CBar			= C * Basis;
+	//CBar			= C * Basis;
 	cBar			= c;
+
+	/* Alternative of CBar construction */
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(40 * 2*globalConstraints.size());
+	vector<double> constraints_(2 * globalConstraints.size());
+	for (int i = 0; i < globalConstraints.size(); i++) { 
+		constraints_[2 * i]   = 2*globalConstraints[i]; 
+		constraints_[2 * i+1] = 2*globalConstraints[i]+1;
+	}
+	//for(int k=0; k<Basis.transpose().outerSize(); ++k)
+	for(int k=0; k<constraints_.size(); k++)
+	{
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
+		{
+			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
+		}
+	}
+	CBar.resize(0, 0);
+	CBar.resize(2 * globalConstraints.size(), Basis.cols());
+	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	CBarT = CBar.transpose();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
-	cout << "in " << duration.count() << " seconds." << endl;
+	//cout << "in " << duration.count() << " seconds." << endl;
 
-	printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
-	printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
+	//printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
+	//printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
 }
 
 void VectorFields::setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)
@@ -3651,25 +4031,237 @@ void VectorFields::solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<
 void VectorFields::mapSolutionToFullRes()
 {
 	// For Timing
-	chrono::high_resolution_clock::time_point	t0, t1, t2;
-	chrono::duration<double>					duration;
-	t0 = chrono::high_resolution_clock::now();
-	cout << "> Mapping to full-resolution...";
+	///chrono::high_resolution_clock::time_point	t0, t1, t2;
+	///chrono::duration<double>					duration;
+	///t0 = chrono::high_resolution_clock::now();
+	///cout << "> Mapping to full-resolution...";
 
-	XFullDim = Basis * XLowDim;
+	//XFullDim = Basis * XLowDim;
+	//SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
+	//Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow = Basis; 
+	//SparseMatrix_Vector_Multiplication_CSR(BasisRow, XLowDim, XFullDim);
+	performLifting();
+
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t0;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	//cout << "Fields \n";
+	//cout << XFullDim.block(0, 0, 100, 1) << endl; 
 
 
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
-
-	printf("....XFull (%dx%d) =  Basis (%dx%d) * XLowDim (%dx%d) \n", XFullDim.rows(), XFullDim.cols(), Basis.rows(), Basis.cols(), XLowDim.rows(), XLowDim.cols());
+	//printf("....XFull (%dx%d) =  Basis (%dx%d) * XLowDim (%dx%d) \n", XFullDim.rows(), XFullDim.cols(), Basis.rows(), Basis.cols(), XLowDim.rows(), XLowDim.cols());
 }
+
+void VectorFields::initializeParametersForLifting()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&descrA);
+	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&handle);
+
+	// Matrix variables
+	BasisRow = Basis; 
+	BasisRow.makeCompressed();
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating the matrix in CPU
+	double* h_csrVal	= (double*)malloc(nnz * sizeof(double));
+	int* h_csrRowPtr	= (int*)malloc((m + 1) * sizeof(int));
+	int* h_csrColInd	= (int*)malloc(nnz * sizeof(int));
+	h_csrVal			= BasisRow.valuePtr();
+	h_csrRowPtr			= BasisRow.outerIndexPtr();
+	h_csrColInd			= BasisRow.innerIndexPtr();	
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_csrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_csrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_csrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_csrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+
+}
+
+void VectorFields::performLifting()
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating data in CPU
+	double* h_a = (double*)malloc(n * sizeof(double));
+	h_a = XLowDim.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+	// Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+	// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+ 	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	XFullDim = Eigen::Map<Eigen::VectorXd>(h_b, m);
+}
+
 
 void VectorFields::obtainUserVectorFields()
 {
 
 	cout << "Hello there \n" << endl; 
+}
+
+// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
+void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
+{
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	cout << "Set constraint, set system, solve system, and lift it up in :";
+	t0 = chrono::high_resolution_clock::now();
+
+	obtainConstraints();
+	solveInteractiveSystem();
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::obtainConstraints()
+{
+	getUserConstraints();
+}
+
+void VectorFields::preComputeReducedElements()
+{
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "Precompute B2D, vEst, and B2D*vEst ...";
+
+
+	// Factorization of B2DBar;
+	B2DBarFactor.analyzePattern(B2DBar);
+	B2DBarFactor.factorize(B2DBar);
+
+	// Set up the estimation variable vAdd
+	vAdd.resize(B2DBar.rows());
+	for (int i = 0; i < vAdd.rows(); i++) {
+		vAdd(i) = 0.5;
+	}
+
+	// setup the Bv
+	BvBar = B2DBar * vAdd;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
+}
+
+void VectorFields::solveInteractiveSystem()
+{
+	// Timing
+	///chrono::high_resolution_clock::time_point	t0, t1, t2;
+	///chrono::duration<double>					duration;
+	///cout << "Solve interactive system ...\n";
+	///
+	////* ================== 1. Setting up LHS ================== */
+	///cout << "__Create LHS: ";
+	///t0 = chrono::high_resolution_clock::now();
+	///t1 = chrono::high_resolution_clock::now();
+	//Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
+	if (CBar.rows() == 2)
+		BC.resize(CBar.cols(), CBar.rows());
+	else
+		BC.conservativeResize(Eigen::NoChange, BC.cols() + 2);
+	Eigen::MatrixXd LHS;
+	Eigen::VectorXd bc;
+	for (int i = 2; i > 0; i--)
+	{
+		bc = CBarT.col(BC.cols()-i);
+		//bc.transposeInPlace();
+		BC.col(BC.cols()-i) = B2DBarFactor.solve(bc);
+	}
+	LHS = CBar*BC;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	////* ================== 1. Setting up RHS ================== */
+	///cout << "__Create rhs: ";
+	///t1 = chrono::high_resolution_clock::now();
+	Eigen::VectorXd bbv = B2DBarFactor.solve(BvBar);
+	Eigen::VectorXd cbbv = CBar*bbv;
+	Eigen::VectorXd cvc = CBar*vAdd - cBar; 
+	Eigen::VectorXd rhs = cbbv - cvc;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	////* ================== 1. Solve the 1st System  ================== */
+	///cout << "__Solve Schur-complement system: ";
+	///t1 = chrono::high_resolution_clock::now();
+	Eigen::LDLT<Eigen::MatrixXd> LHS_Fact;
+	LHS_Fact.compute(LHS);
+	Eigen::VectorXd lambda = LHS_Fact.solve(rhs);
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	////* ================== 2. Setting up LHS ================== */
+	///
+	///
+	////* ================== 2. Setting up RHS ================== */
+	///cout << "__dense rhs: ";
+	///t1 = chrono::high_resolution_clock::now();
+	rhs = CBar.transpose()*lambda - BvBar;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 2. Solve the 2nd System  ================== */
+	///cout << "__solve 2nd system: ";
+	///t1 = chrono::high_resolution_clock::now();
+	Eigen::VectorXd x = B2DBarFactor.solve(rhs);
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 3. Map x to xStar  ================== */
+	///cout << "__map x to x*: ";
+	///t1 = chrono::high_resolution_clock::now();
+	XLowDim = x + vAdd;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t0;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 4. Map to full resolution  ================== */
+	mapSolutionToFullRes();
 }
 
 void VectorFields::computeEigenFields(const int &numEigs, const string& filename)
@@ -3686,8 +4278,8 @@ void VectorFields::computeEigenFields(const int &numEigs, const string& filename
 	//computeEigenSpectra_RegNSym(SF2DAsym, MF2Dinv, numEigs, eigFieldFull2D, eigValuesFull, filename);
 	Eigen::SparseMatrix<double> Sh = MF2DhNeg*SF2DAsym*MF2DhNeg;
 	//computeEigenSpectra_RegSym_Transf(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
-	computeEigenSpectra_RegSym_Custom(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
-	//computeEigenMatlab(SF2D, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
+	//computeEigenSpectra_RegSym_Custom(Sh, MF2DhNeg, numEigs, eigFieldFull2D, eigValuesFull, filename);
+	computeEigenMatlab(SF2DAsym, MF2D, numEigs, eigFieldFull2D, eigValuesFull, "hello");
 	//cout << "::::: Eigen Values (Full Res) \n" << eigValuesFull << endl;
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
 
@@ -3737,29 +4329,107 @@ void VectorFields::computeApproxEigenFields(const int &numEigs, const string& fi
 		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 	}
 	else {		
-		t1 = chrono::high_resolution_clock::now();
 		cout << "> Computing restricted eigenproblem (in Matlab)...\n ";
 
 		cout << "____Computing reduced system... ";
+		t1 = chrono::high_resolution_clock::now();
 		Eigen::SparseMatrix<double> Mbar = Basis.transpose() * MF2D * Basis;
 		Eigen::SparseMatrix<double> SFAsymbar = Basis.transpose() * SF2DAsym * Basis;
-
 		t2 = chrono::high_resolution_clock::now();
 		duration = t2 - t1;
 		cout << "in " << duration.count() << " seconds" << endl;
 
+		cout << "____Computing restricted eigenproblem ... ";
 		t1 = chrono::high_resolution_clock::now();
-		//computeEigenGPU(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
+		computeEigenGPU(SFAsymbar, Mbar, eigFieldReduced2D, eigValuesReduced);
 		//computeEigenMatlab(Sbar, Mbar, eigFieldReduced2D, eigValuesReduced);
-		computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
+		//computeEigenMatlab(SFAsymbar, Mbar, numEigs, eigFieldReduced2D, eigValuesReduced, filename);
 		//cout << "::::: Eigen Values (Reduced) \n" << eigValuesReduced << endl;
 
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		cout << "in " << duration.count() << " seconds" << endl;
 		//WriteSparseMatrixToMatlab(Basis, "hello");
 	}
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "____Computing the eigenproblem in " << duration.count() << " seconds" << endl;
+}
+
+void VectorFields::computeApproxEigenFields_Mult()
+{
+	vector<string> modelFile;
+	vector<string> basisFile;
+
+	// populating the model File
+	modelFile.push_back("../LocalFields/Models/Armadillo/Armadillo_43243.obj");
+	modelFile.push_back("../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj");
+	modelFile.push_back("../LocalFields/Models/AIM_fertility_watertight/fertility.obj");
+	modelFile.push_back("../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off");
+	modelFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off");
+
+	// populating the model File
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Arma_2000_EigFields_35sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_CDragon_2000_Eigfields_40sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Fertility_2000_Eigfields_40sup");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Ramses_2000_Eigfields_40sup_spectra");
+	basisFile.push_back("D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Neptune_2000_Eigfields_40sup_spectra");
+	for (int i = 0; i < modelFile.size(); i++)
+	{
+		readMesh(modelFile[i]);
+		scaleMesh(V, F);
+
+		computeEdges();
+		computeAverageEdgeLength();
+		computeFaceCenter();
+		computeFaceNormal();
+		constructVFNeighbors();
+
+		constructVertexAdjacencyMatrix();
+		constructFaceAdjacency3NMatrix();
+		constructFaceAdjacency2RingMatrix();
+		constructEVList();
+		constructEFList();
+		selectFaceToDraw(2000);
+
+		/* MATRIX CONSTRUCTIONS */
+		constructMassMatrices();
+		constructRotationMatrix();
+		constructMappingMatrix();
+
+		constructGradient3D();
+		constructGradientStar3D();
+		constructStiffnessMatrices_Implicit();
+
+		/* Construct sample */
+		numSample = 1000;
+		numSupport = 40.0;
+		faceScale.resize(F.rows()); 
+		faceScale.setConstant(1.0);
+		constructSamples(numSample);
+
+		/* Retrive basis*/
+		if(i<3)
+			constructBasis();
+		else 
+			retrieveBasis(basisFile[i]);
+
+		const int eigsToCompute = 500;
+		computeApproxEigenFields(eigsToCompute, "hello");
+
+		/* Lifting to full res */
+		chrono::high_resolution_clock::time_point	t1, t2;
+		chrono::duration<double>					duration;
+		cout << "Lifting to the full resolution...";
+		t1 = chrono::high_resolution_clock::now();
+
+		Eigen::MatrixXd Eig_Full = Basis*eigFieldReduced2D.block(0,0, Basis.cols(), eigsToCompute);
+
+		t2 = chrono::high_resolution_clock::now();
+		duration = t2 - t1;
+		cout << "in " << duration.count() << " seconds" << endl;
+	}
 }
 
 void VectorFields::retrieveApproxEigenFields() 
@@ -4350,7 +5020,7 @@ void VectorFields::readMesh(const string &meshFile)
 
 }
 
-void VectorFields::scaleMesh()
+void VectorFields::scaleMesh(Eigen::MatrixXd& V, Eigen::MatrixXi& F)
 {
 	Eigen::RowVectorXd minV(V.rows(), 3);
 	Eigen::RowVectorXd maxV(V.rows(), 3);
