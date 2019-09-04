@@ -103,6 +103,7 @@ public:
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
 	Eigen::SparseMatrix<double>		A;						// A map from local to to world coordinate
 	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::SparseMatrix<double>		MF3DhNeg, MF3DhPos;		// 
 	Eigen::SparseMatrix<double>		SF;						// Laplace matrix for the tensor fields (finite difference approach)
 	double							avgEdgeLength;			// avg edge length -> to scale the fields
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
@@ -113,9 +114,10 @@ public:
 	//double							scale = 100;		// regular eigenfields => arma 10k
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
-	double								scale = 0.01;		// smoothing
-	//double								scale = 0.1;		// smoothing torus
 	//double							scale = 2.0; 
+	//double								scale = 1;
+	//double								scale = 0.1;		// smoothing torus
+	double								scale = 0.01;		// smoothing
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;

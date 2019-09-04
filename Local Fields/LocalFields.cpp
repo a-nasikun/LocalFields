@@ -1526,18 +1526,21 @@ void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, 
 	Eigen::MatrixXd EigVectLoc, eigTemp;
 	MF2DLoc.resize(NUM_FIELDS * LocalElements.size(), NUM_FIELDS * LocalElements.size());
 
-	//const int num_fields = 2;
+	//const int num_fields = 3; 3 for tensor in voigt notation
 	obtainLocalMatrixPatch2D(NUM_FIELDS, MF2D, MF2DLoc);
 	obtainLocalMatrixPatch2D(NUM_FIELDS, SF2D, SF2DLoc);
 	
 	/* Reduced matrices */
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
-
+	printf("Entries: %d | Inner: %d | Selector: %dx%d | MF: %dx%d | SF: %dx%d \n", LocalElements.size(), InnerElements.size(),
+		SelectorA.rows(), SelectorA.cols(), MF2DRed.rows(), MF2DRed.cols(), SF2DRed.rows(), SF2DRed.cols());
 
 	/* Getting the eigenfields*/
-	const int shift = 2;
+	const int shift = 17;
 	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG + shift, eigTemp, eigValsLoc, "hello");
+	//computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
+	///computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	//computeEigenSpectra(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 
 	//cusolverDnHandle_t	cusolverH;
@@ -1563,14 +1566,14 @@ void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, 
 	for (int i = 0; i < InnerElements.size(); i++)
 	{
 		// First column ==> First basis (2 elements per-local frame)
-		//for (int j = 0; j < NUM_EIG; j++)
-		for(int j=0; j<eigIDX.size(); j++)
+		for (int j = 0; j < NUM_EIG; j++)
+		//for(int j=0; j<eigIDX.size(); j++)
 		{
 			for (int k = 0; k < NUM_FIELDS; k++)
 			{
 				
-				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, eigIDX[j])));
-				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, eigIDX[j])));
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
 			}
 		}
 
