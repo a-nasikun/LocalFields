@@ -2,6 +2,11 @@
 
 #include <igl/principal_curvature.h>
 
+#include <Windows.h>
+#include <tchar.h>
+#include <stdio.h>
+#include <strsafe.h>
+
 #include <random>
 
 /* Reading data*/
@@ -517,6 +522,7 @@ void NRoSyFields::constructMassMatrixMF3D()
 	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
 	MF2DhPos.setFromTriplets(MhPosTriplet.begin(), MhPosTriplet.end());
 	MF2DhNeg.setFromTriplets(MhNegTriplet.begin(), MhNegTriplet.end());
+	igl::massmatrix(V, F, igl::MassMatrixType::MASSMATRIX_TYPE_VORONOI, MV);
 }
 
 //void NRoSyFields::buildStiffnessMatrix_Combinatorial()
@@ -1121,6 +1127,8 @@ void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::Vect
 		repVect.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 	}
 
+	printf("Conversion of nfields: input %d -> output %d \n", nRoSyFields.magnitude.size(), repVect.size());
+
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
@@ -1254,9 +1262,9 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 0.001;
 	//double scale = 0.1;
 	//double scale = 0.25;
-	//double scale = 1.0;
+	double scale = 1.0;
 	//double scale = 2.5;
-	double scale = 5.0; 
+	//double scale = 5.0; 
 	//double scale = 50.0;
 	//double scale = 250.0; 
 	Eigen::Vector2d b(1, 0);
@@ -1286,6 +1294,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 		}
 
 		visualize2Dfields(viewer, TempFields, color, scale, false);
+		visualize2DfieldsVertexInterpolated(viewer, TempFields, color, scale, false);
 	}
 }
 
@@ -1411,13 +1420,117 @@ void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eig
 	}
 
 	/* Draw the fields */
-	viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
-	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
-	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
+	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
 
+	int lineSize = viewer.data().lines.rows();
+	viewer.data().lines.conservativeResize(lineSize + 3 * FaceToDraw.size(), 9);
+	//viewer.data().lines.resize(lineSize + 3 * FaceToDraw.size(), 9);
+	//for (int i = 0; i < FaceToDraw.size(); i++)
+	//{
+	//	viewer.data().lines.row(i)							<< FCLoc.row(i), FCLoc.row(i) + TFields.row(i)*lengthScale, color;
+	//	viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	//	viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	//}
+
+
+	// Drawing in parallel
+	int id, tid, ntids, ipts, istart, iproc;
+	const int NUM_THREADS = omp_get_num_procs();
+	omp_set_num_threads(NUM_THREADS);
+#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+	{
+		iproc = omp_get_num_procs();
+		tid = omp_get_thread_num();
+		ntids = omp_get_num_threads();
+		ipts = (int)ceil(1.00*(double)FaceToDraw.size() / (double)ntids);
+		istart = tid * ipts;
+		if (tid == ntids - 1) ipts = FaceToDraw.size() - istart;
+		if (ipts <= 0) ipts = 0;
+
+		for (id = istart; id < (istart + ipts); id++) {
+			if (id >= FaceToDraw.size()) break;
+
+			viewer.data().lines.row(lineSize+id) << FCLoc.row(id), FCLoc.row(id) + TFields.row(id)*lengthScale, color;
+			viewer.data().lines.row(lineSize+id +     FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head1Fields.row(id)*lengthScale / HEAD_RATIO, color;
+			viewer.data().lines.row(lineSize+id + 2 * FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head2Fields.row(id)*lengthScale / HEAD_RATIO, color;
+		}
+	}
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	//cout << "in " << duration.count() << " seconds" << endl;
+}
+
+void NRoSyFields::visualize2DfieldsVertexInterpolated(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
+{
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	//cout << "> Adding edges... ";
+
+	//=======
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = scale;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;	
+
+	/* Getting the local data from the population of data */
+	Eigen::SparseMatrix<double> ALoc(3 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(6 * FaceToDraw.size());
+	Eigen::VectorXd fieldLoc(2 * FaceToDraw.size()), fields3D(3 * FaceToDraw.size()), rot1Field, rot2Field;
+	Eigen::MatrixXd TFields(FaceToDraw.size(), F.cols()), Head1Fields(FaceToDraw.size(), F.cols()), Head2Fields(FaceToDraw.size(), F.cols());
+
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		/* Getting the selected ALoc from A */
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 1)));
+
+		/* Getting the selected face */
+		fieldLoc.block(2 * i, 0, 2, 1) = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+	}
+	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	fields3D = ALoc * fieldLoc;
+
+	/* Transform field to Matrix format */
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		TFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+		//Head1Fields.row(i) = (rot1Field.block(3 * i, 0, 3, 1)).transpose();
+		//Head2Fields.row(i) = (rot2Field.block(3 * i, 0, 3, 1)).transpose();
+	}
+
+	/* Interpolate over vertices */
+	Eigen::MatrixXd VFields(V.rows(), 3); VFields.setZero();
+	for (int i = 0; i < FaceToDraw.size(); i++)	{
+		for(int j=0; j<F.cols(); j++)
+			VFields.row(F(FaceToDraw[i], j)) += TFields.row(i) * (doubleArea(FaceToDraw[i])/2.0);
+	}
+
+
+	for (int i = 0; i < VFields.rows(); i++) VFields.row(i) /= 3.0*MV.coeff(i, i);
+
+
+	Eigen::RowVector3d color2(0.0, 0.1, 0.9);
+
+	int lineSize = viewer.data().lines.rows();
+	viewer.data().lines.conservativeResize(lineSize+VFields.rows(), 9);
+	//viewer.data().lines.resize(lineSize + VFields.rows(), 9);
+	//viewer.data().lines.resize(0, 9);
+	//viewer.data().lines.resize(FaceToDraw.size(), 9);
+	for (int i = 0; i < VFields.rows(); i++)
+	{
+		viewer.data().lines.row(lineSize+i)							<< V.row(i), V.row(i)+VFields.row(i)*lengthScale, color2;
+		//viewer.data().lines.row(i + FaceToDraw.size())		<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head1Fields.row(i)*lengthScale / HEAD_RATIO, color;
+		//viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
+	}
 }
 
 void NRoSyFields::visualizeEigenFields(igl::opengl::glfw::Viewer &viewer, const int id)
@@ -1498,6 +1611,7 @@ void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &
 
 	NRoSy nRoSy_;
 	//visualizeRepVectorFields(viewer, XfBar, color);
+	viewer.data().lines.resize(0,9);
 	convertRepVectorsToNRoSy(XfBar, nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, color);
 }
@@ -1520,7 +1634,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 
 	cout << "Drawing on the overlay mesh \n";
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 2.0;
+	viewer.data().line_width = 4.0;
 	viewer.data().point_size = 5.0;
 	viewer.data().show_lines = false;
 
@@ -1641,7 +1755,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 	Eigen::VectorXd					b, g, h, vEst;
 	Eigen::SparseMatrix<double>		A_LHS;
 	double							mu = 0.0001;
-	vector<double>					lambda;
+	//vector<double>					lambda;
 	//Eigen::SparseMatrix<double>		B2F;
 	if (MF.rows() < 1) constructMassMatrixMF3D();
 	if (SF.rows() < 1) buildStiffnessMatrix_Geometric();
@@ -1650,7 +1764,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 
 	//constructRandomHardConstraints(C, c);
 	constructInteractiveConstraints();
-	setupWeight(mu, lambda);
+	//setupWeight(mu, lambda);
 	setupRHSBiharmSystemRef(BF, C, c, g, h, vEst, lambda, b);
 	setupLHSBiharmSystemRef(BF, C, c, lambda, A_LHS);
 	solveBiharmSystemRef(vEst, A_LHS, b, Xf);
@@ -1675,7 +1789,7 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda = 50;
+	double lambda =150;
 	double mu = lambda * factor1 / factor2;
 
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
@@ -1689,8 +1803,7 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	for(int i=0; i<5; i++)
 		smoothNRoSyFields(mu, sparseSolver, v, v);
 
-	convertRepVectorsToNRoSy(v, nRoSy_);
-	
+	convertRepVectorsToNRoSy(v, nRoSy_);	
 }
 
 void NRoSyFields::constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c)
@@ -1845,7 +1958,8 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 	
 	//g = (B2F+MF) * vEst +MF*repV;
 	// g = (B2F) * vEst + MF*repV;
-	g = (lambda[0]*B2F + lambda[1]*MF)*vEst - lambda[1]*MF*alignFields;
+	//g = (lambda[0]*B2F + lambda[1]*MF)*vEst - lambda[1]*MF*alignFields;
+	g = BF*vEst - lambda[1] * MF*alignFields;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -2871,14 +2985,38 @@ void NRoSyFields::getReducedConstraints()
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
+	cout << "> Obtaining user constraints \n ";
 	t0 = chrono::high_resolution_clock::now();
-	cout << "> Obtaining user constraints ";
 
+	//printf("Num of constraints: %d | C=%dx%d | c=%d  \n", globalConstraints.size(), C.rows(), C.cols(), c.size());
 	//constructConstraints();
 
 	//userConstraints = globalConstraints; 
-	CBar = C * Basis;
+	//CBar = C * Basis;
 	cBar = c;
+	//printf("cBar=%d \n", cBar.size());
+	//cout << "c: \n" << c << endl; 
+
+	////* Alternative of CBar construction */
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(40 * 2 * globalConstraints.size());
+	vector<double> constraints_(2 * globalConstraints.size());
+	for (int i = 0; i < globalConstraints.size(); i++) {
+		constraints_[2 * i] = 2 * globalConstraints[i];
+		constraints_[2 * i + 1] = 2 * globalConstraints[i] + 1;
+	}
+	//for(int k=0; k<Basis.transpose().outerSize(); ++k)
+	for (int k = 0; k<constraints_.size(); k++)
+	{
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
+		{
+			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
+		}
+	}
+	CBar.resize(0, 0);
+	CBar.resize(2 * globalConstraints.size(), Basis.cols());
+	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	CBarT = CBar.transpose();
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3085,6 +3223,209 @@ void NRoSyFields::solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<d
 	cout << "..in Total of " << duration.count() << " seconds." << endl;
 }
 
+// INTERACTIVE/REAL-TIME SYSTEM VIA SCHUR COMPLEMENT
+void NRoSyFields::setAndSolveInteractiveSystem()
+{
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	cout << "Set constraint, set system, solve system, and lift it up in :";
+	t0 = chrono::high_resolution_clock::now();
+
+	obtainConstraints();
+	solveInteractiveSystem();
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
+}
+
+void NRoSyFields::obtainConstraints()
+{
+	getReducedConstraints();
+}
+
+void NRoSyFields::preComputeReducedElements()
+{
+	// Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "Precompute B2D, vEst, and B2D*vEst ...";
+
+
+	// Factorization of B2DBar;
+	B2DBarFactor.analyzePattern(B2DBar);
+	B2DBarFactor.factorize(B2DBar);
+
+	// Set up the estimation variable vAdd
+	vAdd.resize(B2DBar.rows());
+	for (int i = 0; i < vAdd.rows(); i++) {
+		vAdd(i) = 0.5;
+	}
+
+	// setup the Bv
+	BvBar = B2DBar * vAdd;
+	if (useAlignment) BvBar -= lambda[1]*MFBar*(Basis.transpose()*alignFields);
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
+}
+
+void NRoSyFields::solveInteractiveSystem()
+{
+	// Timing
+	///chrono::high_resolution_clock::time_point	t0, t1, t2;
+	///chrono::duration<double>					duration;
+	cout << "Solve interactive system ...\n";
+	///
+	////* ================== 1. Setting up LHS ================== */
+	//cout << "__Create LHS: ";
+	///t0 = chrono::high_resolution_clock::now();
+	///t1 = chrono::high_resolution_clock::now();
+	//Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
+	if (CBar.rows() == 2)
+		BC.resize(CBar.cols(), CBar.rows());
+	else
+		BC.conservativeResize(Eigen::NoChange, BC.cols() + 2);
+	Eigen::MatrixXd LHS;
+	Eigen::VectorXd bc;
+	for (int i = 2; i > 0; i--)
+	{
+		bc = CBarT.col(BC.cols() - i);
+		//bc.transposeInPlace();
+		BC.col(BC.cols() - i) = B2DBarFactor.solve(bc);
+	}
+	LHS = CBar*BC;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	////* ================== 1. Setting up RHS ================== */
+	//cout << "__Create rhs: ";
+	///t1 = chrono::high_resolution_clock::now();
+	Eigen::VectorXd bbv = B2DBarFactor.solve(BvBar);
+	Eigen::VectorXd cbbv = CBar*bbv;
+	Eigen::VectorXd cvc = CBar*vAdd - cBar;
+	Eigen::VectorXd rhs = cbbv - cvc;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	////* ================== 1. Solve the 1st System  ================== */
+	//cout << "__Solve Schur-complement system: ";
+	///t1 = chrono::high_resolution_clock::now();
+	Eigen::LDLT<Eigen::MatrixXd> LHS_Fact;
+	LHS_Fact.compute(LHS);
+	Eigen::VectorXd lambda = LHS_Fact.solve(rhs);
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	////* ================== 2. Setting up LHS ================== */
+	///
+	///
+	////* ================== 2. Setting up RHS ================== */
+	//cout << "__dense rhs: ";
+	///t1 = chrono::high_resolution_clock::now();
+	rhs = CBar.transpose()*lambda - BvBar;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 2. Solve the 2nd System  ================== */
+	//cout << "__solve 2nd system: ";
+	///t1 = chrono::high_resolution_clock::now();
+	Eigen::VectorXd x = B2DBarFactor.solve(rhs);
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 3. Map x to xStar  ================== */
+	//cout << "__map x to x*: ";
+	///t1 = chrono::high_resolution_clock::now();
+	XfRed = x + vAdd;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t1;
+	///cout << " in " << duration.count() << " seconds." << endl;
+	///
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t0;
+	///cout << " in " << duration.count() << " seconds." << endl;
+
+	/* ================== 4. Map to full resolution  ================== */
+	performLifting();
+}
+
+void NRoSyFields::initializeParametersForLifting()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&descrA);
+	cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&handle);
+
+	// Matrix variables
+	BasisRow = Basis;
+	BasisRow.makeCompressed();
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating the matrix in CPU
+	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	h_csrVal = BasisRow.valuePtr();
+	h_csrRowPtr = BasisRow.outerIndexPtr();
+	h_csrColInd = BasisRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_csrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_csrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_csrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_csrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_csrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+}
+void NRoSyFields::performLifting()
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating data in CPU
+	double* h_a = (double*)malloc(n * sizeof(double));
+	h_a = XfRed.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+																				 // Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+																									// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	XfBar = Eigen::Map<Eigen::VectorXd>(h_b, m);
+}
+
 void NRoSyFields::measureAccuracy()
 {
 	if (Xf.size() < 1 || XfBar.size() < 1)
@@ -3114,11 +3455,11 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 2;
+	nRot = 1;
 	readMesh(meshFile);
-	//scaleMesh();
+	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Centaur_";
+	string model = "Brezel_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3176,12 +3517,13 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 1000;
+	numSample = 100;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
 	retrieveBasis(basisFile);
+	BasisT = Basis.transpose(); 
 	//visualizeBasis(viewer, 0);
 
 	/* Projection */
@@ -3205,25 +3547,45 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	/* Prepare for n-fields design */
 	
 	double weight = 0;
-	for (int i = 0; i < userVisualConstraints.size(); i += 2){
-		weight += doubleArea(userVisualConstraints[i]);
+	for (int i = 0; i < doubleArea.size(); i += 2){
+		weight += doubleArea(i);
 	}
+	weight /= 2.0; 
 	
-	vector<double> lambda(2);
+	lambda.resize(2);
 	lambda[0] = 1.0;
-	if (userVisualConstraints.size() < 1)	lambda[1] = 0.0;
-	else									lambda[1] = 10 / weight;
+	//lambda[1] = 0.00000005 / weight;	// perfect for armadillo (not-scaled)
+	//lambda[1] = 0.005 / weight;			// perfect for scaled bunny
+	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
+	lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
+	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
+
+	BF = SF*MFinv*SF;
+
+	Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
+	const int factor1 = id.transpose()*BF*id;
+	const int factor2 = id.transpose()*MF*id;
+	//lambda[1] = lambda[1]*factor1 / factor2; 
+
+	useAlignment = true; 
 	
 	createAlignmentField(alignFields);
-	BF = SF*MFinv*SF;
-	BM = lambda[0] * BF;
-	BFBar = Basis.transpose()*BF*Basis;
-	BMBar = BFBar;
+	if (useAlignment) BF += lambda[1] * MF;
+	B2DBar = Basis.transpose()*BF*Basis;
 	MFBar = Basis.transpose()*MF*Basis;
 	
-	convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	//BM = lambda[0] * BF;
+	//BFBar = Basis.transpose()*BF*Basis;
+	//BMBar = BFBar;
+	
 	XfBar = alignFields;
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.0, 0.8, 0.1));
+	Xf = alignFields;
+	convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+	visualizeConstrainedFields_Reduced(viewer);
+
+	preComputeReducedElements();
+	initializeParametersForLifting();
 	
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
@@ -3272,17 +3634,17 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 	for (int i = 0; i < nRot; i++)
 	{
 		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
-		cout << "Drawing the " << i << " fields \n";
+		//cout << "Drawing the " << i << " fields \n";
 
 		/* Construct rotation matrix*/
 		//for (int j = 0; j < F.rows(); j++)
 		for (int j = 0; j<F.rows(); j++)
 		{
 			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
-			if (j == 0)
-			{
-				printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
-			}
+			//if (j == 0)
+			//{
+			//	printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
+			//}
 			Eigen::Matrix2d RotM;
 			RotM(0, 0) = cos(angle);
 			RotM(0, 1) = -sin(angle);
@@ -3311,6 +3673,58 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 			{
 				myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
 			}			
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+
+	cout << "Writing to file doen!!!!\n";
+}
+
+void NRoSyFields::writeNRoSyFieldsToFile_Local(const NRoSy& nRoSy, const string& filename)
+{
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	const int FIELD_TO_WRITE = 1;
+	for (int i = 0; i < nRot; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+		cout << "Drawing the " << i << " fields \n";
+
+		/* Construct rotation matrix*/
+		//for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+			if (j == 0)
+			{
+				printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSy.theta(j));
+			}
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			//nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;			// 'normalized fields'
+		}
+	}
+
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Writing vector fields to file to text \n";
+		printf("__|F|=%d  | vfields=%d\n", F.rows(), nFields[0].size()); for (int j = 0; j < FIELD_TO_WRITE; j++)
+		{
+			for (int i = 0; i < F.rows(); i++)
+			{
+				myfile << nFields[j](2 * i) << "\n";
+				myfile << nFields[j](2*i + 1) << "\n";
+			}
 		}
 		myfile.close();
 	}
@@ -3349,7 +3763,7 @@ void NRoSyFields::writeConstraintsToFile(const string& filename)
 				v2 = RotA*id;
 				v3 = ALoc * v2;
 				//printf("v2=[%.3f, %.3f] and v3=[%.3f, %.3f, %.3f] || Rot = [%.3f, %.3f, %.3f, %.3f. \n", v2(0), v2(1), v3(0), v3(1), v3(2), cosA, -sinA, sinA, cosA);
-				cout << "ALoc: " << ALoc << endl; 
+				//cout << "ALoc: " << ALoc << endl; 
 
 				myfile << globalConstraints[i] << " " << v3(0) << " " << v3(1) << " " << v3(2) << "\n";
 			}
@@ -3398,6 +3812,35 @@ void NRoSyFields::loadNRoSyFieldsFromFile(const string& filename, NRoSy& nRoSy)
 	printf("Load fields of size %d .\n", fields2d.size());
 }
 
+void NRoSyFields::loadNRoSyFieldsFromFile_Local(const string& filename, NRoSy& nRoSy)
+{
+	ifstream file(filename);
+	string oneLine, oneWord;
+	Eigen::VectorXd fields;
+	vector<double> fieldsVector;
+	fieldsVector.reserve(2 * F.rows());
+
+	double v;
+
+	if (file.is_open())
+	{
+
+		/* Obtain each member elements */
+		while (getline(file, oneLine))
+		{
+			istringstream iStream(oneLine);
+			v = stod(oneLine);
+			fieldsVector.push_back(v);
+		}
+	}
+	file.close();
+
+	fields = Eigen::Map<Eigen::VectorXd>(fieldsVector.data(), 2 * F.rows());	
+	createNRoSyFromVectors(fields, nRoSy);
+
+	printf("Load fields of size %d .\n", fields.size());
+}
+
 void NRoSyFields::loadConstraintsFromFile(const string& filename)
 {
 	ifstream file(filename);
@@ -3429,7 +3872,7 @@ void NRoSyFields::loadConstraintsFromFile(const string& filename)
 	file.close();
 
 	Eigen::VectorXd cTemp = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());
-	NRoSy cNRoSy; createNRoSyFromVectors(cTemp);
+	NRoSy cNRoSy; createNRoSyFromVectors(cTemp, cNRoSy);
 	convertNRoSyToRepVectors(cNRoSy, c);
 
 	printf("Load %d constraints \n", globalConstraints.size());
@@ -3492,4 +3935,356 @@ void NRoSyFields::testProjection_MyBasis_NoRegularizer(const Eigen::SparseMatrix
 
 		ofs.close();
 	}
+}
+
+
+/* COMMUNICATION VIA MAILSLOT */
+void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
+{
+	/* COnverting the n-Rosy to collection of fields */
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	const int FIELD_TO_WRITE = 1;
+	for (int i = 0; i < nRot; i++)
+	//for (int i = 0; i < FIELD_TO_WRITE; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+		//cout << "Drawing the " << i << " fields \n";
+
+		/* Construct rotation matrix*/
+		//for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+			
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+		}
+	}
+
+	vector<Eigen::VectorXd> nFields3d(nRot);
+	for (int j = 0; j < nRot; j++)
+	{
+		nFields3d[j] = A*nFields[j];
+	}
+
+	/* Interpolate on vertices (for the FIRST vector only) */
+	cout << "Converting to vertex coordinates \n";
+	Eigen::VectorXd nFieldsVert(3 * V.rows()); nFieldsVert.setZero();
+	for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < F.cols(); j++)
+		{
+			nFieldsVert.block(3 * F(i, j), 0, 3, 1) += nFields3d[0].block(3 * i, 0, 3, 1) *2.0 / doubleArea(i);
+		}
+	}
+
+	for (int i = 0; i < V.rows(); i++) nFieldsVert.block(3 * i, 0, 3, 1) /= MV.coeff(i, i);
+
+	//cout << "Trying to write to a mail slot (1) \n";
+
+	string mailslot_address = "\\\\.\\mailslot\\sandy2";
+
+	HANDLE msHandle;
+	msHandle = CreateFile(mailslot_address.c_str(),	GENERIC_WRITE,	FILE_SHARE_READ,(LPSECURITY_ATTRIBUTES)NULL,OPEN_EXISTING,	FILE_ATTRIBUTE_NORMAL,	(HANDLE)NULL);
+	
+	if (msHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("CreateMailslot failed: %d\n", GetLastError());
+	}
+	else {
+		printf("Successfully create the handle\n");
+	}
+
+	static LPTSTR message = "1.0";
+	BOOL     err;
+	DWORD    numWritten;
+	//WriteFile(msHandle, message, sizeof(message), &numWritten, 0);
+
+	const int data_size = sizeof(float);
+	char *myMessage = (char*)malloc(3 * V.rows() * data_size);	
+	vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
+	//char *myMessage = (char*)malloc(3 * F.rows() * data_size);
+	//vector<char> messageArray; messageArray.reserve(3 * F.rows() * data_size);
+
+	///* Writing to mailslot */
+	//string mailslot_address = "\\\\.\\mailslot\\sandy";
+	//
+	//ofstream myfile(mailslot_address.c_str());
+	
+	
+		printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFieldsVert.size(), data_size);
+		for (int i = 0; i < V.rows(); i++)
+		//for (int i = 0; i < F.rows(); i++)
+		{
+			for (int j = 0; j < FIELD_TO_WRITE; j++)
+			{
+				float data2[3] = {1.0, 0.0, 0.0};
+				for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
+				{
+					char data[data_size];
+					
+					//float field = nFields3d[0](3 * i + k);
+					float field = (float) nFieldsVert(3 * i + k);
+					//memcpy(data, &nFieldsVert(3 * i + k), data_size*sizeof(float));
+					//memcpy(data, &nFieldsVert(3 * i + k), data_size * sizeof(float));
+					memcpy(data, &field, data_size * sizeof(char));
+					//memcpy(data, &data2[k], data_size * sizeof(float));
+					for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
+					{
+						myMessage[data_size*(3 * i + k) + l] = data[data_size-l-1];
+						//myMessage[3 * data_size*i + data_size*k + l] = data[l];
+						//messageArray.push_back(data[l]);
+					}
+				}
+				//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+			}
+		}
+
+		//for (int i = 0; i < messageArray.size(); i++) myMessage[i] = messageArray[i];
+
+		//myMessage = messageArray.data();
+
+		int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+		printf("Size of the messgae: %d \n", lstrlen(myMessage));
+		//int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
+		printf("[%d] Data written %d \n", retWrite, numWritten);
+	
+		CloseHandle(msHandle);
+		cout << "Can write to mailslot \n";
+	//	myfile.close();
+	//}
+}
+
+void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
+{
+	/* COnverting the n-Rosy to collection of fields */
+	double scale = 1.0;
+	Eigen::Vector2d b(1, 0);
+
+	vector<Eigen::VectorXd> nFields(nRot);
+
+	const int FIELD_TO_WRITE = 1;
+	for (int i = 0; i < nRot; i++)
+		//for (int i = 0; i < FIELD_TO_WRITE; i++)
+	{
+		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+										 //cout << "Drawing the " << i << " fields \n";
+
+										 /* Construct rotation matrix*/
+										 //for (int j = 0; j < F.rows(); j++)
+		for (int j = 0; j<F.rows(); j++)
+		{
+			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) = cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) = sin(angle);
+			RotM(1, 1) = cos(angle);
+
+			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+		}
+	}
+
+	vector<Eigen::VectorXd> nFields3d(nRot);
+	for (int j = 0; j < nRot; j++)
+	{
+		nFields3d[j] = A*nFields[j];
+	}
+		
+
+	string mailslot_address = "\\\\.\\mailslot\\sandy";
+
+	HANDLE msHandle;
+	
+	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+
+	if (msHandle == INVALID_HANDLE_VALUE)
+	{
+		printf("CreateMailslot failed: %d\n", GetLastError());
+	}
+	else {
+		printf("Successfully create the handle\n");
+	}
+
+	static LPTSTR message = "1.0";
+	BOOL     err;
+	DWORD    numWritten;
+	//WriteFile(msHandle, message, sizeof(message), &numWritten, 0);
+
+	const int data_size = sizeof(float);
+	//char *myMessage = (char*)malloc(3 * V.rows() * data_size);
+	//vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
+	char *myMessage = (char*)malloc(3 * F.rows() * data_size);
+	vector<char> messageArray; messageArray.reserve(3 * F.rows() * data_size);
+
+	///* Writing to mailslot */
+	//string mailslot_address = "\\\\.\\mailslot\\sandy";
+	//
+	//ofstream myfile(mailslot_address.c_str());
+
+
+	printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFields3d[0].size(), data_size);
+	for (int i = 0; i < V.rows(); i++)
+		//for (int i = 0; i < F.rows(); i++)
+	{
+		for (int j = 0; j < FIELD_TO_WRITE; j++)
+		{
+			float data2[3] = { 1.0, 0.0, 0.0 };
+			for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
+			{
+				char data[data_size];
+
+				float field = nFields3d[0](3 * i + k);
+				memcpy(data, &field, data_size * sizeof(char));
+				//memcpy(data, &data2[k], data_size * sizeof(float));
+				for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
+				{
+					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];
+					//myMessage[3 * data_size*i + data_size*k + l] = data[l];
+					//messageArray.push_back(data[l]);
+				}
+			}
+			//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+		}
+	}
+
+	//for (int i = 0; i < messageArray.size(); i++) myMessage[i] = messageArray[i];
+
+	//myMessage = messageArray.data();
+
+	//int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
+	printf("[%d] Data written %d \n", retWrite, numWritten);
+
+	CloseHandle(msHandle);
+	cout << "Can write to mailslot \n";
+	//	myfile.close();
+	//}
+}
+
+void NRoSyFields::readFieldsFromMailSlot(HANDLE &msHandle)
+{
+	
+	DWORD cbMessage, cMessage, cbRead;
+	BOOL fResult;
+	LPTSTR lpszBuffer;
+	TCHAR achID[80];
+	DWORD cAllMessages;
+	HANDLE hEvent;
+	OVERLAPPED ov;
+
+	cbMessage = cMessage = cbRead = 0;
+
+	hEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("ExampleSlot"));
+
+	if (NULL == hEvent) return; 
+		//return FALSE;
+	ov.Offset = 0;
+	ov.OffsetHigh = 0;
+	ov.hEvent = hEvent;
+
+	fResult = GetMailslotInfo(msHandle, // mailslot handle 
+		(LPDWORD)NULL,               // no maximum message size 
+		&cbMessage,                   // size of next message 
+		&cMessage,                    // number of messages 
+		(LPDWORD)NULL);              // no read time-out 
+
+	if (!fResult)
+	{
+		printf("GetMailslotInfo failed with %d.\n", GetLastError());
+		//return FALSE;
+		return;
+	} else cout << "There are " << cMessage << " message coming \n";
+
+	if (cbMessage == MAILSLOT_NO_MESSAGE)
+	{
+		printf("Waiting for a message...\n");
+		//return TRUE;
+		return;
+	}
+	else cout << "Retrieving the messages \n";
+
+	cAllMessages = cMessage;
+
+	while (cMessage != 0)  // retrieve all messages
+	{
+		// Create a message-number string. 
+
+		StringCchPrintf((LPTSTR)achID,
+			80,
+			TEXT("\nMessage #%d of %d\n"),
+			cAllMessages - cMessage + 1,
+			cAllMessages);
+
+		// Allocate memory for the message. 
+
+		lpszBuffer = (LPTSTR)GlobalAlloc(GPTR,
+			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage);
+		if (NULL == lpszBuffer) return; 
+			//return FALSE;
+		lpszBuffer[0] = '\0';
+
+		fResult = ReadFile(msHandle,
+			lpszBuffer,
+			cbMessage,
+			&cbRead,
+			&ov);
+
+		if (!fResult)
+		{
+			printf("ReadFile failed with %d.\n", GetLastError());
+			GlobalFree((HGLOBAL)lpszBuffer);
+			return;
+			//return FALSE;
+		}
+
+		// Concatenate the message and the message-number string. 
+
+		StringCbCat(lpszBuffer,
+			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage,
+			(LPTSTR)achID);
+
+		// Display the message. 
+
+		_tprintf(TEXT("Contents of the mailslot: %s\n"), lpszBuffer);
+
+		int messageLength = lstrlen(lpszBuffer);
+		int dataSize = 4;
+		char data[sizeof(float)];
+		float number;
+		printf("Size of this message = %d \n", lstrlen(lpszBuffer));
+		for (int i = 0; i < messageLength; i+=dataSize) {
+			for (int j = 0; j < dataSize; j++) data[dataSize-j-1] = lpszBuffer[i + j];
+			memcpy(&number, data, dataSize*sizeof(char));
+			printf("data %d/4: %.5f \n ", i, number);
+		}
+
+		GlobalFree((HGLOBAL)lpszBuffer);
+
+		fResult = GetMailslotInfo(msHandle,  // mailslot handle 
+			(LPDWORD)NULL,               // no maximum message size 
+			&cbMessage,                   // size of next message 
+			&cMessage,                    // number of messages 
+			(LPDWORD)NULL);              // no read time-out 
+
+		if (!fResult)
+		{
+			printf("GetMailslotInfo failed (%d)\n", GetLastError());
+			return; 
+			//return FALSE;
+		}
+	}
+	CloseHandle(hEvent);
 }

@@ -246,6 +246,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//	viewer.data().lines.row(i + 2 * FaceToDraw.size())	<< FCLoc.row(i) + TFields.row(i)*lengthScale, FCLoc.row(i) + TFields.row(i)*lengthScale + Head2Fields.row(i)*lengthScale / HEAD_RATIO, color;
 	//}
 
+	viewer.data().line_width = 1.0;
 
 	// Drawing in parallel
 	int id, tid, ntids, ipts, istart, iproc;
@@ -275,6 +276,8 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	viewer.data().line_width = 4.;
 }
 
 void VectorFields::visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
@@ -504,7 +507,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
 	//visualize2Dfields(viewer, XFullDim, color, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 5, false);
+	visualize2Dfields(viewer, XFullDim, color, 3, false);
 	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
@@ -566,7 +569,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	 
 	viewer.selected_data_index = 0; 	
 	viewer.data().line_width = 4.0;
-	viewer.data().line_width = 1.0;
+	//viewer.data().line_width = 1.0;
 }
 
 void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -896,11 +899,55 @@ void VectorFields::loadConstraintsFromFile(const string& filename)
 		//printf("Inserting %d and %d as constraint, with value of %.3f and %.3f \n", 2*globalConstraints[i], 2*globalConstraints[i]+1, c(2*globalConstraints[i]), c(2*globalConstraints[i]+1) );				
 		printf("Inserting %d and %d as constraint, with value of %.3f and %.3f \n", 2 * globalConstraints[i], 2 * globalConstraints[i] + 1, c(2 *i), c(2 * i + 1));
 	}
-	printf("B2D=%dx%%d | C=%dx%d | c=%d | triplet=%d | const = %d | \n",
+	printf("B2D=%dx%d | C=%dx%d | c=%d | triplet=%d | const = %d | \n",
 		B2D.rows(), B2D.cols(), C.rows(), C.cols(), c.size(), CTriplet.size(), globalConstraints.size());
 	C.resize(2 * globalConstraints.size(), B2D.rows());
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	cout << "C: \n" << C.block(0, 0, 2 * globalConstraints.size(), 20) << endl; 
+}
+
+// In Local coordinate
+void VectorFields::writeVectorFieldsToFile_Local(const Eigen::VectorXd &vfields, const string& filename)
+{
+	ofstream myfile(filename.c_str());
+	if (myfile.is_open())
+	{
+		cout << "Writing vector fields to file to text \n";
+		printf("__|F|=%d  | vfields=%d\n", F.rows(), vfields.size());
+		for (int i = 0; i < F.rows(); i++)
+		{
+			Eigen::Vector2d v = vfields.block(2 * i, 0, 2, 1);
+			v.normalize();
+			myfile << v(0) << "\n";
+			myfile << v(1) << "\n";
+		}
+		myfile.close();
+	}
+	else cout << "Unable to open file";
+}
+void VectorFields::writeConstraintsToFile_Local(const string& filename)
+{
+	cout << "Trying to write the constraint to file \n";
+	ofstream myfile(filename.c_str());
+
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < globalConstraints.size(); i++)
+		{
+			myfile << globalConstraints[i] << " " << c(2 * i) << " " << c(2 * i + 1) << endl;
+		}
+	}
+	else { cout << "Cannot open the file\n"; }
+
+	cout << "Writing is done! \n";
+}
+void VectorFields::loadVectorFieldsFromFile_Local(const string& filename, Eigen::VectorXd &vfields)
+{
+
+}
+void VectorFields::loadConstraintsFromFile_Local(const string& filename)
+{
+
 }
 
 /* ====================== VISUALIZATION for TESTING ELEMENTS ============================*/
