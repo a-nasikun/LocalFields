@@ -113,8 +113,8 @@ public:
 	//double							scale = 100;		// regular eigenfields => arma 10k
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
-	//double								scale = 0.01;		// smoothing
-	double								scale = 0.1;		// smoothing torus
+	double								scale = 0.01;		// smoothing
+	//double								scale = 0.1;		// smoothing torus
 	//double							scale = 2.0; 
 
 	//

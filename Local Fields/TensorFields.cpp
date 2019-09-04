@@ -1653,14 +1653,14 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 250;
+	numSample = 1000;
 	constructSamples(numSample);
-	constructBasis();
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
-	storeBasis(fileBasis);
-	//retrieveBasis(fileBasis);
+	//constructBasis();
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
+	//storeBasis(fileBasis);
+	retrieveBasis(fileBasis);
 	visualizeBasis(viewer, 0);
-	WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
+	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
 	/* Testing the result */
 	//testDirichletAndLaplace();
