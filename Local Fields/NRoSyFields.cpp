@@ -4174,6 +4174,86 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	//}
 }
 
+void NRoSyFields::sendTestDataToMailSlot()
+{
+	string mailslot_address = "\\\\.\\mailslot\\sandy2";
+
+	HANDLE msHandle;
+	static LPTSTR message = "1.0";
+	BOOL     err;
+	DWORD    numWritten;
+	int retWrite;
+
+	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+
+	if (msHandle == INVALID_HANDLE_VALUE) {
+		printf("CreateMailslot failed: %d\n", GetLastError());
+	}
+	else {
+		printf("Successfully create the handle\n");
+	}
+
+	//int retWrite = WriteFile(msHandle, message, lstrlen(message), &numWritten, 0);
+	//printf("Size of the messgae: %d \n", lstrlen(message));
+	//cout << "The data I sent is " << message << "\n";
+	////int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
+	//printf("[%d] Data written %d (of %d) \n", retWrite, numWritten, lstrlen(message));
+
+	//// The SECOND Data, a float
+	//float floatMsgTxt = 2.0f;
+	//char* msgData = (char*)malloc(sizeof(floatMsgTxt) * sizeof(char));
+	//memcpy(msgData, &floatMsgTxt, sizeof(floatMsgTxt) * sizeof(char));
+	//retWrite = WriteFile(msHandle, msgData, lstrlen(msgData), &numWritten, 0);
+	//printf("Size of the messgae: %d \n", lstrlen(msgData));
+	//cout << "The data I sent is " << msgData << "\n";
+	//printf("[%d] 2nd Data written %d (of %d) \n", retWrite, numWritten, lstrlen(msgData));
+	//
+	//// The THIRD MESSAGE
+	//stringbuf message3;
+	//char msg3data[] = {'0','1','2','3','4','5'};
+	//message3.sputn(msg3data, sizeof(msg3data));
+	//retWrite = WriteFile(msHandle, msg3data, lstrlen(msg3data), &numWritten, 0);
+	//printf("Size of the messgae: %d \n", lstrlen(msg3data));
+	//cout << "The data I sent is " << msg3data << "\n";
+	//printf("[%d] 3rd Data written %d (of %d) \n", retWrite, numWritten, lstrlen(msg3data));
+
+	const int dataSize = sizeof(float);
+
+	// the 4th MESSAGE
+	///float data4f = 4.34353f;
+	///uint8_t data4bytes[dataSize];
+	///*(float*)data4bytes = data4f; 
+	///uint8_t* data2ndForm = (uint8_t*)malloc(sizeof(float));
+	///for (int i = 0; i < dataSize; i++) data2ndForm[i] = data4bytes[dataSize-i];
+	///printf("Data: %d %d %d %d \n", data4bytes[0], data4bytes[1], data4bytes[2], data4bytes[3]);
+	/////retWrite = WriteFile(msHandle, data4bytes, sizeof(data4bytes), &numWritten, 0);
+	///retWrite = WriteFile(msHandle, data2ndForm, sizeof(data2ndForm), &numWritten, 0);
+	///printf("Size of the messgae: %d \n", sizeof(data4bytes));
+	///cout << "The data I sent is " << data4bytes << "\n";
+	///printf("[%d] Data written %d (of %d) \n", retWrite, numWritten, sizeof(data4bytes));	
+	///cout << "Pseudo convnersion: \n";
+	///float dataConv = *(float*)data4bytes;
+	///cout << "The data is: " << dataConv << endl; 
+
+	// The FIFTH Message
+	vector<float> data5float = { 2.4f, 0.000005f, 1.3f, 0.00001f, (float)M_PI };
+	uint8_t* dataByteToSend = (uint8_t*)malloc(data5float.size() * dataSize);
+	uint8_t dataByte[dataSize];
+	for (int i = 0; i < data5float.size(); i++)
+	{
+		*(float*)dataByte = data5float[i];
+		for (int j = 0; j < dataSize; j++)
+			dataByteToSend[dataSize*i + j] = dataByte[j];
+	}
+	retWrite = WriteFile(msHandle, dataByteToSend, sizeof(dataByteToSend), &numWritten, 0);
+	printf("Size of the messgae: %d each %d \n", sizeof(dataByteToSend), dataSize);
+	cout << "The data I sent is " << dataByteToSend << "\n";
+	printf("[%d] Data written %d (of %d) \n", retWrite, numWritten, sizeof(dataByteToSend));
+
+	CloseHandle(msHandle);
+	cout << "Can write to mailslot \n";
+}
+
 void NRoSyFields::readFieldsFromMailSlot(HANDLE &msHandle)
 {
 	
@@ -4283,6 +4363,157 @@ void NRoSyFields::readFieldsFromMailSlot(HANDLE &msHandle)
 		{
 			printf("GetMailslotInfo failed (%d)\n", GetLastError());
 			return; 
+			//return FALSE;
+		}
+	}
+	CloseHandle(hEvent);
+}
+
+void NRoSyFields::readTestDataFromMailSlot(HANDLE &msHandle)
+{
+	DWORD cbMessage, cMessage, cbRead;
+	BOOL fResult;
+	LPTSTR lpszBuffer;
+	TCHAR achID[80];
+	DWORD cAllMessages;
+	HANDLE hEvent;
+	OVERLAPPED ov;
+
+	cbMessage = cMessage = cbRead = 0;
+
+	hEvent = CreateEvent(NULL, FALSE, FALSE, TEXT("ExampleSlot"));
+
+	if (NULL == hEvent) return;
+	//return FALSE;
+	ov.Offset = 0;
+	ov.OffsetHigh = 0;
+	ov.hEvent = hEvent;
+
+	fResult = GetMailslotInfo(msHandle, // mailslot handle 
+		(LPDWORD)NULL,               // no maximum message size 
+		&cbMessage,                   // size of next message 
+		&cMessage,                    // number of messages 
+		(LPDWORD)NULL);              // no read time-out 
+
+	if (!fResult)
+	{
+		printf("GetMailslotInfo failed with %d.\n", GetLastError());
+		//return FALSE;
+		return;
+	}
+	else cout << "There are " << cMessage << " message coming \n";
+
+	if (cbMessage == MAILSLOT_NO_MESSAGE)
+	{
+		printf("Waiting for a message...\n");
+		//return TRUE;
+		return;
+	}
+	else cout << "Retrieving the messages \n";
+
+	cAllMessages = cMessage;
+
+	while (cMessage != 0)  // retrieve all messages
+	{
+		// Create a message-number string. 
+
+		StringCchPrintf((LPTSTR)achID,
+			80,
+			TEXT("\nMessage #%d of %d\n"),
+			cAllMessages - cMessage + 1,
+			cAllMessages);
+
+		// Allocate memory for the message. 
+
+		lpszBuffer = (LPTSTR)GlobalAlloc(GPTR,
+			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage);
+		if (NULL == lpszBuffer) return;
+		//return FALSE;
+		lpszBuffer[0] = '\0';
+
+		fResult = ReadFile(msHandle,
+			lpszBuffer,
+			cbMessage,
+			&cbRead,
+			&ov);
+
+		if (!fResult) {
+			printf("ReadFile failed with %d.\n", GetLastError());
+			GlobalFree((HGLOBAL)lpszBuffer);
+			return;
+			//return FALSE;
+		}
+
+		// Concatenate the message and the message-number string. 
+		StringCbCat(lpszBuffer, lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage, (LPTSTR)achID);
+
+		// Display the message. 
+		_tprintf(TEXT("Contents of the mailslot: %s\n"), lpszBuffer);
+
+		string testRead = string(lpszBuffer);
+		cout << "Message in string: " << testRead << endl;
+
+		int messageLength = lstrlen(lpszBuffer);
+		const int dataSize = sizeof(float);
+		char data[dataSize];
+		float number;
+		printf("Size of this message = %d \n", messageLength);
+
+		/* One single byte */
+		///uint8_t* msgInByte = (uint8_t*)malloc(messageLength-dataSize);
+		///memcpy(msgInByte, lpszBuffer, messageLength - dataSize);
+		///uint8_t bytes[sizeof(float)]; 
+		///for(int i=0; i<4; i++) bytes[i] = msgInByte[i];
+		///number = *(float*)bytes;
+		///cout << "The number received is: " << number << endl; 
+
+		/* array of bytes */
+		uint8_t* msgInByte = (uint8_t*)malloc(messageLength - dataSize);
+		//uint8_t* msgInBytePerFloat = (uint8_t*)malloc(16);
+		memcpy(msgInByte, lpszBuffer, messageLength - dataSize);
+		uint8_t bytes[dataSize];
+
+		vector<float> dataReceived;
+		for (int i = 0; i < (messageLength - dataSize) / dataSize; i += 4)
+		{
+			for (int j = 0; j < dataSize; j++) bytes[j] = msgInByte[i + j];
+			float number = *(float*)bytes;
+			dataReceived.push_back(number);
+			cout << "The number received is: " << number;
+		}
+		cout << endl << endl;
+
+		//vector<uint8_t> dataInChar(messageLength - dataSize);
+		//for (int i = 0; i < messageLength - dataSize; i++) {
+		//	dataInChar[i] = lpszBuffer[i];
+		//}
+		//
+		//uint8_t bytes[sizeof(float)];
+		//for (int i = 0; i < dataInChar.size(); i += 4) {
+		//	for(int j=0; i<4; j++)
+		//		bytes[j] = dataInChar[j];
+		//	
+		//}
+
+
+		//for (int i = 0; i < messageLength; i += dataSize) {
+		//	for (int j = 0; j < dataSize; j++) data[dataSize - j - 1] = lpszBuffer[i + j];
+		//	memcpy(&number, data, dataSize * sizeof(char));
+		//	printf("data %d/4: %.5f \n ", i, number);
+		//}
+
+		GlobalFree((HGLOBAL)lpszBuffer);
+
+		fResult = GetMailslotInfo(msHandle,  // mailslot handle 
+			(LPDWORD)NULL,               // no maximum message size 
+			&cbMessage,                   // size of next message 
+			&cMessage,                    // number of messages 
+			(LPDWORD)NULL);              // no read time-out 
+
+		if (!fResult)
+		{
+			printf("GetMailslotInfo failed (%d)\n", GetLastError());
+			return;
 			//return FALSE;
 		}
 	}
