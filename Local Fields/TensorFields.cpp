@@ -918,6 +918,8 @@ void TensorFields::convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt,
 
 void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep)
 {
+	double maxEigVal = 0.0;
+
 	matrixRep.resize(2 * F.rows(), 2);
 	for (int i = 0; i < F.rows(); i++)
 	{
@@ -940,8 +942,22 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 		//evect_ = evect2_.block(0, 0, 2, 2);
 		//eval_ = eval2_.block(0, 0, 1, 2);
 
+		if (eval_(1) > maxEigVal) maxEigVal = eval_(1);
+
 		matrixRep.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
 		matrixRep.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
+	}
+
+	// Scaling the represention vector, to be at the same length as the average edge-length
+	const double scalingFact_ = 2.0 / maxEigVal;
+	for (int j = 0; j < 2; j++)
+	{
+		for (int i = 0; i < F.rows(); i++)
+		{
+			Eigen::Vector2d v_ = matrixRep.block(2 * i, j, 2, 1);
+			v_ = scalingFact_ * v_.norm() * v_.normalized();
+			matrixRep.block(2 * i, j, 2, 1) = v_;
+		}
 	}
 }
 
@@ -1613,16 +1629,39 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	if (id >= 2 * Sample.size()) {
 		bId = 2 * Sample.size() - 1;
 	}
+		
 
 	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id / 2]);
 	Eigen::MatrixXd basisTensor, basisTensorFields;
-	//convertVoigtToTensor(Basis.col(id), basisTensor);
-	Eigen::VectorXd basisVector = Basis.col(id).toDense();
-		cout << "It has " << basisVector.rows() << " entries on " << id << " basis \n";
-	convertVoigtToTensor(basisVector, basisTensor);
+	convertVoigtToTensor(Basis.col(id), basisTensor);
+	//Eigen::VectorXd basisVector = Basis.col(id).toDense();
+	//	cout << "It has " << basisVector.rows() << " entries on " << id << " basis \n";
+	//convertVoigtToTensor(basisVector, basisTensor);
 	printf("Tensor rep %dx%d \n", basisTensor.rows(), basisTensor.cols());
 	constructTensorRepFields(basisTensor, basisTensorFields);
 	printf("basisTensorFields %dx%d \n", basisTensorFields.rows(), basisTensorFields.cols());
+
+	///// Findng the max norm
+	///double maxNorm = 0.0;
+	///double vectorScale;
+	///for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, id); it; ++it) {
+	///	if (it.row() % 2 == 1) continue;
+	///	double v2_ = Basis.coeff(it.row() + 1, it.col());
+	///	Eigen::Vector2d vv; vv << it.value(), v2_;
+	///	double norm_ = vv.norm();
+	///	if (norm_ > maxNorm) maxNorm = norm_;
+	///}
+	///vectorScale = 2.0 / maxNorm;
+	///
+	///// scaling the vectors;
+	///Eigen::VectorXd BasisVector; BasisVector.setZero(Basis.rows());
+	///for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, id); it; ++it) {
+	///	if (it.row() % 2 == 1) continue;
+	///	double v2_ = Basis.coeff(it.row() + 1, it.col());
+	///	Eigen::Vector2d vv; vv << it.value(), v2_;
+	///	vv.normalize();
+	///	BasisVector.block(it.row(), 0, 2, 1) = vectorScale*vv;
+	///}
 
 	double totLocScale = 0.0;
 	for (int i = 0; i < basisTensorFields.rows(); i += 2)
@@ -1634,10 +1673,10 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	printf("Edge: %.2f | scale: %.2f | totScale = %.2f | draw Scale: %.2f \n", avgEdgeLength, scale, totLocScale, scale * 10000);
 
 
-	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale*100.0, true);
-	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale*100.0, true);
-	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale*100.0, true);
-	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale*100.0, true);
+	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale, false);
+	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale, false);
 
 	///visualize2Dfields(viewer,  basisTensorFields.col(0), color1, 100000000000, true);
 	///visualize2Dfields(viewer, -basisTensorFields.col(0), color1, 100000000000, true);
