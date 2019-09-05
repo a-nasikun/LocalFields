@@ -7,7 +7,7 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 100;
+int numSample = 10000;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
 int saveId = 0;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Torus_";
+	const string model = "Kitten_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
@@ -88,6 +88,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Plane/squarePlane_16k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Sphere/sphere10k.off";
 
 	/* ====================== VECTOR FIELDS  ====================*/
 	
@@ -777,7 +779,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.0f; 
+	viewer.data().line_width = 1.5f; 
 
 	return viewer.launch();
 

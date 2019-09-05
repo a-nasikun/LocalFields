@@ -673,6 +673,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 
 void TensorFields::obtainTransformationForLaplacian(double tetha, Eigen::Matrix3d& G)
 {
+
 	double g1 = cos(tetha);
 	double g2 = -sin(tetha);
 	double g3 = sin(tetha);
@@ -797,6 +798,7 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 
 void TensorFields::buildStiffnessMatrix_Geometric()
 {
+	cout << "Computing stiffness matrix \n";
 	SF.resize(3 * F.rows(), 3 * F.rows());
 	vector<Eigen::Triplet<double>> STriplet;
 	STriplet.reserve(4 * 9 * F.rows());
@@ -898,7 +900,7 @@ void TensorFields::convertTensorToVoigt_Elementary(const Eigen::Matrix2d& tensor
 void TensorFields::convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor)
 {
 	tensor.resize(2 * F.rows(), 2);
-	printf("Voigt: %d | tensor: %dx%d\n", voigt.rows(), tensor.rows(), tensor.cols());
+	//printf("Voigt: %d | tensor: %dx%d\n", voigt.rows(), tensor.rows(), tensor.cols());
 	for (int i = 0; i < F.rows(); i++)
 	{
 		tensor(2 * i + 0, 0) = voigt(3 * i + 0);
@@ -918,7 +920,8 @@ void TensorFields::convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt,
 
 void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep)
 {
-	double maxEigVal = 0.0;
+	double maxEigVal = -std::numeric_limits<double>::max();
+	double minEigVal = std::numeric_limits<double>::max();
 
 	matrixRep.resize(2 * F.rows(), 2);
 	for (int i = 0; i < F.rows(); i++)
@@ -943,13 +946,16 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 		//eval_ = eval2_.block(0, 0, 1, 2);
 
 		if (eval_(1) > maxEigVal) maxEigVal = eval_(1);
+		if (eval_(0) < minEigVal) minEigVal = eval_(0);
 
 		matrixRep.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
 		matrixRep.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
 	}
 
+	printf("Max: eigenval. is %.3f | min: %.3f \n", maxEigVal, minEigVal);
+
 	// Scaling the represention vector, to be at the same length as the average edge-length
-	const double scalingFact_ = 2.0 / maxEigVal;
+	const double scalingFact_ =1.0 / maxEigVal;
 	for (int j = 0; j < 2; j++)
 	{
 		for (int i = 0; i < F.rows(); i++)
@@ -1022,8 +1028,8 @@ void TensorFields::loadEigenFields(const string& filename)
 void TensorFields::constructBasis()
 {	
 	constructBasis_LocalEigenProblem();
-	cout << "Basis:: \n";
-	cout << Basis.block(0,0,100,1) << endl << endl; 
+	//cout << "Basis:: \n";
+	//cout << Basis.block(0,0,100,1) << endl << endl; 
 }
 void TensorFields::constructSamples(const int &n)
 {
@@ -1078,12 +1084,13 @@ void TensorFields::constructBasis_LocalEigenProblem()
 	cout << "> Constructing Basis...\n";
 
 	const int Num_fields = 3;
+	const int NUM_EIGEN = 15; 
 	// Setup sizes of each element to construct basis
 	try {
 		Basis.resize(1, 1);
 		Basis.data().clear();
 		Basis.data().squeeze();
-		Basis.resize(Num_fields * F.rows(), 2 * Sample.size());
+		Basis.resize(Num_fields * F.rows(), NUM_EIGEN * Sample.size());
 	}
 	catch (string &msg) {
 		cout << "Cannot allocate memory for basis.." << endl;
@@ -1113,8 +1120,8 @@ void TensorFields::constructBasis_LocalEigenProblem()
 
 	int id, tid, ntids, ipts, istart, iproc;
 
-	omp_set_num_threads(1);
-	//omp_set_num_threads(omp_get_num_procs()/2);
+	//omp_set_num_threads(1);
+	omp_set_num_threads(omp_get_num_procs()/2);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -1149,7 +1156,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
 			cout << "[" << id << "] Constructing local eigen problem\n";
 
-			cout << "__creating subdomain \n";
+			///cout << "__creating subdomain \n";
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
@@ -1158,13 +1165,13 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
-			cout << "__creating boundary \n";
+			///cout << "__creating boundary \n";
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
 			t2 = chrono::high_resolution_clock::now();
 			durations[1] += t2 - t1;
 
-			cout << "__gathering local elements \n";
+			///cout << "__gathering local elements \n";
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
@@ -1172,14 +1179,14 @@ void TensorFields::constructBasis_LocalEigenProblem()
 
 			UiTriplet[id].reserve(2 * localField.InnerElements.size());
 
-			cout << "__solving local eigenvalue problem \n";
+			///cout << "__solving local eigenvalue problem \n";
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
 			//printf("Starting engine %d for element %d\n", tid, id);
 			//if (id % ((int)(Sample.size() / 4)) == 0)
 			//	cout << "[" << id << "] Constructing local eigen problem\n ";
-			localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, Sh, MF3DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
-			//localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, Sh, MF3DhNeg, AdjMF2Ring, NUM_EIGEN, doubleArea, UiTriplet[id]);
+			///localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, NUM_EIGEN, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -1205,7 +1212,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 	//if (writeBasisCompsToFile)
 	//	writeBasisElementsToFile(UiTriplet, 2);
 	//else
-		gatherBasisElements(UiTriplet, 2);
+		gatherBasisElements(UiTriplet, NUM_EIGEN);
 
 	//Basis = BasisTemp;
 	//normalizeBasisAbs(2);
@@ -1614,15 +1621,19 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 
 	int bId = id;
 	Eigen::RowVector3d color1, color2;
-	if (id % 2 == 0) {
+	if (id % 3 == 0) {
 		color1 = Eigen::RowVector3d( 34.0/255.0,  94.0/255.0, 168.0/255.0);
-		color2 = Eigen::RowVector3d(247.0/255.0, 104.0/255.0, 161.0/255.0);
+		//color2 = Eigen::RowVector3d(247.0/255.0, 104.0/255.0, 161.0/255.0);
+		color2 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
+	}
+	else if(id%3==1) {
+		color1 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
+		color2 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
+		//cout << "Basis: " << id << "\n" << Basis.col(id).block(0, 0, 100, 1) << endl;		
 	}
 	else {
-		color1 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
-		color1 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
-		//cout << "Basis: " << id << "\n" << Basis.col(id).block(0, 0, 100, 1) << endl;
-		
+		color1 = Eigen::RowVector3d(5.0 / 255.0, 178.0 / 255.0, 220.0 / 255.0);
+		color2 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
 	}
 	printf("Non zeros on id %d is %d \n", bId, Basis.col(id).nonZeros());
 
@@ -1631,15 +1642,15 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	}
 		
 
-	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id / 2]);
+	//printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id / 2]);
 	Eigen::MatrixXd basisTensor, basisTensorFields;
 	convertVoigtToTensor(Basis.col(id), basisTensor);
 	//Eigen::VectorXd basisVector = Basis.col(id).toDense();
 	//	cout << "It has " << basisVector.rows() << " entries on " << id << " basis \n";
 	//convertVoigtToTensor(basisVector, basisTensor);
-	printf("Tensor rep %dx%d \n", basisTensor.rows(), basisTensor.cols());
+	//printf("Tensor rep %dx%d \n", basisTensor.rows(), basisTensor.cols());
 	constructTensorRepFields(basisTensor, basisTensorFields);
-	printf("basisTensorFields %dx%d \n", basisTensorFields.rows(), basisTensorFields.cols());
+	//printf("basisTensorFields %dx%d \n", basisTensorFields.rows(), basisTensorFields.cols());
 
 	///// Findng the max norm
 	///double maxNorm = 0.0;
@@ -1697,7 +1708,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "Arma_";
+	string model = "Kitten_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1718,12 +1729,12 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(5000);	
+	selectFaceToDraw(75000);	
 
 	/* Construct necessary elements for tensor analysis */
-	constructCurvatureTensor(viewer);
-	computeTensorFields();
-	constructVoigtVector();
+	///constructCurvatureTensor(viewer);
+	///computeTensorFields();
+	///constructVoigtVector();
 	///visualizeTensorFields(viewer, tensorFields);
 
 	computeFrameRotation(viewer);
@@ -1740,12 +1751,12 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/*Subspace construction */
 	numSupport = 40.0;
 	numSample = 1000;
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"_Tensor_15Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	//constructBasis();
-	//storeBasis(fileBasis);
+	///constructBasis();
+	///storeBasis(fileBasis);
 	retrieveBasis(fileBasis);
-	//visualizeBasis(viewer, 0);
+	visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
 	/* Testing the result */
