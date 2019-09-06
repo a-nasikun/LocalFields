@@ -601,14 +601,14 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engEvalString(ep, "[data, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	if (numEigs > 2)
+	if (numEigs > 1)
 	{
 		///engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
-		///string approxFile = "save('" + filename + "_eigFields','data','EigVal');";		
+		string approxFile = "save('" + filename + "_eigFields','data','EigVal');";		
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
-		///engEvalString(ep, approxFile.c_str());
+		engEvalString(ep, approxFile.c_str());
 	}
 	t4 = chrono::high_resolution_clock::now();
 

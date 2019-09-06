@@ -160,12 +160,12 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 	} while (distFromCenter < maxDist);
 }
 
-void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport)
+void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport, int NUM_EIGEN)
 {
 	int center = sampleID;
 	this->sampleID = sampleID;
 
-	int numEntries = (int) round((numSupport*F.rows()) / (float) (2 * sampleSize));
+	int numEntries = (int) round((numSupport*F.rows()) / (float) (NUM_EIGEN * sampleSize));
 
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 	//Eigen::VectorXd D(F.rows());
@@ -1561,12 +1561,12 @@ void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, 
 	//	eigIDX[1] = 1;
 	//}
 
-	if ( id < 100)
-	{
-		printf("_[%d] size of the eigenvector: %dx%d \n", id, eigTemp.rows(), eigTemp.cols());
-		printf("_eigenvalues: "); cout << eigValsLoc.transpose() << endl;
-		printf("_eigenvector: \n"); cout << eigTemp.block(0, 0, 15, eigTemp.cols()) << endl << endl; 
-	}
+	///if ( id < 100)
+	///{
+	///	printf("_[%d] size of the eigenvector: %dx%d \n", id, eigTemp.rows(), eigTemp.cols());
+	///	printf("_eigenvalues: "); cout << eigValsLoc.transpose() << endl;
+	///	printf("_eigenvector: \n"); cout << eigTemp.block(0, 0, 15, eigTemp.cols()) << endl << endl; 
+	///}
 
 	/* Mapping to larger matrix */// First column ==> First basis (2 elements per-local frame)
 	for (int j = 0; j < NUM_EIG; j++)

@@ -185,14 +185,15 @@ void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename, const
 	printf("Size of Matrix=%dx%d\n", M.rows(), M.cols());
 	//M.block(0, 0, NUM_ROWS, NUM_BLOCKS * NUM_EIGEN) = REigCont;
 	
-	engEvalString(ep, "clear;");
-	
-	engClose(ep);
-	//mxDestroyArray(eigValM);
-	//mxDestroyArray(eigVecM);
-	//realloc(eigVecE, 0);
-	//realloc(eigValE, 0);
-
+	///engEvalString(ep, "clear;");
+	///
+	///mxDestroyArray(eigValM);
+	///mxDestroyArray(eigVecM);
+	///realloc(eigVecE, 0);
+	///realloc(eigValE, 0);
+	///
+	///engClose(ep);
+	cout << "FInish loading matrix \n";
 }
 
 void ReadDenseMatrixFromMatlab(Eigen::MatrixXd& M, const string& filename)

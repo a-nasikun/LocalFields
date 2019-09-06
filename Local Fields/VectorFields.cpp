@@ -2405,6 +2405,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	const int NUM_PROCESS = 4;
 	durations.resize(NUM_PROCESS);
 	const int Num_fields = 2;
+	const int NUM_EIG = 2;
 
 	for (int i = 0; i < NUM_PROCESS; i++) {
 		durations[i] = t1 - t1;
@@ -2496,7 +2497,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, NUM_EIG);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[0] += t2 - t1;
@@ -3270,7 +3271,7 @@ void VectorFields::constructBasis_LocalEigenProblem10()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, EIG_NUM);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 

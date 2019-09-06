@@ -1010,7 +1010,7 @@ void TensorFields::computeEigenFields_generalized(const int &numEigs, const stri
 
 	computeEigenMatlab(SF, MF, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
 
-	Eigen::SparseMatrix<double> Sh = MF3DhNeg*SF*MF3DhNeg;
+	//Eigen::SparseMatrix<double> Sh = MF3DhNeg*SF*MF3DhNeg;
 	//computeEigenSpectra_RegSym_Custom(Sh, MF3DhNeg, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
 	//computeEigenSpectra_RegSym_Transf(Sh, MF3DhNeg, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
@@ -1021,7 +1021,7 @@ void TensorFields::computeEigenFields_generalized(const int &numEigs, const stri
 }
 void TensorFields::loadEigenFields(const string& filename)
 {
-	ReadDenseMatrixFromMatlab(eigFieldsTensorRef, filename, F.rows()*3, 500);
+	ReadDenseMatrixFromMatlab(eigFieldsTensorRef, filename+"_eigFields", F.rows()*3, 10);
 }
 
 /* ====================== SUBSPACE CONSTRUCTION ====================== */
@@ -1084,7 +1084,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 	cout << "> Constructing Basis...\n";
 
 	const int Num_fields = 3;
-	const int NUM_EIGEN = 15; 
+	const int NUM_EIGEN = 3; 
 	// Setup sizes of each element to construct basis
 	try {
 		Basis.resize(1, 1);
@@ -1161,7 +1161,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, NUM_EIGEN);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -1729,41 +1729,49 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(75000);	
+	selectFaceToDraw(7500);	
 
 	/* Construct necessary elements for tensor analysis */
-	///constructCurvatureTensor(viewer);
-	///computeTensorFields();
-	///constructVoigtVector();
-	///visualizeTensorFields(viewer, tensorFields);
+	constructCurvatureTensor(viewer);
+	computeTensorFields();
+	constructVoigtVector();
+	visualizeTensorFields(viewer, tensorFields);
 
 	computeFrameRotation(viewer);
 	////testTransformation(viewer);
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
-	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "1000_Ref";
+	string fileEigFields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "10_Ref_2";
 	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
-	///computeEigenFields_generalized(25, fileEigFields);
+	//computeEigenFields_generalized(10, fileEigFields);
 	//computeEigenFields_regular(75, fileEigFields);
-	//////loadEigenFields(fileEigFields);
+	loadEigenFields(fileEigFields);
+	cout << "Loading successful " << eigFieldsTensorRef.rows() << " x " << eigFieldsTensorRef.cols() << " of matrix \n";
 	///visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
 	numSupport = 40.0;
 	numSample = 1000;
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"_Tensor_15Eigfields_"+ to_string(int(numSupport))+"_sup";
+	string fileBasis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
 	///constructBasis();
 	///storeBasis(fileBasis);
 	retrieveBasis(fileBasis);
-	visualizeBasis(viewer, 0);
+	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
 	/* Testing the result */
 	//testDirichletAndLaplace();
 	//testSmoothing(viewer, Tensor, smoothedTensorRef);
 
-	//subspaceProjection(voigtReps);
+	for (int i = 0; i < min((int)eigFieldsTensorRef.cols(), 3); i++)
+	{
+		voigtReps = eigFieldsTensorRef.col(i);
+		convertVoigtToTensor(voigtReps, Tensor);
+		constructTensorRepFields(Tensor, tensorFields);
+
+		subspaceProjection(voigtReps);
+	}
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -2071,9 +2079,11 @@ void TensorFields::subspaceProjection(const Eigen::VectorXd& refField)
 	Eigen::VectorXd q, v;
 
 	Eigen::SparseMatrix<double> LHS = Basis.transpose()*MF*Basis;
-	Eigen::VectorXd rhs = Basis.transpose()*refField;
+	Eigen::VectorXd rhs = Basis.transpose()*MF*refField;
 
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(LHS);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
 	q = sparseSolver.solve(rhs);
 	v = Basis*q;
 
