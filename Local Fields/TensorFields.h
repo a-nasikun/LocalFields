@@ -85,6 +85,7 @@ public:
 	void smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 
+	void prepareSmoothingRed();
 	void smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
@@ -115,9 +116,9 @@ public:
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
 	//double							scale = 2.0; 
-	double								scale = 1;
+	//double								scale = 1;
 	//double								scale = 0.25;		// smoothing torus
-	//double								scale = 0.01;		// smoothing
+	double								scale = 0.01;		// smoothing
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;
@@ -135,6 +136,9 @@ public:
 	/* Application */
 	Eigen::MatrixXd					smoothedTensorRef;			// Smoothed tensor, application;
 	Eigen::MatrixXd					smoothedTensorRed;			// Smoothed tensor, application;
+
+	/* Reduced System*/
+	Eigen::SparseMatrix<double>		MFbar, SFbar, BTMbar; 
 
 	/* Projection */
 	Eigen::MatrixXd					TensorRed;
