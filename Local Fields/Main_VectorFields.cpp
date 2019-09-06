@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "RockerArm_";
+	const string model = "RockerArm800k_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -65,14 +65,16 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Vase-lion/177_vase-lion.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/raptor.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_270k.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -125,6 +127,7 @@ int main(int argc, char *argv[])
 		cout << "\n========================= TENSOR FIELDS =============================\n";
 		tensorFields.TEST_TENSOR(viewer, meshFile);
 		tensorFields.getVF(V, F);
+		//viewer.data().set_colors(Eigen::RowVector3d(186.0/255.0, 225.0/255.0, 255.0/255.0));
 		break;
 	default:
 		break;
@@ -427,6 +430,8 @@ int main(int argc, char *argv[])
 			showSmoothed = !showSmoothed;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
 			if (!showSmoothed) {				
 				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}
@@ -442,6 +447,8 @@ int main(int argc, char *argv[])
 			showSmoothed = !showSmoothed;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
 			if (!showSmoothed) {
 				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}
@@ -777,10 +784,10 @@ int main(int argc, char *argv[])
 	viewer.callback_key_down = key_down;
 
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
-	viewer.core.background_color = bgCol;
+	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.5f; 
-
+	viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
 	/* Trick for remote desktop */

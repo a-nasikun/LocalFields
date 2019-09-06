@@ -1543,8 +1543,11 @@ void TensorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& tensorFields_)
 {
-	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
-	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
+	//Eigen::RowVector3d color1(0.0, 0.0, 1.0);
+	//Eigen::RowVector3d color2(1.0, 0.0, 0.0);
+	//Eigen::RowVector3d color1(113.0 / 255.0,  66.0 / 255.0, 136.0 / 255.0);
+	Eigen::RowVector3d color1(176.0 / 255.0, 48.0 / 255.0, 176.0 / 255.0);
+	Eigen::RowVector3d color2(247.0 / 255.0, 119.0 / 255.0,  84.0 / 255.0);
 
 	//double scale = 0.01;
 	visualize2Dfields(viewer,  tensorFields_.col(0), color1, scale);
@@ -1555,8 +1558,12 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, cons
 
 void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
-	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1(0.1, 0.5, 0.8);
+	//Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1( 62.0 / 255.0, 100.0 / 255.0, 255.0 / 255.0);
+	//Eigen::RowVector3d color1( 94.0 / 255.0, 223.0 / 255.0, 255.0 / 255.0);
+	Eigen::RowVector3d color1(79.0 / 255.0, 129.0 / 255.0, 199.0 / 255.0);
+	Eigen::RowVector3d color2(247.0 / 255.0, 119.0 / 255.0, 84.0 / 255.0);
 	Eigen::MatrixXd smoothedFields;
 	constructTensorRepFields(smoothedTensorRef, smoothedFields);
 
@@ -1570,8 +1577,12 @@ void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &view
 
 void TensorFields::visualizeSmoothedAppTensorFields(igl::opengl::glfw::Viewer &viewer) 
 {
-	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
-	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1(0.1, 0.5, 0.8);
+	//Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1(218.0/255.0,  67.0/255.0,   2.0/255.0);
+	Eigen::RowVector3d color1( 32.0/255.0, 117.0/255.0,  97.0/255.0);
+	//Eigen::RowVector3d color1(75.0 / 255.0, 174.0 / 255.0, 160.0 / 255.0);
+	Eigen::RowVector3d color2(247.0/255.0, 119.0/255.0,  84.0/255.0);
 	Eigen::MatrixXd smoothedFields;
 	constructTensorRepFields(smoothedTensorRed, smoothedFields);
 
@@ -1713,7 +1724,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "RockerArm_";
+	string model = "RockerArm800k_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1734,7 +1745,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(7500);	
+	selectFaceToDraw(25000);	
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1756,12 +1767,12 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 250;
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
+	numSample = 2500;
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	//constructBasis();
-	//storeBasis(fileBasis);
-	retrieveBasis(fileBasis);
+	constructBasis();
+	storeBasis(fileBasis);
+	//retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
@@ -1911,6 +1922,7 @@ void TensorFields::tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer)
 /* APPLICATION :: SMOOTHING */
 void TensorFields::smoothingRef(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
+
 	//smoothing_Explicit_Combinatorial(viewer, inputTensor, outputTensor);
 	//smoothing_Explicit_Geometric(viewer, inputTensor, outputTensor);
 	//smoothing_Implicit_Combinatorial(viewer, inputTensor, outputTensor);
@@ -1970,6 +1982,12 @@ void TensorFields::smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &v
 */
 void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Smoothing (reference)... ";
+	t1 = chrono::high_resolution_clock::now();
+
 	double lambda = 0.5;
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
@@ -1980,7 +1998,7 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);	
 
-	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	//printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
 	Eigen::MatrixXd smoothedFields;
 	Eigen::VectorXd smoothedVoigt;
 
@@ -1994,6 +2012,10 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
 	outputTensor = smoothedTensorRef;
 
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds" << endl;
+
 	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
 	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
 	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
@@ -2004,10 +2026,34 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 
 void TensorFields::prepareSmoothingRed()
 {
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Pre-compute reduced matrics... \n";
+	t1 = chrono::high_resolution_clock::now();		
+
 	MFbar = Basis.transpose()*MF*Basis;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "____ Mass matrix in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	SFbar = Basis.transpose()*SF*Basis;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "____ Stiffness matrix in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();	
 	//BTMbar = MFbar * Basis.transpose();
 	BTMbar = Basis.transpose()*MF; 
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "____ RHS of smoothing in " << duration.count() << " seconds" << endl;
+
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t1;
+	cout << "TOTAL of" << duration.count() << " seconds" << endl;
+
 }
 void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
@@ -2049,7 +2095,14 @@ void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &vi
 }
 void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
-	double lambda = 0.0000005;
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Smoothing (reduced)... ";
+	t1 = chrono::high_resolution_clock::now();
+
+	double lambda = 0.0005;
+	//double lambda = 0.5;
 	//double lambda = 10.0 * std::numeric_limits<double>::epsilon();
 	//double lambda = 10000000.0 * std::numeric_limits<double>::epsilon();
 	
@@ -2088,6 +2141,10 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	smoothedVoigt = Basis*vOutBar;
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
 	outputTensor = smoothedTensorRed;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds" << endl;
 
 	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
 	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
