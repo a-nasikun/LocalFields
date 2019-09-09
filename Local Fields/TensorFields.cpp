@@ -1724,7 +1724,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "RockerArm800k_";
+	string model = "RockerArm_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1767,12 +1767,12 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 2500;
+	numSample = 250;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	constructBasis();
-	storeBasis(fileBasis);
-	//retrieveBasis(fileBasis);
+	//constructBasis();
+	//storeBasis(fileBasis);
+	retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
@@ -1948,7 +1948,7 @@ void TensorFields::smoothing_Explicit_Combinatorial(igl::opengl::glfw::Viewer &v
 
 void TensorFields::smoothing_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
-	double lambda = 0.05;
+	double lambda = 0.005;
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
@@ -1988,12 +1988,12 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	cout << "> Smoothing (reference)... ";
 	t1 = chrono::high_resolution_clock::now();
 
-	double lambda = 0.5;
+	double lambda = 0.005;
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	lambda = lambda * factor1 / factor2;
+	//lambda = lambda * factor1 / factor2;
 	
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);	
@@ -2004,7 +2004,7 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	Eigen::SparseMatrix<double> LHS = MF + lambda*SF;
-	Eigen::VectorXd				rhs = MF*inputVoigt;
+	Eigen::VectorXd				rhs = lambda*MF*inputVoigt;
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
 	smoothedVoigt = sparseSolver.solve(rhs);
@@ -2101,7 +2101,7 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	cout << "> Smoothing (reduced)... ";
 	t1 = chrono::high_resolution_clock::now();
 
-	double lambda = 0.0005;
+	double lambda = 0.005;
 	//double lambda = 0.5;
 	//double lambda = 10.0 * std::numeric_limits<double>::epsilon();
 	//double lambda = 10000000.0 * std::numeric_limits<double>::epsilon();
@@ -2129,11 +2129,11 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MFbar*id;
 	double factor2 = id.transpose()*SFbar*id;
-	lambda = lambda * factor1 / factor2;
+	//lambda = lambda * factor1 / factor2;
 
 	Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
 	//Eigen::VectorXd				rhs = MFbar*vInBar;
-	Eigen::VectorXd				rhs = BTMbar*inputVoigt;
+	Eigen::VectorXd				rhs = lambda*BTMbar*inputVoigt;
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
 	vOutBar = sparseSolver.solve(rhs);
