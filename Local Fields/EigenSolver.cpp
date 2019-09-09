@@ -918,8 +918,15 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 	Eigen::Vector2d v1, v2;
 	v1 << a - D - c, 2 * b;
 	v2 << a + D - c, 2 * b; 
-	EigVect.col(0) = v1.normalized();
-	EigVect.col(1) = v2.normalized();
+	if (abs(EigVal(0)) > std::numeric_limits<double>::epsilon())
+		EigVect.col(0) = v1.normalized();
+	else
+		EigVect.col(0) << 0.0, 0.0; 
+
+	if (abs(EigVal(1)) > std::numeric_limits<double>::epsilon())
+		EigVect.col(1) = v2.normalized();
+	else
+		EigVect.col(1) << 0.0, 0.0;
 }
 
 //void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eigen::Matrix2d& EigVect)

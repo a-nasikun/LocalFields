@@ -1729,11 +1729,24 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	readMesh(meshFile);
 	scaleMesh();
 
+	cout << "TEST TENSOR<< \n";
+	Eigen::Matrix2d A_; A_.setZero(); A_(0, 0) = 1.0;
+	Eigen::Matrix2d EigVec_;
+	Eigen::Vector2d  EigVal_;
+	computeEigenExplicit(A_, EigVal_, EigVec_);
+	cout << " INPUT: \n" << A_ << endl; 
+	cout << " EigVect: \n" << EigVec_ << endl;
+	cout << "EIGVAL: \n" << EigVal_ << endl; 
+	cout << "LIMIT: " << std::numeric_limits<double>::epsilon() << endl; 
+
+
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
+
+	
 
 	computeEdges();
 	computeAverageEdgeLength();
@@ -1770,9 +1783,9 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	numSample = 250;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	//constructBasis();
+	constructBasis();
 	//storeBasis(fileBasis);
-	retrieveBasis(fileBasis);
+	//retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 

@@ -62,7 +62,8 @@ private:
 	Eigen::VectorXd					vEstimateLoc, dijksFaceDist;
 
 public:
-	int								sampleID;
+	int								sampleID;				// the index of sample face in the whole mesh
+	int								sampleIDix;			    // the index of the sample ID in the list of entries in local domain
 	set<int>						SubDomain, Boundary, BeyondBoundary;
 	vector<int>						InnerElements;
 	Eigen::VectorXd					dijksFaceDistMapped, scalingFactor;
