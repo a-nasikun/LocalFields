@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Cube50k_";
+	const string model = "RockerArm_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Plane/squarePlane_16k.obj";
@@ -173,6 +173,8 @@ int main(int argc, char *argv[])
 
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
+
+	double tensor_lambda = 0.1;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -454,7 +456,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				tensorFields.smoothingRed(viewer, inputTensorRed, outputTensorRed);
+				tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
 				tensorFields.visualizeSmoothedAppTensorFields(viewer);
 				inputTensorRed = outputTensorRed;
 			}
@@ -463,15 +465,59 @@ int main(int argc, char *argv[])
 		/* Case x to activate for user inputted constraints */	
 		case 'x':
 		case 'X':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			selectFace = !selectFace;			
-			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+				selectFace = !selectFace;			
+				//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			} 
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				showSmoothed = !showSmoothed;
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
+				if (!showSmoothed) {
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensor_lambda /= 5.0;
+					printf("lambda=%.3f \n", tensor_lambda);
+					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
+					tensorFields.visualizeSmoothedAppTensorFields(viewer);
+					//inputTensorRed = outputTensorRed;
+				}
+			}
 			break;
 		case 'c':
-		case 'C':
-			printf("Computing smoothing on Reduced basis\n");
-			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
-			v_in = v_out; 
+		case 'C':			
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				printf("Computing smoothing on Reduced basis\n");
+				vectorFields.computeSmoothingApprox(mu, v_in, v_out);
+				v_in = v_out;
+			}
+			else if(fieldsType==FieldsType::TENSOR)
+			{
+				showSmoothed = !showSmoothed;
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
+				if (!showSmoothed) {
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensor_lambda *= 5.0;
+					printf("lambda=%.3f \n", tensor_lambda);
+					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
+					tensorFields.visualizeSmoothedAppTensorFields(viewer);
+					//inputTensorRed = outputTensorRed;
+				}
+			}
 			break; 
 		//case 'x':
 		//case 'X':

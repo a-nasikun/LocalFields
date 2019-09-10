@@ -1783,9 +1783,9 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	numSample = 250;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	constructBasis();
+	//constructBasis();
 	//storeBasis(fileBasis);
-	//retrieveBasis(fileBasis);
+	retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 
@@ -2068,15 +2068,15 @@ void TensorFields::prepareSmoothingRed()
 	cout << "TOTAL of" << duration.count() << " seconds" << endl;
 
 }
-void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
-	smoothingRed_Implicit_Geometric(viewer, inputTensor, outputTensor);
-	//smoothingRed_Explicit_Geometric(viewer, inputTensor, outputTensor);
+	smoothingRed_Implicit_Geometric(viewer, inputTensor, lambda, outputTensor);
+	//smoothingRed_Explicit_Geometric(viewer, inputTensor, lambda, outputTensor);
 }
 
-void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
-	double lambda = 10.0 * std::numeric_limits<double>::epsilon();
+	//double lambda = 10.0 * std::numeric_limits<double>::epsilon();
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
@@ -2106,7 +2106,7 @@ void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &vi
 
 
 }
-void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2, t3;
@@ -2114,7 +2114,7 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	cout << "> Smoothing (reduced)... ";
 	t1 = chrono::high_resolution_clock::now();
 
-	double lambda = 0.005;
+	//double lambda = 0.005;
 	//double lambda = 0.5;
 	//double lambda = 10.0 * std::numeric_limits<double>::epsilon();
 	//double lambda = 10000000.0 * std::numeric_limits<double>::epsilon();
