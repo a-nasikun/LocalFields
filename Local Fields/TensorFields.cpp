@@ -1745,7 +1745,6 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
-
 	
 
 	computeEdges();
@@ -1758,7 +1757,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(25000);	
+	selectFaceToDraw(5000);	
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1803,6 +1802,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testDirichletAndLaplace();
 	//testSmoothing(viewer, Tensor, smoothedTensorRef);
 	prepareSmoothingRed();
+	initializeParametersForLifting();
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -2098,6 +2098,7 @@ void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &vi
 	vOutBar = vInBar - lambda*SFbar*vInBar;
 
 	smoothedVoigt = Basis*vOutBar;
+	//performLifting(vOutBar, smoothedVoigt);
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
 	outputTensor = smoothedTensorRed;
 
@@ -2111,7 +2112,7 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2, t3;
 	chrono::duration<double>					duration;
-	cout << "> Smoothing (reduced)... ";
+	cout << "> Smoothing (reduced)... \n";
 	t1 = chrono::high_resolution_clock::now();
 
 	//double lambda = 0.005;
@@ -2122,46 +2123,146 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "__ conversion to voigt in " << duration.count() * 1000 << " mili seconds" << endl;
 
-	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
-	Eigen::MatrixXd smoothedFields;
+	//printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	//Eigen::MatrixXd smoothedFields;
 	Eigen::VectorXd smoothedVoigt;
 
+	t2 = chrono::high_resolution_clock::now();
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	//Eigen::SparseMatrix<double> MFbar, SFbar;
 	Eigen::VectorXd vInBar, vOutBar;
 	//MFbar = Basis.transpose()*MF*Basis;
 	//SFbar = Basis.transpose()*SF*Basis;
 	vInBar = Basis.transpose()*inputVoigt;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ map to reduced space in " << duration.count() * 1000 << " mili seconds" << endl;
 
 	//printf("Size of MFbar: %dx%d\n", MFbar.rows(), MFbar.cols());
 	//printf("Size of SFbar: %dx%d\n", SFbar.rows(), SFbar.cols());
 	//printf("Size of vInBar: %d \n", vInBar.rows());
 
-	Eigen::VectorXd id(MFbar.rows());
-	id.setConstant(1.0);
-	double factor1 = id.transpose()*MFbar*id;
-	double factor2 = id.transpose()*SFbar*id;
+	//Eigen::VectorXd id(MFbar.rows());
+	//id.setConstant(1.0);
+	//double factor1 = id.transpose()*MFbar*id;
+	//double factor2 = id.transpose()*SFbar*id;
 	//lambda = lambda * factor1 / factor2;
 
+	t2 = chrono::high_resolution_clock::now();
 	Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
 	//Eigen::VectorXd				rhs = MFbar*vInBar;
-	Eigen::VectorXd				rhs = lambda*BTMbar*inputVoigt;
+	Eigen::VectorXd				rhs = BTMbar*(lambda*inputVoigt);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Setting up the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
 	vOutBar = sparseSolver.solve(rhs);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
 
-	smoothedVoigt = Basis*vOutBar;
+	t2 = chrono::high_resolution_clock::now();
+	//smoothedVoigt = Basis*vOutBar;
+	performLifting(vOutBar, smoothedVoigt);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Lifting the result in " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
 	outputTensor = smoothedTensorRed;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ convert back to tensor rep " << duration.count() * 1000 << " mili seconds" << endl;
+	
+	
+	//outputTensor = smoothedTensorRed;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	cout << " in " << duration.count() << " seconds" << endl;
+	cout << "[TOTAL IN] in " << duration.count()*1000 << " mili seconds" << endl;
 
 	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
 	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
 	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
+}
+
+
+void TensorFields::initializeParametersForLifting()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&liftDescrA);
+	cusparseSetMatType(liftDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(liftDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&liftHandle);
+
+	// Matrix variables
+	BasisRow = Basis;
+	BasisRow.makeCompressed();
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating the matrix in CPU
+	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	h_csrVal = BasisRow.valuePtr();
+	h_csrRowPtr = BasisRow.outerIndexPtr();
+	h_csrColInd = BasisRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_liftCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_liftCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_liftCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_liftCsrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+}
+
+void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating data in CPU
+	double* h_a = (double*)malloc(n * sizeof(double));
+	h_a = voigtRed.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+																				 // Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+																									// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(liftHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, liftDescrA, d_liftCsrVal, d_liftCsrRowPtr, d_liftCsrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	voigtLifted = Eigen::Map<Eigen::VectorXd>(h_b, m);
 }
 
 /* APPLICATION :: Sub-space Projection */

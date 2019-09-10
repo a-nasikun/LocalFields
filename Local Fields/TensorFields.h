@@ -90,6 +90,10 @@ public:
 	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 
+	void initializeParametersForLifting();
+	void performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted);
+
+
 	/* APPLICATION :: Sub-space Projection */
 	void subspaceProjection(const Eigen::VectorXd& refField);
 
@@ -144,6 +148,15 @@ public:
 
 	/* Projection */
 	Eigen::MatrixXd					TensorRed;
+
+	/* Working in CUDA */
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisTransposeRow;
+	cusparseHandle_t				liftHandle;		/* Entries for lifting using CUDA */
+	cusparseMatDescr_t				liftDescrA;
+	double*							d_liftCsrVal;
+	int*							d_liftCsrRowPtr;
+	int*							d_liftCsrColInd;
 private:
 
 };
