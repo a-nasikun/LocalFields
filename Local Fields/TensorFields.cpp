@@ -1802,6 +1802,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testDirichletAndLaplace();
 	//testSmoothing(viewer, Tensor, smoothedTensorRef);
 	prepareSmoothingRed();
+	initializeParametersForProjection();
 	initializeParametersForLifting();
 }
 
@@ -2137,7 +2138,8 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	Eigen::VectorXd vInBar, vOutBar;
 	//MFbar = Basis.transpose()*MF*Basis;
 	//SFbar = Basis.transpose()*SF*Basis;
-	vInBar = Basis.transpose()*inputVoigt;
+	//vInBar = Basis.transpose()*inputVoigt;
+	performSubspaceProjection(inputVoigt, vInBar);
 	t3 = chrono::high_resolution_clock::now();
 	duration = t3 - t2;
 	cout << "__ map to reduced space in " << duration.count() * 1000 << " mili seconds" << endl;
@@ -2263,6 +2265,77 @@ void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& vo
 
 	//XFullDim.resize(2 * F.rows());
 	voigtLifted = Eigen::Map<Eigen::VectorXd>(h_b, m);
+}
+
+void TensorFields::initializeParametersForProjection()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&projDescrA);
+	cusparseSetMatType(projDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(projDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&projHandle);
+
+	// Matrix variables
+	BasisTransposeRow = Basis.transpose();
+	BasisTransposeRow.makeCompressed();
+	const int nnz = BasisTransposeRow.nonZeros();
+	const int m = BasisTransposeRow.rows();
+	const int n = BasisTransposeRow.cols();
+
+	// Populating the matrix in CPU
+	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	h_csrVal = BasisTransposeRow.valuePtr();
+	h_csrRowPtr = BasisTransposeRow.outerIndexPtr();
+	h_csrColInd = BasisTransposeRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_projCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_projCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_projCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_projCsrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+
+}
+
+void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisTransposeRow.nonZeros();
+	const int m = BasisTransposeRow.rows();
+	const int n = BasisTransposeRow.cols();
+
+	// Populating data in CPU
+	double* h_a = (double*)malloc(n * sizeof(double));
+	h_a = voigtFull.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+																				 // Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+																									// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(projHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, projDescrA, d_projCsrVal, d_projCsrRowPtr, d_projCsrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	voigtRed = Eigen::Map<Eigen::VectorXd>(h_b, m);
 }
 
 /* APPLICATION :: Sub-space Projection */

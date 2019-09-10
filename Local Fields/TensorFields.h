@@ -92,6 +92,8 @@ public:
 
 	void initializeParametersForLifting();
 	void performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted);
+	void initializeParametersForProjection();
+	void performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed);
 
 
 	/* APPLICATION :: Sub-space Projection */
@@ -157,6 +159,11 @@ public:
 	double*							d_liftCsrVal;
 	int*							d_liftCsrRowPtr;
 	int*							d_liftCsrColInd;
+	cusparseHandle_t				projHandle;		/* Entries for projection using CUDA */
+	cusparseMatDescr_t				projDescrA;
+	double*							d_projCsrVal;
+	int*							d_projCsrRowPtr;
+	int*							d_projCsrColInd;
 private:
 
 };
