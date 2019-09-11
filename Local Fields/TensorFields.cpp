@@ -1805,6 +1805,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	initializeParametersForProjection();
 	initializeParametersForLifting();
 	initializeParametersForRHS();
+	initializeParametersForLHS();
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -2156,7 +2157,9 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	//lambda = lambda * factor1 / factor2;
 
 	t2 = chrono::high_resolution_clock::now();
-	Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
+	//Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
+	Eigen::SparseMatrix<double> LHS;
+	performSettingLHS(lambda, LHS);
 	//Eigen::VectorXd				rhs = MFbar*vInBar;
 	//Eigen::VectorXd				rhs = BTMbar*(lambda*inputVoigt);
 	Eigen::VectorXd				rhs;
@@ -2409,8 +2412,173 @@ void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, E
 	// Copying to CPU
 	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
 
+	//for (int i = 0; i < m; i++)
+	//{
+	//	printf("h_b[%d]=%.5f \n", i, h_b[i]);
+	//}
+
 	//XFullDim.resize(2 * F.rows());
 	rhs = Eigen::Map<Eigen::VectorXd>(h_b, m);
+	//cout << "Vector m: \n" << rhs << endl; 
+}
+
+void TensorFields::initializeParametersForLHS()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&lhsDescrA);
+	cusparseSetMatType(lhsDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(lhsDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&lhsHandle);
+
+	// Matrix variables
+	MFBarRow = MFbar;
+	SFBarRow = SFbar;
+	MFBarRow.makeCompressed();
+	SFBarRow.makeCompressed();
+	const int nnzM	= MFBarRow.nonZeros();
+	const int mM	= MFBarRow.rows();
+	const int nM	= MFBarRow.cols();
+	const int nnzS	= SFBarRow.nonZeros();
+	const int mS	= SFBarRow.rows();
+	const int nS	= SFBarRow.cols();
+
+	// Populating the matrix in CPU (MFbar)
+	double* h_McsrVal		= (double*)malloc(nnzM * sizeof(double));
+	int*	h_McsrRowPtr	= (int*)malloc((mM + 1) * sizeof(int));
+	int*	h_McsrColInd	= (int*)malloc(nnzM * sizeof(int));
+	h_McsrVal		= MFBarRow.valuePtr();
+	h_McsrRowPtr	= MFBarRow.outerIndexPtr();
+	h_McsrColInd	= MFBarRow.innerIndexPtr();
+	
+
+	// Populating the matrix in CPU (SFbar)
+	double* h_ScsrVal		= (double*)malloc(nnzS * sizeof(double));
+	int*	h_ScsrRowPtr	= (int*)malloc((mS + 1) * sizeof(int));
+	int*	h_ScsrColInd	= (int*)malloc(nnzS * sizeof(int));
+	h_ScsrVal		= SFBarRow.valuePtr();
+	h_ScsrRowPtr	= SFBarRow.outerIndexPtr();
+	h_ScsrColInd	= SFBarRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_lhsMCsrColInd, nnzM * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsMCsrRowPtr, (mM + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsMCsrVal, nnzM * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsSCsrColInd, nnzS * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsSCsrRowPtr, (mS + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsSCsrVal, nnzS * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_lhsMCsrRowPtr, h_McsrRowPtr, (mM + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsMCsrColInd, h_McsrColInd, nnzM * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsMCsrVal, h_McsrVal, nnzM * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsSCsrRowPtr, h_ScsrRowPtr, (mS + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsSCsrColInd, h_ScsrColInd, nnzS * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsSCsrVal, h_ScsrVal, nnzS * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;	
+
+	//for (int i = 0; i < 20; i++)
+	//{
+	//	printf("%d : [%d][%d][%.16f]\n", i, h_ScsrRowPtr[i], h_ScsrColInd[i], h_ScsrVal[i]);
+	//}
+}
+
+void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> LHS)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	int baseC, nnzC;	
+	int *nnzTotalDevHostPtr = &nnzC; // nnzTotalDevHostPtr points to host memory
+
+	/* Getting the size of the matrices */
+	const int nnzM = MFBarRow.nonZeros();
+	const int mM = MFBarRow.rows();
+	const int nM = MFBarRow.cols();
+	const int nnzS = SFBarRow.nonZeros();
+	const int mS = SFBarRow.rows();
+	const int nS = SFBarRow.cols();
+
+	cout << "Preparting matrix C \n";
+	/* Preparing storage for C (i.e. LHS matrix) */
+	cusparseMatDescr_t				lhsDescrC;
+	cusparseCreateMatDescr(&lhsDescrC);
+	cusparseSetMatType(lhsDescrC, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(lhsDescrC, CUSPARSE_INDEX_BASE_ZERO);
+	double*							d_lhsCCsrVal;
+	int*							d_lhsCCsrRowPtr;
+	int*							d_lhsCCsrColInd;
+	int*							d_lhsCCooRowInd;
+
+	cout << "Determining sparsity patter in the GPU \n";
+	/* Determining sparsity patter in the GPU */
+	cusparseSetPointerMode(lhsHandle, CUSPARSE_POINTER_MODE_HOST);
+	cudaMalloc((void**)&d_lhsCCsrRowPtr, sizeof(int)*(mM + 1));
+	cusparseXcsrgeamNnz(lhsHandle, mM, nM,
+		lhsDescrA, nnzM, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
+		lhsDescrA, nnzS, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
+		lhsDescrC, d_lhsCCsrRowPtr, nnzTotalDevHostPtr);
+	if (NULL != nnzTotalDevHostPtr) {
+		nnzC = *nnzTotalDevHostPtr;
+	}
+	else {
+		cudaMemcpy(&nnzC, d_lhsCCsrRowPtr + mM, sizeof(int), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&baseC, d_lhsCCsrRowPtr, sizeof(int), cudaMemcpyDeviceToHost);
+		nnzC -= baseC;
+	}
+
+	cout << "Performing the computation of C = S + a*M \n";
+	/* Performing the computation of C = S + a*M */
+	double alpha = 1.0;
+	double beta = lambda;
+	cudaMalloc((void**)&d_lhsCCsrColInd, sizeof(int)*nnzC);
+	cudaMalloc((void**)&d_lhsCCsrVal, sizeof(double)*nnzC);
+	cusparseDcsrgeam(lhsHandle, mM, nM,
+		&alpha, 
+		lhsDescrA, nnzS,
+		d_lhsSCsrVal, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
+		&beta,
+		lhsDescrA, nnzM,
+		d_lhsMCsrVal, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
+		lhsDescrC,
+		d_lhsCCsrVal, d_lhsCCsrRowPtr, d_lhsCCsrColInd);
+
+	cout << "Converting CSR to COO \n";
+	/* Converting CSR to COO */
+	cusparseXcsr2coo(lhsHandle, d_lhsCCsrRowPtr, nnzC, mM, d_lhsCCooRowInd, CUSPARSE_INDEX_BASE_ZERO);
+
+	cout << "Copying to CPU \n";
+	/* COpy back to CPU */
+	double* h_CcsrVal   = (double*)malloc(nnzC * sizeof(double));
+	int*	h_CcooRowInd = (int*)malloc(nnzC * sizeof(int));
+	int*	h_CcsrColInd = (int*)malloc(nnzC * sizeof(int));
+	cudaMemcpy(h_CcsrVal   , d_lhsMCsrVal,   nnzM  * sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_CcooRowInd, d_lhsCCooRowInd, nnzC * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_CcsrColInd, d_lhsCCsrColInd, nnzC * sizeof(int), cudaMemcpyDeviceToHost);
+
+	cout << "Setting the LHS matrix \n";
+	int maxRow = -100, maxCol = -100;
+	/* Setting the the LHS Matrix*/
+	vector<Eigen::Triplet<double>> LTriplet; LTriplet.reserve(nnzC);
+	LHS.resize(mS, nS);
+
+
+	printf("LHS M=%d \n", nnzM);
+	for (int i = 0; i < nnzC; i++)
+	{
+
+		//LTriplet.push_back(Eigen::Triplet<double>(*(h_CcooRowInd+i), *(h_CcsrColInd+i), *(h_CcsrVal+i)));
+		//if (*(h_CcooRowInd + i) > maxRow) maxRow = *(h_CcooRowInd + i);
+		//if (*(h_CcsrColInd + i) > maxCol) maxCol = *(h_CcsrColInd + i);
+
+		if (i < 50)
+		{
+			printf("Val[%d]=%.2f\n", i, h_CcsrVal[i]);
+			//printf("Row idx %d => %d \n", i, h_CcooRowInd[i]);
+			//printf("[%d, %d]=%.4f \n", *(h_CcooRowInd + i), *(h_CcsrColInd + i), *(h_CcsrVal + i));
+		}
+	}
+	//printf("LHS: %dx%d | maxRow: %d, maxCol: %d | nnz=%d \n", LHS.rows(), LHS.cols(), maxRow, maxCol, nnzC);
+	//LHS.setFromTriplets(LTriplet.begin(), LTriplet.end());
 }
 
 /* APPLICATION :: Sub-space Projection */
