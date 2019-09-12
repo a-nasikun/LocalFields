@@ -1,6 +1,7 @@
 #include "TensorFields.h"
 #include "EigenSolver.h"
 #include "LocalFields.h"
+#include "VectorFields.h"
 
 #include <set>
 #include <queue>
@@ -245,7 +246,51 @@ void TensorFields::constructEFList()
 	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
 }
 
+void TensorFields::computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D)
+{
+	cout << "working on dijsktra \n";
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 
+	// Computing distance for initial sample points S
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+	}
+
+	D(source) = 0.0f;
+	VertexPair vp{ source,D(source) };
+	DistPQueue.push(vp);
+
+	double distFromCenter = numeric_limits<double>::infinity();
+
+	// For other vertices in mesh
+	cout << "Dot the iteration \n";
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		//auto const& elem = AdjMF3N_temp[vp1.vId];
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		for (auto it = 0; it != F.cols(); ++it) {
+			/* Regular Dikjstra */
+			const int neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
+			double dist = (c2 - c1).norm();
+			double tempDist = distFromCenter + dist;
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+			}
+		}
+	} while (!DistPQueue.empty());
+	cout << "Dijkstra over\n";
+}
 
 /* ====================== UTILITY FUNCTIONS ============================*/
 void TensorFields::constructMassMatrixMF3D()
@@ -1742,7 +1787,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
-	
+	viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 
 	computeEdges();
 	computeAverageEdgeLength();
@@ -1754,13 +1799,14 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(7500);	
+	selectFaceToDraw(7500);
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
 	visualizeTensorFields(viewer, tensorFields);
+	cout << "-------------------------------------------------------------------\n";
 
 	computeFrameRotation(viewer);
 	////testTransformation(viewer);
@@ -1796,14 +1842,21 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	///}
 
 	/* Smoothing and Testing the result */
+	
+	/* adaptive stuff */
+	settingAdaptiveWeight(viewer, adaptiveWeight);
+	projectTheContraints(adaptiveWeight, WMbar);
 	//testDirichletAndLaplace();
 	//testSmoothing(viewer, Tensor, smoothedTensorRef);
+
 	prepareSmoothingRed();
 	initializeParametersForProjection();
 	initializeParametersForLifting();
 	initializeParametersForRHS();
 	initializeParametersForLHS();
 	//initializeSystemSolve();
+
+	
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -2071,7 +2124,8 @@ void TensorFields::prepareSmoothingRed()
 }
 void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
-	smoothingRed_Implicit_Geometric(viewer, inputTensor, lambda, outputTensor);
+	smoothingRed_Implicit_Geometric_Adaptive(viewer, inputTensor, adaptiveWeight, outputTensor);
+	//smoothingRed_Implicit_Geometric(viewer, inputTensor, lambda, outputTensor);
 	//smoothingRed_Explicit_Geometric(viewer, inputTensor, lambda, outputTensor);
 }
 
@@ -2202,6 +2256,149 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "[TOTAL IN] in " << duration.count()*1000 << " mili seconds" << endl;
+
+	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
+	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
+}
+
+void TensorFields::settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda)
+{
+	cout << "Dealing with adaptivity\n";
+		
+	const int face_id1 = 19477; 	const int face_id2 = 13204;	// RockerArm
+	Eigen::VectorXd dist;
+	lambda.resize(F.rows());
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+	Eigen::MatrixXd fCol(F.rows(), 3);
+
+	cout << "COmputing the dijkstra distance \n";
+	
+	computeDijkstraDistanceFace(face_id1, dist);
+	
+
+	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+
+	cout << "Assigning weight \n";
+	for (int i = 0; i<F.rows(); i++)
+	{
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
+		if (dist(i) < upBound) {
+			lambda(i) = 1.0;
+			faceColor(i) = 0.7;
+			//fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(32.0 / 255.0, 117.0 / 255.0, 97.0 / 255.0);
+			
+		}
+		else {
+			lambda(i) = 1.0;
+			faceColor(i) = 0.3;
+			fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+		}
+	}
+
+	cout << "Setting color \n";
+	printf("FCOl: %dx%d | F: %d | V:%d \n", fCol.rows(), fCol.cols(), F.rows(), V.rows());
+	//Eigen::MatrixXd fCol;
+	//igl::jet(faceColor, false, fCol);
+	viewer.data().set_colors(fCol);
+
+}
+
+void TensorFields::projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed)
+{
+	cout << "Project the constraints \n";
+	/* Set-up the full res Matrix */
+	vector<Eigen::Triplet<double>> LTriplet; LTriplet.reserve(lambdaFull.size());
+	Eigen::SparseMatrix<double> LambdaMatrix; LambdaMatrix.resize(3*lambdaFull.size(), 3*lambdaFull.size());
+	for (int i = 0; i < lambdaFull.size(); i++)
+	{
+		for(int j=0; j<3; j++)
+			LTriplet.push_back(Eigen::Triplet<double>(3*i+j, 3 * i + j, lambdaFull(i)));
+	}
+	LambdaMatrix.setFromTriplets(LTriplet.begin(), LTriplet.end());
+
+	/* Reduce/Project the matrix*/
+	//lambdaRed = Basis.transpose()*LambdaMatrix*Basis;
+	lambdaRed = LambdaMatrix.block(0,0,Basis.cols(), Basis.cols());
+}
+
+void TensorFields::smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::VectorXd& lambda, Eigen::MatrixXd& outputTensor)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Smoothing (reduced)... \n";
+	t1 = chrono::high_resolution_clock::now();
+
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "__ conversion to voigt in " << duration.count() * 1000 << " mili seconds" << endl;
+	
+	Eigen::VectorXd smoothedVoigt;
+
+	t2 = chrono::high_resolution_clock::now();
+	Eigen::VectorXd vInBar, vOutBar;
+	//MFbar = Basis.transpose()*MF*Basis;
+	//SFbar = Basis.transpose()*SF*Basis;
+	//vInBar = Basis.transpose()*inputVoigt;
+	performSubspaceProjection(inputVoigt, vInBar);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ map to reduced space in " << duration.count() * 1000 << " mili seconds" << endl;
+	
+
+	t2 = chrono::high_resolution_clock::now();
+	Eigen::SparseMatrix<double> LHS = MFbar + WMbar*SFbar;
+	printf("Sparsity: %.4f (%d/%d) \n", (double)LHS.nonZeros() / (double)(LHS.rows()*LHS.cols()), LHS.nonZeros(), LHS.rows()*LHS.cols());
+
+	///Eigen::SparseMatrix<double> LHS;
+	///performSettingLHS(lambda, LHS);
+	//Eigen::VectorXd				rhs = MFbar*vInBar;
+	Eigen::VectorXd				rhs = WMbar*BTMbar*inputVoigt;
+	//Eigen::VectorXd				rhs;
+	//performSettingRHS(inputVoigt, lambda(0), rhs);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Setting up the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+	vOutBar = sparseSolver.solve(rhs);
+
+	//LHSRow = LHS;
+	//performSystemSolve(LHSRow, rhs, vOutBar);
+
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	//smoothedVoigt = Basis*vOutBar;
+	performLifting(vOutBar, smoothedVoigt);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Lifting the result in " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
+	outputTensor = smoothedTensorRed;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ convert back to tensor rep " << duration.count() * 1000 << " mili seconds" << endl;
+
+
+	//outputTensor = smoothedTensorRed;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "[TOTAL IN] in " << duration.count() * 1000 << " mili seconds" << endl;
 
 	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
 	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;

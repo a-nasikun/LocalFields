@@ -30,6 +30,7 @@ public:
 	void constructFaceAdjacency3NMatrix();
 	void constructFaceAdjacency2RingMatrix();
 	void selectFaceToDraw(const int& numFaces);
+	void computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 	void obtainTransformationForLaplacian(double tetha, Eigen::Matrix3d& G);
@@ -89,6 +90,9 @@ public:
 	void smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
+	void settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
+	void projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed);
+	void smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::VectorXd& lambda, Eigen::MatrixXd& outputTensor);
 
 	void initializeParametersForProjection();
 	void performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed);
@@ -126,12 +130,13 @@ public:
 	//double							scale = 100;		// regular eigenfields => arma 10k
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
+	//double							scale = 2.5;
 	//double							scale = 2.0; 
 	//double								scale = 1;
 	//double								scale = 0.25;		// smoothing torus
 	//double								scale = 0.1;		// smoothing
-	double								scale = 0.05;		// smoothing
-	//double								scale = 0.01;		// smoothing
+	//double								scale = 0.05;		// smoothing
+	double								scale = 0.01;		// smoothing
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;
@@ -149,9 +154,12 @@ public:
 	/* Application */
 	Eigen::MatrixXd					smoothedTensorRef;			// Smoothed tensor, application;
 	Eigen::MatrixXd					smoothedTensorRed;			// Smoothed tensor, application;
+	Eigen::VectorXd					adaptiveWeight;
+	Eigen::SparseMatrix<double>		WM;
 
 	/* Reduced System*/
 	Eigen::SparseMatrix<double>		MFbar, SFbar, BTMbar; 
+	Eigen::SparseMatrix<double>		WMbar;
 
 	/* Projection */
 	Eigen::MatrixXd					TensorRed;

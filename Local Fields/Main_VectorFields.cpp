@@ -833,7 +833,7 @@ int main(int argc, char *argv[])
 	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.5f; 
-	viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
 	/* Trick for remote desktop */
