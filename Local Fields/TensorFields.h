@@ -90,8 +90,6 @@ public:
 	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 
-	void initializeParametersForLifting();
-	void performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted);
 	void initializeParametersForProjection();
 	void performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed);
 	void initializeParametersForRHS();
@@ -100,6 +98,8 @@ public:
 	void performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS);
 	void initializeSystemSolve();
 	void performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajor> &LHS, Eigen::VectorXd& rhs, Eigen::VectorXd& vSol);
+	void initializeParametersForLifting();
+	void performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted);
 
 	/* APPLICATION :: Sub-space Projection */
 	void subspaceProjection(const Eigen::VectorXd& refField);

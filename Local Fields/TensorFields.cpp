@@ -234,18 +234,15 @@ void TensorFields::constructEFList()
 		}
 	}
 
-
-
 	/* For test */
-	int ft = rand() % F.rows();
-	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
-	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
-	
-	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
-
+	//int ft = rand() % F.rows();
+	//printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	//printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+	//
+	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
 }
 
 
@@ -1757,7 +1754,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(5000);	
+	selectFaceToDraw(7500);	
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1806,7 +1803,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	initializeParametersForLifting();
 	initializeParametersForRHS();
 	initializeParametersForLHS();
-	initializeSystemSolve();
+	//initializeSystemSolve();
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -2160,6 +2157,8 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 
 	t2 = chrono::high_resolution_clock::now();
 	Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
+	printf("Sparsity: %.4f (%d/%d) \n", (double) LHS.nonZeros() / (double) (LHS.rows()*LHS.cols()), LHS.nonZeros(), LHS.rows()*LHS.cols());
+
 	///Eigen::SparseMatrix<double> LHS;
 	///performSettingLHS(lambda, LHS);
 	//Eigen::VectorXd				rhs = MFbar*vInBar;
@@ -2171,11 +2170,13 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	cout << "__ Setting up the system " << duration.count() * 1000 << " mili seconds" << endl;
 
 	t2 = chrono::high_resolution_clock::now();
-	//sparseSolver.analyzePattern(LHS);
-	//sparseSolver.factorize(LHS);
-	//vOutBar = sparseSolver.solve(rhs);
-	LHSRow = LHS;
-	performSystemSolve(LHSRow, rhs, vOutBar);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+	vOutBar = sparseSolver.solve(rhs);
+	
+	//LHSRow = LHS;
+	//performSystemSolve(LHSRow, rhs, vOutBar);
 
 	t3 = chrono::high_resolution_clock::now();
 	duration = t3 - t2;
@@ -2226,21 +2227,21 @@ void TensorFields::initializeParametersForLifting()
 	const int n = BasisRow.cols();
 
 	// Populating the matrix in CPU
-	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
-	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
-	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
-	h_csrVal = BasisRow.valuePtr();
-	h_csrRowPtr = BasisRow.outerIndexPtr();
-	h_csrColInd = BasisRow.innerIndexPtr();
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//h_csrVal = BasisRow.valuePtr();
+	//h_csrRowPtr = BasisRow.outerIndexPtr();
+	//h_csrColInd = BasisRow.innerIndexPtr();
 
 	// Allocating memory in device/GPU
 	cudaStat1 = cudaMalloc(&d_liftCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_liftCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_liftCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
 
-	cudaStat1 = cudaMemcpy(d_liftCsrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_liftCsrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_liftCsrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrRowPtr, BasisRow.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrColInd, BasisRow.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrVal, BasisRow.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
 }
 
 void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted)
@@ -2252,8 +2253,8 @@ void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& vo
 	const int n = BasisRow.cols();
 
 	// Populating data in CPU
-	double* h_a = (double*)malloc(n * sizeof(double));
-	h_a = voigtRed.data();
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = voigtRed.data();
 	double* h_b = (double*)malloc(m * sizeof(double));
 	for (int i = 0; i < m; i++) h_b[i] = 0.5;
 
@@ -2262,7 +2263,7 @@ void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& vo
 	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
 
 																				 // Copying data to CUDA/GPU
-	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_a, voigtRed.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 
 																									// The multiciplication
@@ -2276,6 +2277,11 @@ void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& vo
 
 	//XFullDim.resize(2 * F.rows());
 	voigtLifted = Eigen::Map<Eigen::VectorXd>(h_b, m);
+
+	cudaFree(d_a);
+	cudaFree(d_b);
+	//free(h_a);
+	//free(h_b);
 }
 
 void TensorFields::initializeParametersForProjection()
@@ -2296,22 +2302,26 @@ void TensorFields::initializeParametersForProjection()
 	const int n = BasisTransposeRow.cols();
 
 	// Populating the matrix in CPU
-	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
-	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
-	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
-	h_csrVal = BasisTransposeRow.valuePtr();
-	h_csrRowPtr = BasisTransposeRow.outerIndexPtr();
-	h_csrColInd = BasisTransposeRow.innerIndexPtr();
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//h_csrVal = BasisTransposeRow.valuePtr();
+	//h_csrRowPtr = BasisTransposeRow.outerIndexPtr();
+	//h_csrColInd = BasisTransposeRow.innerIndexPtr();
 
 	// Allocating memory in device/GPU
 	cudaStat1 = cudaMalloc(&d_projCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_projCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_projCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
 
-	cudaStat1 = cudaMemcpy(d_projCsrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_projCsrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_projCsrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrRowPtr, BasisTransposeRow.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrColInd, BasisTransposeRow.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrVal, BasisTransposeRow.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
 
+	// Free-ing the allocated data
+	//free(h_csrVal);
+	//free(h_csrRowPtr);
+	//free(h_csrColInd);
 }
 
 void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed)
@@ -2323,8 +2333,8 @@ void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::
 	const int n = BasisTransposeRow.cols();
 
 	// Populating data in CPU
-	double* h_a = (double*)malloc(n * sizeof(double));
-	h_a = voigtFull.data();
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = voigtFull.data();
 	double* h_b = (double*)malloc(m * sizeof(double));
 	for (int i = 0; i < m; i++) h_b[i] = 0.5;
 
@@ -2333,7 +2343,7 @@ void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::
 	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
 
 																				 // Copying data to CUDA/GPU
-	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_a, voigtFull.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 
 																									// The multiciplication
@@ -2347,6 +2357,12 @@ void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::
 
 	//XFullDim.resize(2 * F.rows());
 	voigtRed = Eigen::Map<Eigen::VectorXd>(h_b, m);
+
+	// Free-ing the allocated data
+	cudaFree(d_a);
+	cudaFree(d_b);
+	//free(h_a);
+	//free(h_b);
 }
 void TensorFields::initializeParametersForRHS()
 {
@@ -2367,22 +2383,26 @@ void TensorFields::initializeParametersForRHS()
 	const int n = BTMBarRow.cols();
 
 	// Populating the matrix in CPU
-	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
-	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
-	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
-	h_csrVal = BTMBarRow.valuePtr();
-	h_csrRowPtr = BTMBarRow.outerIndexPtr();
-	h_csrColInd = BTMBarRow.innerIndexPtr();
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//h_csrVal = BTMBarRow.valuePtr();
+	//h_csrRowPtr = BTMBarRow.outerIndexPtr();
+	//h_csrColInd = BTMBarRow.innerIndexPtr();
 
 	// Allocating memory in device/GPU
 	cudaStat1 = cudaMalloc(&d_rhsCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_rhsCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_rhsCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
 
-	cudaStat1 = cudaMemcpy(d_rhsCsrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_rhsCsrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_rhsCsrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_rhsCsrRowPtr, BTMBarRow.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_rhsCsrColInd, BTMBarRow.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_rhsCsrVal, BTMBarRow.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
 
+	// Free-ing the allocated data
+	//free(h_csrVal);
+	//free(h_csrRowPtr);
+	//free(h_csrColInd);
 }
 
 void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, Eigen::VectorXd& rhs)
@@ -2395,8 +2415,8 @@ void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, E
 	const int n = BTMBarRow.cols();
 
 	// Populating data in CPU
-	double* h_a = (double*)malloc(n * sizeof(double));
-	h_a = voigtRed.data();
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = voigtRed.data();
 	double* h_b = (double*)malloc(m * sizeof(double));
 	for (int i = 0; i < m; i++) h_b[i] = 0.5;
 
@@ -2405,7 +2425,7 @@ void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, E
 	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
 
 																				 // Copying data to CUDA/GPU
-	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_a, voigtRed.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 
 																									// The multiciplication
@@ -2425,6 +2445,12 @@ void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, E
 	//XFullDim.resize(2 * F.rows());
 	rhs = Eigen::Map<Eigen::VectorXd>(h_b, m);
 	//cout << "Vector m: \n" << rhs << endl; 
+
+	// Free-ing the allocated data
+	//free(h_a);
+	//free(h_b);
+	cudaFree(d_a);
+	cudaFree(d_b);
 }
 
 void TensorFields::initializeParametersForLHS()
@@ -2485,6 +2511,14 @@ void TensorFields::initializeParametersForLHS()
 	//{
 	//	printf("%d : [%d][%d][%.16f]\n", i, h_McsrRowPtr[i], h_McsrColInd[i], h_McsrVal[i]);
 	//}
+
+	// Free-ing the allocated data
+	//free(h_McsrVal);
+	//free(h_McsrRowPtr);
+	//free(h_McsrColInd);
+	//free(h_ScsrVal);
+	//free(h_ScsrRowPtr);
+	//free(h_ScsrColInd);
 }
 
 void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS)
@@ -2537,21 +2571,21 @@ void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> 
 	}
 
 	/* Checking on A and B before addition */
-	// ===================================================================
-	double*							h_checkCsrVal = (double*)malloc(nnzS*sizeof(double));
-	int*							h_checkCsrRowPtr = (int*)malloc((mS+1)*sizeof(int));
-	int*							h_checkCsrColInd = (int*)malloc(nnzS*sizeof(int));
-	int*							h_checkCooRowInd = (int*)malloc(nnzS * sizeof(int));
-
-	cudaMemcpy(h_checkCsrVal, d_lhsSCsrVal, nnzS * sizeof(double), cudaMemcpyDeviceToHost);
-	cudaMemcpy(h_checkCsrRowPtr, d_lhsCCsrRowPtr, (mS+1) * sizeof(int), cudaMemcpyDeviceToHost);
-	cudaMemcpy(h_checkCsrColInd, d_lhsSCsrColInd, nnzS * sizeof(int), cudaMemcpyDeviceToHost);
-
-	cout << "Checking the conversion back to CPU (matrix M): \n";
-	for (int i = 0; i < 20; i++)
-	{
-		printf("col: %d | rowV: %d | val: %.4f \n", h_checkCsrColInd[i], h_checkCsrRowPtr[i], h_checkCsrVal[i]);
-	}
+	///// ===================================================================
+	///double*							h_checkCsrVal = (double*)malloc(nnzS*sizeof(double));
+	///int*							h_checkCsrRowPtr = (int*)malloc((mS+1)*sizeof(int));
+	///int*							h_checkCsrColInd = (int*)malloc(nnzS*sizeof(int));
+	///int*							h_checkCooRowInd = (int*)malloc(nnzS * sizeof(int));
+	///
+	///cudaMemcpy(h_checkCsrVal, d_lhsSCsrVal, nnzS * sizeof(double), cudaMemcpyDeviceToHost);
+	///cudaMemcpy(h_checkCsrRowPtr, d_lhsCCsrRowPtr, (mS+1) * sizeof(int), cudaMemcpyDeviceToHost);
+	///cudaMemcpy(h_checkCsrColInd, d_lhsSCsrColInd, nnzS * sizeof(int), cudaMemcpyDeviceToHost);
+	///
+	///cout << "Checking the conversion back to CPU (matrix M): \n";
+	///for (int i = 0; i < 20; i++)
+	///{
+	///	printf("col: %d | rowV: %d | val: %.4f \n", h_checkCsrColInd[i], h_checkCsrRowPtr[i], h_checkCsrVal[i]);
+	///}
 
 	//---------------------------------------------------------------------
 
@@ -2611,6 +2645,15 @@ void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> 
 	}
 	//printf("LHS: %dx%d | maxRow: %d, maxCol: %d | nnz=%d \n", LHS.rows(), LHS.cols(), maxRow, maxCol, nnzC);
 	//LHS.setFromTriplets(LTriplet.begin(), LTriplet.end());
+
+// Free-ing memory
+	cudaFree(d_lhsCCsrVal);
+	cudaFree(d_lhsCCsrRowPtr);
+	cudaFree(d_lhsCCsrColInd);
+	cudaFree(d_lhsCCooRowInd);
+	//free(h_CcsrVal);
+	//free(h_CcsrColInd);
+	//free(h_CcooRowInd);
 }
 
 void TensorFields::initializeSystemSolve()
@@ -2633,18 +2676,18 @@ void TensorFields::performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajo
 	const int n   = LHS.cols();
 
 	// Populating the matrix in CPU
-	double* h_csrVal = (double*)malloc(nnz * sizeof(double));
-	int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
-	int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
-	double* h_b		 = (double*)malloc(n * sizeof(double));
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//double* h_b		 = (double*)malloc(n * sizeof(double));
 	double* h_x		 = (double*)malloc(n * sizeof(double));
 	double* d_b;
 	double* d_x;
 	
-	h_csrVal	= LHS.valuePtr();
-	h_csrRowPtr = LHS.outerIndexPtr();
-	h_csrColInd = LHS.innerIndexPtr();
-	h_b			= rhs.data();
+	//h_csrVal	= LHS.valuePtr();
+	//h_csrRowPtr = LHS.outerIndexPtr();
+	//h_csrColInd = LHS.innerIndexPtr();
+	//h_b			= rhs.data();
 
 	// Allocating memory in device/GPU
 	cudaStat1 = cudaMalloc(&d_solveCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
@@ -2653,13 +2696,13 @@ void TensorFields::performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajo
 	cudaStat1 = cudaMalloc(&d_b, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMalloc(&d_x, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
 
-	cudaStat1 = cudaMemcpy(d_solveCsrRowPtr, h_csrRowPtr, (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_solveCsrColInd, h_csrColInd, nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_solveCsrVal, h_csrVal, nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
-	cudaStat1 = cudaMemcpy(d_b, h_b, n * sizeof(double), cudaMemcpyHostToDevice);						   //cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_solveCsrRowPtr, LHS.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_solveCsrColInd, LHS.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_solveCsrVal, LHS.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, rhs.data(), n * sizeof(double), cudaMemcpyHostToDevice);						   //cout << "__alloc_status:" << cudaStat1 << endl;
 
 	double tol = std::numeric_limits<double>::epsilon();
-	int reorder = 1; // 1:symrcm; 2:symamd
+	int reorder = 2; // 1:symrcm; 2:symamd
 	int sing;
 	/* Performing the solving of the linear system */
 	cusolverStatus_t cudaStat = cusolverSpDcsrlsvchol(solveHandle, m, nnz, solveDescrA, d_solveCsrVal, d_solveCsrRowPtr, d_solveCsrColInd, d_b, tol, reorder, d_x, &sing);
@@ -2673,6 +2716,18 @@ void TensorFields::performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajo
 	vSol = Eigen::Map<Eigen::VectorXd>(h_x, m);
 
 	//cout << "Some solution: \n" << vSol.block(0, 0, 20, 1).transpose() << endl; 
+
+	// Free-ing memory
+	//free(h_csrVal);
+	//free(h_csrRowPtr);
+	//free(h_csrColInd);
+	//free(h_b);
+	//free(h_x);
+	cudaFree(d_b);
+	cudaFree(d_x);
+	//cudaFree(d_solveCsrColInd);
+	//cudaFree(d_solveCsrRowPtr);
+	//cudaFree(d_solveCsrVal);
 }
 
 /* APPLICATION :: Sub-space Projection */
