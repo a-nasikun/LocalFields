@@ -97,7 +97,9 @@ public:
 	void initializeParametersForRHS();
 	void performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, Eigen::VectorXd& rhs);
 	void initializeParametersForLHS();
-	void performSettingLHS(double lambda, Eigen::SparseMatrix<double> LHS);
+	void performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS);
+	void initializeSystemSolve();
+	void performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajor> &LHS, Eigen::VectorXd& rhs, Eigen::VectorXd& vSol);
 
 	/* APPLICATION :: Sub-space Projection */
 	void subspaceProjection(const Eigen::VectorXd& refField);
@@ -160,6 +162,7 @@ public:
 	Eigen::SparseMatrix<double, Eigen::RowMajor> BTMBarRow;
 	Eigen::SparseMatrix<double, Eigen::RowMajor> MFBarRow;
 	Eigen::SparseMatrix<double, Eigen::RowMajor> SFBarRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> LHSRow;
 	cusparseHandle_t				liftHandle;		/* Entries for lifting using CUDA */
 	cusparseMatDescr_t				liftDescrA;
 	double*							d_liftCsrVal;
@@ -180,9 +183,15 @@ public:
 	double*							d_lhsMCsrVal;
 	int*							d_lhsMCsrRowPtr;
 	int*							d_lhsMCsrColInd;
+	cusparseMatDescr_t				lhsDescrB;
 	double*							d_lhsSCsrVal;
 	int*							d_lhsSCsrRowPtr;
 	int*							d_lhsSCsrColInd;
+	cusolverSpHandle_t				solveHandle;		/* Entries for setting up LHS of reduced system */
+	cusparseMatDescr_t				solveDescrA;
+	double*							d_solveCsrVal;
+	int*							d_solveCsrRowPtr;
+	int*							d_solveCsrColInd;
 private:
 
 };
