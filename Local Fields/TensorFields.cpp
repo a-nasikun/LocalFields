@@ -1805,7 +1805,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	visualizeTensorFields(viewer, tensorFields);
+	//visualizeTensorFields(viewer, tensorFields);
 	cout << "-------------------------------------------------------------------\n";
 
 	computeFrameRotation(viewer);
@@ -1844,7 +1844,8 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* Smoothing and Testing the result */
 	
 	/* adaptive stuff */
-	settingAdaptiveWeight(viewer, adaptiveWeight);
+	//settingAdaptiveWeight(viewer, adaptiveWeight);
+	settingAdaptiveWeightGradual(viewer, adaptiveWeight);
 	projectTheContraints(adaptiveWeight, WMbar);
 	//testDirichletAndLaplace();
 	//testSmoothing(viewer, Tensor, smoothedTensorRef);
@@ -2266,7 +2267,10 @@ void TensorFields::settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eige
 {
 	cout << "Dealing with adaptivity\n";
 		
-	const int face_id1 = 19477; 	const int face_id2 = 13204;	// RockerArm
+	//const int face_id1 = 19477; 	const int face_id2 = 13204;	// RockerArm
+	const int face_id1 = 19477; 	const int face_id2 = 8090;	// RockerArm (8626)
+	//const int face_id1 = 216527; 	const int face_id2 = 196734;	// Dragon
+	//const int face_id1 = 147709; 	const int face_id2 = 259974;	// Dragon
 	Eigen::VectorXd dist;
 	lambda.resize(F.rows());
 	dist.resize(F.rows());
@@ -2279,23 +2283,25 @@ void TensorFields::settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eige
 	computeDijkstraDistanceFace(face_id1, dist);
 	
 
-	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+	//double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+	double upBound = dist(face_id2);
 
 	cout << "Assigning weight \n";
 	for (int i = 0; i<F.rows(); i++)
 	{
-		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound );
 		if (dist(i) < upBound) {
-			lambda(i) = 1.0;
+			lambda(i) = 2.5;
 			faceColor(i) = 0.7;
 			//fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
-			fCol.row(i) = Eigen::RowVector3d(32.0 / 255.0, 117.0 / 255.0, 97.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0);
 			
 		}
 		else {
 			lambda(i) = 1.0;
 			faceColor(i) = 0.3;
-			fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			//fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
 		}
 	}
 
@@ -2307,22 +2313,82 @@ void TensorFields::settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eige
 
 }
 
+void TensorFields::settingAdaptiveWeightGradual(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda)
+{
+	cout << "Dealing with adaptivity\n";
+
+	//const int face_id1 = 19477; 	const int face_id2 = 13204;	// RockerArm
+	const int face_id1 = 19477; 	const int face_id2 = 8090;	// RockerArm (8626)
+																//const int face_id1 = 216527; 	const int face_id2 = 196734;	// Dragon
+																//const int face_id1 = 147709; 	const int face_id2 = 259974;	// Dragon
+	Eigen::VectorXd dist;
+	lambda.resize(F.rows());
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+	Eigen::MatrixXd fCol(F.rows(), 3);
+
+	cout << "COmputing the dijkstra distance \n";
+
+	computeDijkstraDistanceFace(face_id1, dist);
+
+
+	//double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+	double upBound = dist(face_id2);
+
+	cout << "Assigning weight \n";
+
+	// parameter
+	double minWeight = 0.15;
+	double maxWeight = 7.15;
+	double wScale = (minWeight-maxWeight) / upBound;
+
+	for (int i = 0; i<F.rows(); i++)
+	{
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound );
+		if (dist(i) < upBound) {
+			lambda(i) = wScale*dist(i) + maxWeight;
+			//lambda(i) = maxWeight;
+			faceColor(i) = 0.7;
+			//fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0);
+
+		}
+		else {
+			lambda(i) = minWeight;
+			faceColor(i) = 0.3;
+			//fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+		}
+	}
+
+	cout << "Setting color \n";
+	printf("FCOl: %dx%d | F: %d | V:%d \n", fCol.rows(), fCol.cols(), F.rows(), V.rows());
+	//Eigen::MatrixXd fCol;
+	igl::jet(lambda, true, fCol);
+	viewer.data().set_colors(fCol);
+
+}
+
 void TensorFields::projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed)
 {
 	cout << "Project the constraints \n";
 	/* Set-up the full res Matrix */
 	vector<Eigen::Triplet<double>> LTriplet; LTriplet.reserve(lambdaFull.size());
-	Eigen::SparseMatrix<double> LambdaMatrix; LambdaMatrix.resize(3*lambdaFull.size(), 3*lambdaFull.size());
+	//Eigen::SparseMatrix<double> LambdaMatrix; LambdaMatrix.resize(3*lambdaFull.size(), 3*lambdaFull.size());
+	WM.resize(3 * lambdaFull.size(), 3 * lambdaFull.size());
 	for (int i = 0; i < lambdaFull.size(); i++)
 	{
-		for(int j=0; j<3; j++)
-			LTriplet.push_back(Eigen::Triplet<double>(3*i+j, 3 * i + j, lambdaFull(i)));
+		for (int j = 0; j < 3; j++)
+			LTriplet.push_back(Eigen::Triplet<double>(3 * i + j, 3 * i + j, lambdaFull(i)));
 	}
-	LambdaMatrix.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	WM.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	cout << "Lambda: " << lambdaFull.block(0, 0, 3, 1) << endl; 
+	cout << "Lambda matrix: \n" << WM.block(0, 0, 9, 9) << endl; 
 
 	/* Reduce/Project the matrix*/
-	//lambdaRed = Basis.transpose()*LambdaMatrix*Basis;
-	lambdaRed = LambdaMatrix.block(0,0,Basis.cols(), Basis.cols());
+	lambdaRed = Basis.transpose()*WM*Basis;
+	//lambdaRed = WM.block(0,0,Basis.cols(), Basis.cols());
 }
 
 void TensorFields::smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::VectorXd& lambda, Eigen::MatrixXd& outputTensor)
@@ -2353,13 +2419,15 @@ void TensorFields::smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::V
 	
 
 	t2 = chrono::high_resolution_clock::now();
-	Eigen::SparseMatrix<double> LHS = MFbar + WMbar*SFbar;
+	//Eigen::SparseMatrix<double> LHS = MFbar + WMbar*SFbar;
+	Eigen::SparseMatrix<double> LHS = MFbar + Basis.transpose()*WM*SF*Basis;
 	printf("Sparsity: %.4f (%d/%d) \n", (double)LHS.nonZeros() / (double)(LHS.rows()*LHS.cols()), LHS.nonZeros(), LHS.rows()*LHS.cols());
 
 	///Eigen::SparseMatrix<double> LHS;
 	///performSettingLHS(lambda, LHS);
 	//Eigen::VectorXd				rhs = MFbar*vInBar;
-	Eigen::VectorXd				rhs = WMbar*BTMbar*inputVoigt;
+	///Eigen::VectorXd				rhs = WMbar*BTMbar*inputVoigt;
+	Eigen::VectorXd				rhs = Basis.transpose()*(WM*MF*inputVoigt);
 	//Eigen::VectorXd				rhs;
 	//performSettingRHS(inputVoigt, lambda(0), rhs);
 	t3 = chrono::high_resolution_clock::now();

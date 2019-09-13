@@ -91,6 +91,7 @@ public:
 	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
 	void settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
+	void settingAdaptiveWeightGradual(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
 	void projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed);
 	void smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::VectorXd& lambda, Eigen::MatrixXd& outputTensor);
 
@@ -135,7 +136,7 @@ public:
 	//double								scale = 1;
 	//double								scale = 0.25;		// smoothing torus
 	//double								scale = 0.1;		// smoothing
-	//double								scale = 0.05;		// smoothing
+	///double								scale = 0.05;		// smoothing
 	double								scale = 0.01;		// smoothing
 
 	//
