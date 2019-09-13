@@ -1241,10 +1241,14 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			durations[3] += t2 - t1;
 
 
-			if (id == 0)
+			if (id == 11 || id==3)
 			{
 				SubDomain = localField.SubDomain;
 				Boundary = localField.Boundary;
+
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
 			}
 		}
 	}
@@ -1680,23 +1684,23 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	int bId = id;
 	Eigen::RowVector3d color1, color2;
 	if (id % 3 == 0) {
-		color1 = Eigen::RowVector3d( 34.0/255.0,  94.0/255.0, 168.0/255.0);
+		color2 = Eigen::RowVector3d( 34.0/255.0,  94.0/255.0, 168.0/255.0);
 		//color2 = Eigen::RowVector3d(247.0/255.0, 104.0/255.0, 161.0/255.0);
-		color2 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
+		color1 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
 	}
 	else if(id%3==1) {
-		color1 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
-		color2 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
+		color2 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
+		color1 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
 		//cout << "Basis: " << id << "\n" << Basis.col(id).block(0, 0, 100, 1) << endl;		
 	}
 	else {
-		color1 = Eigen::RowVector3d(5.0 / 255.0, 178.0 / 255.0, 220.0 / 255.0);
-		color2 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
+		color2 = Eigen::RowVector3d(5.0 / 255.0, 178.0 / 255.0, 220.0 / 255.0);
+		color1 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
 	}
 	printf("Non zeros on id %d is %d \n", bId, Basis.col(id).nonZeros());
 
-	if (id >= 2 * Sample.size()) {
-		bId = 2 * Sample.size() - 1;
+	if (id >= 3 * Sample.size()) {
+		bId = 3 * Sample.size() - 1;
 	}
 		
 
@@ -1752,8 +1756,45 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	///visualize2Dfields(viewer,  basisTensorFields.col(1), color2, 100000000000, true);
 	///visualize2Dfields(viewer, -basisTensorFields.col(1), color2, 100000000000, true);
 
-	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
-	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 3], 0)) + V.row(F(Sample[bId / 3], 1)) + V.row(F(Sample[bId / 3], 2))) / 3.0;
+	//viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+}
+
+void TensorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::MatrixXd vColor;
+
+	/* My Own */
+	vColor.resize(F.rows(), 3);
+	// 0:background => eeeeee; 0.3:selected region; 0.7:boundary
+	for (int i = 0; i < F.rows(); i++)
+	{
+		if (localSystem(i) < 0.1)
+		{
+			vColor.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+		}
+		else if (localSystem(i) > 0.6)
+		{
+			vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
+
+		}
+		else
+		{
+			//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
+			//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
+			//vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);	
+			vColor.row(i) = Eigen::RowVector3d(223.0 / 255.0, 180.0 / 255.0, 240.0 / 255.0);
+		}
+	}
+
+	//printf("Local system: %d x %d \n", localSystem.rows(), localSystem.cols());
+	cout << localSystem.block(0, 0, 3, 3) << endl;
+	//printf("Color system: %d x %d \n", vColor.rows(), vColor.cols());
+	cout << vColor.block(0, 0, 3, 3) << endl;
+
+
+	viewer.data().set_colors(vColor);
+	//viewer.data().set_colors(Eigen::RowVector3d(0.0, 1.0, 0.0));
 }
 
 void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewer)
@@ -1766,7 +1807,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "RockerArm_";
+	string model = "Bunny_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1822,15 +1863,15 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 250;
+	numSample = 500;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	//constructBasis();
-	//storeBasis(fileBasis);
-	retrieveBasis(fileBasis);
+	constructBasis();
+	storeBasis(fileBasis);
+	//retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
-
+	visualizeSubdomain(viewer);
 
 	///for (int i = 0; i < min((int)eigFieldsTensorRef.cols(), 0); i++)
 	///{
@@ -1845,10 +1886,8 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	
 	/* adaptive stuff */
 	//settingAdaptiveWeight(viewer, adaptiveWeight);
-	settingAdaptiveWeightGradual(viewer, adaptiveWeight);
-	projectTheContraints(adaptiveWeight, WMbar);
-	//testDirichletAndLaplace();
-	//testSmoothing(viewer, Tensor, smoothedTensorRef);
+	///settingAdaptiveWeightGradual(viewer, adaptiveWeight);
+	///projectTheContraints(adaptiveWeight, WMbar);
 
 	prepareSmoothingRed();
 	initializeParametersForProjection();

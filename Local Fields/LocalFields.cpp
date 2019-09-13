@@ -1580,39 +1580,47 @@ void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, 
 	//if (id == 0)
 	{
 		//cout << "Total entries: " << InnerElements.size() << endl; 
-		Eigen::Matrix3d centerBlock_, transformBlock_, targetBlock_;
-	
+		Eigen::Matrix3d centerBlock_, transformBlock_, targetBlock_, coefBlock_;	
 		centerBlock_ = eigTemp.block(3 * sampleIDix, 0, 3, 3);
 		//cout << "Center box: \n" << centerBlock_ << endl;
-
 		targetBlock_.setIdentity(3, 3); targetBlock_(2, 2) = sqrt(2.0);
 		//cout << "Target box: \n" << targetBlock_ << endl;
+		
+		transformBlock_ = centerBlock_.inverse();
+		for(int i=0; i<3; i++)	coefBlock_.col(i) = transformBlock_*targetBlock_.col(i);
 
-		transformBlock_ = targetBlock_*centerBlock_.inverse();
-		//cout << "transformation block: \n" << transformBlock_ << endl; 
-
-		//cout << "Resulting transformation: \n " << transformBlock_*centerBlock_ << endl;
-
-		TransformBasisOp_.resize(eigTemp.rows(), eigTemp.rows());
-		for (int i = 0; i < InnerElements.size(); i++)
-		{
-			for (int j = 0; j < NUM_FIELDS; j++)
-			{
-				for (int k = 0; k < NUM_FIELDS; k++)
-				{
-					TTriplet.push_back(Eigen::Triplet<double>(3 * i + j, 3 * i + k, transformBlock_(j, k)));
-				}
-			}
+		eigTempTransformed_.resize(eigTemp.rows(), eigTemp.cols());
+		for (int i = 0; i < 3; i++) {
+			eigTempTransformed_.col(i) = coefBlock_(0,i)*eigTemp.col(0) + coefBlock_(1,i)*eigTemp.col(1) + coefBlock_(2,i)*eigTemp.col(2);
 		}
+		
 
-		TransformBasisOp_.setFromTriplets(TTriplet.begin(), TTriplet.end());
-		eigTempTransformed_ = TransformBasisOp_*eigTemp;
+
+		///transformBlock_ = targetBlock_*centerBlock_.inverse();
+		/////cout << "transformation block: \n" << transformBlock_ << endl; 
+		///
+		/////cout << "Resulting transformation: \n " << transformBlock_*centerBlock_ << endl;
+		///
+		///TransformBasisOp_.resize(eigTemp.rows(), eigTemp.rows());
+		///for (int i = 0; i < InnerElements.size(); i++)
+		///{
+		///	for (int j = 0; j < NUM_FIELDS; j++)
+		///	{
+		///		for (int k = 0; k < NUM_FIELDS; k++)
+		///		{
+		///			TTriplet.push_back(Eigen::Triplet<double>(3 * i + j, 3 * i + k, transformBlock_(j, k)));
+		///		}
+		///	}
+		///}
+		///
+		///TransformBasisOp_.setFromTriplets(TTriplet.begin(), TTriplet.end());
+		///eigTempTransformed_ = TransformBasisOp_*eigTemp;
 
 		//for (int l = sampleIDix-1; l < sampleIDix+2; l++) {
 		//	cout << "Before: " << eigTemp.row(l) << "   | aftter: " << eigTempTransformed_.row(l) << endl; 
 		//}
 
-		eigTemp = eigTempTransformed_;
+		///eigTemp = eigTempTransformed_;
 
 		//centerBlock_ = eigTemp.block(3 * LocalElements[sampleIDix], 0, 3, 3);
 		//cout << "Center box: \n" << centerBlock_ << endl;
@@ -1650,8 +1658,8 @@ void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, 
 			for (int k = 0; k < NUM_FIELDS; k++)
 			{
 				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, eigIDX[j])));
-				///BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTempTransformed_(NUM_FIELDS * i + k, j)));
-				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTempTransformed_(NUM_FIELDS * i + k, j)));
+				///BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
 				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * LocalElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
 			}
 		}
