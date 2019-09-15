@@ -156,7 +156,9 @@ public:
 	/* COMMUNICATION VIA MAILSLOT */
 	void sendFieldsToMailSlot(const NRoSy& nRoSy);
 	void sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy);
+	void sendTestDataToMailSlot();
 	void readFieldsFromMailSlot(HANDLE &msHandle);
+	void readTestDataFromMailSlot(HANDLE &msHandle);
 public:
 	NRoSy							nRoSy;
 	Eigen::MatrixXd					V, FC;
