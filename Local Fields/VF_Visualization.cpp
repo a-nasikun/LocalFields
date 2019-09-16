@@ -277,7 +277,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
-	viewer.data().line_width = 4.;
+	viewer.data().line_width = 1.;
 }
 
 void VectorFields::visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
@@ -568,7 +568,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	}
 	 
 	viewer.selected_data_index = 0; 	
-	viewer.data().line_width = 4.0;
+	viewer.data().line_width = 1.0;
 	//viewer.data().line_width = 1.0;
 }
 
@@ -589,7 +589,8 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 			Eigen::Vector3d basis = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
 			basis *= avgEdgeLength; 
 			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
-			viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
+			//viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
+			viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.75, 0.1, 0.1));
 		}
 	}
 

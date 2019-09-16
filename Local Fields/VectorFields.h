@@ -68,6 +68,7 @@ public:
 	void testAdjacency();
 	void constructEVList();
 	void constructEFList();
+	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 
 	// SETTING UP MATRICES
 	void constructGlobalMatrices();
@@ -118,6 +119,7 @@ public:
 	void constructMappingMatrix();
 	void constructMatrixB();
 
+
 	void setupGlobalProblem(const Eigen::Vector3d& lambda);
 	void setupGlobalProblem(const Eigen::Vector3d& lambda, Eigen::MatrixXd& M);
 	void constructConstraints();
@@ -132,7 +134,7 @@ public:
 	void constructSingularities();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
-	void constructHardConstraintsWithSingularitiesWithGauss();
+	void constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer);
 	void constructSoftConstraints();
 	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
 	void measureSoftConstraintError(const Eigen::Vector3d& lambda);
@@ -339,6 +341,7 @@ public:
 	vector<set<FacePair>>			AdjMF3N_temp;
 	vector<set<int>>				VENeighbors;
 	Eigen::MatrixXi					FE, EF;
+	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
 	double							avgEdgeLength;
 	vector<int>						FaceToDraw;
 
