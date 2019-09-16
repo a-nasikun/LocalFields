@@ -436,7 +436,7 @@ void VectorFields::resetInteractiveConstraints()
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 1;
+	const int NUM_SINGS = 3;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -805,7 +805,7 @@ void VectorFields::constructHardConstraintsWithSingularities_Cheat()
 void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer)
 {
 	// Define the constraints
-	const int numConstraints = 2;
+	const int numConstraints = 1;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -909,13 +909,17 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 		for (int i = 0; i < (SingNeighCC[id].size()-1); i++) {
 			printf("______ angle %d (F %d) = %.3f \n", i, SingNeighCC[id][i], internalAngle[id][i] * 180.0 / M_PI);
 			Eigen::Vector3d firstBasis_ = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
-			viewer.data().add_edges(FC.row(SingNeighCC[id][i]), FC.row(SingNeighCC[id][i]) + firstBasis_.transpose().normalized()*avgEdgeLength*1.0, Eigen::RowVector3d(0.0, 1.0, 0.7));
+			//viewer.data().add_edges(FC.row(SingNeighCC[id][i]), FC.row(SingNeighCC[id][i]) + firstBasis_.transpose().normalized()*avgEdgeLength*1.0, Eigen::RowVector3d(0.0, 1.0, 0.7));
 		}
 	}
 
 	// Show the angles
 	for (int id = 0; id < SingNeighCC.size(); id++)					// For each singularity
-	{			
+	{		
+		double rotAngle = gaussAngle[id] / (double)SingNeighCC[id].size();
+		Eigen::VectorXd inpCol(SingNeighCC.size()); inpCol.setLinSpaced(0.0, 1.0);
+		Eigen::MatrixXd edgeCol; igl::jet(inpCol, true, edgeCol);
+
 		for (int i = 0; i < (SingNeighCC[id].size()-1); i++) {		// iterate over all faces in one singularity
 			/* Iterate to find shared edge between two neighboring faces */
 			int sharedEdgeID;
@@ -930,17 +934,61 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 			//printf("|%d:%d => %d", SingNeighCC[id][i], SingNeighCC[id][i+1], sharedEdgeID);
 
 			/* Obtaining the transport angle (bring the T{i+1} to T{i}) */
-			printf("Angle T1: %.3f | T2: %.3f \n", 180.0/M_PI*FrameRot(sharedEdgeID, 0), 180.0/M_PI*FrameRot(sharedEdgeID, 1));
-		}
-		//cout << endl; 
-
-		for (int i = 0; i < (SingNeighCC[id].size()); i++) {
-			printf("Edges in %d : ", SingNeighCC[id][i]);
-			for (int j = 0; j < 3; j++) {
-				printf("|%d ", FE(SingNeighCC[id][i], j));
+			double angTarget, angSource;
+			if (EF(sharedEdgeID, 0) == SingNeighCC[id][i])
+			{
+				angTarget = FrameRot(sharedEdgeID, 0);
+				angSource = FrameRot(sharedEdgeID, 1);
+				//printf("[0] Angle T1: %.3f | T2: %.3f \n", 180.0/M_PI*FrameRot(sharedEdgeID, 0), 180.0/M_PI*FrameRot(sharedEdgeID, 1));			
 			}
-			cout << endl; 
+			else if (EF(sharedEdgeID, 1) == SingNeighCC[id][i])
+			{
+				angTarget = FrameRot(sharedEdgeID, 1);
+				angSource = FrameRot(sharedEdgeID, 0);
+				//printf("[1] Angle T1: %.3f | T2: %.3f \n", 180.0 / M_PI*FrameRot(sharedEdgeID, 1), 180.0 / M_PI*FrameRot(sharedEdgeID, 0));
+			}	
+			printf("Angle T1: %.3f | T2: %.3f \n", 180.0 / M_PI*angTarget, 180.0 / M_PI*angSource);
+
+
+			double totalRot = -rotAngle + angTarget - angSource + M_PI;
+
+			printf("RotAngle: %.4f | transportAngle: %.4f | target: %.4f | source: %.4f \n", -rotAngle*180.0 / M_PI, (angTarget - angSource + M_PI)*180.0 / M_PI, angTarget*180.0 / M_PI, angSource*180.0 / M_PI);
+
+			Eigen::Matrix2d transfRotMat; transfRotMat << cos(totalRot), -sin(totalRot), sin(totalRot), cos(totalRot);
+
+			// vector for visualization
+			// -- vector in my (next) neighbor
+			Eigen::Vector2d vn; vn << 1.0, 0.0;
+			Eigen::Vector2d vm = transfRotMat*vn;
+
+			Eigen::MatrixXd An; An = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1], 3, 2);
+			Eigen::MatrixXd Am; Am = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 2);
+			
+			Eigen::Vector3d edgeN = An*vn;
+			Eigen::Vector3d edgeM = Am*vm;
+
+			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 0, 2 * SingNeighCC[id][i] + 0, -transfRotMat(0, 0)));	// the reference triangle
+			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * SingNeighCC[id][i] + 0, -transfRotMat(1, 0)));
+			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 0, 2 * SingNeighCC[id][i] + 1, -transfRotMat(0, 1)));
+			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * SingNeighCC[id][i] + 1, -transfRotMat(1, 1)));
+
+			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 0, 2 * SingNeighCC[id][i+1] + 0, 1.0));					// the neighbor (next, CCW)
+			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * SingNeighCC[id][i+1] + 1, 1.0));
+
+			c(2 * counter + 0) = 0.0;
+			c(2 * counter + 1) = 0.0;
+
+			viewer.data().add_edges(FC.row(SingNeighCC[id][i]), FC.row(SingNeighCC[id][i]) + edgeM.transpose().normalized()*avgEdgeLength, edgeCol.row(i));
+			viewer.data().add_edges(FC.row(SingNeighCC[id][i+1]), FC.row(SingNeighCC[id][i+1]) + edgeN.transpose().normalized()*avgEdgeLength, edgeCol.row(i));
 		}
+
+		//for (int i = 0; i < (SingNeighCC[id].size()); i++) {
+		//	printf("Edges in %d : ", SingNeighCC[id][i]);
+		//	for (int j = 0; j < 3; j++) {
+		//		printf("|%d ", FE(SingNeighCC[id][i], j));
+		//	}
+		//	cout << endl; 
+		//}
 		
 	}
 
