@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "RockerArm_";
+	const string model = "Torus_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
+	string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -216,8 +216,9 @@ int main(int argc, char *argv[])
 			{				
 				//vectorFields.visualizeSubdomain(viewer);
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
+				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
-				vectorFields.visualizeApproximatedFields(viewer);				
+				//vectorFields.visualizeSingularitiesConstraints(viewer);				
 				
 			}
 			else if (fieldsType == FieldsType::NROSY)
@@ -239,7 +240,7 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-				//vectorFields.visualizeApproxResult(viewer);
+				vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				vectorFields.visualizeGlobalConstraints(viewer);
@@ -565,7 +566,7 @@ int main(int argc, char *argv[])
 			{
 				cout << "\n========================= GLOBAL PROBLEM =============================\n";
 				//vectorFields.constructInteractiveConstraints();
-				vectorFields.constructHardConstraintsWithSingularitiesWithGauss();
+				vectorFields.constructHardConstraintsWithSingularitiesWithGauss(viewer);
 				vectorFields.setupGlobalProblem(lambda);
 				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
@@ -672,11 +673,11 @@ int main(int argc, char *argv[])
 				//vectorFields.setupGlobalProblem();			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.constructInteractiveConstraints();				
-				//vectorFields.setAndSolveUserSystem(lambda);
-				vectorFields.setAndSolveInteractiveSystem(lambda);
+				//vectorFields.constructInteractiveConstraints();
+				//vectorFields.setAndSolveInteractiveSystem(lambda);				
+				vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
-				vectorFields.visualizeGlobalConstraints(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{

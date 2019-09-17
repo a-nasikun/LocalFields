@@ -1391,7 +1391,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	selectFaceToDraw(75000); 
+	computeFrameRotation(viewer);
+	selectFaceToDraw(2500); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1417,7 +1418,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	lambda(0) = 0.25; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 1;
-	//setupGlobalProblem(lambda);
+	constructSingularities();
+	constructHardConstraintsWithSingularitiesWithGauss(viewer);
+	//constructHardConstraintsWithSingularities_Cheat();
+	setupGlobalProblem(lambda);
+	//visualizeSingularitiesConstraints(viewer);
 
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Eigfields_40sup_Spectra";
@@ -1469,9 +1474,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 200; 
+	numSample = 250; 
 	numSupport = 40.0;
-	string model = "Fertility_";
+	string model = "Torus_";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
@@ -1488,10 +1493,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);
 
+	/* Set-up/Precomputation for reduced system */
+	setupReducedBiLaplacian();
+	preComputeReducedElements();
+	initializeParametersForLifting();
 
-	//setupReducedBiLaplacian();
-	//preComputeReducedElements();
-	//initializeParametersForLifting();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
@@ -1530,7 +1536,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	//convergenceTest();
+	///convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* Alignment using (maximal/) principal curvature */
