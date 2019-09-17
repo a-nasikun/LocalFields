@@ -1383,8 +1383,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	computeFaceCenter();
 	computeFaceNormal();
 	constructVFNeighbors();
+	constructVFAdjacency();
 	//constructVFNeighborsFull();
-	//constructVFAdjacency();
 	//testAdjacency();
 	constructVertexAdjacencyMatrix();
 	constructFaceAdjacency3NMatrix();
@@ -1392,9 +1392,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	computeFrameRotation(viewer);
-	selectFaceToDraw(2500); 
+	//selectFaceToDraw(2500); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
-	//selectFaceToDraw(F.rows());
+	selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1418,10 +1418,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	lambda(0) = 0.25; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 1;
-	constructSingularities();
-	constructHardConstraintsWithSingularitiesWithGauss(viewer);
+	///constructSingularities();
+	///constructHardConstraintsWithSingularitiesWithGauss(viewer);
 	//constructHardConstraintsWithSingularities_Cheat();
-	setupGlobalProblem(lambda);
+	///setupGlobalProblem(lambda);
 	//visualizeSingularitiesConstraints(viewer);
 
 	/* ====================== LOCAL ELEMENTS ====================*/
@@ -1622,7 +1622,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//computeEigenFields(eigsToCompute, filename_refField);		
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
 
-	setAndSolveUserSystem(lambda);
+	///setAndSolveUserSystem(lambda);
 }
 
 void VectorFields::constructParallelTransport()

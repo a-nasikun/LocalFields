@@ -11,6 +11,7 @@ int numSample = 10000;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
 int saveId = 0;
+bool singularConstraint = false; 
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::VECTOR;
@@ -470,6 +471,13 @@ int main(int argc, char *argv[])
 			}
 			break;
 
+		case 'g':
+		case 'G':
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				singularConstraint = !singularConstraint;
+			}
+			break;
 		/* Case x to activate for user inputted constraints */	
 		case 'x':
 		case 'X':
@@ -738,16 +746,28 @@ int main(int argc, char *argv[])
 		if (selectFace) {
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
-			{				
-				// paint hit red
-				C.row(fid) << 1, 0, 0;
-				//viewer.data().set_colors(C);
-				ChosenFaces.push_back(fid);
-				if (ChosenFaces.size() == 1)
+			{	
+				if (singularConstraint)
 				{
-					viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+					ChosenFaces.push_back(fid);
+					selectFace = !selectFace;
+					for (int i : ChosenFaces)
+						viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.8, 0.0));
 				}
+				else {
+					// paint hit red
+					C.row(fid) << 1, 0, 0;
+					//viewer.data().set_colors(C);
+					ChosenFaces.push_back(fid);
+					if (ChosenFaces.size() == 1)
+					{
+						viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+					}
+				}
+
+				/* Select vertices closest to the center*/
 	
+
 				return true;
 			}
 		}
@@ -764,17 +784,37 @@ int main(int argc, char *argv[])
 				//printf("Size of the contraints vector is %d\n", constraintSize);
 				if (fieldsType == FieldsType::VECTOR)
 				{
-					constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
-					viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
-					vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					if (singularConstraint)
+					{
+						for (int i : ChosenFaces) {
+							vectorFields.userSingularConstraints.push_back(F(i, 0));
+							printf("Inserting %d as singularity constraints \n", F(i,0));
+						}
+					}
+					else {
+						constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
+						viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+						vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					}
+
+					//srand(time(NULL));
+					//int vConst = rand() % V.rows();
+					//vectorFields.userSingularConstraints.push_back(vConst);
+					//printf("Inserting %d as singularity constraints \n", vConst);
+
 					//printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
 					/* Interactivity in reduced space */
 					/////viewer.data().clear();
 					/////viewer.data().set_mesh(V, F);
-					vectorFields.constructInteractiveConstraints();
-					vectorFields.setAndSolveInteractiveSystem(lambda);
-					/////vectorFields.setAndSolveUserSystem(lambda);
+					///vectorFields.constructInteractiveConstraints();
+					///vectorFields.setAndSolveInteractiveSystem(lambda);
+					
+
+					vectorFields.constructInteractiveSingularities();
+					vectorFields.constructInteractiveConstraintsWithSingularities(viewer);
+					vectorFields.setAndSolveUserSystem(lambda);
+
 					vectorFields.visualizeApproxResult(viewer);
 					vectorFields.visualizeGlobalConstraints(viewer);
 				}

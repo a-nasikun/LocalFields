@@ -129,9 +129,11 @@ public:
 	void constructSpecifiedHardConstraints();
 	void constructRandomHardConstraints();
 	void constructInteractiveConstraints();
+	void constructInteractiveConstraintsWithSingularities(igl::opengl::glfw::Viewer &viewer);
 	void constructInteractiveConstraintsWithLaplacian();
 	void resetInteractiveConstraints();
 	void constructSingularities();
+	void constructInteractiveSingularities();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
 	void constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer);
@@ -349,7 +351,7 @@ public:
 	// Variable related to global problem
 	Eigen::SparseMatrix<double>		C; 
 	Eigen::VectorXd					c, Xf;
-	vector<int>						LocalElements, userConstraints, globalConstraints, userVisualConstraints;
+	vector<int>						LocalElements, userConstraints, globalConstraints, userVisualConstraints, userSingularConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
 	set<int>						SubDomain, Boundary;
