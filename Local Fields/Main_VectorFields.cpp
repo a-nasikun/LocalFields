@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
 				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
-				vectorFields.visualizeSingularitiesConstraints(viewer);				
+				//vectorFields.visualizeSingularitiesConstraints(viewer);				
 				
 			}
 			else if (fieldsType == FieldsType::NROSY)

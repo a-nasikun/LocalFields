@@ -805,7 +805,7 @@ void VectorFields::constructHardConstraintsWithSingularities_Cheat()
 void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer)
 {
 	// Define the constraints
-	const int numConstraints = 1;
+	const int numConstraints = 4;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -838,7 +838,7 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 	int numSingConstraints = 1;
 	for (int i = 0; i < SingNeighCC.size(); i++) {
 		// Use only n-1 neighboring faces as constraints
-		//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {
+		//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {		// no consntraints on the last triangle
 		for (int j = 0; j < (SingNeighCC[i].size()); j++) {
 			numSingConstraints++;
 		}
@@ -856,10 +856,12 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 	for (int i = 0; i < globalConstraints.size(); i++) {
 		// Matrix C
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 0, 1.0));
-		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 0) = sqrt(2.0);
+		c(counter++, 0) = sqrt(1.0);
 		//c(counter++, 1) = sqrt(2.0);
 		CTriplet.push_back(Eigen::Triplet<double>(counter, 2 * globalConstraints[i] + 1, 1.0));
-		c(counter++, 0) = sqrt(2.0);
+		//c(counter++, 0) = sqrt(2.0);
+		c(counter++, 0) = sqrt(0.0);
 		//c(counter++, 1) = sqrt(2.0);
 	}
 
@@ -881,7 +883,7 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 
 		for (int i = 0; i < (SingNeighCC[id].size()); i++) 
 		{
-			int i2 = (i < (SingNeighCC[id].size() - 1) ? i + 1 : 0);
+			int i2 = (i < (SingNeighCC[id].size()) ? i + 1 : 0);
 
 			// [a] obtain shared edges
 			for (int f = 0; f < F.cols(); f++) {
@@ -906,7 +908,7 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 	{
 		viewer.data().add_points(V.row(singularities[id]), Eigen::RowVector3d(1.0, 0.1, 0.1));
 		printf("__Gauss angle = %.4f\n", gaussAngle[id]*180.0/M_PI);
-		for (int i = 0; i < (SingNeighCC[id].size()-1); i++) {
+		for (int i = 0; i < (SingNeighCC[id].size()); i++) {
 			printf("______ angle %d (F %d) = %.3f \n", i, SingNeighCC[id][i], internalAngle[id][i] * 180.0 / M_PI);
 			Eigen::Vector3d firstBasis_ = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
 			//viewer.data().add_edges(FC.row(SingNeighCC[id][i]), FC.row(SingNeighCC[id][i]) + firstBasis_.transpose().normalized()*avgEdgeLength*1.0, Eigen::RowVector3d(0.0, 1.0, 0.7));
@@ -920,39 +922,45 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 		Eigen::VectorXd inpCol(SingNeighCC.size()); inpCol.setLinSpaced(0.0, 1.0);
 		Eigen::MatrixXd edgeCol; igl::jet(inpCol, true, edgeCol);
 
-		for (int i = 0; i < (SingNeighCC[id].size()-1); i++) {		// iterate over all faces in one singularity
+		for (int i = 0; i < (SingNeighCC[id].size()); i++) {		// iterate over all faces in one singularity
+			int curFace = SingNeighCC[id][i];
+			int nextFace;
+			if (i == (SingNeighCC[id].size() - 1)) nextFace = SingNeighCC[id][0];
+			else nextFace = SingNeighCC[id][i + 1];
+			//if (i == SingNeighCC[id].size() - 2) SingNeighCC[id][SingNeighCC[id].size() - 1] = SingNeighCC[id][0];
+
 			/* Iterate to find shared edge between two neighboring faces */
 			int sharedEdgeID;
 			for (int e1 = 0; e1 < 3; e1++) {						// iterate over edges sharing that face
 				for (int e2 = 0; e2 < 3; e2++) {
-					if (FE(SingNeighCC[id][i], e1) == FE(SingNeighCC[id][i+1], e2))
+					if (FE(curFace, e1) == FE(nextFace, e2))
 					{
-						sharedEdgeID = FE(SingNeighCC[id][i], e1);
+						sharedEdgeID = FE(curFace, e1);
 					}
 				}
 			}
-			//printf("|%d:%d => %d", SingNeighCC[id][i], SingNeighCC[id][i+1], sharedEdgeID);
+			printf("|%d:%d => %d", curFace, nextFace, sharedEdgeID);
 
 			/* Obtaining the transport angle (bring the T{i+1} to T{i}) */
 			double angTarget, angSource;
-			if (EF(sharedEdgeID, 0) == SingNeighCC[id][i])
+			if (EF(sharedEdgeID, 0) == curFace)
 			{
 				angTarget = FrameRot(sharedEdgeID, 0);
 				angSource = FrameRot(sharedEdgeID, 1);
 				//printf("[0] Angle T1: %.3f | T2: %.3f \n", 180.0/M_PI*FrameRot(sharedEdgeID, 0), 180.0/M_PI*FrameRot(sharedEdgeID, 1));			
 			}
-			else if (EF(sharedEdgeID, 1) == SingNeighCC[id][i])
+			else if (EF(sharedEdgeID, 1) == curFace)
 			{
 				angTarget = FrameRot(sharedEdgeID, 1);
 				angSource = FrameRot(sharedEdgeID, 0);
 				//printf("[1] Angle T1: %.3f | T2: %.3f \n", 180.0 / M_PI*FrameRot(sharedEdgeID, 1), 180.0 / M_PI*FrameRot(sharedEdgeID, 0));
 			}	
-			printf("Angle T1: %.3f | T2: %.3f \n", 180.0 / M_PI*angTarget, 180.0 / M_PI*angSource);
+			///printf("Angle T1: %.3f | T2: %.3f \n", 180.0 / M_PI*angTarget, 180.0 / M_PI*angSource);
 
 
 			double totalRot = -rotAngle + angTarget - angSource + M_PI;
 
-			printf("RotAngle: %.4f | transportAngle: %.4f | target: %.4f | source: %.4f \n", -rotAngle*180.0 / M_PI, (angTarget - angSource + M_PI)*180.0 / M_PI, angTarget*180.0 / M_PI, angSource*180.0 / M_PI);
+			///printf("RotAngle: %.4f | transportAngle: %.4f | target: %.4f | source: %.4f \n", -rotAngle*180.0 / M_PI, (angTarget - angSource + M_PI)*180.0 / M_PI, angTarget*180.0 / M_PI, angSource*180.0 / M_PI);
 
 			Eigen::Matrix2d transfRotMat; transfRotMat << cos(totalRot), -sin(totalRot), sin(totalRot), cos(totalRot);
 
@@ -961,25 +969,26 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 			Eigen::Vector2d vn; vn << 1.0, 0.0;
 			Eigen::Vector2d vm = transfRotMat*vn;
 
-			Eigen::MatrixXd An; An = A.block(3 * SingNeighCC[id][i + 1], 2 * SingNeighCC[id][i + 1], 3, 2);
-			Eigen::MatrixXd Am; Am = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 2);
+			Eigen::MatrixXd An; An = A.block(3 * nextFace, 2 * nextFace, 3, 2);
+			Eigen::MatrixXd Am; Am = A.block(3 * curFace, 2 * curFace, 3, 2);
 			
 			Eigen::Vector3d edgeN = An*vn;
 			Eigen::Vector3d edgeM = Am*vm;
 
-			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 0, 2 * SingNeighCC[id][i] + 0, -transfRotMat(0, 0)));	// the reference triangle
-			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * SingNeighCC[id][i] + 0, -transfRotMat(1, 0)));
-			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 0, 2 * SingNeighCC[id][i] + 1, -transfRotMat(0, 1)));
-			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * SingNeighCC[id][i] + 1, -transfRotMat(1, 1)));
+			CTriplet.push_back(Eigen::Triplet<double>(counter + 0, 2 * nextFace + 0, transfRotMat(0, 0)));	// the reference triangle
+			CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * nextFace + 0, transfRotMat(1, 0)));
+			CTriplet.push_back(Eigen::Triplet<double>(counter + 0, 2 * nextFace + 1, transfRotMat(0, 1)));
+			CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * nextFace + 1, transfRotMat(1, 1)));
 
-			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 0, 2 * SingNeighCC[id][i+1] + 0, 1.0));					// the neighbor (next, CCW)
-			CTriplet.push_back(Eigen::Triplet<double>(2 * counter + 1, 2 * SingNeighCC[id][i+1] + 1, 1.0));
+			CTriplet.push_back(Eigen::Triplet<double>(counter + 0, 2 * curFace + 0, -1.0));					// the neighbor (next, CCW)
+			CTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * curFace + 1, -1.0));
 
-			c(2 * counter + 0) = 0.0;
-			c(2 * counter + 1) = 0.0;
+			c(counter + 0) = 0.0;
+			c(counter + 1) = 0.0;
+			counter+=2;
 
-			viewer.data().add_edges(FC.row(SingNeighCC[id][i]), FC.row(SingNeighCC[id][i]) + edgeM.transpose().normalized()*avgEdgeLength, edgeCol.row(i));
-			viewer.data().add_edges(FC.row(SingNeighCC[id][i+1]), FC.row(SingNeighCC[id][i+1]) + edgeN.transpose().normalized()*avgEdgeLength, edgeCol.row(i));
+			viewer.data().add_edges(FC.row(curFace), FC.row(curFace) + edgeM.transpose().normalized()*avgEdgeLength, edgeCol.row(i));
+			viewer.data().add_edges(FC.row(nextFace), FC.row(nextFace) + edgeN.transpose().normalized()*avgEdgeLength, edgeCol.row(i));
 		}
 
 		//for (int i = 0; i < (SingNeighCC[id].size()); i++) {
@@ -992,6 +1001,8 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 		
 	}
 
+	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
 
 	//// SINGULARITIES CONSTRAINTS
 	//for (int id = 0; id < SingNeighCC.size(); id++) 
@@ -1105,8 +1116,7 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 	//	}
 	//}
 
-	C.resize(2 * (globalConstraints.size() + numSingConstraints), B2D.rows());
-	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	
 }
 
 //void VectorFields::constructHardConstraintsWithSingularitiesWithGauss()
