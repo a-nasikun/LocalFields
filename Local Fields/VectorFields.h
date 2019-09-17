@@ -168,6 +168,7 @@ public:
 	void constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions);
 	void constructBasisEigenVects();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
+	void checkBasisSupport(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
 	void loadAndConstructBasis();
 	void writeBasisElementsToFile(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
 	void normalizeBasis();
@@ -359,6 +360,7 @@ public:
 	int								numSample;
 	double							numSupport; 
 	Eigen::VectorXd					faceScale;
+	vector<int>						lowSupportFaces;
 
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;

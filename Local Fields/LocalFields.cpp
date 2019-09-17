@@ -163,6 +163,8 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 
 void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport, int NUM_EIGEN)
 {
+	//cout << "Construct sub-domain \n";
+
 	int center = sampleID;
 	this->sampleID = sampleID;
 
@@ -269,6 +271,8 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::Matri
 
 void LocalFields::constructBoundary(const Eigen::MatrixXi& F, vector<bool>& visitedFaces, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring)
 {
+	//cout << "Construct boundary \n";
+
 	/* Define the subdomain */
 	for (int i : SubDomain) {
 		visitedFaces[i] = true;
@@ -346,6 +350,8 @@ void LocalFields::constructSelectorMatrix(const Eigen::MatrixXi& F, const Eigen:
 
 void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::MatrixXi &F)
 {
+	//cout << "Construct Local elements \n";
+
 	/* Defining the size of respective matrices */
 	LocalElements.resize(SubDomain.size() + Boundary.size());
 	InnerElements.resize(SubDomain.size());
@@ -1453,24 +1459,27 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 
 
 	//const int num_fields = 2;
+	//cout << "Selecting local matrices \n";
 	obtainLocalMatrixPatch2D(NUM_FIELDS, MF2Dh, MF2DLoc);
 	obtainLocalMatrixPatch2D(NUM_FIELDS, SF2Dh, SF2DLoc);
 	
 	/* Reduced matrices */
+	//cout << "Obtaining local matrices \n";
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
 
 	
 		
-
+	//cout << "Computing eigenvectros \n";
 	///computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 
-	EigVectLoc = SelectorA.transpose() * eigTemp * SelectorA;
+	//EigVectLoc = SelectorA.transpose() * eigTemp * SelectorA;
 	
-	if (id < 10)
-		printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
+	//if (id < 10)
+	//	printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
 
+	//cout << "Stacking them as basis functions \n";
 	/* Mapping to larger matrix */
 	for (int i = 0; i < InnerElements.size(); i++)
 	{
@@ -1479,19 +1488,19 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 		{
 			for (int k = 0; k < NUM_FIELDS; k++)
 			{
-				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
-				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
 				//if (id == 10 && i<10)
 				//	printf("[%d,%d]=%5f \n", NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j));
 			}
 		}
 	}
 
-	if (id < 10)
-		printf(" | %d triplet \n", BTriplet.size());
-
-	if (id == 0) cout << "eig vector (0): \n" << eigTemp.block(0, 0, 20, 1) << endl; 
-	if (id == 0) cout << "eig vector (9): \n" << eigTemp.block(0, 9, 20, 1) << endl;
+	//if (id < 10)
+	//	printf(" | %d triplet \n", BTriplet.size());
+	//
+	//if (id == 0) cout << "eig vector (0): \n" << eigTemp.block(0, 0, 20, 1) << endl; 
+	//if (id == 0) cout << "eig vector (9): \n" << eigTemp.block(0, 9, 20, 1) << endl;
 }
 
 void LocalFields::constructLocalEigenProblemWithSelectorMatrix(const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)

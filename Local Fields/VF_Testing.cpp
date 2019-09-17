@@ -1478,8 +1478,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
 	faceScale.resize(F.rows()); faceScale.setConstant(1.0);
-	///constructSamples(numSample);
-	///constructBasis();	
+	constructSamples(numSample);
+	constructBasis();	
 	///storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);	
@@ -1530,7 +1530,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	convergenceTest();
+	//convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* Alignment using (maximal/) principal curvature */

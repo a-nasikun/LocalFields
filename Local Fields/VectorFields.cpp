@@ -805,7 +805,7 @@ void VectorFields::constructHardConstraintsWithSingularities_Cheat()
 void VectorFields::constructHardConstraintsWithSingularitiesWithGauss()
 {
 	// Define the constraints
-	const int numConstraints = 20;
+	const int numConstraints = 1;
 	set<int> constraints;
 
 	globalConstraints.resize(numConstraints);
@@ -835,7 +835,7 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss()
 		globalConstraints[counter1++] = i;
 	}
 
-	int numSingConstraints = 0;
+	int numSingConstraints = 1;
 	for (int i = 0; i < SingNeighCC.size(); i++) {
 		// Use only n-1 neighboring faces as constraints
 		//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {
@@ -2361,8 +2361,8 @@ void VectorFields::constructBasis()
 	// Select the types of basis construction
 	Eigen::SparseMatrix<double> BasisFunctions;
 
-	//constructBasis_LocalEigenProblem();
-	constructBasis_LocalEigenProblem10();
+	constructBasis_LocalEigenProblem();
+	//constructBasis_LocalEigenProblem10();
 	//constructBasis_OptProblem();
 	//constructBasis_GradOfLocalFunction(BasisFunctions);
 	//constructBasis_EigenPatch(BasisFunctions);
@@ -2425,9 +2425,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "Setup the timing parameters: \n";
 	//const int NUM_THREADS = omp_get_num_procs();
-	const int NUM_THREADS = omp_get_num_procs()/2;
+	//const int NUM_THREADS = omp_get_num_procs()/2;
 	//const int NUM_THREADS = 8;
-	//const int NUM_THREADS = 1;
+	const int NUM_THREADS = 1;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
 	vector<chrono::duration<double>> subdom_dur(NUM_THREADS);
@@ -2589,6 +2589,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "....Gathering local elements as basis matrix... ";
 	t1 = chrono::high_resolution_clock::now();
+
+	checkBasisSupport(UiTriplet);
 
 	bool writeBasisCompsToFile = false;
 	if(writeBasisCompsToFile)
@@ -3535,8 +3537,8 @@ void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double
 	Basis.setFromTriplets(BTriplet.begin(), BTriplet.end());
 	printf("Basis space: %dx%d | BTriplet size: %d \n", Basis.rows(), Basis.cols(), BTriplet.size());
 	vector<int> checkPoint = { 1, 190000, 400000, 600000 };
-	for(int i : checkPoint)
-	printf("%d data: [%d,  %d]=%.4f \n", i,  BTriplet[i].row(), BTriplet[i].col(), BTriplet[i].value());
+	//for(int i : checkPoint)
+	//printf("%d data: [%d,  %d]=%.4f \n", i,  BTriplet[i].row(), BTriplet[i].col(), BTriplet[i].value());
 
 	BTriplet.clear(); BTriplet.shrink_to_fit();
 	//for (int k = 0; k < Basis.outerSize(); ++k) {
@@ -3559,6 +3561,58 @@ void VectorFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double
 	//		BasisSum(it.row(), it.col() % NUM_EIGEN) += it.value();
 	//	}
 	//}
+}
+void VectorFields::checkBasisSupport(const vector<vector<Eigen::Triplet<double>>> &UiTriplet)
+{
+
+	cout << "Checking the support \n";
+	Eigen::VectorXd sumPerRow; sumPerRow.resize(2 * F.rows()); sumPerRow.setZero();
+	Eigen::VectorXi countPerRow; countPerRow.resize(2 * F.rows()); countPerRow.setZero();
+
+	for (int j = 0; j < (Sample.size()-50); j++) {
+		//printf("Triplet %d has %d entries \n", j, UiTriplet[j].size());
+		{
+			for (int i = 0; i < UiTriplet[j].size(); i++)
+			{
+				sumPerRow[UiTriplet[j][i].row()] += abs(UiTriplet[j][i].value());
+				countPerRow[UiTriplet[j][i].row()] += 1;
+			}
+		}
+	}
+
+	printf("Size of coutn per row: %d with last entry: %d \n", countPerRow.size(), countPerRow(2 * F.rows() - 1));
+
+	for (int i = 0; i < countPerRow.size(); i++)
+	{
+		//if (i % 10 == 0)
+		//{
+		//	printf("The %d-th row has %d entries (total val: %.4f) \n", i, countPerRow(i), sumPerRow(i));
+		//}
+		
+		if (countPerRow(i) < 25)
+		{
+			//printf("PROBLEM! The %d-th row has only %d entries \n", i, countPerRow(i));
+			lowSupportFaces.push_back(i);
+		}
+	}
+
+	/* Getting the IDs of the faces with low support */
+	for (int i = 0; i < lowSupportFaces.size(); i++)
+	{
+		printf("[%d] ID:%d has only %d support. Problem! \n ", i, lowSupportFaces[i], countPerRow(lowSupportFaces[i]));
+	}
+
+	/* Finding the distance between them */
+	Eigen::VectorXd faceDistance(F.rows());
+	faceDistance.setConstant(std::numeric_limits<double>::max());
+	computeDijkstraDistanceFaceForSampling(lowSupportFaces[0], faceDistance);
+
+	/* Showing distance among faces */
+	for (int i = 0; i < lowSupportFaces.size(); i++)
+	{
+		printf("Distance from Face %d to Face %d is %.32f \n", lowSupportFaces[0], lowSupportFaces[i], faceDistance(lowSupportFaces[i]));
+	}
+
 }
 
 void VectorFields::writeBasisElementsToFile(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN)

@@ -13,7 +13,7 @@ int eigsToCompute = 500;
 int saveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::TENSOR;
+FieldsType fieldsType = FieldsType::VECTOR;
 
 
 
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
-	string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
+	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
 	/* MODEL FOR TESTING, LARGE ONES */
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -291,8 +291,8 @@ int main(int argc, char *argv[])
 		case '5':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
-			tensorFields.visualizeSubdomain(viewer);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			///tensorFields.visualizeSubdomain(viewer);
 			if(basisId%2==0)
 				basisId = max(basisId - 1, 0);
 			else 
@@ -319,8 +319,8 @@ int main(int argc, char *argv[])
 		case '6':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
-			tensorFields.visualizeSubdomain(viewer);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			///tensorFields.visualizeSubdomain(viewer);
 			if(basisId%2==1)
 				basisId = min(basisId + 1, 2 * numSample - 1);
 			else 
@@ -564,7 +564,8 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				vectorFields.constructInteractiveConstraints();
+				//vectorFields.constructInteractiveConstraints();
+				vectorFields.constructHardConstraintsWithSingularitiesWithGauss();
 				vectorFields.setupGlobalProblem(lambda);
 				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
@@ -767,13 +768,14 @@ int main(int argc, char *argv[])
 					vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					//printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
-					//viewer.data().clear();
-					//viewer.data().set_mesh(V, F);
-					vectorFields.constructInteractiveConstraints();
-					vectorFields.setAndSolveInteractiveSystem(lambda);
-					//vectorFields.setAndSolveUserSystem(lambda);
-					vectorFields.visualizeApproxResult(viewer);
-					vectorFields.visualizeGlobalConstraints(viewer);
+					/* Interactivity in reduced space */
+					/////viewer.data().clear();
+					/////viewer.data().set_mesh(V, F);
+					///vectorFields.constructInteractiveConstraints();
+					///vectorFields.setAndSolveInteractiveSystem(lambda);
+					/////vectorFields.setAndSolveUserSystem(lambda);
+					///vectorFields.visualizeApproxResult(viewer);
+					///vectorFields.visualizeGlobalConstraints(viewer);
 				}
 				else if (fieldsType == FieldsType::NROSY)
 				{
@@ -839,7 +841,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 2.5f; 
+	viewer.data().line_width = 1.5f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
