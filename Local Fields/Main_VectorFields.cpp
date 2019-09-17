@@ -565,8 +565,8 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				//vectorFields.constructInteractiveConstraints();
-				vectorFields.constructHardConstraintsWithSingularitiesWithGauss(viewer);
+				vectorFields.constructInteractiveConstraints();
+				//vectorFields.constructHardConstraintsWithSingularitiesWithGauss(viewer);
 				vectorFields.setupGlobalProblem(lambda);
 				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
@@ -674,7 +674,7 @@ int main(int argc, char *argv[])
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 				//vectorFields.constructInteractiveConstraints();
-				//vectorFields.setAndSolveInteractiveSystem(lambda);				
+				//vectorFields.setAndSolveInteractiveSystem(lambda);
 				vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
 				//vectorFields.visualizeGlobalConstraints(viewer);
@@ -772,11 +772,11 @@ int main(int argc, char *argv[])
 					/* Interactivity in reduced space */
 					/////viewer.data().clear();
 					/////viewer.data().set_mesh(V, F);
-					///vectorFields.constructInteractiveConstraints();
-					///vectorFields.setAndSolveInteractiveSystem(lambda);
+					vectorFields.constructInteractiveConstraints();
+					vectorFields.setAndSolveInteractiveSystem(lambda);
 					/////vectorFields.setAndSolveUserSystem(lambda);
-					///vectorFields.visualizeApproxResult(viewer);
-					///vectorFields.visualizeGlobalConstraints(viewer);
+					vectorFields.visualizeApproxResult(viewer);
+					vectorFields.visualizeGlobalConstraints(viewer);
 				}
 				else if (fieldsType == FieldsType::NROSY)
 				{

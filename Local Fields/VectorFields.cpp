@@ -436,7 +436,7 @@ void VectorFields::resetInteractiveConstraints()
 
 void VectorFields::constructSingularities()
 {
-	const int NUM_SINGS = 0;
+	const int NUM_SINGS = 2;
 
 	if (NUM_SINGS > 0)
 		constructVFAdjacency();
@@ -835,7 +835,7 @@ void VectorFields::constructHardConstraintsWithSingularitiesWithGauss(igl::openg
 		globalConstraints[counter1++] = i;
 	}
 
-	int numSingConstraints = 1;
+	int numSingConstraints = 0;
 	for (int i = 0; i < SingNeighCC.size(); i++) {
 		// Use only n-1 neighboring faces as constraints
 		//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {		// no consntraints on the last triangle
@@ -4197,6 +4197,9 @@ void VectorFields::getUserConstraints()
 	CBar			= C * Basis;
 	cBar			= c;
 
+	printf("Basis: %dx%d | C: %dx%d | CBar: %dx%d | c:%d | cBar:%d \n", Basis.rows(), Basis.cols(), C.rows(), C.cols(), CBar.rows(), CBar.cols(), c.rows(), cBar.rows());
+
+
 	/* MUCH FASTER: Alternative of CBar construction */
 	///vector<Eigen::Triplet<double>> CTriplet;
 	///CTriplet.reserve(40 * 2*globalConstraints.size());
@@ -4249,6 +4252,8 @@ void VectorFields::setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::Vecto
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
+
+	printf("Rhs: %d \n", bBar.rows());
 }
 
 void VectorFields::setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar)
@@ -4349,7 +4354,10 @@ void VectorFields::solveUserSystemMappedLDLT(Eigen::VectorXd& vEstBar, Eigen::Sp
 	XLowDim.resize(B2DBar.rows());
 	XFullDim.resize(Basis.rows());
 	Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
-	//Eigen::SparseLU<Eigen::SparseMatrix<double>> sparseSolver(A_LHSBar);
+	//Eigen::SparseLU<Eigen::SparseMatrix<double>> sparseSolver;
+
+	//sparseSolver.analyzePattern(A_LHSBar);
+	//sparseSolver.compute(A_LHSBar);
 
 	cout << "....Solving for the first frame.\n";
 	Eigen::VectorXd x = sparseSolver.solve(bBar);

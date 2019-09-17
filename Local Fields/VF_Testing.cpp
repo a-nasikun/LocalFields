@@ -1487,13 +1487,13 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructBasis();	
 	///storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	//retrieveBasis(filename_basis);	
-	///BasisT = Basis.transpose();
+	//retrieveBasis(filename_basis);
 	//normalizeBasisAbs(2);
 	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);
 
-	/* Set-up/Precomputation for reduced system */
+	/* Set-up/Precomputation for reduced system */	
+	BasisT = Basis.transpose();
 	setupReducedBiLaplacian();
 	preComputeReducedElements();
 	initializeParametersForLifting();
@@ -1621,6 +1621,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//computeEigenFields(eigsToCompute, filename_refField);		
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
+
+	setAndSolveUserSystem(lambda);
 }
 
 void VectorFields::constructParallelTransport()

@@ -138,7 +138,7 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//Eigen::RowVector3d color = Eigen::RowVector3d(0.53, 0.95, 1.0);
 	//Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.9, 0.0);
 
-	visualize2Dfields(viewer, Xf, color, 3.0, false);
+	visualize2Dfields(viewer, Xf, color, 2.0, false);
 	//visualize2Dfields(viewer, Xf, color, 2.0, true);
 }
 
@@ -238,6 +238,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
+	//viewer.data().lines.resize(0, 9);
 	viewer.data().lines.resize(3 * FaceToDraw.size(), 9);
 	//for (int i = 0; i < FaceToDraw.size(); i++)
 	//{
@@ -506,8 +507,8 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
-	//visualize2Dfields(viewer, XFullDim, color, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 3, false);
+	//visualize2Dfields(viewer, XFullDim, color, 1, true);
+	visualize2Dfields(viewer, XFullDim, color, 2, false);
 	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
