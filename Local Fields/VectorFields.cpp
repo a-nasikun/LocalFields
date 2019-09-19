@@ -369,6 +369,10 @@ void VectorFields::constructInteractiveConstraintsWithSingularities(igl::opengl:
 {
 	/* Define the constraints */
 	//cout << "The hard constraints part \n";
+
+	int oldNumConstr, newNumConstr;
+	oldNumConstr = C.rows();
+
 	const int numConstraints = userVisualConstraints.size() / 2;
 	globalConstraints.resize(numConstraints);
 	vector<Eigen::Vector2d> constraintValues(numConstraints);
@@ -551,6 +555,9 @@ void VectorFields::constructInteractiveConstraintsWithSingularities(igl::opengl:
 	///printf("counter: %d | C: %dx%d \n", counter, C.rows(), C.cols());
 
 	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+
+	newNumConstr = C.rows();
+	deltaConstraints = newNumConstr - oldNumConstr;
 }
 
 void VectorFields::constructInteractiveConstraintsWithLaplacian()
@@ -4501,49 +4508,35 @@ void VectorFields::getUserConstraintsEfficient()
 	Eigen::SparseMatrix<double> CT = C.transpose();
 
 	//printf("Basis: %dx%d | C: %dx%d | CBar: %dx%d | c:%d | cBar:%d \n", Basis.rows(), Basis.cols(), C.rows(), C.cols(), CBar.rows(), CBar.cols(), c.rows(), cBar.rows());
-
-
+	
 	/* MUCH FASTER: Alternative of CBar construction */
 	/* For the stroke hard constraints */
 	vector<Eigen::Triplet<double>> CTriplet;
 	CTriplet.reserve(40 * 2*globalConstraints.size());
-	vector<double> constraints_(2 * globalConstraints.size());
-	for (int i = 0; i < globalConstraints.size(); i++) { 
-		constraints_[2 * i]   = 2*globalConstraints[i]; 
-		constraints_[2 * i+1] = 2*globalConstraints[i]+1;
-	}
-	//for(int k=0; k<Basis.transpose().outerSize(); ++k)
-	for(int k=0; k<constraints_.size(); k++)
+	
 	{
-		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
-		{
-			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
-		}
-	}
-
-	/* For the singularity constraints*/
-	if (C.rows() > 2 * globalConstraints.size())
-	{
-		for (int i = 2 * globalConstraints.size(); i < C.rows(); i++)
+		//for (int i = 2 * globalConstraints.size(); i < C.rows(); i++)
+		for (int i = 0; i < C.rows(); i++)
 		{
 			vector<int> filledIdx;
-			printf("i:%d :", i - 2 * globalConstraints.size());
+			//printf("i:%d :", i - 2 * globalConstraints.size());
 			for (Eigen::SparseMatrix<double>::InnerIterator it(CT, i); it; ++it)
 			{
 				filledIdx.push_back(it.row());
-				printf("%d |", it.row());
+				//printf("%d |", it.row());
 			}
-			cout << endl;
+			//cout << endl;
+
 			for (int k = 0; k < Basis.cols(); k++)
 			{
 				double e_ik = 0;
-				e_ik = C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], 0) + C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], 1) + C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], 2);
-				//for (int val : filledIdx) {
-				//	e_ik += C.coeff(i, val)*Basis.coeff(val, k);
-				//}
+				//e_ik = C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], k) + C.coeff(i, filledIdx[1])*Basis.coeff(filledIdx[1], k) + C.coeff(i, filledIdx[2])*Basis.coeff(filledIdx[2], k);
+				for (int val : filledIdx) {
+					e_ik += C.coeff(i, val)*Basis.coeff(val, k);
+				}
 				if (abs(e_ik) > 100.0*std::numeric_limits<double>::epsilon()) {
 					CTriplet.push_back(Eigen::Triplet<double>(i, k, e_ik));
-					printf("data [%d,%d]=%.4f \n", i, k, e_ik);
+					//printf("data [%d,%d]=%.4f \n", i, k, e_ik);
 				}
 			}
 		}
@@ -4865,8 +4858,8 @@ void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
 
 void VectorFields::obtainConstraints()
 {
-	getUserConstraints();
-	//getUserConstraintsEfficient();
+	//getUserConstraints();
+	getUserConstraintsEfficient();
 }
 
 void VectorFields::preComputeReducedElements()
@@ -4911,10 +4904,12 @@ void VectorFields::solveInteractiveSystem()
 	if (CBar.rows() == 2)
 		BC.resize(CBar.cols(), CBar.rows());
 	else
-		BC.conservativeResize(Eigen::NoChange, BC.cols() + 2);
+		BC.conservativeResize(Eigen::NoChange, BC.cols() + deltaConstraints);
+		//BC.conservativeResize(Eigen::NoChange, BC.cols() + 2);
 	Eigen::MatrixXd LHS;
 	Eigen::VectorXd bc;
-	for (int i = 2; i > 0; i--)
+	//for (int i = 2; i > 0; i--)
+	for (int i = deltaConstraints; i > 0; i--)
 	{
 		bc = CBarT.col(BC.cols()-i);
 		//bc.transposeInPlace();

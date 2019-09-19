@@ -375,6 +375,7 @@ public:
 	Eigen::VectorXd					vAdd, BvBar;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
 	Eigen::MatrixXd					BC; 
+	int								deltaConstraints;		// how many new constraints are added
 	cusparseHandle_t handle;		/* Entries for lifting using CUDA */
 	cusparseMatDescr_t descrA;
 	double* d_csrVal;
