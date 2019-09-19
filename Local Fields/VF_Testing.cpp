@@ -1392,9 +1392,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	computeFrameRotation(viewer);
-	//selectFaceToDraw(2500); 
+	selectFaceToDraw(25000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
-	selectFaceToDraw(F.rows());
+	//selectFaceToDraw(F.rows());
 
 	/* MATRIX CONSTRUCTIONS */
 	constructMassMatrices();
@@ -1474,20 +1474,20 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 250; 
+	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Torus_";
+	string model = "Armadillo_";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
 	//selectAdaptiveRegions(viewer);
 	//selectAdaptiveRegions_Curvature(viewer);
 	faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 	constructSamples(numSample);
-	constructBasis();	
+	///constructBasis();	
 	///storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	//retrieveBasis(filename_basis);
+	retrieveBasis(filename_basis);
 	//normalizeBasisAbs(2);
 	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);

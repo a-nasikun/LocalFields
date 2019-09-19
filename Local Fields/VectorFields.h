@@ -187,6 +187,7 @@ public:
 	void setAndSolveUserSystem(const Eigen::Vector3d& lambda);
 	void setupReducedBiLaplacian();
 	void getUserConstraints();
+	void getUserConstraintsEfficient();
 	void setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar);
 	void setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& bBar);

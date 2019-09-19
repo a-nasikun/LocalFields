@@ -4406,6 +4406,8 @@ void VectorFields::setAndSolveUserSystem(const Eigen::Vector3d& lambda)
 
 	//setupReducedBiLaplacian();
 	getUserConstraints();
+	//getUserConstraintsEfficient();
+
 	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
 	setupLHSUserProblemMapped(A_LHSBar);
 	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
@@ -4459,24 +4461,24 @@ void VectorFields::getUserConstraints()
 
 
 	/* MUCH FASTER: Alternative of CBar construction */
-	///vector<Eigen::Triplet<double>> CTriplet;
-	///CTriplet.reserve(40 * 2*globalConstraints.size());
-	///vector<double> constraints_(2 * globalConstraints.size());
-	///for (int i = 0; i < globalConstraints.size(); i++) { 
-	///	constraints_[2 * i]   = 2*globalConstraints[i]; 
-	///	constraints_[2 * i+1] = 2*globalConstraints[i]+1;
-	///}
-	/////for(int k=0; k<Basis.transpose().outerSize(); ++k)
-	///for(int k=0; k<constraints_.size(); k++)
-	///{
-	///	for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
-	///	{
-	///		CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
-	///	}
-	///}
-	///CBar.resize(0, 0);
-	///CBar.resize(2 * globalConstraints.size(), Basis.cols());
-	///CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	//vector<Eigen::Triplet<double>> CTriplet;
+	//CTriplet.reserve(40 * 2*globalConstraints.size());
+	//vector<double> constraints_(2 * globalConstraints.size());
+	//for (int i = 0; i < globalConstraints.size(); i++) { 
+	//	constraints_[2 * i]   = 2*globalConstraints[i]; 
+	//	constraints_[2 * i+1] = 2*globalConstraints[i]+1;
+	//}
+	////for(int k=0; k<Basis.transpose().outerSize(); ++k)
+	//for(int k=0; k<constraints_.size(); k++)
+	//{
+	//	for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
+	//	{
+	//		CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
+	//	}
+	//}
+	//CBar.resize(0, 0);
+	//CBar.resize(2 * globalConstraints.size(), Basis.cols());
+	//CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	CBarT = CBar.transpose();
 
 	t2 = chrono::high_resolution_clock::now();
@@ -4485,6 +4487,80 @@ void VectorFields::getUserConstraints()
 
 	//printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
 	//printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
+}
+
+void VectorFields::getUserConstraintsEfficient()
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	t0 = chrono::high_resolution_clock::now();
+	cout << "> Obtaining user constraints ";
+
+	cBar = c;
+	Eigen::SparseMatrix<double> CT = C.transpose();
+
+	//printf("Basis: %dx%d | C: %dx%d | CBar: %dx%d | c:%d | cBar:%d \n", Basis.rows(), Basis.cols(), C.rows(), C.cols(), CBar.rows(), CBar.cols(), c.rows(), cBar.rows());
+
+
+	/* MUCH FASTER: Alternative of CBar construction */
+	/* For the stroke hard constraints */
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(40 * 2*globalConstraints.size());
+	vector<double> constraints_(2 * globalConstraints.size());
+	for (int i = 0; i < globalConstraints.size(); i++) { 
+		constraints_[2 * i]   = 2*globalConstraints[i]; 
+		constraints_[2 * i+1] = 2*globalConstraints[i]+1;
+	}
+	//for(int k=0; k<Basis.transpose().outerSize(); ++k)
+	for(int k=0; k<constraints_.size(); k++)
+	{
+		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
+		{
+			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
+		}
+	}
+
+	/* For the singularity constraints*/
+	if (C.rows() > 2 * globalConstraints.size())
+	{
+		for (int i = 2 * globalConstraints.size(); i < C.rows(); i++)
+		{
+			vector<int> filledIdx;
+			printf("i:%d :", i - 2 * globalConstraints.size());
+			for (Eigen::SparseMatrix<double>::InnerIterator it(CT, i); it; ++it)
+			{
+				filledIdx.push_back(it.row());
+				printf("%d |", it.row());
+			}
+			cout << endl;
+			for (int k = 0; k < Basis.cols(); k++)
+			{
+				double e_ik = 0;
+				e_ik = C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], 0) + C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], 1) + C.coeff(i, filledIdx[0])*Basis.coeff(filledIdx[0], 2);
+				//for (int val : filledIdx) {
+				//	e_ik += C.coeff(i, val)*Basis.coeff(val, k);
+				//}
+				if (abs(e_ik) > 100.0*std::numeric_limits<double>::epsilon()) {
+					CTriplet.push_back(Eigen::Triplet<double>(i, k, e_ik));
+					printf("data [%d,%d]=%.4f \n", i, k, e_ik);
+				}
+			}
+		}
+	}
+
+	CBar.resize(0, 0);
+	CBar.resize(C.rows(), Basis.cols());
+	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	CBarT = CBar.transpose();
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	//cout << "in " << duration.count() << " seconds." << endl;
+
+	printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
+	printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
+
 }
 
 void VectorFields::setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar)
@@ -4790,6 +4866,7 @@ void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
 void VectorFields::obtainConstraints()
 {
 	getUserConstraints();
+	//getUserConstraintsEfficient();
 }
 
 void VectorFields::preComputeReducedElements()
