@@ -129,11 +129,13 @@ public:
 	void constructSpecifiedHardConstraints();
 	void constructRandomHardConstraints();
 	void constructInteractiveConstraints();
+	void addHardConstraints();
 	void constructInteractiveConstraintsWithSingularities(igl::opengl::glfw::Viewer &viewer);
 	void constructInteractiveConstraintsWithLaplacian();
 	void resetInteractiveConstraints();
 	void constructSingularities();
 	void constructInteractiveSingularities();
+	void addSingularityConstraints();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
 	void constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer);
@@ -356,6 +358,7 @@ public:
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
 	set<int>						SubDomain, Boundary;
+	vector<Eigen::Triplet<double>>	ConstrTriplet;
 
 	// Variable related to subspace construction
 	Eigen::SparseMatrix<double>		BasisTemp, Basis, BasisT;

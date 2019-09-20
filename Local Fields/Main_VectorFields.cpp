@@ -46,13 +46,13 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
-	string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
+	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -752,7 +752,8 @@ int main(int argc, char *argv[])
 					ChosenFaces.push_back(fid);
 					selectFace = !selectFace;
 					for (int i : ChosenFaces)
-						viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.8, 0.0));
+						viewer.data().add_points(vectorFields.V.row(F(fid,0)), Eigen::RowVector3d(0.0, 0.8, 0.0));
+						//viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.8, 0.0));
 				}
 				else {
 					// paint hit red
@@ -789,12 +790,14 @@ int main(int argc, char *argv[])
 						for (int i : ChosenFaces) {
 							vectorFields.userSingularConstraints.push_back(F(i, 0));
 							printf("Inserting %d as singularity constraints \n", F(i,0));
+							vectorFields.addSingularityConstraints();
 						}
 					}
 					else {
 						constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
 						viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 						vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+						vectorFields.addHardConstraints();
 					}
 
 					//srand(time(NULL));
@@ -811,8 +814,8 @@ int main(int argc, char *argv[])
 					///vectorFields.setAndSolveInteractiveSystem(lambda);
 					
 
-					vectorFields.constructInteractiveSingularities();
-					vectorFields.constructInteractiveConstraintsWithSingularities(viewer);
+					///vectorFields.constructInteractiveSingularities();
+					///vectorFields.constructInteractiveConstraintsWithSingularities(viewer);
 					
 					//vectorFields.setupGlobalProblem(lambda);
 					
