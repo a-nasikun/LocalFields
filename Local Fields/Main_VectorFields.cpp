@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Fertility_";
+	const string model = "Armadillo_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -547,14 +547,14 @@ int main(int argc, char *argv[])
 			{
 				/* Saving the file */
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_Local" + to_string(saveId++);
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx_" + to_string(saveId++);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx_" + to_string(saveId++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
-				//nRoSyFields.writeNRoSyFieldsToFile_Local(nRoSy, filename_vfields+"_red.txt");
-				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields + ".txt");				
+				nRoSyFields.writeNRoSyFieldsToFile_Local(nRoSy, filename_vfields+"_red.txt");
+				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields + "_global.txt");				
 				nRoSyFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 
-				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
-				//nRoSyFields.writeNRoSyFieldsToFile_Local(nRoSy, filename_vfields + "_ref.txt");
+				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
+				nRoSyFields.writeNRoSyFieldsToFile_Local(nRoSy, filename_vfields + "_ref.txt");
 
 				/* Load and display the fields */
 				//cout << "========================================== \n";
@@ -726,8 +726,8 @@ int main(int argc, char *argv[])
 					nRoSyFields.visualizeConstraints(viewer);
 					
 					NRoSy nRoSy_;
-					nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy_);
-					nRoSyFields.sendFieldsToMailSlot(nRoSy_);
+					///nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy_);
+					///nRoSyFields.sendFieldsToMailSlot(nRoSy_);
 
 					/* Full res*/
 					//if (F.rows() < 50000)

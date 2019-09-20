@@ -3455,11 +3455,11 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 1;
+	nRot = 4;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Brezel_";
+	string model = "Armadillo_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3517,7 +3517,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 100;
+	numSample = 1000;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
@@ -3557,9 +3557,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.00000005 / weight;	// perfect for armadillo (not-scaled)
 	//lambda[1] = 0.005 / weight;			// perfect for scaled bunny
 	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
-	lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
+	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
-
+	lambda[1] = 0.000005 / weight;
 	BF = SF*MFinv*SF;
 
 	Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
@@ -3630,7 +3630,7 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 
 	vector<Eigen::VectorXd> nFields(nRot);
 
-	const int FIELD_TO_WRITE = 1;
+	const int FIELD_TO_WRITE = nRot;
 	for (int i = 0; i < nRot; i++)
 	{
 		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
@@ -3688,7 +3688,7 @@ void NRoSyFields::writeNRoSyFieldsToFile_Local(const NRoSy& nRoSy, const string&
 
 	vector<Eigen::VectorXd> nFields(nRot);
 
-	const int FIELD_TO_WRITE = 1;
+	const int FIELD_TO_WRITE = nRot;
 	for (int i = 0; i < nRot; i++)
 	{
 		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());

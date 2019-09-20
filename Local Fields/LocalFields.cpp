@@ -1457,14 +1457,12 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	/* Reduced matrices */
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
-
-	
-		
+			
 
 	///computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 
-	EigVectLoc = SelectorA.transpose() * eigTemp * SelectorA;
+	//EigVectLoc = SelectorA.transpose() * eigTemp * SelectorA;
 	
 	if (id < 10)
 		printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
@@ -1477,8 +1475,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 		{
 			for (int k = 0; k < NUM_FIELDS; k++)
 			{
-				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
-				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
 				//if (id == 10 && i<10)
 				//	printf("[%d,%d]=%5f \n", NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j));
 			}
