@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Armadillo_";
+	const string model = "RockerArm_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/raptor.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_270k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
 			{
 				//nRoSyFields.visualizeSoftConstraints(viewer);
 				nRoSyFields.visualizeConstraints(viewer);
-				//nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
@@ -512,11 +512,11 @@ int main(int argc, char *argv[])
 			{
 				nRoSyFields.nRoSyFieldsDesignRef();
 				viewer.data().clear(); viewer.data().set_mesh(V, F);
-				nRoSyFields.visualizeConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields(viewer);
+				nRoSyFields.visualizeConstraints(viewer);
 
-				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
-				nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.7, 0.0));
+				///nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
+				///nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.7, 0.0));
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -547,7 +547,7 @@ int main(int argc, char *argv[])
 			{
 				/* Saving the file */
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_Local" + to_string(saveId++);
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx_" + to_string(saveId++);
+				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx_" + to_string(saveId++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.writeNRoSyFieldsToFile_Local(nRoSy, filename_vfields+"_red.txt");
 				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields + "_global.txt");				
@@ -633,8 +633,8 @@ int main(int argc, char *argv[])
 				nRoSyFields.setAndSolveInteractiveSystem();
 				
 				//viewer.data().clear(); viewer.data().set_mesh(V, F);
-				nRoSyFields.visualizeConstraints(viewer);
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
+				nRoSyFields.visualizeConstraints(viewer);
 
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
 				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));				

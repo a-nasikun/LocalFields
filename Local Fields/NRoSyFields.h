@@ -74,8 +74,8 @@ public:
 	void nRoSyFieldsDesignRef_HardConstraints();
 	void createAlignmentField(Eigen::VectorXd& v);
 	void constructRandomHardConstraints(Eigen::SparseMatrix<double>& C, Eigen::VectorXd& c);
-	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst,  const vector<double>& lambda, Eigen::VectorXd& b);
-	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHS);
+	void setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst,  Eigen::VectorXd& b);
+	void setupLHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F, const Eigen::SparseMatrix<double>& C, const Eigen::VectorXd& c, Eigen::SparseMatrix<double>& A_LHS);
 	void solveBiharmSystemRef(const Eigen::VectorXd& vEst, const Eigen::SparseMatrix<double>& A_LHS, const Eigen::VectorXd& b, Eigen::VectorXd& Xf);
 
 	// Interactive constraints for spline editing
