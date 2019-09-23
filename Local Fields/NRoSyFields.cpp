@@ -1150,12 +1150,13 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy
 		nRoSyFields.magnitude(i) = v.norm();
 		//nRoSyFields.magnitude(i) = 1.0;		// normalizing the n-fields
 
-		if (v(0) > std::numeric_limits<double>::epsilon() & v(1) > std::numeric_limits<double>::epsilon())
+		if (abs(v(0)) > std::numeric_limits<double>::epsilon() && abs(v(1)) > std::numeric_limits<double>::epsilon())
 			v.normalize();
 		else
 			v = v;
 		
 		double dotP = b.dot(v);
+		if (dotP > 1) cout << "b: " << b.transpose() << ", and v:" << v.transpose() << endl; 
 		if (isnan(dotP)) cout << "The dot of " << b.transpose() << " and " << v.transpose() << ".\n";
 		double angle = acos(dotP);
 		if (v(1) < 0)
@@ -1167,7 +1168,7 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy
 		{
 			nRoSyFields.theta(i) = angle / (double) nRot;
 		}
-		if (isnan(angle)) cout << "NaN on " << i << endl; 
+		if (isnan(angle)) cout << "NaN on " << i << ", where angle is: " << angle << ", and dotP is: " << dotP << " WITH b: " << b.transpose() << ", and v:" << v.transpose() << endl;
 	}
 }
 
@@ -1629,7 +1630,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0;
-	const double EDGE_RATIO = 5.0;
+	const double EDGE_RATIO = 2.0;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color2(0.2, 0.8, 0.1);
 	Eigen::RowVector3d color(0.1, 0.1, 0.1);
@@ -1703,7 +1704,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 1.0;
+	viewer.data().line_width = 4.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1769,7 +1770,7 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 	//B2F = SF * MFinv * SF;
 
 	//constructRandomHardConstraints(C, c);
-	constructInteractiveConstraints();
+	///constructInteractiveConstraints();
 	//setupWeight(mu, lambda);
 	setupRHSBiharmSystemRef(BF, C, c, g, h, vEst, b);
 	setupLHSBiharmSystemRef(BF, C, c, A_LHS);
@@ -2838,8 +2839,8 @@ void NRoSyFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>
 /* ============================= REDUCED N-FIELDS DESIGN ============================= */
 void NRoSyFields::nRoSyFieldsDesign_Reduced()
 {
-	//nRoSyFieldsDesign_Reduced_HardConstraints();
-	nRoSyFieldsDesign_Reduced_SoftConstraints();
+	nRoSyFieldsDesign_Reduced_HardConstraints();
+	//nRoSyFieldsDesign_Reduced_SoftConstraints();
 }
 
 void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
@@ -2848,18 +2849,20 @@ void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
 	//Eigen::SparseMatrix<double>		MFBar = Basis.transpose()*MF*Basis;
 	Eigen::VectorXd					bBar, gBar, hBar, vEstBar;
 	Eigen::SparseMatrix<double>		A_LHSBar;
-	vector<double> lambda;
+	//vector<double> lambda;
 	//double mu = 0.0000000000000000000000000000000000000000000000000000000000001;
 	//double mu = std::numeric_limits<double>::epsilon();
 	//double mu = 100000.0; 
 	double mu = 0.0000075;
 
 	//constructInteractiveConstraints();
-	constructRandomHardConstraints_Reduced();
-	setupWeight(mu, lambda);
+	///constructRandomHardConstraints_Reduced();
+	///setupWeight(mu, lambda);
+	obtainConstraints();
 	setupRHSBiharmSystem_Reduced(BFBar, MFBar, gBar, hBar, vEstBar, lambda, bBar);
 	setupLHSBiharmSystem_Reduced(BFBar, MFBar, lambda, A_LHSBar);
 	solveBiharmSystem_Reduced(vEstBar, A_LHSBar, bBar);
+
 }
 
 void NRoSyFields::constructRandomHardConstraints_Reduced()
@@ -2871,13 +2874,15 @@ void NRoSyFields::constructRandomHardConstraints_Reduced()
 
 void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, const vector<double>& lambda, Eigen::VectorXd& bBar)
 {
-	vEstBar.resize(B2FBar.rows());
+	cout << "Set up RHS \n";
+	vEstBar.resize(B2DBar.rows());
 	Eigen::VectorXd vT(BF.rows());
-	for (int i = 0; i < BF.rows(); i++)
+	for (int i = 0; i < B2DBar.rows(); i++)
 	{
-		vT(i) = 0.5;
+		vEstBar(i) = 0.5;
+		//vT(i) = 0.5;
 	}
-	vEstBar = Basis.transpose()*vT;
+	//vEstBar = Basis.transpose()*vT;
 
 	//for (int i = 0; i < vEstBar.rows(); i++) {
 	//	vEstBar(i) = 0.5;
@@ -2898,7 +2903,8 @@ void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 	bBar << gBar, hBar;
 	*/
 
-	gBar = Basis.transpose()*(SF*MFinv*SF + lambda[1] * MF)*Basis * vEstBar + lambda[1] * (Basis.transpose()*MF*Basis)*(Basis.transpose()*alignFields);
+	//gBar = Basis.transpose()*(SF*MFinv*SF + lambda[1] * MF)*Basis * vEstBar + lambda[1] * (Basis.transpose()*MF*Basis)*(Basis.transpose()*alignFields);
+	gBar =B2DBar * vEstBar + lambda[1] * (Basis.transpose()*MF*alignFields);
 	hBar = C*Basis*vEstBar - cBar; 
 	bBar.resize(B2FBar.rows() + cBar.rows());
 	bBar << gBar, hBar;
@@ -2906,12 +2912,18 @@ void NRoSyFields::setupRHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 
 void NRoSyFields::setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const Eigen::SparseMatrix<double>& MFBar, const vector<double>& lambda, Eigen::SparseMatrix<double>& A_LHSBar)
 {
-	A_LHSBar.resize(B2FBar.rows() + CBar.rows(), B2FBar.cols() + CBar.rows());
-	vector<Eigen::Triplet<double>>	ATriplet;
-	ATriplet.reserve(B2FBar.nonZeros() + 2 * CBar.nonZeros());
+	cout << "Set up LHS \n";
 
+	cout << "__resize + reserve \n";
+	//A_LHSBar.resize(B2FBar.rows() + CBar.rows(), B2FBar.cols() + CBar.rows());
+	A_LHSBar.resize(B2DBar.rows() + CBar.rows(), B2DBar.cols() + CBar.rows());
+	vector<Eigen::Triplet<double>>	ATriplet;
+	ATriplet.reserve(B2DBar.nonZeros() + 2 * CBar.nonZeros());
+
+	cout << "__assigning stufff \n";
 	//Eigen::SparseMatrix<double> BMBar = lambda[0] * B2FBar + lambda[1] * MFBar;
-	Eigen::SparseMatrix<double> BMBar = Basis.transpose()*(lambda[0] * BF + lambda[1] * MF)*Basis;
+	//Eigen::SparseMatrix<double> BMBar = Basis.transpose()*(lambda[0] * BF + lambda[1] * MF)*Basis;
+	Eigen::SparseMatrix<double> BMBar = B2DBar;
 
 	for (int k = 0; k < BMBar.outerSize(); ++k) {
 		for (Eigen::SparseMatrix<double>::InnerIterator it(BMBar, k); it; ++it) {
@@ -2925,6 +2937,8 @@ void NRoSyFields::setupLHSBiharmSystem_Reduced(const Eigen::SparseMatrix<double>
 			ATriplet.push_back(Eigen::Triplet<double>(it.col(), B2FBar.cols() + it.row(), it.value()));
 		}
 	}
+
+	cout << "__set LHS\n";
 	A_LHSBar.setFromTriplets(ATriplet.begin(), ATriplet.end());
 }
 
@@ -2948,6 +2962,9 @@ void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, cons
 
 	XLowDim = -x.block(0, 0, vEstBar.size(), 1) + vEstBar;
 
+	cout << "vEst Bar: " << vEstBar.block(0, 0, 10, 1) << endl; 
+
+	cout << "Lifting: \n";
 	XfBar = Basis * XLowDim;
 }
 void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
@@ -3002,7 +3019,7 @@ void NRoSyFields::getReducedConstraints()
 	//constructConstraints();
 
 	//userConstraints = globalConstraints; 
-	//CBar = C * Basis;
+	///CBar = C * Basis;
 	cBar = c;
 	//printf("cBar=%d \n", cBar.size());
 	//cout << "c: \n" << c << endl; 
@@ -3027,13 +3044,13 @@ void NRoSyFields::getReducedConstraints()
 	CBar.resize(2 * globalConstraints.size(), Basis.cols());
 	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	CBarT = CBar.transpose();
-
+	
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
 	cout << "in " << duration.count() << " seconds." << endl;
-
-	printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
-	printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
+	//
+	//printf(".... C_LoCal = %dx%d\n", CBar.rows(), CBar.cols());
+	//printf(".... c_LoCal = %dx%d\n", cBar.rows(), cBar.cols());
 }
 void NRoSyFields::setupRHSSplines_Reduced(const Eigen::SparseMatrix<double>& B2FBar, const vector<double>& lambda, Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& bBar)
 {
@@ -3404,6 +3421,7 @@ void NRoSyFields::initializeParametersForLifting()
 }
 void NRoSyFields::performLifting()
 {
+	cout << "lfiiting \n";
 	// Setting up some variable
 	cudaError_t			cudaStat1 = cudaSuccess;
 	const int nnz = BasisRow.nonZeros();
@@ -3530,7 +3548,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	numSupport = 40.0;
 	numSample = 1000;
 	constructSamples(numSample);
-	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
 	retrieveBasis(basisFile);
@@ -3569,12 +3587,12 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	lambda[0] = 1.0;
 	//lambda[1] = 0.5 / weight;	// perfect for armadillo (not-scaled)
 	//lambda[1] = 0.00000005 / weight;	// perfect for armadillo (not-scaled)
-	lambda[1] = 0.005 / weight;			// perfect for scaled bunny
+	//lambda[1] = 0.005 / weight;			// perfect for scaled bunny
 	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.000005 / weight;
-	//lambda[1] = 0.5 / weight;
+	lambda[1] = 0.005 / weight;
 	//BF = SF*MFinv*SF;
 	BF = SF;
 
@@ -3866,6 +3884,9 @@ void NRoSyFields::loadConstraintsFromFile(const string& filename)
 	globalConstraints.reserve(300);
 	vector<double> constraintValues;
 
+	vector<Eigen::Triplet<double>> CTriplet;
+	CTriplet.reserve(2 * globalConstraints.size());
+
 	double	val2;
 	int		val1;
 
@@ -3885,15 +3906,43 @@ void NRoSyFields::loadConstraintsFromFile(const string& filename)
 			getline(iStream, oneWord, ' ');
 			val2 = stod(oneWord);
 			constraintValues.push_back(val2);
+			getline(iStream, oneWord, ' ');
+			val2 = stod(oneWord);
+			constraintValues.push_back(val2);
 		}
 	}
 	file.close();
 
-	Eigen::VectorXd cTemp = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 2 * globalConstraints.size());
-	NRoSy cNRoSy; createNRoSyFromVectors(cTemp, cNRoSy);
+	Eigen::VectorXd cTemp3d = Eigen::Map<Eigen::VectorXd>(constraintValues.data(), 3 * globalConstraints.size());
+	Eigen::VectorXd cTemp2d; cTemp2d.resize(2 * globalConstraints.size());
+
+	for (int i = 0; i < globalConstraints.size(); i++)
+	{
+		Eigen::MatrixXd ALoc(3, 2);
+		ALoc = A.block(3 * globalConstraints[i], 2 * globalConstraints[i], 3, 2);
+		Eigen::Vector2d cLoc;
+		cLoc = ALoc.transpose()*cTemp3d.block(3 * i, 0, 3, 1);
+		//cTemp2d.block(2 * i, 0, 2, 1) = cLoc;
+		cTemp2d(2 * i + 0) = cLoc(0);
+		cTemp2d(2 * i + 1) = cLoc(1);
+
+		cout << "c init:" << cTemp3d.block(3 * i, 0, 3, 1).transpose() << "c 2d: " << cLoc.transpose() << endl;
+
+
+		CTriplet.push_back(Eigen::Triplet<double>(2*i+0, 2 * globalConstraints[i] + 0, 1.0));
+		CTriplet.push_back(Eigen::Triplet<double>(2*i+1, 2 * globalConstraints[i] + 1, 1.0));
+	}
+
+	NRoSy cNRoSy; createNRoSyFromVectors(cTemp2d, cNRoSy);
 	convertNRoSyToRepVectors(cNRoSy, c);
 
+	C.resize(2 * globalConstraints.size(), SF.rows());
+	C.setFromTriplets(CTriplet.begin(), CTriplet.end());
+
 	printf("Load %d constraints \n", globalConstraints.size());
+
+	cout << "c: " << c.transpose() << endl << endl;
+	cout << "C nnz: " << C.nonZeros() << endl; 
 }
 
 /* PROJECTION ON REDUCED FIELDS */

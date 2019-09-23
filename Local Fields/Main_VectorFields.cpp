@@ -10,7 +10,7 @@ int eigToShow = 0, basisId = 0, selectedVertex;
 int numSample = 100;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
-int saveId = 0;
+int saveId = 2;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
 FieldsType fieldsType = FieldsType::NROSY;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/raptor.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_270k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
@@ -547,7 +547,7 @@ int main(int argc, char *argv[])
 			{
 				/* Saving the file */
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model +"2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_Local" + to_string(saveId++);
-				filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx_" + to_string(saveId++);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx_" + to_string(saveId++);
 				nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 				nRoSyFields.writeNRoSyFieldsToFile_Local(nRoSy, filename_vfields+"_red.txt");
 				nRoSyFields.writeNRoSyFieldsToFile(nRoSy, filename_vfields + "_global.txt");				
@@ -588,8 +588,9 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				//filename_vfields = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "_2fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(saveId++);
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_Local_user_10_constraints.txt";
+				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(saveId++);
+				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_Local_user_10_constraints.txt";
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/RockerArm_4fields_2000_40_approx_2_constraints.txt";
 				nRoSyFields.loadConstraintsFromFile(filename_vfields);
 				nRoSyFields.visualizeConstraints(viewer);
 			}
@@ -608,7 +609,7 @@ int main(int argc, char *argv[])
 				//vectorFields.setupGlobalProblem();			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				vectorFields.constructInteractiveConstraints();				
+				//vectorFields.constructInteractiveConstraints();				
 				//vectorFields.setAndSolveUserSystem(lambda);
 				vectorFields.setAndSolveInteractiveSystem(lambda);
 				vectorFields.visualizeApproxResult(viewer);
@@ -630,11 +631,14 @@ int main(int argc, char *argv[])
 				//nRoSyFields.constructInteractiveConstraints();
 				//nRoSyFields.nRoSyFieldsDesign_Reduced_HardConstraints();
 				//nRoSyFields.nRoSyFieldsDesign_Reduced_Splines();
-				nRoSyFields.setAndSolveInteractiveSystem();
+				///nRoSyFields.setAndSolveInteractiveSystem();
+				nRoSyFields.nRoSyFieldsDesign_Reduced();
 				
+				cout << "visual \n";
+
 				//viewer.data().clear(); viewer.data().set_mesh(V, F);
 				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
-				nRoSyFields.visualizeConstraints(viewer);
+				//nRoSyFields.visualizeConstraints(viewer);
 
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.alignFields, nRoSy);
 				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.0, 0.9, 0.1));				
