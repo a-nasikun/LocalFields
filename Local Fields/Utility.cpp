@@ -551,6 +551,9 @@ void readEigenSparseMatrixFromBinary(const std::string &filename, Eigen::SparseM
 		m.finalize();
 		readFile.close();
 	}
+	else {
+		cout << "ERROR! Cannot read the basis from file \n";
+	}
 	printf("File is closed\n");
 }
 

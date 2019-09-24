@@ -1485,7 +1485,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 	constructSamples(numSample);
 	constructBasis();	
-	storeBasis(filename_basis);			// Binary, Eigen-base
+	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);
 	visualizeSamples(viewer);
@@ -1610,7 +1610,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	wbEigen = wb; 
 	
 	/* PRojection on uniform basis */
-	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Bimba_2000_Eigfields_40sup";
 	retrieveBasis(filename_basis);
 	//faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 	//constructSamples(numSample);
