@@ -569,12 +569,12 @@ void VectorFields::constructEFList()
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
-	for (int i = 0; i < EF.rows(); i++)
-	{
-		if (i < 100) {
-			printf("Edge %d has faces: %d and %d \n", i, EF(i, 0), EF(i, 1));
-		}
-	}
+	//for (int i = 0; i < EF.rows(); i++)
+	//{
+	//	if (i < 100) {
+	//		printf("Edge %d has faces: %d and %d \n", i, EF(i, 0), EF(i, 1));
+	//	}
+	//}
 
 	/* For test */
 	//int ft = 264;

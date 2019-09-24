@@ -298,6 +298,7 @@ public:
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
 	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
+	void visualize2DfieldsSlow(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces);
@@ -368,7 +369,7 @@ public:
 	vector<chrono::duration<double>>durations;
 	int								numSample;
 	double							numSupport; 
-	Eigen::VectorXd					faceScale;
+	Eigen::VectorXd					faceScale, fieldScale;
 	vector<int>						lowSupportFaces;
 
 	// Variable related to manipulation within the subspace

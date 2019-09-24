@@ -116,7 +116,8 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 	Eigen::VectorXd D(F.rows());
-	const double maxDist = distRatio * avgEdgeLength;
+	//const double maxDist = distRatio * avgEdgeLength;
+	const double maxDist = distRatio;
 
 	// Computing distance for initial sample points S
 	for (int i = 0; i < F.rows(); i++) {
@@ -159,6 +160,7 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 			}
 		}
 	} while (distFromCenter < maxDist);
+	//cout << "dist: " << maxDist; 
 }
 
 void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport, int NUM_EIGEN)

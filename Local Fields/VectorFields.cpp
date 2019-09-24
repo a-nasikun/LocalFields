@@ -2971,9 +2971,12 @@ void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
 	
 	//const int face_id1 = 5213; 	const int face_id2 = 44893;	// arma43k
 	//const int face_id1 = 26806; 	const int face_id2 = 29748;	// arma43k
-	const int face_id1 = 421007; 	const int face_id2 = 397117;	// arma43k
+	//const int face_id1 = 421007; 	const int face_id2 = 397117;	// arma43k
+	//const int face_id1 = 0; const int face_id2 = 5000;
+	const int face_id1 = 520374; const int face_id2 = 137423;			//bimba 1m
 	Eigen::VectorXd dist;
 	faceScale.resize(F.rows());	
+	fieldScale.resize(F.rows());
 	dist.resize(F.rows());
 
 	Eigen::VectorXd faceColor(F.rows());
@@ -2983,18 +2986,22 @@ void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
 	computeDijkstraDistanceFace(face_id1, dist);
 
 	double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+	double scaleBound = 1.5*upBound;
+	double coef = (-1.0) / (scaleBound - upBound);
 
 	for(int i=0; i<F.rows(); i++)
 	{
 		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound);
 		if (dist(i) < upBound) {
-			faceScale(i) = 7.5;
+			faceScale(i) = 6.0;
 			faceColor(i) = 0.7;
+			fieldScale(i) = 1.0;
 			fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
 		}
 		else {
 			faceScale(i) = 1.0;
 			faceColor(i) = 0.3;
+			fieldScale(i) = max(0.0, coef*(dist(i) - upBound)+ 1.0);
 			fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
 		}
 	
@@ -3174,7 +3181,14 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	double	coef = sqrt(pow(1.7, 2) + pow(1.9, 2));			// regular
 	//double	coef = 1.5*sqrt(pow(1.7, 2) + pow(1.9, 2));			// adaptive
 	//double	coef = sqrt(pow(1.1, 2) + pow(1.3, 2));
-	double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
+	//double distRatio = coef * sqrt((double)V.rows() / (double)Sample.size());
+
+	double avg_area = 0;
+	for (int i = 0; i < F.rows(); i++) avg_area += doubleArea(i) / 2.0;
+	avg_area /= (double)F.rows();
+
+	this->numSupport = 160.0;
+	double distRatio = sqrt((this->numSupport*(double)F.rows()*avg_area) / (M_PI*2.0*(double)Sample.size()));
 
 	// Setup sizes of each element to construct basis
 	try {
@@ -3220,9 +3234,9 @@ void VectorFields::constructBasis_LocalEigenProblem()
 
 	cout << "Setup the timing parameters: \n";
 	//const int NUM_THREADS = omp_get_num_procs();
-	//const int NUM_THREADS = omp_get_num_procs()/2;
+	const int NUM_THREADS = omp_get_num_procs()/2;
 	//const int NUM_THREADS = 8;
-	const int NUM_THREADS = 1;
+	//const int NUM_THREADS = 1;
 	vector<chrono::high_resolution_clock::time_point> t_end(NUM_THREADS);
 	vector<chrono::duration<double>> eigen_dur(NUM_THREADS);
 	vector<chrono::duration<double>> subdom_dur(NUM_THREADS);
@@ -3291,8 +3305,8 @@ void VectorFields::constructBasis_LocalEigenProblem()
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
-			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, NUM_EIG);
+			localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, faceScale, AdjMF2Ring, distRatio);
+			//localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, NUM_EIG);
 			t2 = chrono::high_resolution_clock::now();
 			dur_ = t2 - t1;
 			durations[0] += t2 - t1;

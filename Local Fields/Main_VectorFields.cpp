@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Fertility_";
+	const string model = "Bimba_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Vase-lion/177_vase-lion.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/raptor.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
@@ -202,7 +202,8 @@ int main(int argc, char *argv[])
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);	
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 3.0, false);
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(180.0/255.0, 173.0/255.0, 234.0 / 255.0), 3.0, false);
-			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
+			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
+			vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
 			vectorFields.selectAdaptiveRegions(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
@@ -217,8 +218,9 @@ int main(int argc, char *argv[])
 			{				
 				//vectorFields.visualizeSubdomain(viewer);
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-				vectorFields.visualizeApproximatedFields(viewer);
-				vectorFields.visualizeGlobalConstraints(viewer);
+				//vectorFields.visualizeApproximatedFields(viewer);
+				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
+				//vectorFields.visualizeGlobalConstraints(viewer);
 				//vectorFields.visualizeSingularitiesConstraints(viewer);				
 				
 			}
@@ -241,10 +243,12 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-				vectorFields.visualizeApproxResult(viewer);
+				//vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
-				vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
 				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 				//vectorFields.selectAdaptiveRegions(viewer);
@@ -393,6 +397,7 @@ int main(int argc, char *argv[])
 			viewer.selected_data_index = 0;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			vectorFields.selectAdaptiveRegions(viewer);
 			//viewer.selected_data_index = 1;
 			//viewer.data().clear();
 			//viewer.data().set_mesh(V, F);
@@ -603,7 +608,8 @@ int main(int argc, char *argv[])
 				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"constraintFields_user_" + std::to_string(saveId);
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "constraintFields_Local_user_" + std::to_string(saveId);
 				saveId++;
-				vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
+				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
+				vectorFields.writeVectorFieldsToFile(vectorFields.Xf, filename_vfields + ".txt");
 				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 
 				//vectorFields.writeVectorFieldsToFile_Local(vectorFields.XFullDim, filename_vfields + "_red.txt");
@@ -647,8 +653,8 @@ int main(int argc, char *argv[])
 		case 'K':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_user_" + std::to_string(saveId);
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_Local_user_" + std::to_string(saveId);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_user_" + std::to_string(saveId);
+				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_Local_user_" + std::to_string(saveId);
 				saveId++;
 				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				//vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
