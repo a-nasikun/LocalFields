@@ -3002,7 +3002,8 @@ void VectorFields::selectAdaptiveRegions(igl::opengl::glfw::Viewer &viewer)
 			faceScale(i) = 1.0;
 			faceColor(i) = 0.3;
 			fieldScale(i) = max(0.0, coef*(dist(i) - upBound)+ 1.0);
-			fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			//fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(112.0 / 255.0, 161.0 / 255.0, 215.0 / 255.0);
 		}
 	
 	}
@@ -3187,7 +3188,10 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	for (int i = 0; i < F.rows(); i++) avg_area += doubleArea(i) / 2.0;
 	avg_area /= (double)F.rows();
 
-	this->numSupport = 160.0;
+	this->numSupport = 40.0;
+	bool adaptiveBasis = false;			// IMPORTANT FLAG!!!!!
+	if (adaptiveBasis) this->numSupport *= 4.0; 
+
 	double distRatio = sqrt((this->numSupport*(double)F.rows()*avg_area) / (M_PI*2.0*(double)Sample.size()));
 
 	// Setup sizes of each element to construct basis

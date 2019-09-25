@@ -1254,7 +1254,8 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::RowVector3d color(0.8, 0.1, 0.0);
+	//Eigen::RowVector3d color(0.8, 0.1, 0.0);
+	Eigen::RowVector3d color(163.0/255.0, 127.0/255.0, 207.0/255.0);
 	Eigen::RowVector3d c;
 
 	/* Point based */

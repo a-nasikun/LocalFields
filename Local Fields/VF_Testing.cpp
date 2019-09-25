@@ -1392,7 +1392,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	computeFrameRotation(viewer);
-	selectFaceToDraw(75000); 
+	selectFaceToDraw(5000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1476,19 +1476,23 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Bimba_";	
+	string model = "Armadillo_";	
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
-	selectAdaptiveRegions(viewer);
-	//selectAdaptiveRegions_Curvature(viewer);
-	//faceScale.resize(F.rows()); faceScale.setConstant(1.0);
+	bool adaptiveSampling = false;
+	if (adaptiveSampling) {
+		selectAdaptiveRegions(viewer);
+		//selectAdaptiveRegions_Curvature(viewer);
+	}else {
+		faceScale.resize(F.rows()); faceScale.setConstant(1.0);
+	}
 	constructSamples(numSample);
 	constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);
-	visualizeSamples(viewer);
+	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);
 
 	/* Set-up/Precomputation for reduced system */	
@@ -1592,33 +1596,31 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* MEASURE ACCURACY */
 	//measureApproxAccuracyL2Norm();
 
-	/* PROJECTION ON ADAPTIVE SAMPLING */
-	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_user_0.txt";
-	loadVectorFieldsFromFile(filename_vfields, Xf);
-	for (int i = 0; i < F.rows(); i++){		// scale the fields
-		Xf(2 * i + 0) *= fieldScale(i);
-		Xf(2 * i + 1) *= fieldScale(i);
-	}
-	///visualizeApproximatedFields(viewer);
-	//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
-	//loadConstraintsFromFile(filename_vfields);
-	//visualizeGlobalConstraints(viewer);
-	
-	/* PRojection on adaptive basis */
-	cout << "[1] Projection using adaptive basis \n";
-	projectionSimpleL2Test();
-	wbEigen = wb; 
-	
-	/* PRojection on uniform basis */
-	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Bimba_2000_Eigfields_40sup";
-	retrieveBasis(filename_basis);
-	//faceScale.resize(F.rows()); faceScale.setConstant(1.0);
-	//constructSamples(numSample);
-	//constructBasis();
-	//storeBasis(filename_basis);
-	
-	cout << "[2] Projection using regular/isotropic basis \n";
-	projectionSimpleL2Test();
+	////* PROJECTION ON ADAPTIVE SAMPLING */
+	///{
+	///	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_user_0.txt";
+	///	loadVectorFieldsFromFile(filename_vfields, Xf);
+	///	for (int i = 0; i < F.rows(); i++) {		// scale the fields
+	///		Xf(2 * i + 0) *= fieldScale(i);
+	///		Xf(2 * i + 1) *= fieldScale(i);
+	///	}
+	///	///visualizeApproximatedFields(viewer);
+	///	//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
+	///	//loadConstraintsFromFile(filename_vfields);
+	///	//visualizeGlobalConstraints(viewer);
+	///
+	///	/* PRojection on adaptive basis */
+	///	cout << "[1] Projection using adaptive basis \n";
+	///	projectionSimpleL2Test();
+	///	wbEigen = wb;
+	///
+	///	/* PRojection on uniform basis */
+	///	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Bimba_2000_Eigfields_40sup";
+	///	retrieveBasis(filename_basis);
+	///
+	///	cout << "[2] Projection using regular/isotropic basis \n";
+	///	projectionSimpleL2Test();
+	///}
 
 	/* Basis via Coarsening */
 	//constructBasis_Coarsening(viewer);
