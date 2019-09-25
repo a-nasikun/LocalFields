@@ -692,24 +692,24 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 
 		/** _____________________ DEBUG PURPOSE _____________________________*/
 		//if (ei < 100 && ei%10==0)
-		if (ei == testEdge)
-		{
-			// first basis of the triangle frame (frist and second)
-			viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 0)) + e_i.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
-			viewer.data().add_edges(V.row(F(TB, 0)), V.row(F(TB, 0)) + e_j.transpose(), Eigen::RowVector3d(0.0, 0.9, 0.0));
-			// shared edge
-			viewer.data().add_edges(V.row(E(ei, 0)), V.row(E(ei, 1)), Eigen::RowVector3d(0.0, 0.0, 0.9));
-			viewer.data().add_points(V.row(E(ei, 0)), Eigen::RowVector3d(0.0, 0.1, 0.1));
-			viewer.data().add_points(V.row(E(ei, 1)), Eigen::RowVector3d(0.9, 0.1, 0.1));
-			//viewer.data().add_edges(V.row(F(TA, eMatchA)), V.row(F(TA, eMatchA)) + e_ij.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
-			//viewer.data().add_points(V.row(F(TA, eMatchA)), Eigen::RowVector3d(0.0, 0.1, 0.1));
-			printf("Angle between basis and shared edge (fram 1) is %.5f degree \n", FrameRot(ei, 0)*180.0 / M_PI);
-			cout << "__case 1= " << eMatchA << endl;
-			printf("__angle1 = %.10f \n", angle_1*180.0 / M_PI);
-			printf("Angle between basis and shared edge (fram 2) is %.5f degree \n", FrameRot(ei, 1)*180.0 / M_PI);
-			cout << "__case 2= " << eMatchB << endl;
-			printf("__angle2 = %.10f \n", angle_2*180.0 / M_PI);
-		}
+		//if (ei == testEdge)
+		//{
+		//	// first basis of the triangle frame (frist and second)
+		//	viewer.data().add_edges(V.row(F(TA, 0)), V.row(F(TA, 0)) + e_i.transpose(), Eigen::RowVector3d(0.9, 0.0, 0.0));
+		//	viewer.data().add_edges(V.row(F(TB, 0)), V.row(F(TB, 0)) + e_j.transpose(), Eigen::RowVector3d(0.0, 0.9, 0.0));
+		//	// shared edge
+		//	viewer.data().add_edges(V.row(E(ei, 0)), V.row(E(ei, 1)), Eigen::RowVector3d(0.0, 0.0, 0.9));
+		//	viewer.data().add_points(V.row(E(ei, 0)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+		//	viewer.data().add_points(V.row(E(ei, 1)), Eigen::RowVector3d(0.9, 0.1, 0.1));
+		//	//viewer.data().add_edges(V.row(F(TA, eMatchA)), V.row(F(TA, eMatchA)) + e_ij.transpose(), Eigen::RowVector3d(0.0, 0.0, 0.9));
+		//	//viewer.data().add_points(V.row(F(TA, eMatchA)), Eigen::RowVector3d(0.0, 0.1, 0.1));
+		//	printf("Angle between basis and shared edge (fram 1) is %.5f degree \n", FrameRot(ei, 0)*180.0 / M_PI);
+		//	cout << "__case 1= " << eMatchA << endl;
+		//	printf("__angle1 = %.10f \n", angle_1*180.0 / M_PI);
+		//	printf("Angle between basis and shared edge (fram 2) is %.5f degree \n", FrameRot(ei, 1)*180.0 / M_PI);
+		//	cout << "__case 2= " << eMatchB << endl;
+		//	printf("__angle2 = %.10f \n", angle_2*180.0 / M_PI);
+		//}
 	}
 }
 
@@ -1807,22 +1807,11 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "Bunny_";
+	string model = "RockerArm_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
-
-	cout << "TEST TENSOR<< \n";
-	Eigen::Matrix2d A_; A_.setZero(); A_(0, 0) = 1.0;
-	Eigen::Matrix2d EigVec_;
-	Eigen::Vector2d  EigVal_;
-	computeEigenExplicit(A_, EigVal_, EigVec_);
-	cout << " INPUT: \n" << A_ << endl; 
-	cout << " EigVect: \n" << EigVec_ << endl;
-	cout << "EIGVAL: \n" << EigVal_ << endl; 
-	cout << "LIMIT: " << std::numeric_limits<double>::epsilon() << endl; 
-
-
+	
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
 	viewer.data().set_mesh(V, F);
@@ -1846,7 +1835,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	//visualizeTensorFields(viewer, tensorFields);
+	///visualizeTensorFields(viewer, tensorFields);
 	cout << "-------------------------------------------------------------------\n";
 
 	computeFrameRotation(viewer);
@@ -1858,20 +1847,20 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	///computeEigenFields_generalized(10, fileEigFields);
 	//computeEigenFields_regular(75, fileEigFields);
 	//loadEigenFields(fileEigFields);
-	cout << "Loading successful " << eigFieldsTensorRef.rows() << " x " << eigFieldsTensorRef.cols() << " of matrix \n";
+	///cout << "Loading successful " << eigFieldsTensorRef.rows() << " x " << eigFieldsTensorRef.cols() << " of matrix \n";
 	///visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 500;
+	numSample = 250;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	constructBasis();
-	storeBasis(fileBasis);
-	//retrieveBasis(fileBasis);
+	//constructBasis();
+	//storeBasis(fileBasis);
+	retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
-	visualizeSubdomain(viewer);
+	//visualizeSubdomain(viewer);
 
 	///for (int i = 0; i < min((int)eigFieldsTensorRef.cols(), 0); i++)
 	///{
@@ -1886,8 +1875,8 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	
 	/* adaptive stuff */
 	//settingAdaptiveWeight(viewer, adaptiveWeight);
-	///settingAdaptiveWeightGradual(viewer, adaptiveWeight);
-	///projectTheContraints(adaptiveWeight, WMbar);
+	settingAdaptiveWeightGradual(viewer, adaptiveWeight);
+	projectTheContraints(adaptiveWeight, WMbar);
 
 	prepareSmoothingRed();
 	initializeParametersForProjection();
@@ -1896,7 +1885,8 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	initializeParametersForLHS();
 	//initializeSystemSolve();
 
-	
+	smoothingRed_Implicit_Geometric_Adaptive(viewer, Tensor, Eigen::VectorXd(10), Tensor);
+	//visualizeSmoothedAppTensorFields(viewer);
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -2164,8 +2154,8 @@ void TensorFields::prepareSmoothingRed()
 }
 void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
-	smoothingRed_Implicit_Geometric_Adaptive(viewer, inputTensor, adaptiveWeight, outputTensor);
-	//smoothingRed_Implicit_Geometric(viewer, inputTensor, lambda, outputTensor);
+	//smoothingRed_Implicit_Geometric_Adaptive(viewer, inputTensor, adaptiveWeight, outputTensor);
+	smoothingRed_Implicit_Geometric(viewer, inputTensor, lambda, outputTensor);
 	//smoothingRed_Explicit_Geometric(viewer, inputTensor, lambda, outputTensor);
 }
 
@@ -2378,8 +2368,8 @@ void TensorFields::settingAdaptiveWeightGradual(igl::opengl::glfw::Viewer &viewe
 	cout << "Assigning weight \n";
 
 	// parameter
-	double minWeight = 0.15;
-	double maxWeight = 7.15;
+	double minWeight = 2.0;
+	double maxWeight = 10.0;
 	double wScale = (minWeight-maxWeight) / upBound;
 
 	for (int i = 0; i<F.rows(); i++)
@@ -2459,7 +2449,9 @@ void TensorFields::smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::V
 
 	t2 = chrono::high_resolution_clock::now();
 	//Eigen::SparseMatrix<double> LHS = MFbar + WMbar*SFbar;
-	Eigen::SparseMatrix<double> LHS = MFbar + Basis.transpose()*WM*SF*Basis;
+	//Eigen::SparseMatrix<double> LHS = MFbar + Basis.transpose()*WM*SF*Basis;
+	Eigen::SparseMatrix<double> LHS = Basis.transpose()*(MF+WM*SF)*Basis;
+
 	printf("Sparsity: %.4f (%d/%d) \n", (double)LHS.nonZeros() / (double)(LHS.rows()*LHS.cols()), LHS.nonZeros(), LHS.rows()*LHS.cols());
 
 	///Eigen::SparseMatrix<double> LHS;

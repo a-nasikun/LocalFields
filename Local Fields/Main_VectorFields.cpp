@@ -13,7 +13,7 @@ int eigsToCompute = 500;
 int saveId = 0;
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::VECTOR;
+FieldsType fieldsType = FieldsType::TENSOR;
 
 
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
-	const string model = "Bunny_";
+	const string model = "RockerArm_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
+	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_large/octopus_large.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
 
-	double tensor_lambda = 0.1;
+	double tensor_lambda = 2.5;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
@@ -491,7 +491,8 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					tensor_lambda /= 5.0;
+					tensor_lambda -= 0.5;
+					//tensor_lambda /= 5.0;
 					printf("lambda=%.3f \n", tensor_lambda);
 					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
 					tensorFields.visualizeSmoothedAppTensorFields(viewer);
@@ -519,7 +520,8 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					tensor_lambda *= 5.0;
+					//tensor_lambda *= 5.0;
+					tensor_lambda += 0.5;
 					printf("lambda=%.3f \n", tensor_lambda);
 					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
 					tensorFields.visualizeSmoothedAppTensorFields(viewer);
