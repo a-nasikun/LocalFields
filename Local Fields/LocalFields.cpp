@@ -1464,8 +1464,8 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 
 	//EigVectLoc = SelectorA.transpose() * eigTemp * SelectorA;
 	
-	if (id < 10)
-		printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
+	//if (id < 10)
+	//	printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
 
 	/* Mapping to larger matrix */
 	for (int i = 0; i < InnerElements.size(); i++)
@@ -1483,11 +1483,11 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 		}
 	}
 
-	if (id < 10)
-		printf(" | %d triplet \n", BTriplet.size());
-
-	if (id == 0) cout << "eig vector (0): \n" << eigTemp.block(0, 0, 20, 1) << endl; 
-	if (id == 0) cout << "eig vector (9): \n" << eigTemp.block(0, 9, 20, 1) << endl;
+	//if (id < 10)
+	//	printf(" | %d triplet \n", BTriplet.size());
+	//
+	//if (id == 0) cout << "eig vector (0): \n" << eigTemp.block(0, 0, 20, 1) << endl; 
+	//if (id == 0) cout << "eig vector (9): \n" << eigTemp.block(0, 9, 20, 1) << endl;
 }
 
 void LocalFields::constructLocalEigenProblemWithSelectorMatrix(const int NUM_FIELDS, const Eigen::SparseMatrix<double>& SF2D, const Eigen::SparseMatrix<double>& MF2D, const vector<set<int>>& AdjMF2Ring, const int& NUM_EIG, const Eigen::VectorXd& doubleArea, vector<Eigen::Triplet<double>>& BTriplet)

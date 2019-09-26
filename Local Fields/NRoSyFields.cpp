@@ -12,6 +12,7 @@
 /* Reading data*/
 void NRoSyFields::readMesh(const string &filename)
 {
+	cout << "reading mesh data: " << filename << endl; 
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
@@ -1704,7 +1705,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 4.0;
+	viewer.data().line_width = 1.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -1969,7 +1970,7 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 
 	g = BF*vEst;
 	if(useAlignment) 
-		g = g+lambda[1] * MF*alignFields;
+		g = g-lambda[1] * MF*alignFields;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -3294,7 +3295,7 @@ void NRoSyFields::preComputeReducedElements()
 	// setup the Bv
 	BvBar = B2DBar * vAdd;
 	//if (useAlignment) BvBar -= lambda[1]*MFBar*(Basis.transpose()*alignFields);
-	if (useAlignment) BvBar += lambda[1] * (Basis.transpose()*(MF*alignFields));
+	if (useAlignment) BvBar -= lambda[1] * (Basis.transpose()*(MF*alignFields));
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3488,7 +3489,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "RockerArm_";
+	string model = "Mechanics_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3549,9 +3550,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	numSample = 1000;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
-	//constructBasis();
-	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	constructBasis();
+	storeBasis(basisFile);
+	//retrieveBasis(basisFile);
 	BasisT = Basis.transpose(); 
 	//visualizeBasis(viewer, 0);
 
@@ -3592,9 +3593,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.000005 / weight;
-	lambda[1] = 0.005 / weight;
-	//BF = SF*MFinv*SF;
-	BF = SF;
+	lambda[1] = 0.05 / weight;
+	BF = SF*MFinv*SF;
+	BF = 0.25*BF + SF;
 
 	Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
 	const int factor1 = id.transpose()*BF*id;
