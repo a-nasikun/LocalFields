@@ -83,6 +83,8 @@ public:
 	void pushNewUserConstraints(const int& fInit, const int& fEnd);
 	void constructInteractiveConstraints();
 	void setupWeight(double mu, vector<double>& lambda);
+	void addHardConstraints();
+	void addSingularityConstraints();
 
 	void resetInteractiveConstraints();
 	void setupRHSBiharmSystemRef_Chris(const Eigen::SparseMatrix<double>& B2F, const vector<double>& lambda, const Eigen::VectorXd& c, Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& b);
@@ -199,15 +201,18 @@ public:
 	Eigen::SparseMatrix<double>		BF, BM;
 
 	/* Variable related to REDUCED n-RoSy fields design */
-	bool							useAlignment; 
-	vector<double>					lambda;
-	Eigen::VectorXd					XfBar, XfRed;
+	bool							useAlignment;								// Flag to turn-on/off the aligntment fields
+	vector<double>					lambda;										// weight for the aligntment
+	Eigen::VectorXd					XfBar, XfRed;								// The approx (n-dim) and reduced (d-dim)
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
-	Eigen::SparseMatrix<double>		CBar, CBarT, B2DBar;										// selector matrix
-	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar; 
-	Eigen::VectorXd					vAdd, BvBar;
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
+	Eigen::SparseMatrix<double>		CBar, CBarT;								// reduced constraints/selector matrix, its transpose;
+	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar, B2DBar;				// reduced matrices
+	Eigen::VectorXd					vAdd, BvBar;	
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;				// factorization 
 	Eigen::MatrixXd					BC;
+	int								deltaConstraints;
+	vector<Eigen::Triplet<double>>	ConstrTriplet;
+	
 	cusparseHandle_t				handle;		/* Entries for lifting using CUDA */
 	cusparseMatDescr_t				descrA;
 	double*							d_csrVal;

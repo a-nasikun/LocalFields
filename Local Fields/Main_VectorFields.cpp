@@ -14,7 +14,7 @@ int saveId = 2;
 bool singularConstraint = false; 
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::VECTOR;
+FieldsType fieldsType = FieldsType::NROSY;
 
 
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur0.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Screwdriver/40_screwdriver.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
@@ -496,6 +496,11 @@ int main(int argc, char *argv[])
 				selectFace = !selectFace;			
 				//vectorFields.visualizeRandomFace(viewer, selectedFace);
 			} 
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+				selectFace = !selectFace;
+			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
 				showSmoothed = !showSmoothed;
@@ -825,14 +830,14 @@ int main(int argc, char *argv[])
 					/* Interactivity in reduced space */
 					/////viewer.data().clear();
 					/////viewer.data().set_mesh(V, F);
-					///vectorFields.constructInteractiveConstraints();
+					//vectorFields.constructInteractiveConstraints();
 					///vectorFields.setAndSolveInteractiveSystem(lambda);
 					
 
-					///vectorFields.constructInteractiveSingularities();
+					//vectorFields.constructInteractiveSingularities();
 					///vectorFields.constructInteractiveConstraintsWithSingularities(viewer);
 					
-					//vectorFields.setupGlobalProblem(lambda);
+					vectorFields.setupGlobalProblem(lambda);
 					
 
 					//vectorFields.setAndSolveUserSystem(lambda);

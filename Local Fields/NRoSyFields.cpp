@@ -2573,6 +2573,67 @@ void NRoSyFields::constructInteractiveConstraints()
 
 }
 
+void NRoSyFields::addHardConstraints()
+{
+	int oldNumConstr, newNumConstr;
+	oldNumConstr = C.rows();
+
+	/* Define the constraints */
+	const int CRows = c.rows();
+	const int curConstSize = userVisualConstraints.size();
+	int constFid;
+	Eigen::Vector2d normDir;
+
+	printf("CRows: %d \n", CRows);
+
+
+
+	/* Define the constraints */
+	///const int numConstraints = userVisualConstraints.size() / 2;
+	///globalConstraints.resize(numConstraints);
+	///vector<Eigen::Vector2d> constraintValues(numConstraints);
+
+	/* Global constraints from user input */
+	for (int i = curConstSize-2; i < curConstSize; i += 2)
+	{
+		/* Location of constraints */
+		constFid = userVisualConstraints[i];
+		/* Getting the constraints + making them into local coordinates */
+		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i + 1]) - FC.row(userVisualConstraints[i]);
+		Eigen::MatrixXd ALoc(3, 2);
+		ALoc = A.block(3 * userVisualConstraints[i], 2 * userVisualConstraints[i], 3, 2);
+		normDir = ALoc.transpose() * dir.transpose();
+		normDir.normalize();
+	}
+
+	c.conservativeResize(CRows + 2);
+	NRoSy nRoSy_;
+	Eigen::VectorXd cCur;
+	createNRoSyFromVectors(normDir, nRoSy_);
+	convertNRoSyToRepVectors(nRoSy_, cCur);
+
+	
+	ConstrTriplet.push_back(Eigen::Triplet<double>(CRows + 0, 2 * constFid + 0, 1.0));
+	c(CRows + 0) = cCur(0);
+	ConstrTriplet.push_back(Eigen::Triplet<double>(CRows + 1, 2 * constFid + 1, 1.0));
+	c(CRows + 1) = cCur(1);
+
+	C.resize(0, 0);
+	C.resize(CRows+2, SF.rows());
+	C.setFromTriplets(ConstrTriplet.begin(), ConstrTriplet.end());	
+
+	printf("C:%dx%d | constraints: %d->%d | size: %d | entries: %d \n ", C.rows(), C.cols(), constFid, userVisualConstraints[curConstSize - 1], curConstSize, ConstrTriplet.size());
+
+
+	newNumConstr = C.rows();
+	deltaConstraints = newNumConstr - oldNumConstr;
+}
+
+void NRoSyFields::addSingularityConstraints()
+{
+
+}
+
 void NRoSyFields::setupWeight(double mu, vector<double>& lambda)
 {
 	/* weighting*/
@@ -3549,10 +3610,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	numSupport = 40.0;
 	numSample = 1000;
 	constructSamples(numSample);
-	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
-	constructBasis();
-	storeBasis(basisFile);
-	//retrieveBasis(basisFile);
+	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	//constructBasis();
+	//storeBasis(basisFile);
+	retrieveBasis(basisFile);
 	BasisT = Basis.transpose(); 
 	//visualizeBasis(viewer, 0);
 
