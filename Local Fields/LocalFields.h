@@ -20,7 +20,7 @@ public:
 	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const Eigen::MatrixXi &AdjMF3N);
 	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const Eigen::MatrixXi &AdjMF3N, const double& distRatio);
 	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, const double &avgEdgeLength, const Eigen::VectorXd& faceScale, const vector<set<int>>& AdjMF2Ring, const double& distRatio);
-	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport);
+	void constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport, int NUM_EIGEN);
 	void constructBoundary(const Eigen::MatrixXi& F, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring);
 	void constructBoundary(const Eigen::MatrixXi& F, vector<bool>& visitedFaces, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring);
 	void constructSelectorMatrix(const Eigen::MatrixXi& F, const Eigen::VectorXd& doubleArea);
@@ -62,7 +62,8 @@ private:
 	Eigen::VectorXd					vEstimateLoc, dijksFaceDist;
 
 public:
-	int								sampleID;
+	int								sampleID;				// the index of sample face in the whole mesh
+	int								sampleIDix;			    // the index of the sample ID in the list of entries in local domain
 	set<int>						SubDomain, Boundary, BeyondBoundary;
 	vector<int>						InnerElements;
 	Eigen::VectorXd					dijksFaceDistMapped, scalingFactor;

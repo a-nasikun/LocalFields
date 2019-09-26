@@ -7,13 +7,14 @@
 #include "TestSolver.h"
 
 int eigToShow = 0, basisId = 0, selectedVertex;
-int numSample = 100;
+int numSample = 10000;
 int eigToShow2 = 0;
 int eigsToCompute = 500; 
 int saveId = 2;
+bool singularConstraint = false; 
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::NROSY;
+FieldsType fieldsType = FieldsType::VECTOR;
 
 
 
@@ -39,6 +40,7 @@ int main(int argc, char *argv[])
 	// Hell there this is main function.
 
 	/* READING DATA */
+
 	const string model = "Mechanics_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
@@ -47,7 +49,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
-	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";
+	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
@@ -65,6 +67,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Vase-lion/177_vase-lion.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/wolf_500k.obj";
@@ -74,8 +77,10 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur0.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Screwdriver/40_screwdriver.off";
 	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_270k.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
@@ -89,7 +94,12 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Raptor/178_raptor.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Plane/squarePlane_16k.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Sphere/sphere10k.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Dragon/Dragon_150k.off";
+
 
 	/* ====================== VECTOR FIELDS  ====================*/
 	
@@ -125,6 +135,7 @@ int main(int argc, char *argv[])
 		cout << "\n========================= TENSOR FIELDS =============================\n";
 		tensorFields.TEST_TENSOR(viewer, meshFile);
 		tensorFields.getVF(V, F);
+		//viewer.data().set_colors(Eigen::RowVector3d(186.0/255.0, 225.0/255.0, 255.0/255.0));
 		break;
 	default:
 		break;
@@ -171,6 +182,8 @@ int main(int argc, char *argv[])
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
 
+	double tensor_lambda = 0.1;
+
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{
 		int selectedFace;
@@ -193,8 +206,9 @@ int main(int argc, char *argv[])
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);	
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 3.0, false);
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(180.0/255.0, 173.0/255.0, 234.0 / 255.0), 3.0, false);
-			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
-			vectorFields.selectAdaptiveRegions(viewer);
+			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
+			vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
+			///vectorFields.selectAdaptiveRegions(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
 		case '`':			
@@ -208,8 +222,10 @@ int main(int argc, char *argv[])
 			{				
 				//vectorFields.visualizeSubdomain(viewer);
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-				vectorFields.visualizeGlobalConstraints(viewer);
-				vectorFields.visualizeApproximatedFields(viewer);				
+				//vectorFields.visualizeApproximatedFields(viewer);
+				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
+				//vectorFields.visualizeGlobalConstraints(viewer);
+				//vectorFields.visualizeSingularitiesConstraints(viewer);				
 				
 			}
 			else if (fieldsType == FieldsType::NROSY)
@@ -234,7 +250,9 @@ int main(int argc, char *argv[])
 				//vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
-				vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
 				//vectorFields.visualize1FieldOnCenter(viewer, evenSpaceField);
 				//vectorFields.selectAdaptiveRegions(viewer);
@@ -283,6 +301,8 @@ int main(int argc, char *argv[])
 		case '5':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			///tensorFields.visualizeSubdomain(viewer);
 			if(basisId%2==0)
 				basisId = max(basisId - 1, 0);
 			else 
@@ -309,6 +329,8 @@ int main(int argc, char *argv[])
 		case '6':
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			///tensorFields.visualizeSubdomain(viewer);
 			if(basisId%2==1)
 				basisId = min(basisId + 1, 2 * numSample - 1);
 			else 
@@ -379,6 +401,7 @@ int main(int argc, char *argv[])
 			viewer.selected_data_index = 0;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			///vectorFields.selectAdaptiveRegions(viewer);
 			//viewer.selected_data_index = 1;
 			//viewer.data().clear();
 			//viewer.data().set_mesh(V, F);
@@ -427,6 +450,8 @@ int main(int argc, char *argv[])
 			showSmoothed = !showSmoothed;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
 			if (!showSmoothed) {				
 				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}
@@ -442,29 +467,82 @@ int main(int argc, char *argv[])
 			showSmoothed = !showSmoothed;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+			//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
 			if (!showSmoothed) {
 				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
 			}
 			else
 			{
-				tensorFields.smoothingRed(viewer, inputTensorRed, outputTensorRed);
+				tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
 				tensorFields.visualizeSmoothedAppTensorFields(viewer);
 				inputTensorRed = outputTensorRed;
 			}
 			break;
 
+		case 'g':
+		case 'G':
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				singularConstraint = !singularConstraint;
+			}
+			break;
 		/* Case x to activate for user inputted constraints */	
 		case 'x':
 		case 'X':
-			C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
-			selectFace = !selectFace;			
-			//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				C = Eigen::MatrixXd::Constant(F.rows(), 3, 1);
+				selectFace = !selectFace;			
+				//vectorFields.visualizeRandomFace(viewer, selectedFace);
+			} 
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				showSmoothed = !showSmoothed;
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
+				if (!showSmoothed) {
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensor_lambda /= 5.0;
+					printf("lambda=%.3f \n", tensor_lambda);
+					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
+					tensorFields.visualizeSmoothedAppTensorFields(viewer);
+					//inputTensorRed = outputTensorRed;
+				}
+			}
 			break;
 		case 'c':
-		case 'C':
-			printf("Computing smoothing on Reduced basis\n");
-			vectorFields.computeSmoothingApprox(mu, v_in, v_out);			
-			v_in = v_out; 
+		case 'C':			
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				printf("Computing smoothing on Reduced basis\n");
+				vectorFields.computeSmoothingApprox(mu, v_in, v_out);
+				v_in = v_out;
+			}
+			else if(fieldsType==FieldsType::TENSOR)
+			{
+				showSmoothed = !showSmoothed;
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
+				if (!showSmoothed) {
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensor_lambda *= 5.0;
+					printf("lambda=%.3f \n", tensor_lambda);
+					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
+					tensorFields.visualizeSmoothedAppTensorFields(viewer);
+					//inputTensorRed = outputTensorRed;
+				}
+			}
 			break; 
 		//case 'x':
 		//case 'X':
@@ -505,6 +583,7 @@ int main(int argc, char *argv[])
 			{
 				cout << "\n========================= GLOBAL PROBLEM =============================\n";
 				vectorFields.constructInteractiveConstraints();
+				//vectorFields.constructHardConstraintsWithSingularitiesWithGauss(viewer);
 				vectorFields.setupGlobalProblem(lambda);
 				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
@@ -533,7 +612,8 @@ int main(int argc, char *argv[])
 				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"constraintFields_user_" + std::to_string(saveId);
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "constraintFields_Local_user_" + std::to_string(saveId);
 				saveId++;
-				vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
+				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
+				vectorFields.writeVectorFieldsToFile(vectorFields.Xf, filename_vfields + ".txt");
 				vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
 
 				//vectorFields.writeVectorFieldsToFile_Local(vectorFields.XFullDim, filename_vfields + "_red.txt");
@@ -577,8 +657,8 @@ int main(int argc, char *argv[])
 		case 'K':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_user_" + std::to_string(saveId);
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_Local_user_" + std::to_string(saveId);
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_user_" + std::to_string(saveId);
+				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_Local_user_" + std::to_string(saveId);
 				saveId++;
 				//vectorFields.writeVectorFieldsToFile(vectorFields.XFullDim, filename_vfields + ".txt");
 				//vectorFields.writeConstraintsToFile(filename_vfields + "_constraints.txt");
@@ -612,11 +692,12 @@ int main(int argc, char *argv[])
 				//vectorFields.setupGlobalProblem();			
 				//vectorFields.visualizeApproximatedFields(viewer);
 				cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-				//vectorFields.constructInteractiveConstraints();				
-				//vectorFields.setAndSolveUserSystem(lambda);
-				vectorFields.setAndSolveInteractiveSystem(lambda);
+				//vectorFields.constructInteractiveConstraints();
+				//vectorFields.setAndSolveInteractiveSystem(lambda);
+				vectorFields.setAndSolveUserSystem(lambda);
+
 				vectorFields.visualizeApproxResult(viewer);
-				vectorFields.visualizeGlobalConstraints(viewer);
+				//vectorFields.visualizeGlobalConstraints(viewer);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -680,16 +761,29 @@ int main(int argc, char *argv[])
 		if (selectFace) {
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
-			{				
-				// paint hit red
-				C.row(fid) << 1, 0, 0;
-				//viewer.data().set_colors(C);
-				ChosenFaces.push_back(fid);
-				if (ChosenFaces.size() == 1)
+			{	
+				if (singularConstraint)
 				{
-					viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+					ChosenFaces.push_back(fid);
+					selectFace = !selectFace;
+					for (int i : ChosenFaces)
+						viewer.data().add_points(vectorFields.V.row(F(fid,0)), Eigen::RowVector3d(0.0, 0.8, 0.0));
+						//viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.8, 0.0));
 				}
+				else {
+					// paint hit red
+					C.row(fid) << 1, 0, 0;
+					//viewer.data().set_colors(C);
+					ChosenFaces.push_back(fid);
+					if (ChosenFaces.size() == 1)
+					{
+						viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+					}
+				}
+
+				/* Select vertices closest to the center*/
 	
+
 				return true;
 			}
 		}
@@ -706,16 +800,44 @@ int main(int argc, char *argv[])
 				//printf("Size of the contraints vector is %d\n", constraintSize);
 				if (fieldsType == FieldsType::VECTOR)
 				{
-					constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
-					viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
-					vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					if (singularConstraint)
+					{
+						for (int i : ChosenFaces) {
+							vectorFields.userSingularConstraints.push_back(F(i, 0));
+							printf("Inserting %d as singularity constraints \n", F(i,0));
+							vectorFields.addSingularityConstraints();
+						}
+					}
+					else {
+						constraintDir = vectorFields.FC.row(ChosenFaces[constraintSize - 1]) - vectorFields.FC.row(ChosenFaces[0]);
+						viewer.data().add_edges(vectorFields.FC.row(ChosenFaces[0]), vectorFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+						vectorFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+						vectorFields.addHardConstraints();
+					}
+
+					//srand(time(NULL));
+					//int vConst = rand() % V.rows();
+					//vectorFields.userSingularConstraints.push_back(vConst);
+					//printf("Inserting %d as singularity constraints \n", vConst);
+
 					//printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
-					//viewer.data().clear();
-					//viewer.data().set_mesh(V, F);
-					vectorFields.constructInteractiveConstraints();
-					vectorFields.setAndSolveInteractiveSystem(lambda);
+					/* Interactivity in reduced space */
+					/////viewer.data().clear();
+					/////viewer.data().set_mesh(V, F);
+					///vectorFields.constructInteractiveConstraints();
+					///vectorFields.setAndSolveInteractiveSystem(lambda);
+					
+
+					///vectorFields.constructInteractiveSingularities();
+					///vectorFields.constructInteractiveConstraintsWithSingularities(viewer);
+					
+					//vectorFields.setupGlobalProblem(lambda);
+					
+
 					//vectorFields.setAndSolveUserSystem(lambda);
+					vectorFields.setAndSolveInteractiveSystem(lambda);
+
 					vectorFields.visualizeApproxResult(viewer);
 					vectorFields.visualizeGlobalConstraints(viewer);
 				}
@@ -782,10 +904,10 @@ int main(int argc, char *argv[])
 	viewer.callback_key_down = key_down;
 
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
-	viewer.core.background_color = bgCol;
+	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.0f; 
-
+	viewer.data().line_width = 1.5f; 
+	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
 	/* Trick for remote desktop */

@@ -1,6 +1,7 @@
 #include "LocalFields.h"
 #include "EigenSolver.h"
 #include "Utility.h"
+#include <Eigen/LU>
 
 LocalFields::LocalFields(const int &sampleID)
 {
@@ -115,7 +116,8 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 	Eigen::VectorXd D(F.rows());
-	const double maxDist = distRatio * avgEdgeLength;
+	//const double maxDist = distRatio * avgEdgeLength;
+	const double maxDist = distRatio;
 
 	// Computing distance for initial sample points S
 	for (int i = 0; i < F.rows(); i++) {
@@ -158,14 +160,17 @@ void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd 
 			}
 		}
 	} while (distFromCenter < maxDist);
+	//cout << "dist: " << maxDist; 
 }
 
-void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport)
+void LocalFields::constructSubdomain(const int &sampleID, const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, Eigen::VectorXd &D, const vector<set<int>>& AdjMF2Ring, int sampleSize, double numSupport, int NUM_EIGEN)
 {
+	//cout << "Construct sub-domain \n";
+
 	int center = sampleID;
 	this->sampleID = sampleID;
 
-	int numEntries = (int) round((numSupport*F.rows()) / (float) (10 * sampleSize));
+	int numEntries = (int) round((numSupport*F.rows()) / (float) (NUM_EIGEN * sampleSize));
 
 	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 	//Eigen::VectorXd D(F.rows());
@@ -268,6 +273,8 @@ void LocalFields::constructBoundary(const Eigen::MatrixXi& F, const Eigen::Matri
 
 void LocalFields::constructBoundary(const Eigen::MatrixXi& F, vector<bool>& visitedFaces, const Eigen::MatrixXi &AdjMF3N, const vector<set<int>> &AdjMF2Ring)
 {
+	//cout << "Construct boundary \n";
+
 	/* Define the subdomain */
 	for (int i : SubDomain) {
 		visitedFaces[i] = true;
@@ -345,6 +352,8 @@ void LocalFields::constructSelectorMatrix(const Eigen::MatrixXi& F, const Eigen:
 
 void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::MatrixXi &F)
 {
+	//cout << "Construct Local elements \n";
+
 	/* Defining the size of respective matrices */
 	LocalElements.resize(SubDomain.size() + Boundary.size());
 	InnerElements.resize(SubDomain.size());
@@ -366,6 +375,7 @@ void LocalFields::constructLocalElements(const int NUM_FIELDS, const Eigen::Matr
 		LocalElements[counter] = face;
 		InnerElements[counter] = face; 
 
+		if (face == sampleID) sampleIDix = counter;
 		//LocToGlobMap[counter] = face;
 		//GlobToLocMap[face] = counter;
 		//GlobToLocInnerMap[face] = counter;
@@ -1451,14 +1461,16 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 
 
 	//const int num_fields = 2;
+	//cout << "Selecting local matrices \n";
 	obtainLocalMatrixPatch2D(NUM_FIELDS, MF2Dh, MF2DLoc);
 	obtainLocalMatrixPatch2D(NUM_FIELDS, SF2Dh, SF2DLoc);
 	
 	/* Reduced matrices */
+	//cout << "Obtaining local matrices \n";
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
-			
-
+		
+	//cout << "Computing eigenvectros \n";
 	///computeEigenSpectra_RegSym_Transf(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 
@@ -1467,6 +1479,7 @@ void LocalFields::constructLocalEigenProblemWithSelector(const int NUM_FIELDS, c
 	//if (id < 10)
 	//	printf("ID %d has %d elements | eigTemp: %dx%d (%d) ", id, MF2DLoc.rows(), eigTemp.rows(), eigTemp.cols(), eigTemp.nonZeros());
 
+	//cout << "Stacking them as basis functions \n";
 	/* Mapping to larger matrix */
 	for (int i = 0; i < InnerElements.size(); i++)
 	{
@@ -1520,55 +1533,143 @@ void LocalFields::constructLocalEigenProblemWithSelector_forTensor(Engine*& ep, 
 {
 	//cout << "[" << id << "] Constructing local eigen problem\n ";
 	Eigen::SparseMatrix<double> SF2DLoc, MF2DLoc, MF2DRed, SF2DRed, J2DRed;
+	Eigen::SparseMatrix<double> TransformBasisOp_;
+	vector<Eigen::Triplet<double>> TTriplet; TTriplet.reserve(NUM_FIELDS*NUM_FIELDS*InnerElements.size());
 	Eigen::VectorXd eigValsLoc;
 	Eigen::MatrixXd EigVectLoc, eigTemp;
+	Eigen::MatrixXd eigTempTransformed_; 
 	MF2DLoc.resize(NUM_FIELDS * LocalElements.size(), NUM_FIELDS * LocalElements.size());
 
-	//const int num_fields = 2;
+	//const int num_fields = 3; 3 for tensor in voigt notation
 	obtainLocalMatrixPatch2D(NUM_FIELDS, MF2D, MF2DLoc);
 	obtainLocalMatrixPatch2D(NUM_FIELDS, SF2D, SF2DLoc);
 	
 	/* Reduced matrices */
 	MF2DRed = SelectorA * MF2DLoc * SelectorA.transpose();
 	SF2DRed = SelectorA * SF2DLoc * SelectorA.transpose();
-
+	///printf("Entries: %d | Inner: %d | Selector: %dx%d | MF: %dx%d | SF: %dx%d \n", LocalElements.size(), InnerElements.size(),
+	///	SelectorA.rows(), SelectorA.cols(), MF2DRed.rows(), MF2DRed.cols(), SF2DRed.rows(), SF2DRed.cols());
 
 	/* Getting the eigenfields*/
-	const int shift = 2;
-	computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG + shift, eigTemp, eigValsLoc, "hello");
+	const int shift = 0;
+	///computeEigenMatlab(ep, tid, SF2DRed, MF2DRed, NUM_EIG + shift, eigTemp, eigValsLoc, "hello");
+	computeEigenSpectra_RegSym_Custom(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "");
 	//computeEigenSpectra(SF2DRed, MF2DRed, NUM_EIG, eigTemp, eigValsLoc, "hello");
 
 	//cusolverDnHandle_t	cusolverH;
 	//computeEigenGPU(SF2DRed, MF2DRed, eigTemp, eigValsLoc);
 	EigVectLoc = SelectorA.transpose() * eigTemp;
+		
+	//double b_ = eigValsLoc(1);
+	//double c_ = eigValsLoc(2);
+	//double d_ = eigValsLoc(3);
+	//
+	//vector<int> eigIDX(2);
+	//eigIDX[0] = 1;
+	//if ((c_ - b_) < (d_ - c_) / 10.0)
+	//{
+	//	eigIDX[1] = 3;
+	//}
+	//else
+	//{
+	//	eigIDX[1] = 1;
+	//}
 
-	double b_ = eigValsLoc(1);
-	double c_ = eigValsLoc(2);
-	double d_ = eigValsLoc(3);
+	///if ( id < 100)
+	///{
+	///	printf("_[%d] size of the eigenvector: %dx%d \n", id, eigTemp.rows(), eigTemp.cols());
+	///	printf("_eigenvalues: "); cout << eigValsLoc.transpose() << endl;
+	///	printf("_eigenvector: \n"); cout << eigTemp.block(0, 0, 15, eigTemp.cols()) << endl << endl; 
+	///}
 
-	vector<int> eigIDX(2);
-	eigIDX[0] = 1;
-	if ((c_ - b_) < (d_ - c_) / 10.0)
+	//printf("ID=%d | 1st inner elements: %d [InnerID: %d] \n", sampleID, InnerElements[sampleIDix], sampleIDix);
+
+	
+
+	//if (id == 0)
 	{
-		eigIDX[1] = 3;
+		//cout << "Total entries: " << InnerElements.size() << endl; 
+		Eigen::Matrix3d centerBlock_, transformBlock_, targetBlock_, coefBlock_;	
+		centerBlock_ = eigTemp.block(3 * sampleIDix, 0, 3, 3);
+		//cout << "Center box: \n" << centerBlock_ << endl;
+		targetBlock_.setIdentity(3, 3); targetBlock_(2, 2) = sqrt(2.0);
+		//cout << "Target box: \n" << targetBlock_ << endl;
+		
+		transformBlock_ = centerBlock_.inverse();
+		for(int i=0; i<3; i++)	coefBlock_.col(i) = transformBlock_*targetBlock_.col(i);
+
+		eigTempTransformed_.resize(eigTemp.rows(), eigTemp.cols());
+		for (int i = 0; i < 3; i++) {
+			eigTempTransformed_.col(i) = coefBlock_(0,i)*eigTemp.col(0) + coefBlock_(1,i)*eigTemp.col(1) + coefBlock_(2,i)*eigTemp.col(2);
+		}
+		
+
+
+		///transformBlock_ = targetBlock_*centerBlock_.inverse();
+		/////cout << "transformation block: \n" << transformBlock_ << endl; 
+		///
+		/////cout << "Resulting transformation: \n " << transformBlock_*centerBlock_ << endl;
+		///
+		///TransformBasisOp_.resize(eigTemp.rows(), eigTemp.rows());
+		///for (int i = 0; i < InnerElements.size(); i++)
+		///{
+		///	for (int j = 0; j < NUM_FIELDS; j++)
+		///	{
+		///		for (int k = 0; k < NUM_FIELDS; k++)
+		///		{
+		///			TTriplet.push_back(Eigen::Triplet<double>(3 * i + j, 3 * i + k, transformBlock_(j, k)));
+		///		}
+		///	}
+		///}
+		///
+		///TransformBasisOp_.setFromTriplets(TTriplet.begin(), TTriplet.end());
+		///eigTempTransformed_ = TransformBasisOp_*eigTemp;
+
+		//for (int l = sampleIDix-1; l < sampleIDix+2; l++) {
+		//	cout << "Before: " << eigTemp.row(l) << "   | aftter: " << eigTempTransformed_.row(l) << endl; 
+		//}
+
+		///eigTemp = eigTempTransformed_;
+
+		//centerBlock_ = eigTemp.block(3 * LocalElements[sampleIDix], 0, 3, 3);
+		//cout << "Center box: \n" << centerBlock_ << endl;
+
 	}
-	else
-	{
-		eigIDX[1] = 1;
-	}
 
-	/* Mapping to larger matrix */
-	for (int i = 0; i < InnerElements.size(); i++)
+	//if (id == 0)
+	//{
+	//	centerBox_ = eigTemp.block(3 * LocalElements[sampleIDix], 0, 3, 3);
+	//	cout << "Center box: \n" << centerBox_ << endl; 
+	//
+	//	transformBlock_(0, 0) = centerBox_(0, 0);
+	//	transformBlock_(0, 1) = centerBox_(1, 0);
+	//	transformBlock_(0, 2) = centerBox_(2, 0);
+	//	transformBlock_(1, 0) = centerBox_(0, 1);
+	//	transformBlock_(1, 1) = centerBox_(0, 1);
+	//	transformBlock_(1, 2) = centerBox_(2, 1);
+	//	transformBlock_(2, 0) = sqrt(2.0)*centerBox_(0, 2);
+	//	transformBlock_(2, 1) = sqrt(2.0)*centerBox_(1, 2);
+	//	transformBlock_(2, 2) = sqrt(2.0)*centerBox_(2, 2);
+	//	cout << "Transform: \n" << transformBlock_ << endl;
+	//
+	//	cout << "Transofmration: \n" << transformBlock_*centerBox_ << endl << endl; 
+	//}
+
+
+
+	/* Mapping to larger matrix */// First column ==> First basis (2 elements per-local frame)
+	for (int j = 0; j < NUM_EIG; j++)
+	//for(int j=0; j<eigIDX.size(); j++)
 	{
-		// First column ==> First basis (2 elements per-local frame)
-		//for (int j = 0; j < NUM_EIG; j++)
-		for(int j=0; j<eigIDX.size(); j++)
+		for (int i = 0; i < InnerElements.size(); i++)
+		//for (int i = 0; i < LocalElements.size(); i++)
 		{
 			for (int k = 0; k < NUM_FIELDS; k++)
 			{
-				
-				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, eigIDX[j])));
-				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + 1, NUM_EIG * id + j, EigVectLoc(2 * i + 1, j)));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, eigIDX[j])));
+				BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTempTransformed_(NUM_FIELDS * i + k, j)));
+				///BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * InnerElements[i] + k, NUM_EIG * id + j, eigTemp(NUM_FIELDS * i + k, j)));
+				//BTriplet.push_back(Eigen::Triplet<double>(NUM_FIELDS * LocalElements[i] + k, NUM_EIG * id + j, EigVectLoc(NUM_FIELDS * i + k, j)));
 			}
 		}
 

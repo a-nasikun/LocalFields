@@ -569,6 +569,13 @@ void VectorFields::constructEFList()
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
+	//for (int i = 0; i < EF.rows(); i++)
+	//{
+	//	if (i < 100) {
+	//		printf("Edge %d has faces: %d and %d \n", i, EF(i, 0), EF(i, 1));
+	//	}
+	//}
+
 	/* For test */
 	//int ft = 264;
 	//printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
@@ -579,6 +586,115 @@ void VectorFields::constructEFList()
 	//
 	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0),0), EF(FE(ft, 0),1));
 
+}
+
+void VectorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
+{
+	cout << "> Computing the angles between pairs of triangles \n";
+	FrameRot.resize(E.rows(), 2);
+	Eigen::Vector3d e_ij, e_ji;
+	Eigen::Vector3d e_i, e_j;		// e_i: 1st edge vector of the 1st triangle     |  e_j: 1st edge vector of the 2nd triangle
+
+	srand(time(NULL));
+	int testEdge = rand() % E.rows();
+
+	for (int ei = 0; ei < E.rows(); ei++)
+	{
+		/* Obtain two neighboring triangles TA and TB */
+		int TA = EF(ei, 0);
+		int TB = EF(ei, 1);
+
+		/* Frame basis of each TA and TB */
+		Eigen::VectorXd basisTA = V.row(F(TA, 1)) - V.row(F(TA, 0));
+		Eigen::VectorXd basisTB = V.row(F(TB, 1)) - V.row(F(TB, 0));
+		e_i = basisTA;
+		e_j = basisTB;
+
+		/* Finding the common edge direction + index of its first vertex */
+		int eMatchA, eMatchB;
+		for (int j = 0; j < 3; j++)
+		{
+			if (E(ei, 0) == F(TA, j))
+			{
+				if (E(ei, 1) == F(TA, (j + 1) % 3))
+				{
+					e_ij = V.row(E(ei, 1)) - V.row(E(ei, 0));
+					e_ji = V.row(E(ei, 0)) - V.row(E(ei, 1));
+					eMatchA = j;
+				}
+				else
+				{
+					e_ij = V.row(E(ei, 0)) - V.row(E(ei, 1));
+					e_ji = V.row(E(ei, 1)) - V.row(E(ei, 0));
+					eMatchA = (3 + j - 1) % 3;
+				}
+			}
+		}
+
+		/* for the 2nd triangle */
+		for (int j = 0; j < 3; j++)
+		{
+			if (E(ei, 1) == F(TB, j))
+			{
+				if (E(ei, 0) == F(TB, (j + 1) % 3))
+				{
+					eMatchB = j;
+				}
+				else
+				{
+					eMatchB = (3 + j - 1) % 3;
+				}
+			}
+		}
+
+		/* Computing angle for triangle A (the first one) */
+		double dp_1, angle_1;
+		switch (eMatchA)
+		{
+		case 0:
+			angle_1 = 0.0;
+			FrameRot(ei, 0) = 0.0;
+			break;
+		case 1:
+			//dp_1 = e_i.dot(e_ij)/ (e_i.norm() * e_ij.norm());
+			dp_1 = (e_ij).dot(-e_i) / (e_i.norm()*e_ij.norm());
+			angle_1 = acos(dp_1);
+			FrameRot(ei, 0) = M_PI - angle_1;
+			break;
+		case 2:
+			//dp_1 = e_ij.dot(e_i) / (e_i.norm() * e_ij.norm());
+			dp_1 = (e_i).dot(-e_ij) / (e_i.norm() * e_ij.norm());
+			angle_1 = acos(dp_1);
+			FrameRot(ei, 0) = M_PI + angle_1;
+			break;
+		default:
+			break;
+		}
+
+		/* Computing angle for triangle B (the second one) */
+		double dp_2, angle_2;
+		switch (eMatchB)
+		{
+		case 0:
+			angle_2 = 0.0;
+			FrameRot(ei, 1) = 0.0;
+			break;
+		case 1:
+			//dp_2 = e_j.dot(e_ij) / (e_j.norm() * e_ij.norm());
+			dp_2 = (e_ji).dot(-e_j) / (e_j.norm() * e_ji.norm());
+			angle_2 = acos(dp_2);
+			FrameRot(ei, 1) = M_PI - angle_2;
+			break;
+		case 2:
+			//dp_2 = e_ij.dot(e_j) / (e_j.norm() * e_ij.norm());
+			dp_2 = (e_j).dot(-e_ji) / (e_j.norm() * e_ji.norm());
+			angle_2 = acos(dp_2);
+			FrameRot(ei, 1) = M_PI + angle_2;
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 //void VectorFields::constructVFNeighborsFull()

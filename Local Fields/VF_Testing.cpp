@@ -1383,15 +1383,16 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	computeFaceCenter();
 	computeFaceNormal();
 	constructVFNeighbors();
+	constructVFAdjacency();
 	//constructVFNeighborsFull();
-	//constructVFAdjacency();
 	//testAdjacency();
 	constructVertexAdjacencyMatrix();
 	constructFaceAdjacency3NMatrix();
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList(); 
-	selectFaceToDraw(75000); 
+	computeFrameRotation(viewer);
+	selectFaceToDraw(5000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1417,7 +1418,11 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	lambda(0) = 0.25; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 1;
-	//setupGlobalProblem(lambda);
+	///constructSingularities();
+	///constructHardConstraintsWithSingularitiesWithGauss(viewer);
+	//constructHardConstraintsWithSingularities_Cheat();
+	///setupGlobalProblem(lambda);
+	//visualizeSingularitiesConstraints(viewer);
 
 	/* ====================== LOCAL ELEMENTS ====================*/
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Kitten_2000_Eigfields_40sup_Spectra";
@@ -1469,29 +1474,33 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 200; 
+	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Fertility_";
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
+	string model = "Armadillo_";	
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
-	//selectAdaptiveRegions(viewer);
-	//selectAdaptiveRegions_Curvature(viewer);
-	faceScale.resize(F.rows()); faceScale.setConstant(1.0);
-	///constructSamples(numSample);
-	///constructBasis();	
-	///storeBasis(filename_basis);			// Binary, Eigen-base
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
+	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
+	bool adaptiveSampling = false;
+	if (adaptiveSampling) {
+		selectAdaptiveRegions(viewer);
+		//selectAdaptiveRegions_Curvature(viewer);
+	}else {
+		faceScale.resize(F.rows()); faceScale.setConstant(1.0);
+	}
+	constructSamples(numSample);
+	constructBasis();	
+	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	//retrieveBasis(filename_basis);	
-	///BasisT = Basis.transpose();
-	//normalizeBasisAbs(2);
+	//retrieveBasis(filename_basis);
 	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);
 
+	/* Set-up/Precomputation for reduced system */	
+	BasisT = Basis.transpose();
+	setupReducedBiLaplacian();
+	preComputeReducedElements();
+	initializeParametersForLifting();
 
-	//setupReducedBiLaplacian();
-	//preComputeReducedElements();
-	//initializeParametersForLifting();
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
@@ -1530,7 +1539,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//LoadEigenVectorFromTxtFile(filename_vfields, arbField2D);
 	//double error; 
 	//projectionTest();
-	convergenceTest();
+	///convergenceTest();
 	//compareModalBasis_SameStorage();
 
 	/* Alignment using (maximal/) principal curvature */
@@ -1587,26 +1596,31 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* MEASURE ACCURACY */
 	//measureApproxAccuracyL2Norm();
 
-	/* PROJECTION ON ADAPTIVE SAMPLING */
-
-	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7.txt";
-	//loadVectorFieldsFromFile(filename_vfields, Xf);
-	//visualizeApproximatedFields(viewer);
-	//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
-	//loadConstraintsFromFile(filename_vfields);
-	//visualizeGlobalConstraints(viewer);
-
-	/* PRojection on adaptive basis */
-	//cout << "[1] Projection using adaptive basis \n";
-	//projectionSimpleL2Test();
-	//wbEigen = wb; 
-	//
-	///* PRojection on uniform basis */
-	//filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_Spectra";
-	//retrieveBasis(filename_basis);
-	//
-	//cout << "[2] Projection using regular/isotropic basis \n";
-	//projectionSimpleL2Test();
+	////* PROJECTION ON ADAPTIVE SAMPLING */
+	///{
+	///	filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Bimba_constraintFields_user_0.txt";
+	///	loadVectorFieldsFromFile(filename_vfields, Xf);
+	///	for (int i = 0; i < F.rows(); i++) {		// scale the fields
+	///		Xf(2 * i + 0) *= fieldScale(i);
+	///		Xf(2 * i + 1) *= fieldScale(i);
+	///	}
+	///	///visualizeApproximatedFields(viewer);
+	///	//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Fertility_constraintFields_user_7_constraints.txt";
+	///	//loadConstraintsFromFile(filename_vfields);
+	///	//visualizeGlobalConstraints(viewer);
+	///
+	///	/* PRojection on adaptive basis */
+	///	cout << "[1] Projection using adaptive basis \n";
+	///	projectionSimpleL2Test();
+	///	wbEigen = wb;
+	///
+	///	/* PRojection on uniform basis */
+	///	filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_Bimba_2000_Eigfields_40sup";
+	///	retrieveBasis(filename_basis);
+	///
+	///	cout << "[2] Projection using regular/isotropic basis \n";
+	///	projectionSimpleL2Test();
+	///}
 
 	/* Basis via Coarsening */
 	//constructBasis_Coarsening(viewer);
@@ -1615,6 +1629,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//computeEigenFields(eigsToCompute, filename_refField);		
 	//computeApproxEigenFields(eigsToCompute, filename_approxField);
+
+	///setAndSolveUserSystem(lambda);
 }
 
 void VectorFields::constructParallelTransport()

@@ -138,7 +138,8 @@ void VectorFields::visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer
 	//Eigen::RowVector3d color = Eigen::RowVector3d(0.53, 0.95, 1.0);
 	//Eigen::RowVector3d color = Eigen::RowVector3d(0.1, 0.9, 0.0);
 
-	visualize2Dfields(viewer, Xf, color, 3.0, false);
+	visualize2Dfields(viewer, Xf, color, 2.0, false);
+	//visualize2DfieldsSlow(viewer, Xf, color, 2.0, false);
 	//visualize2Dfields(viewer, Xf, color, 2.0, true);
 }
 
@@ -238,7 +239,14 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
-	viewer.data().lines.resize(3 * FaceToDraw.size(), 9);
+	viewer.data().lines.resize(0, 9);
+	//const int prevLines = viewer.data().lines.rows();
+	const int prevLines = 0;
+	viewer.data().lines.conservativeResize(prevLines + 3 * FaceToDraw.size(), Eigen::NoChange_t());
+
+	printf("Num of lines: %d => %d \n", prevLines, viewer.data().lines.rows());
+
+	//viewer.data().lines.resize(3 * FaceToDraw.size(), 9);
 	//for (int i = 0; i < FaceToDraw.size(); i++)
 	//{
 	//	viewer.data().lines.row(i)							<< FCLoc.row(i), FCLoc.row(i) + TFields.row(i)*lengthScale, color;
@@ -265,9 +273,9 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 		for (id = istart; id < (istart + ipts); id++) {
 			if (id >= FaceToDraw.size()) break; 
 
-			viewer.data().lines.row(id) << FCLoc.row(id), FCLoc.row(id) + TFields.row(id)*lengthScale, color;
-			viewer.data().lines.row(id+ FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head1Fields.row(id)*lengthScale / HEAD_RATIO, color;
-			viewer.data().lines.row(id+ 2*FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head2Fields.row(id)*lengthScale / HEAD_RATIO, color;
+			viewer.data().lines.row(prevLines+id) << FCLoc.row(id), FCLoc.row(id) + TFields.row(id)*lengthScale, color;
+			viewer.data().lines.row(prevLines+id+ FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head1Fields.row(id)*lengthScale / HEAD_RATIO, color;
+			viewer.data().lines.row(prevLines+id+ 2*FaceToDraw.size()) << FCLoc.row(id) + TFields.row(id)*lengthScale, FCLoc.row(id) + TFields.row(id)*lengthScale + Head2Fields.row(id)*lengthScale / HEAD_RATIO, color;
 
 		}
 	}
@@ -277,9 +285,112 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
 
-	viewer.data().line_width = 4.;
+	viewer.data().line_width = 1.;
 }
 
+void VectorFields::visualize2DfieldsSlow(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
+{
+	/* For Timing*/
+	chrono::high_resolution_clock::time_point	t1, t2, te1, te2, ta1, ta2;
+	chrono::duration<double>					duration, da, de;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Adding edges... ";
+
+	/* Some constants for arrow drawing */
+	const double HEAD_RATIO = 3.0;
+	const double EDGE_RATIO = scale;
+	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	//>>>>>>> master
+
+	/* Computing the rotation angle for 1:3 ratio of arrow head */
+	double rotAngle = M_PI - atan(1.0 / 3.0);
+	Eigen::Matrix2d rotMat1, rotMat2;
+	Eigen::SparseMatrix<double> MRot1(2 * FaceToDraw.size(), 2 * FaceToDraw.size()), MRot2(2 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> R1Triplet, R2Triplet;
+	R1Triplet.reserve(2 * 2 * FaceToDraw.size());
+	R2Triplet.reserve(2 * 2 * FaceToDraw.size());
+	Eigen::MatrixXd FCLoc(FaceToDraw.size(), 3);
+
+	/* Defining the rotation matrix (2-by-2) on the local frame */
+	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
+	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
+
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		/* Rotation matrix for the first head */
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, rotMat1(0, 0)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, rotMat1(1, 0)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, rotMat1(0, 1)));
+		R1Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, rotMat1(1, 1)));
+
+		/* Rotation matrix for the second head */
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 0, rotMat2(0, 0)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 0, rotMat2(1, 0)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 0, 2 * i + 1, rotMat2(0, 1)));
+		R2Triplet.push_back(Eigen::Triplet<double>(2 * i + 1, 2 * i + 1, rotMat2(1, 1)));
+
+		/* Getting the face center of selected faces */
+		FCLoc.row(i) = FC.row(FaceToDraw[i]);
+	}
+	MRot1.setFromTriplets(R1Triplet.begin(), R1Triplet.end());
+	MRot2.setFromTriplets(R2Triplet.begin(), R2Triplet.end());
+
+	/* Getting the local data from the population of data */
+	Eigen::SparseMatrix<double> ALoc(3 * FaceToDraw.size(), 2 * FaceToDraw.size());
+	vector<Eigen::Triplet<double>> ATriplet;
+	ATriplet.reserve(6 * FaceToDraw.size());
+	Eigen::VectorXd fieldLoc(2 * FaceToDraw.size()), fields3D(3 * FaceToDraw.size()), rot1Field, rot2Field;
+	Eigen::MatrixXd TFields(FaceToDraw.size(), F.cols()), Head1Fields(FaceToDraw.size(), F.cols()), Head2Fields(FaceToDraw.size(), F.cols());
+
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		/* Getting the selected ALoc from A */
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 0, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 0)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 0, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 1, 2 * FaceToDraw[i] + 1)));
+		ATriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 2 * i + 1, A.coeff(3 * FaceToDraw[i] + 2, 2 * FaceToDraw[i] + 1)));
+
+		/* Getting the selected face */
+		fieldLoc.block(2 * i, 0, 2, 1) = field2D.block(2 * FaceToDraw[i], 0, 2, 1);
+	}
+	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
+	fields3D = ALoc * fieldLoc;
+
+	/* The head of the arrows */
+	rot1Field = MRot1*fieldLoc;
+	rot1Field = ALoc * rot1Field;
+	rot2Field = MRot2*fieldLoc;
+	rot2Field = ALoc * rot2Field;
+
+	/* Transform field to Matrix format */
+	for (int i = 0; i < FaceToDraw.size(); i++)
+	{
+		TFields.row(i) = (fields3D.block(3 * i, 0, 3, 1)).transpose();
+		Head1Fields.row(i) = (rot1Field.block(3 * i, 0, 3, 1)).transpose();
+		Head2Fields.row(i) = (rot2Field.block(3 * i, 0, 3, 1)).transpose();
+	}
+
+	/* If user wants normalized fields, then so do it */
+	if (normalized)
+	{
+		TFields.rowwise().normalize();
+		Head1Fields.rowwise().normalize();
+		Head2Fields.rowwise().normalize();
+	}
+
+	/* Draw the fields in MATRIX format (much faster then looping over each face and draw them) */
+	viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
+	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
+	viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);	
+	
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
+
+	viewer.data().line_width = 1.;
+}
 void VectorFields::visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized)
 {
 	/* For Timing*/
@@ -506,8 +617,8 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
-	//visualize2Dfields(viewer, XFullDim, color, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 3, false);
+	//visualize2Dfields(viewer, XFullDim, color, 1, true);
+	visualize2Dfields(viewer, XFullDim, color, 2, false);
 	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
@@ -568,7 +679,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	}
 	 
 	viewer.selected_data_index = 0; 	
-	viewer.data().line_width = 4.0;
+	viewer.data().line_width = 1.0;
 	//viewer.data().line_width = 1.0;
 }
 
@@ -589,7 +700,8 @@ void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &
 			Eigen::Vector3d basis = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
 			basis *= avgEdgeLength; 
 			Eigen::RowVector3d c = FC.row(SingNeighCC[id][i]);
-			viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
+			//viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.5, 0.1, 0.6));
+			viewer.data().add_edges(c, c + basis.transpose(), Eigen::RowVector3d(0.75, 0.1, 0.1));
 		}
 	}
 
@@ -1142,7 +1254,8 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 
 void VectorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::RowVector3d color(0.8, 0.1, 0.0);
+	//Eigen::RowVector3d color(0.8, 0.1, 0.0);
+	Eigen::RowVector3d color(163.0/255.0, 127.0/255.0, 207.0/255.0);
 	Eigen::RowVector3d c;
 
 	/* Point based */

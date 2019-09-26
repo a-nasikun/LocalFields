@@ -30,6 +30,7 @@ public:
 	void constructFaceAdjacency3NMatrix();
 	void constructFaceAdjacency2RingMatrix();
 	void selectFaceToDraw(const int& numFaces);
+	void computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D);
 	void computeDijkstraDistanceFaceForSampling(const int &source, Eigen::VectorXd &D);
 	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 	void obtainTransformationForLaplacian(double tetha, Eigen::Matrix3d& G);
@@ -70,6 +71,7 @@ public:
 	void visualizeEigenTensorFields(igl::opengl::glfw::Viewer &viewer, int id);
 	void visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id);
 	void visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
 
 	/* TESTING STUFF*/
 	void TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile);
@@ -85,9 +87,25 @@ public:
 	void smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 	void smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
 
-	void smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
-	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
-	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor);
+	void prepareSmoothingRed();
+	void smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
+	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
+	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
+	void settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
+	void settingAdaptiveWeightGradual(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
+	void projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed);
+	void smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::VectorXd& lambda, Eigen::MatrixXd& outputTensor);
+
+	void initializeParametersForProjection();
+	void performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed);
+	void initializeParametersForRHS();
+	void performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, Eigen::VectorXd& rhs);
+	void initializeParametersForLHS();
+	void performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS);
+	void initializeSystemSolve();
+	void performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajor> &LHS, Eigen::VectorXd& rhs, Eigen::VectorXd& vSol);
+	void initializeParametersForLifting();
+	void performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted);
 
 	/* APPLICATION :: Sub-space Projection */
 	void subspaceProjection(const Eigen::VectorXd& refField);
@@ -103,6 +121,7 @@ public:
 	Eigen::VectorXd					doubleArea;				// (double) Area of each triangle
 	Eigen::SparseMatrix<double>		A;						// A map from local to to world coordinate
 	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
+	Eigen::SparseMatrix<double>		MF3DhNeg, MF3DhPos;		// 
 	Eigen::SparseMatrix<double>		SF;						// Laplace matrix for the tensor fields (finite difference approach)
 	double							avgEdgeLength;			// avg edge length -> to scale the fields
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
@@ -113,9 +132,13 @@ public:
 	//double							scale = 100;		// regular eigenfields => arma 10k
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
-	//double								scale = 0.01;		// smoothing
-	double								scale = 0.1;		// smoothing torus
+	//double							scale = 2.5;
 	//double							scale = 2.0; 
+	double								scale = 1;
+	//double								scale = 0.25;		// smoothing torus
+	//double								scale = 0.1;		// smoothing
+	///double								scale = 0.05;		// smoothing
+	//double								scale = 0.01;		// smoothing
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;
@@ -133,9 +156,52 @@ public:
 	/* Application */
 	Eigen::MatrixXd					smoothedTensorRef;			// Smoothed tensor, application;
 	Eigen::MatrixXd					smoothedTensorRed;			// Smoothed tensor, application;
+	Eigen::VectorXd					adaptiveWeight;
+	Eigen::SparseMatrix<double>		WM;
+
+	/* Reduced System*/
+	Eigen::SparseMatrix<double>		MFbar, SFbar, BTMbar; 
+	Eigen::SparseMatrix<double>		WMbar;
 
 	/* Projection */
 	Eigen::MatrixXd					TensorRed;
+
+	/* Working in CUDA */
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BasisTransposeRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> BTMBarRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> MFBarRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> SFBarRow;
+	Eigen::SparseMatrix<double, Eigen::RowMajor> LHSRow;
+	cusparseHandle_t				liftHandle;		/* Entries for lifting using CUDA */
+	cusparseMatDescr_t				liftDescrA;
+	double*							d_liftCsrVal;
+	int*							d_liftCsrRowPtr;
+	int*							d_liftCsrColInd;
+	cusparseHandle_t				projHandle;		/* Entries for projection using CUDA */
+	cusparseMatDescr_t				projDescrA;
+	double*							d_projCsrVal;
+	int*							d_projCsrRowPtr;
+	int*							d_projCsrColInd;
+	cusparseHandle_t				rhsHandle;		/* Entries for setting up RHS of reduced system */
+	cusparseMatDescr_t				rhsDescrA;
+	double*							d_rhsCsrVal;
+	int*							d_rhsCsrRowPtr;// d_rhsCsrColInd; (cannot stack the definition together)
+	int*							d_rhsCsrColInd;
+	cusparseHandle_t				lhsHandle;		/* Entries for setting up LHS of reduced system */
+	cusparseMatDescr_t				lhsDescrA;
+	double*							d_lhsMCsrVal;
+	int*							d_lhsMCsrRowPtr;
+	int*							d_lhsMCsrColInd;
+	cusparseMatDescr_t				lhsDescrB;
+	double*							d_lhsSCsrVal;
+	int*							d_lhsSCsrRowPtr;
+	int*							d_lhsSCsrColInd;
+	cusolverSpHandle_t				solveHandle;		/* Entries for setting up LHS of reduced system */
+	cusparseMatDescr_t				solveDescrA;
+	double*							d_solveCsrVal;
+	int*							d_solveCsrRowPtr;
+	int*							d_solveCsrColInd;
 private:
 
 };

@@ -2663,6 +2663,7 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 	cout << "> Constructing Basis...\n";
 
 	const int Num_fields = 2;
+	const int NUM_EIGEN = 2; 
 	// Setup sizes of each element to construct basis
 	try {
 		Basis.resize(1, 1);
@@ -2738,7 +2739,7 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, NUM_EIGEN);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
@@ -2760,15 +2761,14 @@ void NRoSyFields::constructBasis_LocalEigenProblem()
 			//printf("Starting engine %d for element %d\n", tid, id);
 			//if (id % ((int)(Sample.size() / 4)) == 0)
 			//	cout << "[" << id << "] Constructing local eigen problem\n ";
-			//localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// Matlab
-			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);						// Spectra
+			//localField.constructLocalEigenProblemWithSelector(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, NUM_EIGEN, doubleArea, UiTriplet[id]);		// Matlab
+			localField.constructLocalEigenProblemWithSelector(Num_fields, Sh, MF2DhNeg, AdjMF2Ring, NUM_EIGEN, doubleArea, UiTriplet[id]);						// Spectra
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
 			t2 = chrono::high_resolution_clock::now();
 			durations[3] += t2 - t1;
-
-
+			
 			if (id == 0)
 			{
 				SubDomain = localField.SubDomain;

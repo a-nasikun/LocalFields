@@ -1,6 +1,7 @@
 #include "TensorFields.h"
 #include "EigenSolver.h"
 #include "LocalFields.h"
+#include "VectorFields.h"
 
 #include <set>
 #include <queue>
@@ -234,31 +235,76 @@ void TensorFields::constructEFList()
 		}
 	}
 
-
-
 	/* For test */
-	int ft = rand() % F.rows();
-	printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
-	printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
-	printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
-	
-	printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
-
+	//int ft = rand() % F.rows();
+	//printf("F(%d) has edges <%d, %d, %d>\n", ft, FE(ft, 0), FE(ft, 1), FE(ft, 2));
+	//printf("__F(%d) has vertices (%d, %d, %d)\n", ft, F(ft, 0), F(ft, 1), F(ft, 2));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 0), E(FE(ft, 0), 0), E(FE(ft, 0), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 1), E(FE(ft, 1), 0), E(FE(ft, 1), 1));
+	//printf("__Edge(%d) has (%d,%d) vertices \n", FE(ft, 2), E(FE(ft, 2), 0), E(FE(ft, 2), 1));
+	//
+	//printf("Edge (%d) belongs to face <%d and %d>\n", FE(ft, 0), EF(FE(ft, 0), 0), EF(FE(ft, 0), 1));
 }
 
+void TensorFields::computeDijkstraDistanceFace(const int &source, Eigen::VectorXd &D)
+{
+	cout << "working on dijsktra \n";
+	priority_queue<VertexPair, std::vector<VertexPair>, std::greater<VertexPair>> DistPQueue;
 
+	// Computing distance for initial sample points S
+	for (int i = 0; i < F.rows(); i++) {
+		D(i) = numeric_limits<double>::infinity();
+	}
+
+	D(source) = 0.0f;
+	VertexPair vp{ source,D(source) };
+	DistPQueue.push(vp);
+
+	double distFromCenter = numeric_limits<double>::infinity();
+
+	// For other vertices in mesh
+	cout << "Dot the iteration \n";
+	do {
+		if (DistPQueue.size() == 0) break;
+		VertexPair vp1 = DistPQueue.top();
+		distFromCenter = vp1.distance;
+		DistPQueue.pop();
+
+		// Updating the distance for neighbors of vertex of lowest distance in priority queue
+		//auto const& elem = AdjMF3N_temp[vp1.vId];
+		int const elem = vp1.vId;
+		Eigen::Vector3d const c1 = (V.row(F(elem, 0)) + V.row(F(elem, 1)) + V.row(F(elem, 2))) / 3.0;
+		for (auto it = 0; it != F.cols(); ++it) {
+			/* Regular Dikjstra */
+			const int neigh = AdjMF3N(elem, it);
+			Eigen::Vector3d const c2 = (V.row(F(neigh, 0)) + V.row(F(neigh, 1)) + V.row(F(neigh, 2))) / 3.0;
+			double dist = (c2 - c1).norm();
+			double tempDist = distFromCenter + dist;
+
+			/* updating the distance */
+			if (tempDist < D(neigh)) {
+				D(neigh) = tempDist;
+				VertexPair vp2{ neigh,tempDist };
+				DistPQueue.push(vp2);
+			}
+		}
+	} while (!DistPQueue.empty());
+	cout << "Dijkstra over\n";
+}
 
 /* ====================== UTILITY FUNCTIONS ============================*/
 void TensorFields::constructMassMatrixMF3D()
 {
 	MF.resize(3 * F.rows(), 3 * F.rows());
 	MFinv.resize(3 * F.rows(), 3 * F.rows());
+	MF3DhNeg.resize(3*F.rows(), 3*F.rows());
+	MF3DhPos.resize(3*F.rows(), 3*F.rows());
 	vector<Eigen::Triplet<double>> MFTriplet;
 	MFTriplet.reserve(3 * F.rows());
-	vector<Eigen::Triplet<double>> MFInvTriplet;
-	MFInvTriplet.reserve(2 * F.rows());
+	vector<Eigen::Triplet<double>> MFInvTriplet, MFPosTriplet, MFNegTriplet;
+	MFInvTriplet.reserve(3 * F.rows());
+	MFPosTriplet.reserve(3 * F.rows());
+	MFNegTriplet.reserve(3 * F.rows());
 
 	for (int i = 0; i < F.rows(); i++) {
 		double area = doubleArea(i) / 2.0;
@@ -268,9 +314,18 @@ void TensorFields::constructMassMatrixMF3D()
 		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, 1.0/area));
 		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0/area));
 		MFInvTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0/area));
+		double sqrt_area = sqrt(area);
+		MFPosTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, sqrt_area));
+		MFPosTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, sqrt_area));
+		MFPosTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, sqrt_area));
+		MFNegTriplet.push_back(Eigen::Triplet<double>(3 * i + 0, 3 * i + 0, 1.0/sqrt_area));
+		MFNegTriplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0/sqrt_area));
+		MFNegTriplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0/sqrt_area));
 	}
 	MF.setFromTriplets(MFTriplet.begin(), MFTriplet.end());
 	MFinv.setFromTriplets(MFInvTriplet.begin(), MFInvTriplet.end());
+	MF3DhNeg.setFromTriplets(MFNegTriplet.begin(), MFNegTriplet.end());
+	MF3DhPos.setFromTriplets(MFPosTriplet.begin(), MFPosTriplet.end());
 
 }
 
@@ -660,6 +715,7 @@ void TensorFields::computeFrameRotation(igl::opengl::glfw::Viewer &viewer)
 
 void TensorFields::obtainTransformationForLaplacian(double tetha, Eigen::Matrix3d& G)
 {
+
 	double g1 = cos(tetha);
 	double g2 = -sin(tetha);
 	double g3 = sin(tetha);
@@ -784,6 +840,7 @@ void TensorFields::buildStiffnessMatrix_Combinatorial()
 
 void TensorFields::buildStiffnessMatrix_Geometric()
 {
+	cout << "Computing stiffness matrix \n";
 	SF.resize(3 * F.rows(), 3 * F.rows());
 	vector<Eigen::Triplet<double>> STriplet;
 	STriplet.reserve(4 * 9 * F.rows());
@@ -885,6 +942,7 @@ void TensorFields::convertTensorToVoigt_Elementary(const Eigen::Matrix2d& tensor
 void TensorFields::convertVoigtToTensor(const Eigen::VectorXd& voigt, Eigen::MatrixXd& tensor)
 {
 	tensor.resize(2 * F.rows(), 2);
+	//printf("Voigt: %d | tensor: %dx%d\n", voigt.rows(), tensor.rows(), tensor.cols());
 	for (int i = 0; i < F.rows(); i++)
 	{
 		tensor(2 * i + 0, 0) = voigt(3 * i + 0);
@@ -904,6 +962,9 @@ void TensorFields::convertVoigtToTensor_Elementary(const Eigen::Vector3d& voigt,
 
 void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen::MatrixXd& matrixRep)
 {
+	double maxEigVal = -std::numeric_limits<double>::max();
+	double minEigVal = std::numeric_limits<double>::max();
+
 	matrixRep.resize(2 * F.rows(), 2);
 	for (int i = 0; i < F.rows(); i++)
 	{
@@ -926,8 +987,30 @@ void TensorFields::constructTensorRepFields(const Eigen::MatrixXd& tensor, Eigen
 		//evect_ = evect2_.block(0, 0, 2, 2);
 		//eval_ = eval2_.block(0, 0, 1, 2);
 
+		if (eval_(1) > maxEigVal) maxEigVal = eval_(1);
+		if (eval_(0) < minEigVal) minEigVal = eval_(0);
+
 		matrixRep.block(2 * i, 0, 2, 1) = eval_(0)*(evect_.col(0).normalized());
 		matrixRep.block(2 * i, 1, 2, 1) = eval_(1)*(evect_.col(1).normalized());
+	}
+
+	printf("Max: eigenval. is %.3f | min: %.3f \n", maxEigVal, minEigVal);
+
+	bool rescaling = false; 
+
+	// Scaling the represention vector, to be at the same length as the average edge-length
+	if (rescaling)
+	{
+		const double scalingFact_ = 1.0 / maxEigVal;
+		for (int j = 0; j < 2; j++)
+		{
+			for (int i = 0; i < F.rows(); i++)
+			{
+				Eigen::Vector2d v_ = matrixRep.block(2 * i, j, 2, 1);
+				v_ = scalingFact_ * v_.norm() * v_.normalized();
+				matrixRep.block(2 * i, j, 2, 1) = v_;
+			}
+		}
 	}
 }
 
@@ -973,6 +1056,10 @@ void TensorFields::computeEigenFields_generalized(const int &numEigs, const stri
 	cout << "> Computing reference generalized-eigenproblem (in Matlab)... ";
 
 	computeEigenMatlab(SF, MF, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
+
+	//Eigen::SparseMatrix<double> Sh = MF3DhNeg*SF*MF3DhNeg;
+	//computeEigenSpectra_RegSym_Custom(Sh, MF3DhNeg, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
+	//computeEigenSpectra_RegSym_Transf(Sh, MF3DhNeg, numEigs, eigFieldsTensorRef, eigValuesTensorRef, filename);
 	//WriteSparseMatrixToMatlab(MF2D, "hello");
 
 	t2 = chrono::high_resolution_clock::now();
@@ -981,15 +1068,15 @@ void TensorFields::computeEigenFields_generalized(const int &numEigs, const stri
 }
 void TensorFields::loadEigenFields(const string& filename)
 {
-	ReadDenseMatrixFromMatlab(eigFieldsTensorRef, filename, F.rows()*3, 500);
+	ReadDenseMatrixFromMatlab(eigFieldsTensorRef, filename+"_eigFields", F.rows()*3, 10);
 }
 
 /* ====================== SUBSPACE CONSTRUCTION ====================== */
 void TensorFields::constructBasis()
 {	
 	constructBasis_LocalEigenProblem();
-	cout << "Basis:: \n";
-	cout << Basis.block(0,0,100,1) << endl << endl; 
+	//cout << "Basis:: \n";
+	//cout << Basis.block(0,0,100,1) << endl << endl; 
 }
 void TensorFields::constructSamples(const int &n)
 {
@@ -1044,18 +1131,22 @@ void TensorFields::constructBasis_LocalEigenProblem()
 	cout << "> Constructing Basis...\n";
 
 	const int Num_fields = 3;
+	const int NUM_EIGEN = 3; 
 	// Setup sizes of each element to construct basis
 	try {
 		Basis.resize(1, 1);
 		Basis.data().clear();
 		Basis.data().squeeze();
-		Basis.resize(Num_fields * F.rows(), 2 * Sample.size());
+		Basis.resize(Num_fields * F.rows(), NUM_EIGEN * Sample.size());
 	}
 	catch (string &msg) {
 		cout << "Cannot allocate memory for basis.." << endl;
 	}
 
 	vector<vector<Eigen::Triplet<double>>> UiTriplet(Sample.size());
+
+	Eigen::SparseMatrix<double> Sh = MF3DhNeg*SF*MF3DhNeg;
+	printf("Sh=%dx%d (%d) | Mh=%dx%d (%d nnzs) \n", Sh.rows(), Sh.cols(), Sh.nonZeros(), MF3DhNeg.rows(), MF3DhNeg.cols(), MF3DhNeg.nonZeros());
 	
 	cout << "....Constructing and solving local systems...";
 	const int NUM_PROCESS = 4;
@@ -1076,7 +1167,8 @@ void TensorFields::constructBasis_LocalEigenProblem()
 
 	int id, tid, ntids, ipts, istart, iproc;
 
-	omp_set_num_threads(1);
+	//omp_set_num_threads(1);
+	omp_set_num_threads(omp_get_num_procs()/2);
 #pragma omp parallel private(tid,ntids,ipts,istart,id)	
 	{
 		iproc = omp_get_num_procs();
@@ -1101,7 +1193,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 
 		//cout << "[" << tid << "] Number of processors " << iproc << ", with " << ntids << " threads." << endl;
 
-		UiTriplet[tid].reserve(Num_fields * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
+		//UiTriplet[tid].reserve(Num_fields * ((double)ipts / (double)Sample.size()) * 2 * 10.0 * F.rows());
 
 		// Computing the values of each element
 		for (id = istart; id < (istart + ipts); id++) {
@@ -1109,36 +1201,39 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
-			cout << "[" << id << "] Constructing local eigen problem\n ";
+			cout << "[" << id << "] Constructing local eigen problem\n";
 
-			cout << "__creating subdomain \n";
+			///cout << "__creating subdomain \n";
 			LocalFields localField(id);
 			t1 = chrono::high_resolution_clock::now();
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF3N, distRatio);
 			//localField.constructSubdomain(Sample[id], V, F, avgEdgeLength, AdjMF2Ring, distRatio);
-			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport);
+			localField.constructSubdomain(Sample[id], V, F, D, AdjMF2Ring, Sample.size(), this->numSupport, NUM_EIGEN);
 			t2 = chrono::high_resolution_clock::now();
 			durations[0] += t2 - t1;
 
-			cout << "__creating boundary \n";
+			///cout << "__creating boundary \n";
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructBoundary(F, AdjMF3N, AdjMF2Ring);
 			t2 = chrono::high_resolution_clock::now();
 			durations[1] += t2 - t1;
 
-			cout << "__gathering local elements \n";
+			///cout << "__gathering local elements \n";
 			t1 = chrono::high_resolution_clock::now();
 			localField.constructLocalElements(Num_fields, F);
 			t2 = chrono::high_resolution_clock::now();
 			durations[2] += t2 - t1;
 
-			cout << "__solving local eigenvalue problem \n";
+			UiTriplet[id].reserve(2 * localField.InnerElements.size());
+
+			///cout << "__solving local eigenvalue problem \n";
 			t1 = chrono::high_resolution_clock::now();
 			//ep[tid] = engOpen(NULL);
 			//printf("Starting engine %d for element %d\n", tid, id);
 			//if (id % ((int)(Sample.size() / 4)) == 0)
 			//	cout << "[" << id << "] Constructing local eigen problem\n ";
-			localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);
+			localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, Sh, MF3DhNeg, AdjMF2Ring, NUM_EIGEN, doubleArea, UiTriplet[id]);
+			///localField.constructLocalEigenProblemWithSelector_forTensor(ep[tid], tid, Num_fields, SF, MF, AdjMF2Ring, NUM_EIGEN, doubleArea, UiTriplet[id]);
 			//localField.constructLocalEigenProblemWithSelectorRotEig(ep[tid], tid, SF2DAsym, MF2D, AdjMF2Ring, 2, doubleArea, UiTriplet[id]);		// 2nd basis: 90 rotation of the first basis
 			//engClose(ep[tid]);
 			//localField.constructLocalEigenProblem(SF2D, AdjMF3N, doubleArea, UiTriplet[id]);
@@ -1146,10 +1241,14 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			durations[3] += t2 - t1;
 
 
-			if (id == 0)
+			if (id == 11 || id==3)
 			{
 				SubDomain = localField.SubDomain;
 				Boundary = localField.Boundary;
+
+				for (int fid : localField.SubDomain) {
+					localSystem(fid) = 0.3;
+				}
 			}
 		}
 	}
@@ -1164,7 +1263,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 	//if (writeBasisCompsToFile)
 	//	writeBasisElementsToFile(UiTriplet, 2);
 	//else
-		gatherBasisElements(UiTriplet, 2);
+		gatherBasisElements(UiTriplet, NUM_EIGEN);
 
 	//Basis = BasisTemp;
 	//normalizeBasisAbs(2);
@@ -1490,8 +1589,11 @@ void TensorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& tensorFields_)
 {
-	Eigen::RowVector3d color1(0.0, 0.0, 1.0);
-	Eigen::RowVector3d color2(1.0, 0.0, 0.0);
+	//Eigen::RowVector3d color1(0.0, 0.0, 1.0);
+	//Eigen::RowVector3d color2(1.0, 0.0, 0.0);
+	//Eigen::RowVector3d color1(113.0 / 255.0,  66.0 / 255.0, 136.0 / 255.0);
+	Eigen::RowVector3d color1(176.0 / 255.0, 48.0 / 255.0, 176.0 / 255.0);
+	Eigen::RowVector3d color2(247.0 / 255.0, 119.0 / 255.0,  84.0 / 255.0);
 
 	//double scale = 0.01;
 	visualize2Dfields(viewer,  tensorFields_.col(0), color1, scale);
@@ -1502,8 +1604,12 @@ void TensorFields::visualizeTensorFields(igl::opengl::glfw::Viewer &viewer, cons
 
 void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &viewer)
 {
-	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
-	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1(0.1, 0.5, 0.8);
+	//Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1( 62.0 / 255.0, 100.0 / 255.0, 255.0 / 255.0);
+	//Eigen::RowVector3d color1( 94.0 / 255.0, 223.0 / 255.0, 255.0 / 255.0);
+	Eigen::RowVector3d color1(79.0 / 255.0, 129.0 / 255.0, 199.0 / 255.0);
+	Eigen::RowVector3d color2(247.0 / 255.0, 119.0 / 255.0, 84.0 / 255.0);
 	Eigen::MatrixXd smoothedFields;
 	constructTensorRepFields(smoothedTensorRef, smoothedFields);
 
@@ -1517,8 +1623,12 @@ void TensorFields::visualizeSmoothedTensorFields(igl::opengl::glfw::Viewer &view
 
 void TensorFields::visualizeSmoothedAppTensorFields(igl::opengl::glfw::Viewer &viewer) 
 {
-	Eigen::RowVector3d color1(0.1, 0.5, 0.8);
-	Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1(0.1, 0.5, 0.8);
+	//Eigen::RowVector3d color2(0.8, 0.5, 0.1);
+	//Eigen::RowVector3d color1(218.0/255.0,  67.0/255.0,   2.0/255.0);
+	Eigen::RowVector3d color1( 32.0/255.0, 117.0/255.0,  97.0/255.0);
+	//Eigen::RowVector3d color1(75.0 / 255.0, 174.0 / 255.0, 160.0 / 255.0);
+	Eigen::RowVector3d color2(247.0/255.0, 119.0/255.0,  84.0/255.0);
 	Eigen::MatrixXd smoothedFields;
 	constructTensorRepFields(smoothedTensorRed, smoothedFields);
 
@@ -1573,32 +1683,118 @@ void TensorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 
 	int bId = id;
 	Eigen::RowVector3d color1, color2;
-	if (id % 2 == 0) {
-		color1 = Eigen::RowVector3d( 34.0/255.0,  94.0/255.0, 168.0/255.0);
-		color2 = Eigen::RowVector3d(247.0/255.0, 104.0/255.0, 161.0/255.0);
+	if (id % 3 == 0) {
+		color2 = Eigen::RowVector3d( 34.0/255.0,  94.0/255.0, 168.0/255.0);
+		//color2 = Eigen::RowVector3d(247.0/255.0, 104.0/255.0, 161.0/255.0);
+		color1 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
+	}
+	else if(id%3==1) {
+		color2 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
+		color1 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
+		//cout << "Basis: " << id << "\n" << Basis.col(id).block(0, 0, 100, 1) << endl;		
 	}
 	else {
-		color1 = Eigen::RowVector3d( 35.0/255.0, 132.0/255.0, 67.0/255.0);
-		color1 = Eigen::RowVector3d(227.0/255.0,  26.0/255.0, 28.0/255.0);
-		cout << "Basis: " << id << "\n" << Basis.col(id).block(0, 0, 100, 1) << endl;
+		color2 = Eigen::RowVector3d(5.0 / 255.0, 178.0 / 255.0, 220.0 / 255.0);
+		color1 = Eigen::RowVector3d(227.0 / 255.0, 26.0 / 255.0, 28.0 / 255.0);
 	}
+	printf("Non zeros on id %d is %d \n", bId, Basis.col(id).nonZeros());
 
-	if (id >= 2 * Sample.size()) {
-		bId = 2 * Sample.size() - 1;
+	if (id >= 3 * Sample.size()) {
+		bId = 3 * Sample.size() - 1;
 	}
+		
 
-	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id / 2]);
+	//printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id / 2]);
 	Eigen::MatrixXd basisTensor, basisTensorFields;
 	convertVoigtToTensor(Basis.col(id), basisTensor);
+	//Eigen::VectorXd basisVector = Basis.col(id).toDense();
+	//	cout << "It has " << basisVector.rows() << " entries on " << id << " basis \n";
+	//convertVoigtToTensor(basisVector, basisTensor);
+	//printf("Tensor rep %dx%d \n", basisTensor.rows(), basisTensor.cols());
 	constructTensorRepFields(basisTensor, basisTensorFields);
+	//printf("basisTensorFields %dx%d \n", basisTensorFields.rows(), basisTensorFields.cols());
 
-	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale*10.0, false);
-	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale*10.0, false);
-	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale*10.0, false);
-	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale*10.0, false);
+	///// Findng the max norm
+	///double maxNorm = 0.0;
+	///double vectorScale;
+	///for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, id); it; ++it) {
+	///	if (it.row() % 2 == 1) continue;
+	///	double v2_ = Basis.coeff(it.row() + 1, it.col());
+	///	Eigen::Vector2d vv; vv << it.value(), v2_;
+	///	double norm_ = vv.norm();
+	///	if (norm_ > maxNorm) maxNorm = norm_;
+	///}
+	///vectorScale = 2.0 / maxNorm;
+	///
+	///// scaling the vectors;
+	///Eigen::VectorXd BasisVector; BasisVector.setZero(Basis.rows());
+	///for (Eigen::SparseMatrix<double>::InnerIterator it(Basis, id); it; ++it) {
+	///	if (it.row() % 2 == 1) continue;
+	///	double v2_ = Basis.coeff(it.row() + 1, it.col());
+	///	Eigen::Vector2d vv; vv << it.value(), v2_;
+	///	vv.normalize();
+	///	BasisVector.block(it.row(), 0, 2, 1) = vectorScale*vv;
+	///}
 
-	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
-	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+	double totLocScale = 0.0;
+	for (int i = 0; i < basisTensorFields.rows(); i += 2)
+	{
+		Eigen::Vector2d v_ = basisTensorFields.block(i, 0, 2, 1);
+		totLocScale += v_.norm();
+	}
+	totLocScale /= (basisTensorFields.rows() / 2);
+	printf("Edge: %.2f | scale: %.2f | totScale = %.2f | draw Scale: %.2f \n", avgEdgeLength, scale, totLocScale, scale * 10000);
+
+
+	visualize2Dfields(viewer,  basisTensorFields.col(0), color1, scale, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(0), color1, scale, false);
+	visualize2Dfields(viewer,  basisTensorFields.col(1), color2, scale, false);
+	visualize2Dfields(viewer, -basisTensorFields.col(1), color2, scale, false);
+
+	///visualize2Dfields(viewer,  basisTensorFields.col(0), color1, 100000000000, true);
+	///visualize2Dfields(viewer, -basisTensorFields.col(0), color1, 100000000000, true);
+	///visualize2Dfields(viewer,  basisTensorFields.col(1), color2, 100000000000, true);
+	///visualize2Dfields(viewer, -basisTensorFields.col(1), color2, 100000000000, true);
+
+	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 3], 0)) + V.row(F(Sample[bId / 3], 1)) + V.row(F(Sample[bId / 3], 2))) / 3.0;
+	//viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+}
+
+void TensorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
+{
+	Eigen::MatrixXd vColor;
+
+	/* My Own */
+	vColor.resize(F.rows(), 3);
+	// 0:background => eeeeee; 0.3:selected region; 0.7:boundary
+	for (int i = 0; i < F.rows(); i++)
+	{
+		if (localSystem(i) < 0.1)
+		{
+			vColor.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+		}
+		else if (localSystem(i) > 0.6)
+		{
+			vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
+
+		}
+		else
+		{
+			//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
+			//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
+			//vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);	
+			vColor.row(i) = Eigen::RowVector3d(223.0 / 255.0, 180.0 / 255.0, 240.0 / 255.0);
+		}
+	}
+
+	//printf("Local system: %d x %d \n", localSystem.rows(), localSystem.cols());
+	cout << localSystem.block(0, 0, 3, 3) << endl;
+	//printf("Color system: %d x %d \n", vColor.rows(), vColor.cols());
+	cout << vColor.block(0, 0, 3, 3) << endl;
+
+
+	viewer.data().set_colors(vColor);
+	//viewer.data().set_colors(Eigen::RowVector3d(0.0, 1.0, 0.0));
 }
 
 void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewer)
@@ -1611,16 +1807,28 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "Arma_10k_";
+	string model = "Bunny_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
+
+	cout << "TEST TENSOR<< \n";
+	Eigen::Matrix2d A_; A_.setZero(); A_(0, 0) = 1.0;
+	Eigen::Matrix2d EigVec_;
+	Eigen::Vector2d  EigVal_;
+	computeEigenExplicit(A_, EigVal_, EigVec_);
+	cout << " INPUT: \n" << A_ << endl; 
+	cout << " EigVect: \n" << EigVec_ << endl;
+	cout << "EIGVAL: \n" << EigVal_ << endl; 
+	cout << "LIMIT: " << std::numeric_limits<double>::epsilon() << endl; 
+
 
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
+	viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 
 	computeEdges();
 	computeAverageEdgeLength();
@@ -1632,41 +1840,63 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(5000);	
+	selectFaceToDraw(7500);
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
 	computeTensorFields();
 	constructVoigtVector();
-	visualizeTensorFields(viewer, tensorFields);
+	//visualizeTensorFields(viewer, tensorFields);
+	cout << "-------------------------------------------------------------------\n";
 
 	computeFrameRotation(viewer);
 	////testTransformation(viewer);
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
-	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "1000_Ref";
+	string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "10_Tensor_Ref";
 	//string fileEigFields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/CDragon_50_Ref_Comb_eigFields";
-	//computeEigenFields_generalized(25, fileEigFields);
+	///computeEigenFields_generalized(10, fileEigFields);
 	//computeEigenFields_regular(75, fileEigFields);
-	//////loadEigenFields(fileEigFields);
-	//visualizeEigenTensorFields(viewer, 0);
+	//loadEigenFields(fileEigFields);
+	cout << "Loading successful " << eigFieldsTensorRef.rows() << " x " << eigFieldsTensorRef.cols() << " of matrix \n";
+	///visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 250;
+	numSample = 500;
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
 	constructBasis();
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(2*numSample)+"Eigfields"+ to_string(int(numSupport));
 	storeBasis(fileBasis);
 	//retrieveBasis(fileBasis);
-	visualizeBasis(viewer, 0);
-	WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
+	//visualizeBasis(viewer, 0);
+	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
+	visualizeSubdomain(viewer);
 
-	/* Testing the result */
-	//testDirichletAndLaplace();
-	//testSmoothing(viewer, Tensor, smoothedTensorRef);
+	///for (int i = 0; i < min((int)eigFieldsTensorRef.cols(), 0); i++)
+	///{
+	///	voigtReps = eigFieldsTensorRef.col(i);
+	///	convertVoigtToTensor(voigtReps, Tensor);
+	///	constructTensorRepFields(Tensor, tensorFields);
+	///
+	///	subspaceProjection(voigtReps);
+	///}
 
-	subspaceProjection(voigtReps);
+	/* Smoothing and Testing the result */
+	
+	/* adaptive stuff */
+	//settingAdaptiveWeight(viewer, adaptiveWeight);
+	///settingAdaptiveWeightGradual(viewer, adaptiveWeight);
+	///projectTheContraints(adaptiveWeight, WMbar);
+
+	prepareSmoothingRed();
+	initializeParametersForProjection();
+	initializeParametersForLifting();
+	initializeParametersForRHS();
+	initializeParametersForLHS();
+	//initializeSystemSolve();
+
+	
 }
 
 void TensorFields::testDirichletAndLaplace()
@@ -1799,6 +2029,7 @@ void TensorFields::tensorConvertNConvert(igl::opengl::glfw::Viewer &viewer)
 /* APPLICATION :: SMOOTHING */
 void TensorFields::smoothingRef(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
+
 	//smoothing_Explicit_Combinatorial(viewer, inputTensor, outputTensor);
 	//smoothing_Explicit_Geometric(viewer, inputTensor, outputTensor);
 	//smoothing_Implicit_Combinatorial(viewer, inputTensor, outputTensor);
@@ -1824,7 +2055,7 @@ void TensorFields::smoothing_Explicit_Combinatorial(igl::opengl::glfw::Viewer &v
 
 void TensorFields::smoothing_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
-	double lambda = 0.05;
+	double lambda = 0.005;
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
@@ -1858,23 +2089,29 @@ void TensorFields::smoothing_Implicit_Combinatorial(igl::opengl::glfw::Viewer &v
 */
 void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
 {
-	double lambda = 0.5;
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Smoothing (reference)... ";
+	t1 = chrono::high_resolution_clock::now();
+
+	double lambda = 0.005;
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	lambda = lambda * factor1 / factor2;
+	//lambda = lambda * factor1 / factor2;
 	
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);	
 
-	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	//printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
 	Eigen::MatrixXd smoothedFields;
 	Eigen::VectorXd smoothedVoigt;
 
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	Eigen::SparseMatrix<double> LHS = MF + lambda*SF;
-	Eigen::VectorXd				rhs = MF*inputVoigt;
+	Eigen::VectorXd				rhs = lambda*MF*inputVoigt;
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
 	smoothedVoigt = sparseSolver.solve(rhs);
@@ -1882,19 +2119,59 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
 	outputTensor = smoothedTensorRef;
 
-	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
-	printf("The energy is %.10f\n", dir);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << " in " << duration.count() << " seconds" << endl;
+
+	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
+	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
+
+	//double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	//printf("The energy is %.10f\n", dir);
 }
 
-void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::prepareSmoothingRed()
 {
-	//smoothingRed_Implicit_Geometric(viewer, inputTensor, outputTensor);
-	smoothingRed_Explicit_Geometric(viewer, inputTensor, outputTensor);
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Pre-compute reduced matrics... \n";
+	t1 = chrono::high_resolution_clock::now();		
+
+	MFbar = Basis.transpose()*MF*Basis;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "____ Mass matrix in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	SFbar = Basis.transpose()*SF*Basis;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "____ Stiffness matrix in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();	
+	//BTMbar = MFbar * Basis.transpose();
+	BTMbar = Basis.transpose()*MF; 
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "____ RHS of smoothing in " << duration.count() << " seconds" << endl;
+
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t1;
+	cout << "TOTAL of" << duration.count() << " seconds" << endl;
+
+}
+void TensorFields::smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
+{
+	smoothingRed_Implicit_Geometric_Adaptive(viewer, inputTensor, adaptiveWeight, outputTensor);
+	//smoothingRed_Implicit_Geometric(viewer, inputTensor, lambda, outputTensor);
+	//smoothingRed_Explicit_Geometric(viewer, inputTensor, lambda, outputTensor);
 }
 
-void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
-	double lambda = 10.0 * std::numeric_limits<double>::epsilon();
+	//double lambda = 10.0 * std::numeric_limits<double>::epsilon();
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
@@ -1916,6 +2193,7 @@ void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &vi
 	vOutBar = vInBar - lambda*SFbar*vInBar;
 
 	smoothedVoigt = Basis*vOutBar;
+	//performLifting(vOutBar, smoothedVoigt);
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
 	outputTensor = smoothedTensorRed;
 
@@ -1924,48 +2202,836 @@ void TensorFields::smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &vi
 
 
 }
-void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::MatrixXd& outputTensor)
+void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor)
 {
-	//double lambda = 0.00005;
-	double lambda = 10.0 * std::numeric_limits<double>::epsilon();
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Smoothing (reduced)... \n";
+	t1 = chrono::high_resolution_clock::now();
+
+	//double lambda = 0.005;
+	//double lambda = 0.5;
+	//double lambda = 10.0 * std::numeric_limits<double>::epsilon();
+	//double lambda = 10000000.0 * std::numeric_limits<double>::epsilon();
 	
 
 	Eigen::VectorXd inputVoigt;
 	convertTensorToVoigt(inputTensor, inputVoigt);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "__ conversion to voigt in " << duration.count() * 1000 << " mili seconds" << endl;
 
-	printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
-	Eigen::MatrixXd smoothedFields;
+	//printf("Size of tensor: %dx%d    || Voigt=%d. \n", Tensor.rows(), Tensor.cols(), inputVoigt.size());
+	//Eigen::MatrixXd smoothedFields;
 	Eigen::VectorXd smoothedVoigt;
 
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
-	Eigen::SparseMatrix<double> MFbar, SFbar;
+	t2 = chrono::high_resolution_clock::now();
+	//Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//Eigen::SparseMatrix<double> MFbar, SFbar;
+
 	Eigen::VectorXd vInBar, vOutBar;
-	MFbar = Basis.transpose()*MF*Basis;
-	SFbar = Basis.transpose()*SF*Basis;
-	vInBar = Basis.transpose()*inputVoigt;
+	//MFbar = Basis.transpose()*MF*Basis;
+	//SFbar = Basis.transpose()*SF*Basis;
+	//vInBar = Basis.transpose()*inputVoigt;
+	performSubspaceProjection(inputVoigt, vInBar);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ map to reduced space in " << duration.count() * 1000 << " mili seconds" << endl;
 
-	printf("Size of MFbar: %dx%d\n", MFbar.rows(), MFbar.cols());
-	printf("Size of SFbar: %dx%d\n", SFbar.rows(), SFbar.cols());
-	printf("Size of vInBar: %d \n", vInBar.rows());
+	//printf("Size of MFbar: %dx%d\n", MFbar.rows(), MFbar.cols());
+	//printf("Size of SFbar: %dx%d\n", SFbar.rows(), SFbar.cols());
+	//printf("Size of vInBar: %d \n", vInBar.rows());
 
-	Eigen::VectorXd id(MFbar.rows());
-	id.setConstant(1.0);
-	double factor1 = id.transpose()*MFbar*id;
-	double factor2 = id.transpose()*SFbar*id;
-	lambda = lambda * factor1 / factor2;
+	//Eigen::VectorXd id(MFbar.rows());
+	//id.setConstant(1.0);
+	//double factor1 = id.transpose()*MFbar*id;
+	//double factor2 = id.transpose()*SFbar*id;
+	//lambda = lambda * factor1 / factor2;
 
+	t2 = chrono::high_resolution_clock::now();
 	Eigen::SparseMatrix<double> LHS = MFbar + lambda*SFbar;
-	Eigen::VectorXd				rhs = MFbar*vInBar;
+	printf("Sparsity: %.4f (%d/%d) \n", (double) LHS.nonZeros() / (double) (LHS.rows()*LHS.cols()), LHS.nonZeros(), LHS.rows()*LHS.cols());
+
+	///Eigen::SparseMatrix<double> LHS;
+	///performSettingLHS(lambda, LHS);
+	//Eigen::VectorXd				rhs = MFbar*vInBar;
+	//Eigen::VectorXd				rhs = BTMbar*(lambda*inputVoigt);
+	Eigen::VectorXd				rhs;
+	performSettingRHS(inputVoigt, lambda, rhs);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Setting up the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+	vOutBar = sparseSolver.solve(rhs);
+	
+	//LHSRow = LHS;
+	//performSystemSolve(LHSRow, rhs, vOutBar);
+
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	//smoothedVoigt = Basis*vOutBar;
+	performLifting(vOutBar, smoothedVoigt);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Lifting the result in " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
+	outputTensor = smoothedTensorRed;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ convert back to tensor rep " << duration.count() * 1000 << " mili seconds" << endl;
+	
+	
+	//outputTensor = smoothedTensorRed;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "[TOTAL IN] in " << duration.count()*1000 << " mili seconds" << endl;
+
+	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
+	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
+}
+
+void TensorFields::settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda)
+{
+	cout << "Dealing with adaptivity\n";
+		
+	//const int face_id1 = 19477; 	const int face_id2 = 13204;	// RockerArm
+	const int face_id1 = 19477; 	const int face_id2 = 8090;	// RockerArm (8626)
+	//const int face_id1 = 216527; 	const int face_id2 = 196734;	// Dragon
+	//const int face_id1 = 147709; 	const int face_id2 = 259974;	// Dragon
+	Eigen::VectorXd dist;
+	lambda.resize(F.rows());
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+	Eigen::MatrixXd fCol(F.rows(), 3);
+
+	cout << "COmputing the dijkstra distance \n";
+	
+	computeDijkstraDistanceFace(face_id1, dist);
+	
+
+	//double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+	double upBound = dist(face_id2);
+
+	cout << "Assigning weight \n";
+	for (int i = 0; i<F.rows(); i++)
+	{
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound );
+		if (dist(i) < upBound) {
+			lambda(i) = 2.5;
+			faceColor(i) = 0.7;
+			//fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0);
+			
+		}
+		else {
+			lambda(i) = 1.0;
+			faceColor(i) = 0.3;
+			//fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+		}
+	}
+
+	cout << "Setting color \n";
+	printf("FCOl: %dx%d | F: %d | V:%d \n", fCol.rows(), fCol.cols(), F.rows(), V.rows());
+	//Eigen::MatrixXd fCol;
+	//igl::jet(faceColor, false, fCol);
+	viewer.data().set_colors(fCol);
+
+}
+
+void TensorFields::settingAdaptiveWeightGradual(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda)
+{
+	cout << "Dealing with adaptivity\n";
+
+	//const int face_id1 = 19477; 	const int face_id2 = 13204;	// RockerArm
+	const int face_id1 = 19477; 	const int face_id2 = 8090;	// RockerArm (8626)
+																//const int face_id1 = 216527; 	const int face_id2 = 196734;	// Dragon
+																//const int face_id1 = 147709; 	const int face_id2 = 259974;	// Dragon
+	Eigen::VectorXd dist;
+	lambda.resize(F.rows());
+	dist.resize(F.rows());
+
+	Eigen::VectorXd faceColor(F.rows());
+	Eigen::MatrixXd fCol(F.rows(), 3);
+
+	cout << "COmputing the dijkstra distance \n";
+
+	computeDijkstraDistanceFace(face_id1, dist);
+
+
+	//double upBound = 1.25*(FC.row(face_id1) - FC.row(face_id2)).norm();
+	double upBound = dist(face_id2);
+
+	cout << "Assigning weight \n";
+
+	// parameter
+	double minWeight = 0.15;
+	double maxWeight = 7.15;
+	double wScale = (minWeight-maxWeight) / upBound;
+
+	for (int i = 0; i<F.rows(); i++)
+	{
+		//printf("ID=%d distance=%.4f (c.t. %.4f) \n", i, dist(i), upBound );
+		if (dist(i) < upBound) {
+			lambda(i) = wScale*dist(i) + maxWeight;
+			//lambda(i) = maxWeight;
+			faceColor(i) = 0.7;
+			//fCol.row(i) = Eigen::RowVector3d(232.0 / 255.0, 232.0 / 255.0, 232.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0);
+
+		}
+		else {
+			lambda(i) = minWeight;
+			faceColor(i) = 0.3;
+			//fCol.row(i) = Eigen::RowVector3d(152.0 / 255.0, 152.0 / 255.0, 152.0 / 255.0);
+			fCol.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+		}
+	}
+
+	cout << "Setting color \n";
+	printf("FCOl: %dx%d | F: %d | V:%d \n", fCol.rows(), fCol.cols(), F.rows(), V.rows());
+	//Eigen::MatrixXd fCol;
+	igl::jet(lambda, true, fCol);
+	viewer.data().set_colors(fCol);
+
+}
+
+void TensorFields::projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed)
+{
+	cout << "Project the constraints \n";
+	/* Set-up the full res Matrix */
+	vector<Eigen::Triplet<double>> LTriplet; LTriplet.reserve(lambdaFull.size());
+	//Eigen::SparseMatrix<double> LambdaMatrix; LambdaMatrix.resize(3*lambdaFull.size(), 3*lambdaFull.size());
+	WM.resize(3 * lambdaFull.size(), 3 * lambdaFull.size());
+	for (int i = 0; i < lambdaFull.size(); i++)
+	{
+		for (int j = 0; j < 3; j++)
+			LTriplet.push_back(Eigen::Triplet<double>(3 * i + j, 3 * i + j, lambdaFull(i)));
+	}
+	WM.setFromTriplets(LTriplet.begin(), LTriplet.end());
+	cout << "Lambda: " << lambdaFull.block(0, 0, 3, 1) << endl; 
+	cout << "Lambda matrix: \n" << WM.block(0, 0, 9, 9) << endl; 
+
+	/* Reduce/Project the matrix*/
+	lambdaRed = Basis.transpose()*WM*Basis;
+	//lambdaRed = WM.block(0,0,Basis.cols(), Basis.cols());
+}
+
+void TensorFields::smoothingRed_Implicit_Geometric_Adaptive(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, Eigen::VectorXd& lambda, Eigen::MatrixXd& outputTensor)
+{
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2, t3;
+	chrono::duration<double>					duration;
+	cout << "> Smoothing (reduced)... \n";
+	t1 = chrono::high_resolution_clock::now();
+
+	Eigen::VectorXd inputVoigt;
+	convertTensorToVoigt(inputTensor, inputVoigt);
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "__ conversion to voigt in " << duration.count() * 1000 << " mili seconds" << endl;
+	
+	Eigen::VectorXd smoothedVoigt;
+
+	t2 = chrono::high_resolution_clock::now();
+	Eigen::VectorXd vInBar, vOutBar;
+	//MFbar = Basis.transpose()*MF*Basis;
+	//SFbar = Basis.transpose()*SF*Basis;
+	//vInBar = Basis.transpose()*inputVoigt;
+	performSubspaceProjection(inputVoigt, vInBar);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ map to reduced space in " << duration.count() * 1000 << " mili seconds" << endl;
+	
+
+	t2 = chrono::high_resolution_clock::now();
+	//Eigen::SparseMatrix<double> LHS = MFbar + WMbar*SFbar;
+	Eigen::SparseMatrix<double> LHS = MFbar + Basis.transpose()*WM*SF*Basis;
+	printf("Sparsity: %.4f (%d/%d) \n", (double)LHS.nonZeros() / (double)(LHS.rows()*LHS.cols()), LHS.nonZeros(), LHS.rows()*LHS.cols());
+
+	///Eigen::SparseMatrix<double> LHS;
+	///performSettingLHS(lambda, LHS);
+	//Eigen::VectorXd				rhs = MFbar*vInBar;
+	///Eigen::VectorXd				rhs = WMbar*BTMbar*inputVoigt;
+	Eigen::VectorXd				rhs = Basis.transpose()*(WM*MF*inputVoigt);
+	//Eigen::VectorXd				rhs;
+	//performSettingRHS(inputVoigt, lambda(0), rhs);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Setting up the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
 	vOutBar = sparseSolver.solve(rhs);
 
-	smoothedVoigt = Basis*vOutBar;
+	//LHSRow = LHS;
+	//performSystemSolve(LHSRow, rhs, vOutBar);
+
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	//smoothedVoigt = Basis*vOutBar;
+	performLifting(vOutBar, smoothedVoigt);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Lifting the result in " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRed);
 	outputTensor = smoothedTensorRed;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ convert back to tensor rep " << duration.count() * 1000 << " mili seconds" << endl;
 
-	double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
-	printf("The energy is %.10f\n", dir);
+
+	//outputTensor = smoothedTensorRed;
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "[TOTAL IN] in " << duration.count() * 1000 << " mili seconds" << endl;
+
+	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
+	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
+	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
+}
+
+
+void TensorFields::initializeParametersForLifting()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&liftDescrA);
+	cusparseSetMatType(liftDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(liftDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&liftHandle);
+
+	// Matrix variables
+	BasisRow = Basis;
+	BasisRow.makeCompressed();
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating the matrix in CPU
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//h_csrVal = BasisRow.valuePtr();
+	//h_csrRowPtr = BasisRow.outerIndexPtr();
+	//h_csrColInd = BasisRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_liftCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_liftCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_liftCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_liftCsrRowPtr, BasisRow.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrColInd, BasisRow.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_liftCsrVal, BasisRow.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+}
+
+void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisRow.nonZeros();
+	const int m = BasisRow.rows();
+	const int n = BasisRow.cols();
+
+	// Populating data in CPU
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = voigtRed.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+																				 // Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, voigtRed.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+																									// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(liftHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, liftDescrA, d_liftCsrVal, d_liftCsrRowPtr, d_liftCsrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	voigtLifted = Eigen::Map<Eigen::VectorXd>(h_b, m);
+
+	cudaFree(d_a);
+	cudaFree(d_b);
+	//free(h_a);
+	//free(h_b);
+}
+
+void TensorFields::initializeParametersForProjection()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&projDescrA);
+	cusparseSetMatType(projDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(projDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&projHandle);
+
+	// Matrix variables
+	BasisTransposeRow = Basis.transpose();
+	BasisTransposeRow.makeCompressed();
+	const int nnz = BasisTransposeRow.nonZeros();
+	const int m = BasisTransposeRow.rows();
+	const int n = BasisTransposeRow.cols();
+
+	// Populating the matrix in CPU
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//h_csrVal = BasisTransposeRow.valuePtr();
+	//h_csrRowPtr = BasisTransposeRow.outerIndexPtr();
+	//h_csrColInd = BasisTransposeRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_projCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_projCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_projCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_projCsrRowPtr, BasisTransposeRow.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrColInd, BasisTransposeRow.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_projCsrVal, BasisTransposeRow.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+
+	// Free-ing the allocated data
+	//free(h_csrVal);
+	//free(h_csrRowPtr);
+	//free(h_csrColInd);
+}
+
+void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::VectorXd& voigtRed)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+	const int nnz = BasisTransposeRow.nonZeros();
+	const int m = BasisTransposeRow.rows();
+	const int n = BasisTransposeRow.cols();
+
+	// Populating data in CPU
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = voigtFull.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+																				 // Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, voigtFull.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+																									// The multiciplication
+	double alpha = 1.0;
+	double beta = 0.0;
+	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(projHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, projDescrA, d_projCsrVal, d_projCsrRowPtr, d_projCsrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	voigtRed = Eigen::Map<Eigen::VectorXd>(h_b, m);
+
+	// Free-ing the allocated data
+	cudaFree(d_a);
+	cudaFree(d_b);
+	//free(h_a);
+	//free(h_b);
+}
+void TensorFields::initializeParametersForRHS()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&rhsDescrA);
+	cusparseSetMatType(rhsDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(rhsDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&rhsHandle);
+
+	// Matrix variables
+	//Eigen::SparseMatrix<double, Eigen::RowMajor> 
+	BTMBarRow = BTMbar;
+	BTMBarRow.makeCompressed();
+	const int nnz = BTMBarRow.nonZeros();
+	const int m = BTMBarRow.rows();
+	const int n = BTMBarRow.cols();
+
+	// Populating the matrix in CPU
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//h_csrVal = BTMBarRow.valuePtr();
+	//h_csrRowPtr = BTMBarRow.outerIndexPtr();
+	//h_csrColInd = BTMBarRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_rhsCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_rhsCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_rhsCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_rhsCsrRowPtr, BTMBarRow.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_rhsCsrColInd, BTMBarRow.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_rhsCsrVal, BTMBarRow.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+
+	// Free-ing the allocated data
+	//free(h_csrVal);
+	//free(h_csrRowPtr);
+	//free(h_csrColInd);
+}
+
+void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, Eigen::VectorXd& rhs)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	const int nnz = BTMBarRow.nonZeros();
+	const int m = BTMBarRow.rows();
+	const int n = BTMBarRow.cols();
+
+	// Populating data in CPU
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = voigtRed.data();
+	double* h_b = (double*)malloc(m * sizeof(double));
+	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+
+	// Allocating memory in device/GPU
+	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+																				 // Copying data to CUDA/GPU
+	cudaStat1 = cudaMemcpy(d_a, voigtRed.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+
+																									// The multiciplication
+	double alpha = lambda;
+	double beta = 0.0;
+	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(rhsHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, rhsDescrA, d_rhsCsrVal, d_rhsCsrRowPtr, d_rhsCsrColInd, d_a, &beta, d_b);
+	//cout << "__status:" << cusparseStat1 << endl;
+
+	// Copying to CPU
+	cudaMemcpy(h_b, d_b, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//for (int i = 0; i < m; i++)
+	//{
+	//	printf("h_b[%d]=%.5f \n", i, h_b[i]);
+	//}
+
+	//XFullDim.resize(2 * F.rows());
+	rhs = Eigen::Map<Eigen::VectorXd>(h_b, m);
+	//cout << "Vector m: \n" << rhs << endl; 
+
+	// Free-ing the allocated data
+	//free(h_a);
+	//free(h_b);
+	cudaFree(d_a);
+	cudaFree(d_b);
+}
+
+void TensorFields::initializeParametersForLHS()
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// initialize the system
+	cusparseCreateMatDescr(&lhsDescrA);
+	cusparseSetMatType(lhsDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(lhsDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusparseCreate(&lhsHandle);
+
+	// Matrix variables
+	MFBarRow = MFbar;
+	SFBarRow = SFbar;
+	MFBarRow.makeCompressed();
+	SFBarRow.makeCompressed();
+	const int nnzM	= MFBarRow.nonZeros();
+	const int mM	= MFBarRow.rows();
+	const int nM	= MFBarRow.cols();
+	const int nnzS	= SFBarRow.nonZeros();
+	const int mS	= SFBarRow.rows();
+	const int nS	= SFBarRow.cols();
+
+	// Populating the matrix in CPU (MFbar)
+	double* h_McsrVal		= (double*)malloc(nnzM * sizeof(double));
+	int*	h_McsrRowPtr	= (int*)malloc((mM + 1) * sizeof(int));
+	int*	h_McsrColInd	= (int*)malloc(nnzM * sizeof(int));
+	h_McsrVal		= MFBarRow.valuePtr();
+	h_McsrRowPtr	= MFBarRow.outerIndexPtr();
+	h_McsrColInd	= MFBarRow.innerIndexPtr();
+	
+
+	// Populating the matrix in CPU (SFbar)
+	double* h_ScsrVal		= (double*)malloc(nnzS * sizeof(double));
+	int*	h_ScsrRowPtr	= (int*)malloc((mS + 1) * sizeof(int));
+	int*	h_ScsrColInd	= (int*)malloc(nnzS * sizeof(int));
+	h_ScsrVal		= SFBarRow.valuePtr();
+	h_ScsrRowPtr	= SFBarRow.outerIndexPtr();
+	h_ScsrColInd	= SFBarRow.innerIndexPtr();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_lhsMCsrColInd, nnzM * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsMCsrRowPtr, (mM + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsMCsrVal, nnzM * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsSCsrColInd, nnzS * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsSCsrRowPtr, (mS + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_lhsSCsrVal, nnzS * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_lhsMCsrRowPtr, h_McsrRowPtr, (mM + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsMCsrColInd, h_McsrColInd, nnzM * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsMCsrVal, h_McsrVal, nnzM * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsSCsrRowPtr, h_ScsrRowPtr, (mS + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsSCsrColInd, h_ScsrColInd, nnzS * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_lhsSCsrVal, h_ScsrVal, nnzS * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;	
+
+	//for (int i = 0; i < 20; i++)
+	//{
+	//	printf("%d : [%d][%d][%.16f]\n", i, h_McsrRowPtr[i], h_McsrColInd[i], h_McsrVal[i]);
+	//}
+
+	// Free-ing the allocated data
+	//free(h_McsrVal);
+	//free(h_McsrRowPtr);
+	//free(h_McsrColInd);
+	//free(h_ScsrVal);
+	//free(h_ScsrRowPtr);
+	//free(h_ScsrColInd);
+}
+
+void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS)
+{
+	// Setting up some variable
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	
+	cusparseCreateMatDescr(&lhsDescrB);
+	cusparseSetMatType(lhsDescrB, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(lhsDescrB, CUSPARSE_INDEX_BASE_ZERO);
+
+	int baseC, nnzC;	
+	int *nnzTotalDevHostPtr = &nnzC; // nnzTotalDevHostPtr points to host memory
+
+	/* Getting the size of the matrices */
+	const int nnzM = MFBarRow.nonZeros();
+	const int mM = MFBarRow.rows();
+	const int nM = MFBarRow.cols();
+	const int nnzS = SFBarRow.nonZeros();
+	const int mS = SFBarRow.rows();
+	const int nS = SFBarRow.cols();
+
+	cout << "Preparting matrix C \n";
+	/* Preparing storage for C (i.e. LHS matrix) */
+	cusparseMatDescr_t				lhsDescrC;
+	cusparseCreateMatDescr(&lhsDescrC);
+	cusparseSetMatType(lhsDescrC, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(lhsDescrC, CUSPARSE_INDEX_BASE_ZERO);
+	double*							d_lhsCCsrVal;
+	int*							d_lhsCCsrRowPtr;
+	int*							d_lhsCCsrColInd;
+	int*							d_lhsCCooRowInd;
+
+	cout << "Determining sparsity patter in the GPU \n";
+	/* Determining sparsity patter in the GPU */
+	cusparseSetPointerMode(lhsHandle, CUSPARSE_POINTER_MODE_HOST);
+	cudaMalloc((void**)&d_lhsCCsrRowPtr, sizeof(int)*(mM + 1));
+	cusparseXcsrgeamNnz(lhsHandle, mM, nM,
+		lhsDescrA, nnzM, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
+		lhsDescrB, nnzS, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
+		lhsDescrC, d_lhsCCsrRowPtr, nnzTotalDevHostPtr);
+	if (NULL != nnzTotalDevHostPtr) {
+		nnzC = *nnzTotalDevHostPtr;
+	}
+	else {
+		cudaMemcpy(&nnzC, d_lhsCCsrRowPtr + mM, sizeof(int), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&baseC, d_lhsCCsrRowPtr, sizeof(int), cudaMemcpyDeviceToHost);
+		nnzC -= baseC;
+	}
+
+	/* Checking on A and B before addition */
+	///// ===================================================================
+	///double*							h_checkCsrVal = (double*)malloc(nnzS*sizeof(double));
+	///int*							h_checkCsrRowPtr = (int*)malloc((mS+1)*sizeof(int));
+	///int*							h_checkCsrColInd = (int*)malloc(nnzS*sizeof(int));
+	///int*							h_checkCooRowInd = (int*)malloc(nnzS * sizeof(int));
+	///
+	///cudaMemcpy(h_checkCsrVal, d_lhsSCsrVal, nnzS * sizeof(double), cudaMemcpyDeviceToHost);
+	///cudaMemcpy(h_checkCsrRowPtr, d_lhsCCsrRowPtr, (mS+1) * sizeof(int), cudaMemcpyDeviceToHost);
+	///cudaMemcpy(h_checkCsrColInd, d_lhsSCsrColInd, nnzS * sizeof(int), cudaMemcpyDeviceToHost);
+	///
+	///cout << "Checking the conversion back to CPU (matrix M): \n";
+	///for (int i = 0; i < 20; i++)
+	///{
+	///	printf("col: %d | rowV: %d | val: %.4f \n", h_checkCsrColInd[i], h_checkCsrRowPtr[i], h_checkCsrVal[i]);
+	///}
+
+	//---------------------------------------------------------------------
+
+
+	printf("Non-zeroes S:%d | M:%d | S+M: %d \n", nnzS, nnzM, nnzC);
+	cout << "Performing the computation of C = S + a*M \n";
+	/* Performing the computation of C = S + a*M */
+	double alpha = 1.0;
+	//double beta = lambda;
+	double beta = 1.0;
+	cudaMalloc((void**)&d_lhsCCsrColInd, sizeof(int)*nnzC);
+	cudaMalloc((void**)&d_lhsCCsrVal, sizeof(double)*nnzC);
+	cusparseDcsrgeam(lhsHandle, mM, nM,
+		&alpha, 
+		lhsDescrA, nnzS,
+		d_lhsSCsrVal, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
+		&beta,
+		lhsDescrB, nnzM,
+		d_lhsMCsrVal, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
+		lhsDescrC,
+		d_lhsCCsrVal, d_lhsCCsrRowPtr, d_lhsCCsrColInd);
+
+	cout << "Converting CSR to COO \n";
+	/* Converting CSR to COO */
+	cusparseXcsr2coo(lhsHandle, d_lhsCCsrRowPtr, nnzC, mM, d_lhsCCooRowInd, CUSPARSE_INDEX_BASE_ZERO);
+	printf("Non-zeroes S:%d | M:%d | S+M: %d \n", nnzS, nnzM, nnzC);
+
+	cout << "Copying to CPU \n";
+	/* COpy back to CPU */
+	double* h_CcsrVal   = (double*)malloc(nnzC * sizeof(double));
+	int*	h_CcooRowInd = (int*)malloc(nnzC * sizeof(int));
+	int*	h_CcsrColInd = (int*)malloc(nnzC * sizeof(int));
+	cudaMemcpy(h_CcsrVal   , d_lhsMCsrVal,   nnzM  * sizeof(double), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_CcooRowInd, d_lhsCCooRowInd, nnzC * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_CcsrColInd, d_lhsCCsrColInd, nnzC * sizeof(int), cudaMemcpyDeviceToHost);
+
+	cout << "Setting the LHS matrix \n";
+	int maxRow = -100, maxCol = -100;
+	/* Setting the the LHS Matrix*/
+	vector<Eigen::Triplet<double>> LTriplet; LTriplet.reserve(nnzC);
+	LHS.resize(mS, nS);
+	
+	printf("LHS M=%d \n", nnzM);
+	for (int i = 0; i < nnzC; i++)
+	{
+
+		//LTriplet.push_back(Eigen::Triplet<double>(*(h_CcooRowInd+i), *(h_CcsrColInd+i), *(h_CcsrVal+i)));
+		//if (*(h_CcooRowInd + i) > maxRow) maxRow = *(h_CcooRowInd + i);
+		//if (*(h_CcsrColInd + i) > maxCol) maxCol = *(h_CcsrColInd + i);
+
+		if (i < 50)
+		{
+			printf("Val[%d]=%.2f\n", i, h_CcsrVal[i]);
+			//printf("Row idx %d => %d \n", i, h_CcooRowInd[i]);
+			//printf("[%d, %d]=%.4f \n", *(h_CcooRowInd + i), *(h_CcsrColInd + i), *(h_CcsrVal + i));
+		}
+	}
+	//printf("LHS: %dx%d | maxRow: %d, maxCol: %d | nnz=%d \n", LHS.rows(), LHS.cols(), maxRow, maxCol, nnzC);
+	//LHS.setFromTriplets(LTriplet.begin(), LTriplet.end());
+
+// Free-ing memory
+	cudaFree(d_lhsCCsrVal);
+	cudaFree(d_lhsCCsrRowPtr);
+	cudaFree(d_lhsCCsrColInd);
+	cudaFree(d_lhsCCooRowInd);
+	//free(h_CcsrVal);
+	//free(h_CcsrColInd);
+	//free(h_CcooRowInd);
+}
+
+void TensorFields::initializeSystemSolve()
+{
+	// initialize the system
+	cusparseCreateMatDescr(&solveDescrA);
+	cusparseSetMatType(solveDescrA, CUSPARSE_MATRIX_TYPE_GENERAL);
+	cusparseSetMatIndexBase(solveDescrA, CUSPARSE_INDEX_BASE_ZERO);
+	cusolverSpCreate(&solveHandle);
+}
+
+void TensorFields::performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajor> &LHS, Eigen::VectorXd& rhs, Eigen::VectorXd& vSol)
+{
+	cudaError_t			cudaStat1 = cudaSuccess;
+
+	// Matrix variables
+	LHS.makeCompressed();
+	const int nnz = LHS.nonZeros();
+	const int m   = LHS.rows();
+	const int n   = LHS.cols();
+
+	// Populating the matrix in CPU
+	//double* h_csrVal = (double*)malloc(nnz * sizeof(double));
+	//int* h_csrRowPtr = (int*)malloc((m + 1) * sizeof(int));
+	//int* h_csrColInd = (int*)malloc(nnz * sizeof(int));
+	//double* h_b		 = (double*)malloc(n * sizeof(double));
+	double* h_x		 = (double*)malloc(n * sizeof(double));
+	double* d_b;
+	double* d_x;
+	
+	//h_csrVal	= LHS.valuePtr();
+	//h_csrRowPtr = LHS.outerIndexPtr();
+	//h_csrColInd = LHS.innerIndexPtr();
+	//h_b			= rhs.data();
+
+	// Allocating memory in device/GPU
+	cudaStat1 = cudaMalloc(&d_solveCsrColInd, nnz * sizeof(int));     //cout << "__col:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_solveCsrRowPtr, (m + 1) * sizeof(int)); //cout << "__row:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_solveCsrVal, nnz * sizeof(double));     //cout << "__val:alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_b, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMalloc(&d_x, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
+
+	cudaStat1 = cudaMemcpy(d_solveCsrRowPtr, LHS.outerIndexPtr(), (m + 1) * sizeof(int), cudaMemcpyHostToDevice);  //cout << "__rows: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_solveCsrColInd, LHS.innerIndexPtr(), nnz * sizeof(int), cudaMemcpyHostToDevice);      //cout << "__col: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_solveCsrVal, LHS.valuePtr(), nnz * sizeof(double), cudaMemcpyHostToDevice);         //cout << "__val: status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_b, rhs.data(), n * sizeof(double), cudaMemcpyHostToDevice);						   //cout << "__alloc_status:" << cudaStat1 << endl;
+
+	double tol = std::numeric_limits<double>::epsilon();
+	int reorder = 2; // 1:symrcm; 2:symamd
+	int sing;
+	/* Performing the solving of the linear system */
+	cusolverStatus_t cudaStat = cusolverSpDcsrlsvchol(solveHandle, m, nnz, solveDescrA, d_solveCsrVal, d_solveCsrRowPtr, d_solveCsrColInd, d_b, tol, reorder, d_x, &sing);
+
+	cout << "Singular? " << sing << " " << cudaStat << endl; 
+
+	// Copying to CPU
+	cudaMemcpy(h_x, d_x, m * sizeof(double), cudaMemcpyDeviceToHost);
+
+	//XFullDim.resize(2 * F.rows());
+	vSol = Eigen::Map<Eigen::VectorXd>(h_x, m);
+
+	//cout << "Some solution: \n" << vSol.block(0, 0, 20, 1).transpose() << endl; 
+
+	// Free-ing memory
+	//free(h_csrVal);
+	//free(h_csrRowPtr);
+	//free(h_csrColInd);
+	//free(h_b);
+	//free(h_x);
+	cudaFree(d_b);
+	cudaFree(d_x);
+	//cudaFree(d_solveCsrColInd);
+	//cudaFree(d_solveCsrRowPtr);
+	//cudaFree(d_solveCsrVal);
 }
 
 /* APPLICATION :: Sub-space Projection */
@@ -1974,9 +3040,11 @@ void TensorFields::subspaceProjection(const Eigen::VectorXd& refField)
 	Eigen::VectorXd q, v;
 
 	Eigen::SparseMatrix<double> LHS = Basis.transpose()*MF*Basis;
-	Eigen::VectorXd rhs = Basis.transpose()*refField;
+	Eigen::VectorXd rhs = Basis.transpose()*MF*refField;
 
-	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver(LHS);
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
 	q = sparseSolver.solve(rhs);
 	v = Basis*q;
 

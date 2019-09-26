@@ -68,6 +68,7 @@ public:
 	void testAdjacency();
 	void constructEVList();
 	void constructEFList();
+	void computeFrameRotation(igl::opengl::glfw::Viewer &viewer);
 
 	// SETTING UP MATRICES
 	void constructGlobalMatrices();
@@ -118,6 +119,7 @@ public:
 	void constructMappingMatrix();
 	void constructMatrixB();
 
+
 	void setupGlobalProblem(const Eigen::Vector3d& lambda);
 	void setupGlobalProblem(const Eigen::Vector3d& lambda, Eigen::MatrixXd& M);
 	void constructConstraints();
@@ -127,12 +129,16 @@ public:
 	void constructSpecifiedHardConstraints();
 	void constructRandomHardConstraints();
 	void constructInteractiveConstraints();
+	void addHardConstraints();
+	void constructInteractiveConstraintsWithSingularities(igl::opengl::glfw::Viewer &viewer);
 	void constructInteractiveConstraintsWithLaplacian();
 	void resetInteractiveConstraints();
 	void constructSingularities();
+	void constructInteractiveSingularities();
+	void addSingularityConstraints();
 	void constructHardConstraintsWithSingularities();
 	void constructHardConstraintsWithSingularities_Cheat();
-	void constructHardConstraintsWithSingularitiesWithGauss();
+	void constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer);
 	void constructSoftConstraints();
 	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
 	void measureSoftConstraintError(const Eigen::Vector3d& lambda);
@@ -168,6 +174,7 @@ public:
 	void constructBasis_EigenPatch(Eigen::SparseMatrix<double>& BasisFunctions);
 	void constructBasisEigenVects();
 	void gatherBasisElements(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
+	void checkBasisSupport(const vector<vector<Eigen::Triplet<double>>> &UiTriplet);
 	void loadAndConstructBasis();
 	void writeBasisElementsToFile(const vector<vector<Eigen::Triplet<double>>> &UiTriplet, const int& NUM_EIGEN);
 	void normalizeBasis();
@@ -182,6 +189,7 @@ public:
 	void setAndSolveUserSystem(const Eigen::Vector3d& lambda);
 	void setupReducedBiLaplacian();
 	void getUserConstraints();
+	void getUserConstraintsEfficient();
 	void setupRHSUserProblemMapped(Eigen::VectorXd& gBar, Eigen::VectorXd& hBar, Eigen::VectorXd& vEstBar, Eigen::VectorXd& bBar);
 	void setupLHSUserProblemMapped(Eigen::SparseMatrix<double>& A_LHSBar);
 	void setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3d& lambda, Eigen::VectorXd& bBar);
@@ -290,6 +298,7 @@ public:
 	void visualizeLocalFrames(igl::opengl::glfw::Viewer &viewer);
 	void visualizeApproximatedFields(igl::opengl::glfw::Viewer &viewer);
 	void visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
+	void visualize2DfieldsSlow(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize2Dfields_viaSet(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const double& scale, const bool& normalized = false);
 	void visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field3D, const Eigen::RowVector3d &color);
 	void visualize2DfieldsNormalized(igl::opengl::glfw::Viewer &viewer, const Eigen::VectorXd &field2D, const Eigen::RowVector3d &color, const int &numFaces);
@@ -339,16 +348,18 @@ public:
 	vector<set<FacePair>>			AdjMF3N_temp;
 	vector<set<int>>				VENeighbors;
 	Eigen::MatrixXi					FE, EF;
+	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
 	double							avgEdgeLength;
 	vector<int>						FaceToDraw;
 
 	// Variable related to global problem
 	Eigen::SparseMatrix<double>		C; 
 	Eigen::VectorXd					c, Xf;
-	vector<int>						LocalElements, userConstraints, globalConstraints, userVisualConstraints;
+	vector<int>						LocalElements, userConstraints, globalConstraints, userVisualConstraints, userSingularConstraints;
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
 	set<int>						SubDomain, Boundary;
+	vector<Eigen::Triplet<double>>	ConstrTriplet;
 
 	// Variable related to subspace construction
 	Eigen::SparseMatrix<double>		BasisTemp, Basis, BasisT;
@@ -358,7 +369,8 @@ public:
 	vector<chrono::duration<double>>durations;
 	int								numSample;
 	double							numSupport; 
-	Eigen::VectorXd					faceScale;
+	Eigen::VectorXd					faceScale, fieldScale;
+	vector<int>						lowSupportFaces;
 
 	// Variable related to manipulation within the subspace
 	Eigen::MatrixXd					cBar;
@@ -367,6 +379,7 @@ public:
 	Eigen::VectorXd					vAdd, BvBar;
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;
 	Eigen::MatrixXd					BC; 
+	int								deltaConstraints;		// how many new constraints are added
 	cusparseHandle_t handle;		/* Entries for lifting using CUDA */
 	cusparseMatDescr_t descrA;
 	double* d_csrVal;

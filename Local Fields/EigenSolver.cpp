@@ -601,14 +601,14 @@ void computeEigenMatlab(Eigen::SparseMatrix<double> &S, Eigen::SparseMatrix<doub
 	engEvalString(ep, "[data, EigVal]=eigs(MS,MM, Num(1,1),'smallestabs');");
 	//engEvalString(ep, "[EigVec, EigVal]=eigs(MS,MM);");
 	engEvalString(ep, "EigVal=diag(EigVal);");
-	if (numEigs > 2)
+	if (numEigs > 1)
 	{
 		///engEvalString(ep, "hold on; plot(1:Num(1,1), EigVal(1:Num(1,1)),'LineWidth',1.5);"); // has to do it this way for "correct" plot		
-		///string approxFile = "save('" + filename + "_eigFields','data','EigVal');";		
+		string approxFile = "save('" + filename + "_eigFields','data','EigVal');";		
 		//string approxFile = "save('" + filename + "_eigFields','EigVec');";
 		//string approxFile = "save('" + filename + "_eigvalues','EigVal');";
 		cout << "Saving the eigen problem\n";
-		///engEvalString(ep, approxFile.c_str());
+		engEvalString(ep, approxFile.c_str());
 	}
 	t4 = chrono::high_resolution_clock::now();
 
@@ -918,8 +918,15 @@ void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eig
 	Eigen::Vector2d v1, v2;
 	v1 << a - D - c, 2 * b;
 	v2 << a + D - c, 2 * b; 
-	EigVect.col(0) = v1.normalized();
-	EigVect.col(1) = v2.normalized();
+	if (abs(EigVal(0)) > std::numeric_limits<double>::epsilon())
+		EigVect.col(0) = v1.normalized();
+	else
+		EigVect.col(0) << 0.0, 0.0; 
+
+	if (abs(EigVal(1)) > std::numeric_limits<double>::epsilon())
+		EigVect.col(1) = v2.normalized();
+	else
+		EigVect.col(1) << 0.0, 0.0;
 }
 
 //void computeEigenExplicit(const Eigen::Matrix2d& M, Eigen::Vector2d& EigVal, Eigen::Matrix2d& EigVect)
