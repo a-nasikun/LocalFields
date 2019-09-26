@@ -1136,12 +1136,6 @@ void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::Vect
 
 void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields)
 {
-	// Timing
-	chrono::high_resolution_clock::time_point	t0, t1, t2;
-	chrono::duration<double>					duration;
-	cout << "> Convert rep fields to nRoSy fields :";
-	t0 = chrono::high_resolution_clock::now();
-
 	const int nSize = repVect.size() / 2;
 	nRoSyFields.theta.resize(nSize);
 	nRoSyFields.magnitude.resize(nSize);
@@ -1176,11 +1170,6 @@ void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy
 		}
 		if (isnan(angle)) cout << "NaN on " << i << ", where angle is: " << angle << ", and dotP is: " << dotP << " WITH b: " << b.transpose() << ", and v:" << v.transpose() << endl;
 	}
-
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
 }
 
 void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields)
@@ -1276,11 +1265,6 @@ void NRoSyFields::createNRoSyFromVectors(const Eigen::VectorXd& vectorFields, NR
 /* Visualizing the NRoSyFields */
 void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
 {
-	chrono::high_resolution_clock::time_point	t1, t2;
-	chrono::duration<double>					duration;
-	t1 = chrono::high_resolution_clock::now();
-	cout << "> Visualizing an n-fields: ...";
-
 	//double scale = 1.0 / 100000.0; 
 	//double scale = 0.001;
 	//double scale = 0.1;
@@ -1292,69 +1276,33 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 250.0; 
 	Eigen::Vector2d b(1, 0);
 	
-	const int NUM_THREADS = omp_get_num_procs()/2;
-	Eigen::VectorXd TempFields(2 * F.rows());
-
-	omp_set_num_threads(NUM_THREADS);
-	int id, tid, ntids, ipts, istart, iproc;
-
 
 	for (int i = 0; i < nRot; i++)
 	{
-		#pragma omp parallel private(tid,ntids,ipts,istart,id)	
+		Eigen::VectorXd TempFields(2 * F.rows());
+		//cout << "Drawing the " << i << " fields \n";
+
+		/* Construct rotation matrix*/
+		//for (int j = 0; j < F.rows(); j++)
+		for(int j:FaceToDraw)
 		{
-			iproc = omp_get_num_procs();
-			//iproc = 1; 
-			tid = omp_get_thread_num();
-			ntids = omp_get_num_threads();
-			//ntids = 2; 
-			ipts = (int)ceil(1.00*(double)FaceToDraw.size() / (double)ntids);
-			istart = tid * ipts;
-			if (tid == ntids - 1) ipts = FaceToDraw.size() - istart;
-			if (ipts <= 0) ipts = 0;
+			double angle = nRoSyFields.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+			//if (j == 0)
+			//{
+			//	printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSyFields.theta(j));
+			//}
+			Eigen::Matrix2d RotM;
+			RotM(0, 0) =  cos(angle);
+			RotM(0, 1) = -sin(angle);
+			RotM(1, 0) =  sin(angle);
+			RotM(1, 1) =  cos(angle);
 
-			for (id = istart; id < (istart + ipts); id++) {
-				int j = FaceToDraw[id];
-				double angle = nRoSyFields.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
-				//if (j == 0)
-				//{
-				//	printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSyFields.theta(j));
-				//}
-				Eigen::Matrix2d RotM;
-				RotM(0, 0) = cos(angle);
-				RotM(0, 1) = -sin(angle);
-				RotM(1, 0) = sin(angle);
-				RotM(1, 1) = cos(angle);
-
-				TempFields.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
-			}
+			TempFields.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
 		}
-
-
-
-		//for(int j:FaceToDraw)
-		//{
-		//	double angle = nRoSyFields.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
-		//	//if (j == 0)
-		//	//{
-		//	//	printf("angle 0=%.5f, theta 0=%.5f\n", angle, nRoSyFields.theta(j));
-		//	//}
-		//	Eigen::Matrix2d RotM;
-		//	RotM(0, 0) =  cos(angle);
-		//	RotM(0, 1) = -sin(angle);
-		//	RotM(1, 0) =  sin(angle);
-		//	RotM(1, 1) =  cos(angle);
-		//
-		//	TempFields.block(2 * j, 0, 2, 1) = nRoSyFields.magnitude(j) * RotM * b;
-		//}
 
 		visualize2Dfields(viewer, TempFields, color, scale, false);
 		///visualize2DfieldsVertexInterpolated(viewer, TempFields, color, scale, false);
 	}
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t1;
-	cout << "in " << duration.count() << " seconds" << endl;
 }
 
 void NRoSyFields::visualizeRepVectorFields(igl::opengl::glfw::Viewer &viewer, const NRoSy& nRoSyFields, const Eigen::RowVector3d& color)
@@ -1660,7 +1608,7 @@ void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
 
 void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer)
 {
-	//cout << "> Visualizing the fields...";
+	cout << "Visualizing the fields \n";
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.9, 0.1, 0.1);
 	//visualizeRepVectorFields(viewer, Xf);
 
@@ -1677,12 +1625,7 @@ void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &
 
 void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 {
-	/* For Timing*/
-	chrono::high_resolution_clock::time_point	t0, t2;
-	chrono::duration<double>					duration, da, de;
-	t0 = chrono::high_resolution_clock::now();
-	cout << "> Visualizing the constraints...";
-
+	cout << "visualizing the constraints \n";
 	/* ORIGINAL + OVERLAY on 2nd Mesh */
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
@@ -1692,17 +1635,17 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	Eigen::RowVector3d color2(0.2, 0.8, 0.1);
 	Eigen::RowVector3d color(0.1, 0.1, 0.1);
 
-	//cout << "Getting face normals \n";
+	cout << "Getting face normals \n";
 	Eigen::MatrixXd NF;
 	igl::per_face_normals(V, F, NF);
 
-	//cout << "Drawing on the overlay mesh \n";
+	cout << "Drawing on the overlay mesh \n";
 	viewer.selected_data_index = 0;
 	viewer.data().line_width = 4.0;
 	viewer.data().point_size = 5.0;
 	viewer.data().show_lines = false;
 
-	//cout << "Computing rotaiton angle\n";
+	cout << "Computing rotaiton angle\n";
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
 	Eigen::Matrix2d rotMat1, rotMat2;
@@ -1712,9 +1655,6 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	NRoSy nRoSy_;
 	convertRepVectorsToNRoSy(c, nRoSy_);
 	Eigen::VectorXd c2(c.size());
-
-	int lineSize = viewer.data().lines.rows();
-	viewer.data().lines.conservativeResize(lineSize + nRot*3*globalConstraints.size(), 9);
 
 
 	Eigen::MatrixXd ALoc(3, 2);
@@ -1748,28 +1688,23 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 			//cout << "cc: " << cc << endl;
 			//cout << "f:" << f << endl;
 			//cout << "colro: " << color << endl; 
-			///viewer.data().add_edges(cc, f, color);
+			viewer.data().add_edges(cc, f, color);
 			viewer.data().add_points(cc, color2);
-			viewer.data().lines.row(lineSize + j*(globalConstraints.size()*3) + i*3 + 0) << cc, f, color; 
 
 			//cout << "Drawing the head \n";
 			h1 = (ALoc * (rotMat1*c2.block(2 * i, 0, 2, 1))).transpose();
 			h2 = (ALoc * (rotMat2*c2.block(2 * i, 0, 2, 1))).transpose();
 
-			
-			///viewer.data().add_edges(f, f + h1*lengthScale / HEAD_RATIO, color);
-			///viewer.data().add_edges(f, f + h2*lengthScale / HEAD_RATIO, color);
-			viewer.data().lines.row(lineSize + j*(globalConstraints.size()*3) + i*3 + 1) << f, f + h1*lengthScale / HEAD_RATIO, color;
-			viewer.data().lines.row(lineSize + j*(globalConstraints.size()*3) + i*3 + 2) << f, f + h2*lengthScale / HEAD_RATIO, color;
+			//cout << "h1=" << h1 << endl;
+			//cout << "h2=" << h2 << endl;
+			//cout << "scale: " << lengthScale << endl;
+			//cout << "head ration: " << HEAD_RATIO << endl; 
+			viewer.data().add_edges(f, f + h1*lengthScale / HEAD_RATIO, color);
+			viewer.data().add_edges(f, f + h2*lengthScale / HEAD_RATIO, color);
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 1.0;
-
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
+	viewer.data().line_width = 4.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -2021,7 +1956,7 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 	chrono::high_resolution_clock::time_point	t1, t2;
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
-	cout << "> Constructing RHS (Full Res)... ";
+	cout << "> Constructing RHS... ";
 
 	vEst.resize(B2F.cols());
 	for (int i = 0; i < vEst.rows(); i++) {
@@ -2034,7 +1969,7 @@ void NRoSyFields::setupRHSBiharmSystemRef(const Eigen::SparseMatrix<double>& B2F
 
 	g = BF*vEst;
 	if(useAlignment) 
-		g = g-lambda[1] * MF*alignFields;
+		g = g+lambda[1] * MF*alignFields;
 	b.resize(B2F.rows() + c.rows(), c.cols());
 
 	// First column of b
@@ -2662,9 +2597,6 @@ void NRoSyFields::resetInteractiveConstraints()
 {
 	userVisualConstraints.clear();
 	userVisualConstraints.shrink_to_fit();
-	globalConstraints.clear();
-	globalConstraints.shrink_to_fit();
-	printf("global constraints %d | user%d \n", globalConstraints.size(), userVisualConstraints.size());
 }
 
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
@@ -3080,14 +3012,14 @@ void NRoSyFields::getReducedConstraints()
 	// For Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
-	cout << "> Obtaining user constraints ";
+	cout << "> Obtaining user constraints \n ";
 	t0 = chrono::high_resolution_clock::now();
 
 	//printf("Num of constraints: %d | C=%dx%d | c=%d  \n", globalConstraints.size(), C.rows(), C.cols(), c.size());
 	//constructConstraints();
 
 	//userConstraints = globalConstraints; 
-	//CBar = C * Basis;
+	///CBar = C * Basis;
 	cBar = c;
 	//printf("cBar=%d \n", cBar.size());
 	//cout << "c: \n" << c << endl; 
@@ -3111,7 +3043,6 @@ void NRoSyFields::getReducedConstraints()
 	CBar.resize(0, 0);
 	CBar.resize(2 * globalConstraints.size(), Basis.cols());
 	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
-
 	CBarT = CBar.transpose();
 	
 	t2 = chrono::high_resolution_clock::now();
@@ -3325,7 +3256,7 @@ void NRoSyFields::setAndSolveInteractiveSystem()
 	// Timing
 	chrono::high_resolution_clock::time_point	t0, t1, t2;
 	chrono::duration<double>					duration;
-	cout << "[TOTAL] Set constraint, set system, solve system, and lift it up in \n :";
+	cout << "Set constraint, set system, solve system, and lift it up in :";
 	t0 = chrono::high_resolution_clock::now();
 
 	obtainConstraints();
@@ -3363,8 +3294,7 @@ void NRoSyFields::preComputeReducedElements()
 	// setup the Bv
 	BvBar = B2DBar * vAdd;
 	//if (useAlignment) BvBar -= lambda[1]*MFBar*(Basis.transpose()*alignFields);
-	//if (useAlignment) BvBar += lambda[1] * (Basis.transpose()*(MF*alignFields));
-	if (useAlignment) BvBar -= lambda[1] * (Basis.transpose()*(MF*alignFields));
+	if (useAlignment) BvBar += lambda[1] * (Basis.transpose()*(MF*alignFields));
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3374,14 +3304,14 @@ void NRoSyFields::preComputeReducedElements()
 void NRoSyFields::solveInteractiveSystem()
 {
 	// Timing
-	chrono::high_resolution_clock::time_point	t0, t1, t2;
-	chrono::duration<double>					duration;
-	cout << "> Solve interactive system ...";
+	///chrono::high_resolution_clock::time_point	t0, t1, t2;
+	///chrono::duration<double>					duration;
+	cout << "Solve interactive system ...\n";
 	///
 	////* ================== 1. Setting up LHS ================== */
 	//cout << "__Create LHS: ";
-	t0 = chrono::high_resolution_clock::now();
-	t1 = chrono::high_resolution_clock::now();
+	///t0 = chrono::high_resolution_clock::now();
+	///t1 = chrono::high_resolution_clock::now();
 	//Eigen::MatrixXd BC(CBar.cols(), CBar.rows());
 	if (CBar.rows() == 2)
 		BC.resize(CBar.cols(), CBar.rows());
@@ -3447,10 +3377,9 @@ void NRoSyFields::solveInteractiveSystem()
 	///duration = t2 - t1;
 	///cout << " in " << duration.count() << " seconds." << endl;
 	///
-	
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
+	///t2 = chrono::high_resolution_clock::now();
+	///duration = t2 - t0;
+	///cout << " in " << duration.count() << " seconds." << endl;
 
 	/* ================== 4. Map to full resolution  ================== */
 	performLifting();
@@ -3492,13 +3421,7 @@ void NRoSyFields::initializeParametersForLifting()
 }
 void NRoSyFields::performLifting()
 {
-	// Timing
-	chrono::high_resolution_clock::time_point	t0, t1, t2;
-	chrono::duration<double>					duration;
-	cout <<"> Lifting to the resolution of the mesh";
-	t0 = chrono::high_resolution_clock::now();
-
-	
+	cout << "lfiiting \n";
 	// Setting up some variable
 	cudaError_t			cudaStat1 = cudaSuccess;
 	const int nnz = BasisRow.nonZeros();
@@ -3530,11 +3453,6 @@ void NRoSyFields::performLifting()
 
 	//XFullDim.resize(2 * F.rows());
 	XfBar = Eigen::Map<Eigen::VectorXd>(h_b, m);
-
-
-	t2 = chrono::high_resolution_clock::now();
-	duration = t2 - t0;
-	cout << " in " << duration.count() << " seconds." << endl;
 }
 
 void NRoSyFields::measureAccuracy()
@@ -3674,9 +3592,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.000005 / weight;
-	lambda[1] = 0.5 / weight;
-	BF = SF*MFinv*SF + 4.0*SF;
-	//BF = SF;
+	lambda[1] = 0.005 / weight;
+	//BF = SF*MFinv*SF;
+	BF = SF;
 
 	Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
 	const int factor1 = id.transpose()*BF*id;

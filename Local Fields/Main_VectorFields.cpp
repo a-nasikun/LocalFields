@@ -212,8 +212,8 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::NROSY)
 			{
 				//nRoSyFields.visualizeSoftConstraints(viewer);
-				nRoSyFields.visualizeConstrainedFields(viewer);	
-				nRoSyFields.visualizeConstraints(viewer);			
+				nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields(viewer);				
 				
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.Xf, nRoSy);
 				//nRoSyFields.visualizeNRoSyFields(viewer, nRoSy, Eigen::RowVector3d(0.1, 0.1, 0.8));
@@ -239,8 +239,8 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::NROSY)
 			{
 				//nRoSyFields.visualizeSoftConstraints(viewer);
-				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 				nRoSyFields.visualizeConstraints(viewer);
+				nRoSyFields.visualizeConstrainedFields_Reduced(viewer);
 
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.wb, nRoSy);
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
@@ -376,8 +376,6 @@ int main(int argc, char *argv[])
 			viewer.selected_data_index = 0;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
-			printf("lines: %d \n", viewer.data().lines.rows());
-			//viewer.data().lines.resize(0, 9);
 			//viewer.selected_data_index = 1;
 			//viewer.data().clear();
 			//viewer.data().set_mesh(V, F);
@@ -513,8 +511,7 @@ int main(int argc, char *argv[])
 			else if (fieldsType == FieldsType::NROSY)
 			{
 				nRoSyFields.nRoSyFieldsDesignRef();
-				//viewer.data().clear(); viewer.data().set_mesh(V, F);
-				viewer.data().lines.resize(0, 0);
+				viewer.data().clear(); viewer.data().set_mesh(V, F);
 				nRoSyFields.visualizeConstrainedFields(viewer);
 				nRoSyFields.visualizeConstraints(viewer);
 
@@ -687,7 +684,7 @@ int main(int argc, char *argv[])
 				ChosenFaces.push_back(fid);
 				if (ChosenFaces.size() == 1)
 				{
-					//viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
+					viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.1, 0.0));
 				}
 	
 				return true;
@@ -723,7 +720,6 @@ int main(int argc, char *argv[])
 				{
 					constraintDir = nRoSyFields.FC.row(ChosenFaces[constraintSize - 1]) - nRoSyFields.FC.row(ChosenFaces[0]);
 					viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
-					//viewer.data().lines.resize(0, 0);
 					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 
