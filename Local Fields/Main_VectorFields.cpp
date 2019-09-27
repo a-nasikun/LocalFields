@@ -485,6 +485,9 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				singularConstraint = !singularConstraint;
+			} else if (fieldsType == FieldsType::NROSY)
+			{
+				singularConstraint = !singularConstraint;
 			}
 			break;
 		/* Case x to activate for user inputted constraints */	
@@ -848,12 +851,24 @@ int main(int argc, char *argv[])
 				}
 				else if (fieldsType == FieldsType::NROSY)
 				{
-					constraintDir = nRoSyFields.FC.row(ChosenFaces[constraintSize - 1]) - nRoSyFields.FC.row(ChosenFaces[0]);
-					///viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
-					nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
-					printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+					if (singularConstraint)
+					{
+						for (int i : ChosenFaces) {
+							nRoSyFields.userSingularConstraints.push_back(F(i, 0));
+							printf("Inserting %d as singularity constraints \n", F(i, 0));
+							nRoSyFields.addSingularityConstraints();
+						}
+					}
+					else {
+						constraintDir = nRoSyFields.FC.row(ChosenFaces[constraintSize - 1]) - nRoSyFields.FC.row(ChosenFaces[0]);
+						///viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
+						nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+						printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+						nRoSyFields.addHardConstraints();
+						//nRoSyFields.constructInteractiveConstraints();
+					}
 
-					nRoSyFields.constructInteractiveConstraints();
+					//nRoSyFields.constructInteractiveConstraints();
 					nRoSyFields.setAndSolveInteractiveSystem();
 
 					viewer.data().lines.resize(0, 9);

@@ -272,6 +272,21 @@ void NRoSyFields::constructFaceAdjacency2RingMatrix()
 	cout << "in " << duration.count() << " seconds" << endl;
 }
 
+void NRoSyFields::constructVFAdjacency()
+{
+	VFAdjacency.resize(F.rows(), V.rows());
+	vector<Eigen::Triplet<bool>> VFTriplet;
+	VFTriplet.reserve(7 * V.rows());
+
+	for (int i = 0; i < F.rows(); i++) {
+		for (int j = 0; j < F.cols(); j++) {
+			VFTriplet.push_back(Eigen::Triplet<bool>(i, F(i, j), true));
+		}
+	}
+
+	VFAdjacency.setFromTriplets(VFTriplet.begin(), VFTriplet.end());
+}
+
 // For every vertex V, find where it belongs in edge E
 void NRoSyFields::constructEVList()
 {
@@ -2598,6 +2613,7 @@ void NRoSyFields::addHardConstraints()
 	{
 		/* Location of constraints */
 		constFid = userVisualConstraints[i];
+		globalConstraints.push_back(constFid);
 		/* Getting the constraints + making them into local coordinates */
 		Eigen::RowVector3d dir = FC.row(userVisualConstraints[i + 1]) - FC.row(userVisualConstraints[i]);
 		Eigen::MatrixXd ALoc(3, 2);
@@ -2611,6 +2627,7 @@ void NRoSyFields::addHardConstraints()
 	Eigen::VectorXd cCur;
 	createNRoSyFromVectors(normDir, nRoSy_);
 	convertNRoSyToRepVectors(nRoSy_, cCur);
+	cout << "c: " << cCur.transpose();
 
 	
 	ConstrTriplet.push_back(Eigen::Triplet<double>(CRows + 0, 2 * constFid + 0, 1.0));
@@ -2631,7 +2648,194 @@ void NRoSyFields::addHardConstraints()
 
 void NRoSyFields::addSingularityConstraints()
 {
+	/* Defining LOCATION for the singularities */
+	//time_t t;
+	//srand((unsigned)time(&t));
+	srand(time(NULL));
 
+	int oldNumConstr, newNumConstr;
+	oldNumConstr = C.rows();
+
+	const int id = userSingularConstraints.size() - 1;
+	int CRows = C.rows();
+
+	// Defining varaibles for singularities
+	const int SingLocation = userSingularConstraints[id];
+	singularities.push_back(SingLocation);
+	const int SingNeighNum = VFAdjacency.col(SingLocation).nonZeros();
+	Eigen::SparseMatrix<bool>::InnerIterator it0(VFAdjacency, SingLocation);
+	const int firstNeigh = it0.row();
+
+
+	// Inserting the first neighbor (the one with lowest index/row number)
+	vector<int> emptyVect;
+	SingNeighCC.push_back(emptyVect);
+	SingNeighCC[id].resize(SingNeighNum);
+	SingNeighCC[id][0] = firstNeigh;
+	int curNeigh = firstNeigh;
+	int vertex1 = SingLocation;
+
+	// Getting the neighboring valence triangles in order
+	for (int i2 = 1; i2 < SingNeighNum; i2++) {
+		int vertex2;
+		// Setting the vertex on the edge pointing to vertex1 as vertex2 (edge = v2->v1)
+		for (int i = 0; i < F.cols(); i++) {
+			if (F(curNeigh, i%F.cols()) == vertex1) {
+				vertex2 = F(curNeigh, (i + F.cols() - 1) % F.cols());
+			}
+		}
+		//for (std::set<VtoFPair>::iterator it1 = next(VFNeighFull[SingLocation].begin(), 1); it1 != VFNeighFull[SingLocation].end(); ++it1) {
+		// Getting the neighboring triangles in order (CCW) 
+		for (Eigen::SparseMatrix<bool>::InnerIterator it1(VFAdjacency, SingLocation); it1; ++it1) {
+			for (int i = 0; i < F.cols(); i++) {
+				if (F(it1.row(), i) == vertex1 && F(it1.row(), (i + 1) % F.cols()) == vertex2) {
+					SingNeighCC[id][i2] = it1.row();
+					curNeigh = it1.row();
+				}
+			}
+		}
+	}
+
+	/* Defining the VALUES for singularities */
+	int numSingConstraints = 0;
+
+	//for (int j = 0; j < (SingNeighCC[i].size()-1); j++) {		// no consntraints on the last triangle
+	for (int j = 0; j < (SingNeighCC[id].size()); j++) {
+		numSingConstraints++;
+	}
+	//printf("Sing vert: %d | %d faces \n", SingLocation, numSingConstraints);
+
+	// Setting up matrix C and vector c
+	c.conservativeResize(C.rows() + 2 * numSingConstraints);
+
+
+	// Setting up hard constraints for neighboring faces
+	Eigen::MatrixXd		ALoc(3, 2);
+	Eigen::RowVector3d	c1, c2, field3D;
+	Eigen::Vector2d		field2D;
+	vector<vector<double>>		internalAngle(SingNeighCC.size());
+	vector<double>				gaussAngle(SingNeighCC.size());
+
+	// Local variables to compute angle on each triangle
+	//cout << "Local variables to compute angle on each triangle \n";
+	Eigen::Vector3d		edge1, edge2;
+	double				angle;
+	int					singLoc;
+
+	/* Computing the gauss angles */
+	internalAngle[id].resize(SingNeighCC[id].size());
+	gaussAngle[id] = 0.0;
+
+	for (int i = 0; i < (SingNeighCC[id].size()); i++)
+	{
+		int i2 = (i < (SingNeighCC[id].size()) ? i + 1 : 0);
+
+		// [a] obtain shared edges
+		for (int f = 0; f < F.cols(); f++) {
+			if (F(SingNeighCC[id][i], f) == singularities[id])
+			{
+				// [b] get the two edges
+				edge1 = V.row(F(SingNeighCC[id][i], (f == 0 ? 2 : f - 1))) - V.row(F(SingNeighCC[id][i], f));
+				edge2 = V.row(F(SingNeighCC[id][i], (f == 2 ? 0 : f + 1))) - V.row(F(SingNeighCC[id][i], f));
+				angle = edge2.dot(edge1) / (edge1.norm()*edge2.norm());
+				angle = acos(angle);
+
+				// [c] get the angle
+				internalAngle[id][i] = angle;
+				gaussAngle[id] += angle;
+			}
+		}
+	}
+
+	// Show the angles
+	//for (int id = 0; id < SingNeighCC.size(); id++)
+	//{
+	//	viewer.data().add_points(V.row(singularities[id]), Eigen::RowVector3d(1.0, 0.1, 0.1));
+	//	printf("__Gauss angle = %.4f\n", gaussAngle[id] * 180.0 / M_PI);
+	//	for (int i = 0; i < (SingNeighCC[id].size()); i++) {
+	//		printf("______ angle %d (F %d) = %.3f \n", i, SingNeighCC[id][i], internalAngle[id][i] * 180.0 / M_PI);
+	//		Eigen::Vector3d firstBasis_ = A.block(3 * SingNeighCC[id][i], 2 * SingNeighCC[id][i], 3, 1);
+	//		//viewer.data().add_edges(FC.row(SingNeighCC[id][i]), FC.row(SingNeighCC[id][i]) + firstBasis_.transpose().normalized()*avgEdgeLength*1.0, Eigen::RowVector3d(0.0, 1.0, 0.7));
+	//	}
+	//}
+
+
+	///cout << "Start assigning values \n";
+	int counter = C.rows();
+	double rotAngle = (gaussAngle[id] / ((double)SingNeighCC[id].size()));
+	Eigen::VectorXd inpCol(SingNeighCC.size()); inpCol.setLinSpaced(0.0, 1.0);
+	Eigen::MatrixXd edgeCol; igl::jet(inpCol, true, edgeCol);
+
+	for (int i = 0; i < (SingNeighCC[id].size()); i++) {		// iterate over all faces in one singularity
+		int curFace = SingNeighCC[id][i];
+		int nextFace;
+		if (i == (SingNeighCC[id].size() - 1)) nextFace = SingNeighCC[id][0];
+		else nextFace = SingNeighCC[id][i + 1];
+		//if (i == SingNeighCC[id].size() - 2) SingNeighCC[id][SingNeighCC[id].size() - 1] = SingNeighCC[id][0];
+
+		/* Iterate to find shared edge between two neighboring faces */
+		int sharedEdgeID;
+		for (int e1 = 0; e1 < 3; e1++) {						// iterate over edges sharing that face
+			for (int e2 = 0; e2 < 3; e2++) {
+				if (FE(curFace, e1) == FE(nextFace, e2))
+				{
+					sharedEdgeID = FE(curFace, e1);
+				}
+			}
+		}
+		//printf("|%d:%d => %d \n", curFace, nextFace, sharedEdgeID);
+
+		/* Obtaining the transport angle (bring the T{i+1} to T{i}) */
+		double angTarget, angSource;
+		if (EF(sharedEdgeID, 0) == curFace)
+		{
+			angTarget = FrameRot(sharedEdgeID, 0);
+			angSource = FrameRot(sharedEdgeID, 1);
+			//printf("[0] Angle T1: %.3f | T2: %.3f \n", 180.0/M_PI*FrameRot(sharedEdgeID, 0), 180.0/M_PI*FrameRot(sharedEdgeID, 1));			
+		}
+		else if (EF(sharedEdgeID, 1) == curFace)
+		{
+			angTarget = FrameRot(sharedEdgeID, 1);
+			angSource = FrameRot(sharedEdgeID, 0);
+			//printf("[1] Angle T1: %.3f | T2: %.3f \n", 180.0 / M_PI*FrameRot(sharedEdgeID, 1), 180.0 / M_PI*FrameRot(sharedEdgeID, 0));
+		}
+
+		double totalRot = -rotAngle + nRot*(angTarget - angSource + M_PI);
+
+		Eigen::Matrix2d transfRotMat; transfRotMat << cos(totalRot), -sin(totalRot), sin(totalRot), cos(totalRot);
+
+		// vector for visualization
+		// -- vector in my (next) neighbor
+		Eigen::Vector2d vn; vn << 1.0, 0.0;
+		Eigen::Vector2d vm = transfRotMat*vn;
+
+		Eigen::MatrixXd An; An = A.block(3 * nextFace, 2 * nextFace, 3, 2);
+		Eigen::MatrixXd Am; Am = A.block(3 * curFace, 2 * curFace, 3, 2);
+
+		Eigen::Vector3d edgeN = An*vn;
+		Eigen::Vector3d edgeM = Am*vm;
+
+		ConstrTriplet.push_back(Eigen::Triplet<double>(counter + 0, 2 * nextFace + 0, transfRotMat(0, 0)));	// the reference triangle
+		ConstrTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * nextFace + 0, transfRotMat(1, 0)));
+		ConstrTriplet.push_back(Eigen::Triplet<double>(counter + 0, 2 * nextFace + 1, transfRotMat(0, 1)));
+		ConstrTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * nextFace + 1, transfRotMat(1, 1)));
+
+		ConstrTriplet.push_back(Eigen::Triplet<double>(counter + 0, 2 * curFace + 0, -1.0));					// the neighbor (next, CCW)
+		ConstrTriplet.push_back(Eigen::Triplet<double>(counter + 1, 2 * curFace + 1, -1.0));
+
+		c(counter + 0) = 0.0;
+		c(counter + 1) = 0.0;
+		counter += 2;
+	}
+
+	//cout << "Setting up the matrix for constraint \n";
+	C.resize(0, 0);
+	C.resize(CRows + 2 * numSingConstraints, BF.rows());
+	printf("C: %dx%d \n", C.rows(), C.cols());
+	C.setFromTriplets(ConstrTriplet.begin(), ConstrTriplet.end());
+
+	newNumConstr = C.rows();
+	deltaConstraints = newNumConstr - oldNumConstr;
 }
 
 void NRoSyFields::setupWeight(double mu, vector<double>& lambda)
@@ -3081,30 +3285,30 @@ void NRoSyFields::getReducedConstraints()
 	//constructConstraints();
 
 	//userConstraints = globalConstraints; 
-	///CBar = C * Basis;
+	CBar = C * Basis;
 	cBar = c;
 	//printf("cBar=%d \n", cBar.size());
 	//cout << "c: \n" << c << endl; 
 
 	////* Alternative of CBar construction */
-	vector<Eigen::Triplet<double>> CTriplet;
-	CTriplet.reserve(40 * 2 * globalConstraints.size());
-	vector<double> constraints_(2 * globalConstraints.size());
-	for (int i = 0; i < globalConstraints.size(); i++) {
-		constraints_[2 * i] = 2 * globalConstraints[i];
-		constraints_[2 * i + 1] = 2 * globalConstraints[i] + 1;
-	}
-	//for(int k=0; k<Basis.transpose().outerSize(); ++k)
-	for (int k = 0; k<constraints_.size(); k++)
-	{
-		for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
-		{
-			CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
-		}
-	}
-	CBar.resize(0, 0);
-	CBar.resize(2 * globalConstraints.size(), Basis.cols());
-	CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
+	///vector<Eigen::Triplet<double>> CTriplet;
+	///CTriplet.reserve(40 * 2 * globalConstraints.size());
+	///vector<double> constraints_(2 * globalConstraints.size());
+	///for (int i = 0; i < globalConstraints.size(); i++) {
+	///	constraints_[2 * i] = 2 * globalConstraints[i];
+	///	constraints_[2 * i + 1] = 2 * globalConstraints[i] + 1;
+	///}
+	/////for(int k=0; k<Basis.transpose().outerSize(); ++k)
+	///for (int k = 0; k<constraints_.size(); k++)
+	///{
+	///	for (Eigen::SparseMatrix<double>::InnerIterator it(BasisT, constraints_[k]); it; ++it)
+	///	{
+	///		CTriplet.push_back(Eigen::Triplet<double>(k, it.row(), it.value()));
+	///	}
+	///}
+	///CBar.resize(0, 0);
+	///CBar.resize(2 * globalConstraints.size(), Basis.cols());
+	///CBar.setFromTriplets(CTriplet.begin(), CTriplet.end());
 	CBarT = CBar.transpose();
 	
 	t2 = chrono::high_resolution_clock::now();
@@ -3565,6 +3769,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
+	constructVFAdjacency();
 	constructFrameBasis();
 	constructMappingMatrix();
 

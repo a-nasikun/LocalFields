@@ -22,6 +22,7 @@ public:
 	void computeFaceCenter();
 	void constructFaceAdjacency3NMatrix();
 	void constructFaceAdjacency2RingMatrix();
+	void constructVFAdjacency();
 	void constructEVList();
 	void constructEFList();
 	void computeAverageEdgeLength();
@@ -178,6 +179,7 @@ public:
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
 	vector<set<int>>				AdjMF2Ring;				// 2-ring neighborhood of triangles
 	Eigen::MatrixXi					AdjMF3N;				// List of 3 neighbors of a triangle
+	Eigen::SparseMatrix<bool>		VFAdjacency;
 	Eigen::MatrixXd					FrameRot;				// Rotation angle on each frame to the shared edge of two neighboring triangles
 	Eigen::MatrixXd					eigFieldsNRoSyRef;
 	Eigen::VectorXd					eigValuesNRoSyRef;
@@ -196,7 +198,9 @@ public:
 	Eigen::VectorXd					Xf;
 	Eigen::VectorXd					c;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		C;										// selector matrix
-	vector<int>						reducedConstraints, globalConstraints, userVisualConstraints;
+	vector<int>						reducedConstraints, globalConstraints, userVisualConstraints, userSingularConstraints;
+	vector<int>						singularities;
+	vector<vector<int>>				SingNeighCC;
 	Eigen::VectorXd					alignFields;
 	Eigen::SparseMatrix<double>		BF, BM;
 
