@@ -1720,7 +1720,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 1.0;
+	viewer.data().line_width = 4.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -2762,7 +2762,7 @@ void NRoSyFields::addSingularityConstraints()
 
 	///cout << "Start assigning values \n";
 	int counter = C.rows();
-	double rotAngle = (gaussAngle[id] / ((double)SingNeighCC[id].size()));
+	double rotAngle = (gaussAngle[id] / ((double)SingNeighCC[id].size()*nRot));
 	Eigen::VectorXd inpCol(SingNeighCC.size()); inpCol.setLinSpaced(0.0, 1.0);
 	Eigen::MatrixXd edgeCol; igl::jet(inpCol, true, edgeCol);
 
@@ -3815,7 +3815,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	numSupport = 40.0;
 	numSample = 1000;
 	constructSamples(numSample);
-	string basisFile = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
 	//storeBasis(basisFile);
 	retrieveBasis(basisFile);

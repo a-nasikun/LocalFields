@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur0.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Screwdriver/40_screwdriver.off";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
@@ -681,7 +681,7 @@ int main(int argc, char *argv[])
 			{
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "4fields_" + to_string(nRoSyFields.Basis.cols()) + "_" + to_string((int)nRoSyFields.numSupport) + "_approx" + to_string(saveId++);
 				//filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Kitten_constraintFields_Local_user_10_constraints.txt";
-				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/RockerArm_4fields_2000_40_approx_2_constraints.txt";
+				filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/Mechanics_4fields_2000_40_approx_3_constraints.txt";
 				nRoSyFields.loadConstraintsFromFile(filename_vfields);
 				nRoSyFields.visualizeConstraints(viewer);
 			}
@@ -856,7 +856,7 @@ int main(int argc, char *argv[])
 						for (int i : ChosenFaces) {
 							nRoSyFields.userSingularConstraints.push_back(F(i, 0));
 							printf("Inserting %d as singularity constraints \n", F(i, 0));
-							nRoSyFields.addSingularityConstraints();
+							//nRoSyFields.addSingularityConstraints();
 						}
 					}
 					else {
@@ -926,7 +926,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.5f; 
+	viewer.data().line_width = 1.0f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
