@@ -13,6 +13,7 @@
 #include <igl/readOFF.h>
 
 #include <Eigen/PardisoSupport>
+#include <Eigen/CholmodSupport>
 #include <Eigen/SparseQR>
 
 TensorFields::TensorFields()
@@ -1201,7 +1202,7 @@ void TensorFields::constructBasis_LocalEigenProblem()
 			if (id >= Sample.size()) break;
 
 			vector<Eigen::Triplet<double>> BTriplet, C1Triplet, C2Triplet;
-			cout << "[" << id << "] Constructing local eigen problem\n";
+			//cout << "[" << id << "] Constructing local eigen problem\n";
 
 			///cout << "__creating subdomain \n";
 			LocalFields localField(id);
@@ -1633,10 +1634,10 @@ void TensorFields::visualizeSmoothedAppTensorFields(igl::opengl::glfw::Viewer &v
 	constructTensorRepFields(smoothedTensorRed, smoothedFields);
 
 	//double scale = 0.01;
-	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale);
-	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale);
-	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale);
-	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale);
+	visualize2Dfields(viewer,  smoothedFields.col(0), color1, scale/5.0);
+	visualize2Dfields(viewer, -smoothedFields.col(0), color1, scale/5.0);
+	visualize2Dfields(viewer,  smoothedFields.col(1), color2, scale/5.0);
+	visualize2Dfields(viewer, -smoothedFields.col(1), color2, scale/5.0);
 }
 void TensorFields::visualizeSamples(igl::opengl::glfw::Viewer &viewer)
 {
@@ -1807,7 +1808,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "RockerArm_";
+	string model = "OilPump1m_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1829,7 +1830,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(7500);
+	selectFaceToDraw(50000);
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1852,12 +1853,12 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 250;
+	numSample = 667;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
-	//constructBasis();
-	//storeBasis(fileBasis);
-	retrieveBasis(fileBasis);
+	constructBasis();
+	storeBasis(fileBasis);
+	//retrieveBasis(fileBasis);
 	//visualizeBasis(viewer, 0);
 	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
 	//visualizeSubdomain(viewer);
@@ -1874,9 +1875,9 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* Smoothing and Testing the result */
 	
 	/* adaptive stuff */
-	//settingAdaptiveWeight(viewer, adaptiveWeight);
-	settingAdaptiveWeightGradual(viewer, adaptiveWeight);
-	projectTheContraints(adaptiveWeight, WMbar);
+	///settingAdaptiveWeight(viewer, adaptiveWeight);
+	//settingAdaptiveWeightGradual(viewer, adaptiveWeight);
+	///projectTheContraints(adaptiveWeight, WMbar);
 
 	prepareSmoothingRed();
 	initializeParametersForProjection();
@@ -1885,7 +1886,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	initializeParametersForLHS();
 	//initializeSystemSolve();
 
-	smoothingRed_Implicit_Geometric_Adaptive(viewer, Tensor, Eigen::VectorXd(10), Tensor);
+	//smoothingRed_Implicit_Geometric_Adaptive(viewer, Tensor, Eigen::VectorXd(10), Tensor);
 	//visualizeSmoothedAppTensorFields(viewer);
 }
 
@@ -2255,6 +2256,9 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 
 	t2 = chrono::high_resolution_clock::now();
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//Eigen::CholmodSupernodalLLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver; 
+
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
 	vOutBar = sparseSolver.solve(rhs);
