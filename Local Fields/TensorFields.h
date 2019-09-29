@@ -89,8 +89,8 @@ public:
 
 	void prepareSmoothingRed();
 	void smoothingRed(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
-	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
-	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const int lambda, Eigen::MatrixXd& outputTensor);
+	void smoothingRed_Explicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const double lambda, Eigen::MatrixXd& outputTensor);
+	void smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &viewer, const Eigen::MatrixXd& inputTensor, const double lambda, Eigen::MatrixXd& outputTensor);
 	void settingAdaptiveWeight(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
 	void settingAdaptiveWeightGradual(igl::opengl::glfw::Viewer &viewer, Eigen::VectorXd& lambda);
 	void projectTheContraints(Eigen::VectorXd& lambdaFull, Eigen::SparseMatrix<double>& lambdaRed);
@@ -104,8 +104,11 @@ public:
 	void performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS);
 	void initializeSystemSolve();
 	void performSystemSolve(Eigen::SparseMatrix<double, Eigen::RowMajor> &LHS, Eigen::VectorXd& rhs, Eigen::VectorXd& vSol);
+	void initializeDenseSystemSolve();
+	void performDenseSystemSolve(double mu, Eigen::VectorXd& vSol);
 	void initializeParametersForLifting();
 	void performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& voigtLifted);
+
 
 	/* APPLICATION :: Sub-space Projection */
 	void subspaceProjection(const Eigen::VectorXd& refField);
@@ -158,6 +161,7 @@ public:
 	Eigen::MatrixXd					smoothedTensorRed;			// Smoothed tensor, application;
 	Eigen::VectorXd					adaptiveWeight;
 	Eigen::SparseMatrix<double>		WM;
+	Eigen::VectorXd					vInBar;
 
 	/* Reduced System*/
 	Eigen::SparseMatrix<double>		MFbar, SFbar, BTMbar; 
@@ -202,6 +206,11 @@ public:
 	double*							d_solveCsrVal;
 	int*							d_solveCsrRowPtr;
 	int*							d_solveCsrColInd;
+	cusolverDnHandle_t				denseSolveHandle;
+	double*							d_solveMdata;
+	double*							d_solveSdata;
+	double*							d_solveLHSdata;
+	double*							d_solveRHSdata;
 private:
 
 };
