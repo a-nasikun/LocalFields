@@ -1830,48 +1830,48 @@ void VectorFields::constructSoftConstraints()
 	int init_, end_; 
 	vector<int> aCurve; 
 	/* Automatic random set up */
-	//for (int i = 0; i < NUM_CURVES; i++) {
-	//	init_ = rand() % F.rows();
-	//	//end_ = rand() % F.rows();
-	//	end_ = init_ + 40;
-	//	constructCurvesAsConstraints(init_, end_, aCurve);
-	//	curvesConstraints[i] = aCurve; 
-	//}
+	for (int i = 0; i < NUM_CURVES; i++) {
+		init_ = rand() % F.rows();
+		//end_ = rand() % F.rows();
+		end_ = init_ + 40;
+		constructCurvesAsConstraints(init_, end_, aCurve);
+		curvesConstraints[i] = aCurve; 
+	}
 
 	
 	int constCounter = 0;
-	/* Manual set-up for Chinese Dragon */
-	// Face
-	constructCurvesAsConstraints(152474, 51474, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// Back
-	constructCurvesAsConstraints(44109, 68907, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// body - bottom
-	constructCurvesAsConstraints(13471, 195817, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// body - right
-	constructCurvesAsConstraints(123036, 247143, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// body - left
-	constructCurvesAsConstraints(234815, 232296, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// front_right_leg
-	constructCurvesAsConstraints(75468, 7716, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// front_left_leg
-	constructCurvesAsConstraints(231495, 77171, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-
-	// tail
-	constructCurvesAsConstraints(230301, 113500, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
+	////* Manual set-up for Chinese Dragon */
+	///// Face
+	///constructCurvesAsConstraints(152474, 51474, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// Back
+	///constructCurvesAsConstraints(44109, 68907, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// body - bottom
+	///constructCurvesAsConstraints(13471, 195817, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// body - right
+	///constructCurvesAsConstraints(123036, 247143, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// body - left
+	///constructCurvesAsConstraints(234815, 232296, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// front_right_leg
+	///constructCurvesAsConstraints(75468, 7716, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// front_left_leg
+	///constructCurvesAsConstraints(231495, 77171, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
+	///
+	///// tail
+	///constructCurvesAsConstraints(230301, 113500, aCurve);
+	///curvesConstraints[constCounter++] = aCurve;
 
 	/* Manual set-up for Armadillo */
 	///// Head
@@ -4648,13 +4648,13 @@ void VectorFields::setAndSolveUserSystem(const Eigen::Vector3d& lambda)
 	getUserConstraints();
 	//getUserConstraintsEfficient();
 
-	setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
-	setupLHSUserProblemMapped(A_LHSBar);
-	solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
+	///setupRHSUserProblemMapped(gBar, hBar, vEstBar, bBar);
+	///setupLHSUserProblemMapped(A_LHSBar);
+	///solveUserSystemMappedLDLT(vEstBar, A_LHSBar, bBar);
 	
-	//setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
-	//setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
-	//solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
+	setupRHSUserProblemMappedSoftConstraints(lambda, bBar);
+	setupLHSUserProblemMappedSoftConstraints(lambda, A_LHSBar);
+	solveUserSystemMappedLDLTSoftConstraints(A_LHSBar, bBar);
 
 	mapSolutionToFullRes();
 }
@@ -4858,13 +4858,13 @@ void VectorFields::setupRHSUserProblemMappedSoftConstraints(const Eigen::Vector3
 	cout << "> Constructing RHS (mapped)...";
 
 	/* Mass matrix of the selected faces (on constraints) */
-	Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
+	//Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
 
 	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
 	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());
 
-	//bBar = lambda(2)*CBar.transpose() * cBar; 
-	bBar = lambda(2)*CBar.transpose() * Mconst * cBar;
+	bBar = lambda(2)*CBar.transpose() * cBar; 
+	//bBar = lambda(2)*CBar.transpose() * Mconst * cBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -4888,15 +4888,15 @@ void VectorFields::setupLHSUserProblemMappedSoftConstraints(const Eigen::Vector3
 	cout << "lambda_2 " << lambda(2) << endl;
 
 	/* Local matrix */
-	Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
+	//Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();
 
 	//printf("Siz of Mconst: %dx%d\n", Mconst.rows(), Mconst.cols());
 	//printf("Siz of Cbar: %dx%d\n", CBar.rows(), CBar.cols());
 
 	//A_LHSBar = lambda(0)*SF2DBar +  lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
-	A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*Mconst*CBar;
+	//A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*Mconst*CBar;
 	//A_LHSBar = lambda(0)*SF2DBar + lambda(2)*CBar.transpose()*CBar;
-	//A_LHSBar = lambda(0)*SF2DBar + lambda_1*B2DBar + lambda(2)*CBar.transpose()*CBar;
+	A_LHSBar = lambda(0)*SF2DBar + lambda(1)*B2DBar + lambda(2)*CBar.transpose()*CBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;

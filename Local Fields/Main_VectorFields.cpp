@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
 	/* READING DATA */
 
-	const string model = "Mechanics_";
+	const string model = "AntiqueHead_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -76,7 +76,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur1_425k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur0.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Screwdriver/40_screwdriver.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Turbosquid_Antique Head/antique_tris.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
@@ -247,10 +248,10 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
-				//vectorFields.visualizeApproxResult(viewer);
+				vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
-				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//evenSpaceField = !evenSpaceField; 
@@ -908,9 +909,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.5f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
-	return viewer.launch();
+	///return viewer.launch();
 
 	/* Trick for remote desktop */
-	//getchar();
-	//return 1;
+	getchar();
+	return 1;
 }

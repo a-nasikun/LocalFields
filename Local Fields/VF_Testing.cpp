@@ -1416,7 +1416,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	Eigen::Vector3d lambda;
 	lambda(0) = 0.25; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
-	lambda(1) = 1e-4; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+	lambda(1) = 1e-2; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 1;
 	///constructSingularities();
 	///constructHardConstraintsWithSingularitiesWithGauss(viewer);
@@ -1476,9 +1476,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 	numSample = 1000; 
 	numSupport = 40.0;
-	string model = "Armadillo_";	
-	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
-	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
+	string model = "AntiqueHead_";	
+	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+	//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
 	bool adaptiveSampling = false;
 	if (adaptiveSampling) {
@@ -1588,9 +1588,12 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizePatchDijkstra(viewer);
 
 	/* SOFT CONSTRAINTS */
+	constructSoftConstraints();
+	setAndSolveUserSystem(lambda);
 	//visualizeCurveConstraints(viewer);
-	//visualizeSoftConstraints(viewer);
+	visualizeSoftConstraints(viewer);
 	//measureSoftConstraintError(lambda);
+	visualizeApproxResult(viewer);
 
 
 	/* MEASURE ACCURACY */

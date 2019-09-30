@@ -239,9 +239,9 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head1Fields*lengthScale / HEAD_RATIO, color);
 	//viewer.data().add_edges(FCLoc + TFields*lengthScale, FCLoc + TFields*lengthScale + Head2Fields*lengthScale / HEAD_RATIO, color);
-	viewer.data().lines.resize(0, 9);
-	//const int prevLines = viewer.data().lines.rows();
-	const int prevLines = 0;
+	//viewer.data().lines.resize(0, 9);
+	const int prevLines = viewer.data().lines.rows();
+	//const int prevLines = 0;
 	viewer.data().lines.conservativeResize(prevLines + 3 * FaceToDraw.size(), Eigen::NoChange_t());
 
 	printf("Num of lines: %d => %d \n", prevLines, viewer.data().lines.rows());
