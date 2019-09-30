@@ -140,8 +140,10 @@ public:
 	void constructHardConstraintsWithSingularities_Cheat();
 	void constructHardConstraintsWithSingularitiesWithGauss(igl::opengl::glfw::Viewer &viewer);
 	void constructSoftConstraints();
+	void constructCurves_antiqueHead();
 	void constructCurvesAsConstraints(const int& init, const int& end, vector<int>& curve);
 	void measureSoftConstraintError(const Eigen::Vector3d& lambda);
+	void precomputeForSoftConstraints(const Eigen::Vector3d& lambda);
 	void projectCurvesToFrame();
 	void setupRHSGlobalProblemMapped(Eigen::VectorXd& g, Eigen::VectorXd& h, Eigen::VectorXd& vEst, Eigen::VectorXd& b);
 	void setupLHSGlobalProblemMapped(Eigen::SparseMatrix<double>& A_LHS);
@@ -389,6 +391,11 @@ public:
 	// Variables related to Applications
 	Eigen::MatrixXd					CurvatureTensorField2D;
 	Eigen::SparseMatrix<double>		CurvatureTensor2D; 
+
+	// Soft-constrained systems
+	Eigen::SparseMatrix<double>		SBbar;		// U^T * (a*S + b*B) * U
+	Eigen::SparseMatrix<double>		CTCbar;		// U^T * (C^T * C) * U
+	Eigen::VectorXd					CTcbar;		// U^T * C^T * c
 
 	// FOR TESTING ONLY
 public: 

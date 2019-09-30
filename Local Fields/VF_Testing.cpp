@@ -1336,8 +1336,8 @@ int VectorFields::selectRandomFace()
 
 void VectorFields::checkB2DStructure()
 {
-	for (int i = 0; i < B2D.outerSize(); i++) {
-		for (Eigen::SparseMatrix<double>::InnerIterator it(B2D, i); it; ++it) {
+	for (int i = 0; i < B2DAsym.outerSize(); i++) {
+		for (Eigen::SparseMatrix<double>::InnerIterator it(B2DAsym, i); it; ++it) {
 			if (it.row() == 200 && it.col() % 2 == 0) {
 				cout << "VALUES IN B2D :: N(0)=";
 				cout << it.col() / 2 << ", " << endl;
@@ -1392,7 +1392,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	computeFrameRotation(viewer);
-	selectFaceToDraw(5000); 
+	selectFaceToDraw(75000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1417,7 +1417,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	Eigen::Vector3d lambda;
 	lambda(0) = 0.25; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
 	lambda(1) = 1e-2; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
-	lambda(2) = 1;
+	lambda(2) = 4;
 	///constructSingularities();
 	///constructHardConstraintsWithSingularitiesWithGauss(viewer);
 	//constructHardConstraintsWithSingularities_Cheat();
@@ -1488,10 +1488,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 		faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 	}
 	constructSamples(numSample);
-	constructBasis();	
+	//constructBasis();	
 	//storeBasis(filename_basis);			// Binary, Eigen-base
 	//constructMultiBasis();
-	//retrieveBasis(filename_basis);
+	retrieveBasis(filename_basis);
 	//visualizeSamples(viewer);
 	//visualizeSubdomain(viewer);
 
@@ -1589,12 +1589,12 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/* SOFT CONSTRAINTS */
 	constructSoftConstraints();
+	precomputeForSoftConstraints(lambda);
 	setAndSolveUserSystem(lambda);
 	//visualizeCurveConstraints(viewer);
 	visualizeSoftConstraints(viewer);
 	//measureSoftConstraintError(lambda);
 	visualizeApproxResult(viewer);
-
 
 	/* MEASURE ACCURACY */
 	//measureApproxAccuracyL2Norm();

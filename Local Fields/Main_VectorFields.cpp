@@ -221,12 +221,15 @@ int main(int argc, char *argv[])
 		case '1':
 			if (fieldsType == FieldsType::VECTOR)
 			{				
+				viewer.data().lines.resize(0, 9);
 				//vectorFields.visualizeSubdomain(viewer);
-				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
-				//vectorFields.visualizeApproximatedFields(viewer);
-				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
+				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);	
+				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
-				//vectorFields.visualizeSingularitiesConstraints(viewer);				
+				//vectorFields.visualizeSingularitiesConstraints(viewer);	
+
+				vectorFields.visualizeCurveConstraints(viewer);		
+				vectorFields.visualizeApproximatedFields(viewer);
 				
 			}
 			else if (fieldsType == FieldsType::NROSY)
@@ -247,7 +250,11 @@ int main(int argc, char *argv[])
 		case '2':
 			if (fieldsType == FieldsType::VECTOR)
 			{
+				viewer.data().lines.resize(0, 9);
+
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
+				//vectorFields.visualizeSoftConstraints(viewer);
+				vectorFields.visualizeCurveConstraints(viewer);
 				vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
@@ -282,8 +289,9 @@ int main(int argc, char *argv[])
 
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				vectorFields.visualizeBasis(viewer, basisId);
-				printf("Showing the %d-th basis \n", basisId);
+				///vectorFields.visualizeBasis(viewer, basisId);
+				///printf("Showing the %d-th basis \n", basisId);
+				vectorFields.visualizeSoftConstraints(viewer);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
@@ -583,7 +591,7 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{
 				cout << "\n========================= GLOBAL PROBLEM =============================\n";
-				vectorFields.constructInteractiveConstraints();
+				//vectorFields.constructInteractiveConstraints();
 				//vectorFields.constructHardConstraintsWithSingularitiesWithGauss(viewer);
 				vectorFields.setupGlobalProblem(lambda);
 				vectorFields.visualizeApproximatedFields(viewer);
@@ -909,9 +917,9 @@ int main(int argc, char *argv[])
 	viewer.data().point_size = 10.0f;
 	viewer.data().line_width = 1.5f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
-	///return viewer.launch();
+	return viewer.launch();
 
 	/* Trick for remote desktop */
-	getchar();
-	return 1;
+	//getchar();
+	//return 1;
 }

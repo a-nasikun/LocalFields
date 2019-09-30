@@ -613,12 +613,10 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	//colorInput = Eigen::RowVector3d(0.6, 0.55686274509, 0.76470588235);
 	colorInput = Eigen::RowVector3d(0.35686274509, 0.54901960784, 0.35294117647);
 	
-
-
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
-	//visualize2Dfields(viewer, XFullDim, color, 1, true);
-	visualize2Dfields(viewer, XFullDim, color, 2, false);
+	visualize2Dfields(viewer, XFullDim, color, 5.0, false);
+	//visualize2Dfields(viewer, XFullDim, color, 10, true);
 	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
 }
@@ -1384,19 +1382,23 @@ void VectorFields::visualizeCurveConstraints(igl::opengl::glfw::Viewer &viewer)
 	Eigen::MatrixXd FColor(F.rows(), 3);
 	const double colorDiff = 0.5 / (double) (curvesConstraints.size());
 
-	for (int i = 0; i < F.rows(); i++) func(i) = 0.0;
+	//for (int i = 0; i < F.rows(); i++) func(i) = 0.0;
+	//for (int i = 0; i < F.rows(); i++) func(i) = 25.0/77.0;
+	for (int i = 0; i < F.rows(); i++) FColor.row(i) = Eigen::RowVector3d(220.0, 235.0, 249.0)/255.0;
 
 	/*Draw the color*/
 	for (int i = 0; i < curvesConstraints.size(); i++)
 	{
 		for (int j = 0; j < curvesConstraints[i].size(); j++)
 		{
-			func(curvesConstraints[i][j]) = (i+4)*colorDiff;
+			//func(curvesConstraints[i][j]) = (i+4)*colorDiff;
+			//func(curvesConstraints[i][j]) = 2.0/77.0;
+			FColor.row(curvesConstraints[i][j]) = Eigen::RowVector3d(127, 71, 207) / 255.0;
 		}
 	}
 
 
-	igl::jet(func, false, FColor);
+	//igl::jet(func, false, FColor);
 	viewer.data().set_colors(FColor);
 }
 
