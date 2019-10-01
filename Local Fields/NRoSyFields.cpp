@@ -2863,6 +2863,12 @@ void NRoSyFields::resetInteractiveConstraints()
 {
 	userVisualConstraints.clear();
 	userVisualConstraints.shrink_to_fit();
+	globalConstraints.clear();
+	globalConstraints.shrink_to_fit();
+	ConstrTriplet.clear();
+	ConstrTriplet.shrink_to_fit();
+	c.resize(0);
+	C.resize(0, 2*F.rows());
 }
 
 /* ============================= SUBSPACE CONSTRUCTION ============================= */
@@ -3750,11 +3756,11 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 4;
+	nRot = 1;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Mechanics_";
+	string model = "Brezel_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3813,7 +3819,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 1000;
+	numSample = 100;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
@@ -4326,7 +4332,7 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 
 	//cout << "Trying to write to a mail slot (1) \n";
 
-	string mailslot_address = "\\\\.\\mailslot\\sandy2";
+	string mailslot_address = "\\\\.\\mailslot\\sandy";
 
 	HANDLE msHandle;
 	msHandle = CreateFile(mailslot_address.c_str(),	GENERIC_WRITE,	FILE_SHARE_READ,(LPSECURITY_ATTRIBUTES)NULL,OPEN_EXISTING,	FILE_ATTRIBUTE_NORMAL,	(HANDLE)NULL);
@@ -4401,7 +4407,7 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 
 void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 {
-	/* COnverting the n-Rosy to collection of fields */
+	/* Converting the n-Rosy to collection of 1-fields */
 	double scale = 1.0;
 	Eigen::Vector2d b(1, 0);
 
@@ -4409,13 +4415,9 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 
 	const int FIELD_TO_WRITE = 1;
 	for (int i = 0; i < nRot; i++)
-		//for (int i = 0; i < FIELD_TO_WRITE; i++)
+	//for (int i = 0; i < FIELD_TO_WRITE; i++)			// Send only 1 fields
 	{
-		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
-										 //cout << "Drawing the " << i << " fields \n";
-
-										 /* Construct rotation matrix*/
-										 //for (int j = 0; j < F.rows(); j++)
+		nFields[i].resize(2 * F.rows()); 
 		for (int j = 0; j<F.rows(); j++)
 		{
 			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
@@ -4427,86 +4429,174 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 			RotM(1, 1) = cos(angle);
 
 			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
-			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
 		}
 	}
 
+	/* Work in world coordinate*/
 	vector<Eigen::VectorXd> nFields3d(nRot);
 	for (int j = 0; j < nRot; j++)
 	{
 		nFields3d[j] = A*nFields[j];
 	}
 		
-
+	/* Creating the mailslot */
 	string mailslot_address = "\\\\.\\mailslot\\sandy";
-
-	HANDLE msHandle;
-	
+	HANDLE msHandle;	
 	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
-
-	if (msHandle == INVALID_HANDLE_VALUE)
-	{
+	if (msHandle == INVALID_HANDLE_VALUE){
 		printf("CreateMailslot failed: %d\n", GetLastError());
 	}
 	else {
 		printf("Successfully create the handle\n");
 	}
-
 	static LPTSTR message = "1.0";
 	BOOL     err;
 	DWORD    numWritten;
-	//WriteFile(msHandle, message, sizeof(message), &numWritten, 0);
 
+	/* Specifying the mailslot data */
 	const int data_size = sizeof(float);
-	//char *myMessage = (char*)malloc(3 * V.rows() * data_size);
-	//vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
-	char *myMessage = (char*)malloc(3 * F.rows() * data_size);
-	vector<char> messageArray; messageArray.reserve(3 * F.rows() * data_size);
-
-	///* Writing to mailslot */
-	//string mailslot_address = "\\\\.\\mailslot\\sandy";
-	//
-	//ofstream myfile(mailslot_address.c_str());
+	unsigned char *myMessage = (unsigned char*)malloc(3 * F.rows() * data_size);
 
 
-	printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFields3d[0].size(), data_size);
-	for (int i = 0; i < V.rows(); i++)
-		//for (int i = 0; i < F.rows(); i++)
-	{
-		for (int j = 0; j < FIELD_TO_WRITE; j++)
+	/* Writing to mailslot */
+	//for (int j = 0; j < FIELD_TO_WRITE; j++)
+	//{
+		for (int i = 0; i < F.rows(); i++)
 		{
-			float data2[3] = { 1.0, 0.0, 0.0 };
 			for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
 			{
-				char data[data_size];
+				float field = static_cast<float>(nFields3d[0](3 * i + k));
+				unsigned char* data = (unsigned char*)&field;			
 
-				float field = nFields3d[0](3 * i + k);
-				memcpy(data, &field, data_size * sizeof(char));
-				//memcpy(data, &data2[k], data_size * sizeof(float));
-				for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
+
+				for (int l = 0; l < data_size; l++)	// every byte of a floating point representation
 				{
-					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];
-					//myMessage[3 * data_size*i + data_size*k + l] = data[l];
-					//messageArray.push_back(data[l]);
+					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];	// Little ENDian
+					//if(i<20) cout << myMessage[data_size*(3 * i + k) + l] << "|";
+					if (i<20) printf(" %.2x |", myMessage[data_size*(3 * i + k) + l]);
+					//if (i<20) printf(" %.2x |", data[l]);
 				}
 			}
-			//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+			if(i<20) cout << endl; 
 		}
-	}
+	//}
 
-	//for (int i = 0; i < messageArray.size(); i++) myMessage[i] = messageArray[i];
 
-	//myMessage = messageArray.data();
-
-	//int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
 	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
 	printf("[%d] Data written %d \n", retWrite, numWritten);
 
 	CloseHandle(msHandle);
-	cout << "Can write to mailslot \n";
-	//	myfile.close();
-	//}
+	
 }
+
+//void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
+//{
+//	/* COnverting the n-Rosy to collection of fields */
+//	double scale = 1.0;
+//	Eigen::Vector2d b(1, 0);
+//
+//	vector<Eigen::VectorXd> nFields(nRot);
+//
+//	const int FIELD_TO_WRITE = 1;
+//	for (int i = 0; i < nRot; i++)
+//		//for (int i = 0; i < FIELD_TO_WRITE; i++)
+//	{
+//		nFields[i].resize(2 * F.rows()); // = Eigen::VectorXd(2 * F.rows());
+//										 //cout << "Drawing the " << i << " fields \n";
+//
+//										 /* Construct rotation matrix*/
+//										 //for (int j = 0; j < F.rows(); j++)
+//		for (int j = 0; j<F.rows(); j++)
+//		{
+//			double angle = nRoSy.theta(j) + ((double)i*2.0*M_PI / (double)nRot);
+//
+//			Eigen::Matrix2d RotM;
+//			RotM(0, 0) = cos(angle);
+//			RotM(0, 1) = -sin(angle);
+//			RotM(1, 0) = sin(angle);
+//			RotM(1, 1) = cos(angle);
+//
+//			nFields[i].block(2 * j, 0, 2, 1) = nRoSy.magnitude(j) * RotM * b;
+//			//nFields[i].block(2 * j, 0, 2, 1) = 1.0 * RotM * b;
+//		}
+//	}
+//
+//	vector<Eigen::VectorXd> nFields3d(nRot);
+//	for (int j = 0; j < nRot; j++)
+//	{
+//		nFields3d[j] = A*nFields[j];
+//	}
+//
+//
+//	string mailslot_address = "\\\\.\\mailslot\\sandy";
+//
+//	HANDLE msHandle;
+//
+//	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
+//
+//	if (msHandle == INVALID_HANDLE_VALUE)
+//	{
+//		printf("CreateMailslot failed: %d\n", GetLastError());
+//	}
+//	else {
+//		printf("Successfully create the handle\n");
+//	}
+//
+//	static LPTSTR message = "1.0";
+//	BOOL     err;
+//	DWORD    numWritten;
+//	//WriteFile(msHandle, message, sizeof(message), &numWritten, 0);
+//
+//	const int data_size = sizeof(float);
+//	//char *myMessage = (char*)malloc(3 * V.rows() * data_size);
+//	//vector<char> messageArray; messageArray.reserve(3 * V.rows() * data_size);
+//	char *myMessage = (char*)malloc(3 * F.rows() * data_size);
+//	vector<char> messageArray; messageArray.reserve(3 * F.rows() * data_size);
+//
+//	///* Writing to mailslot */
+//	//string mailslot_address = "\\\\.\\mailslot\\sandy";
+//	//
+//	//ofstream myfile(mailslot_address.c_str());
+//
+//
+//	printf("__|F|=%d  | vfields=%d | data-size: %d \n", V.rows(), nFields3d[0].size(), data_size);
+//	for (int i = 0; i < V.rows(); i++)
+//		//for (int i = 0; i < F.rows(); i++)
+//	{
+//		for (int j = 0; j < FIELD_TO_WRITE; j++)
+//		{
+//			float data2[3] = { 1.0, 0.0, 0.0 };
+//			for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
+//			{
+//				char data[data_size];
+//
+//				float field = nFields3d[0](3 * i + k);
+//				memcpy(data, &field, data_size * sizeof(char));
+//				//memcpy(data, &data2[k], data_size * sizeof(float));
+//				for (int l = 0; l < sizeof(data_size); l++)	// every byte of a floating point representation
+//				{
+//					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];
+//					//myMessage[3 * data_size*i + data_size*k + l] = data[l];
+//					//messageArray.push_back(data[l]);
+//				}
+//			}
+//			//myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+//		}
+//	}
+//
+//	//for (int i = 0; i < messageArray.size(); i++) myMessage[i] = messageArray[i];
+//
+//	//myMessage = messageArray.data();
+//
+//	//int retWrite = WriteFile(msHandle, myMessage, 3 * V.rows() * data_size, &numWritten, 0);
+//	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
+//	printf("[%d] Data written %d \n", retWrite, numWritten);
+//
+//	CloseHandle(msHandle);
+//	cout << "Can write to mailslot \n";
+//	//	myfile.close();
+//	//}
+//}
 
 void NRoSyFields::sendTestDataToMailSlot()
 {
