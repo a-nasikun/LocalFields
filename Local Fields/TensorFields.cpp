@@ -1853,7 +1853,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 1667;
+	numSample = 667;
 	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
 	//constructBasis();
@@ -2597,7 +2597,7 @@ void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& vo
 	//double* h_a = (double*)malloc(n * sizeof(double));
 	//h_a = voigtRed.data();
 	double* h_b = (double*)malloc(m * sizeof(double));
-	for (int i = 0; i < m; i++) h_b[i] = 0.5;
+	///for (int i = 0; i < m; i++) h_b[i] = 0.5;
 
 	// Allocating memory in device/GPU
 	double *d_a;  cudaStat1 = cudaMalloc(&d_a, n * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
