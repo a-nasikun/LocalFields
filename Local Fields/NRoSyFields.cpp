@@ -1285,7 +1285,8 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 0.001;
 	//double scale = 0.1;
 	//double scale = 0.25;
-	double scale = 3.0;
+	double scale = 1.0;
+	//double scale = 3.0;
 	//double scale = 2.5;
 	//double scale = 5.0; 
 	//double scale = 50.0;
@@ -1657,7 +1658,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 
 	cout << "Drawing on the overlay mesh \n";
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 4.0;
+	viewer.data().line_width = 1.0;
 	viewer.data().point_size = 5.0;
 	viewer.data().show_lines = false;
 
@@ -1720,7 +1721,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 		}
 	}
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 4.0;
+	viewer.data().line_width = 1.0;
 }
 
 void NRoSyFields::visualizeSoftConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -3756,7 +3757,7 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 1;
+	nRot = 2;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
@@ -4466,18 +4467,14 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 			for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
 			{
 				float field = static_cast<float>(nFields3d[0](3 * i + k));
-				unsigned char* data = (unsigned char*)&field;			
+				unsigned char* data = (unsigned char*)&field;	
 
 
 				for (int l = 0; l < data_size; l++)	// every byte of a floating point representation
 				{
 					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];	// Little ENDian
-					//if(i<20) cout << myMessage[data_size*(3 * i + k) + l] << "|";
-					if (i<20) printf(" %.2x |", myMessage[data_size*(3 * i + k) + l]);
-					//if (i<20) printf(" %.2x |", data[l]);
 				}
 			}
-			if(i<20) cout << endl; 
 		}
 	//}
 
