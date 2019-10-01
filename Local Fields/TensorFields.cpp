@@ -1808,7 +1808,7 @@ void TensorFields::visualizeReducedTensorFields(igl::opengl::glfw::Viewer &viewe
 /* TESTING STUFF*/
 void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	string model = "OilPump50k_";
+	string model = "OilPump_";
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
@@ -1830,7 +1830,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(5000);
+	selectFaceToDraw(75000);
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1853,8 +1853,8 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	/*Subspace construction */
 	numSupport = 40.0;
-	numSample = 333;
-	string fileBasis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
+	numSample = 1667;
+	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
 	constructSamples(numSample);
 	//constructBasis();
 	//storeBasis(fileBasis);
@@ -2084,10 +2084,10 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2, t3;
 	chrono::duration<double>					duration;
-	cout << "> Smoothing (reference)... ";
+	cout << "> Smoothing (reference)... \n";
 	t1 = chrono::high_resolution_clock::now();
 
-	double lambda = 0.005;
+	double lambda = 12.5;
 	Eigen::VectorXd id(MF.rows());
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
@@ -2101,12 +2101,37 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	Eigen::MatrixXd smoothedFields;
 	Eigen::VectorXd smoothedVoigt;
 
+	// for randome scaling
+	srand(time(NULL));
+	const double randScale = (double) ( rand() % 5 + 1.0);
+	lambda *= randScale;
+
+
+	t2 = chrono::high_resolution_clock::now();
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	Eigen::SparseMatrix<double> LHS = MF + lambda*SF;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__Set LHS in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	Eigen::VectorXd				rhs = lambda*MF*inputVoigt;
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__Set RHS in " << duration.count()*1000 << " mili secs" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	sparseSolver.analyzePattern(LHS);
 	sparseSolver.factorize(LHS);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__Factorize LHS in " << duration.count() << " seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
 	smoothedVoigt = sparseSolver.solve(rhs);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__Solve systemin " << duration.count()*1000 << " mili secs" << endl;
 
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
 	outputTensor = smoothedTensorRef;
@@ -2260,23 +2285,31 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	t2 = chrono::high_resolution_clock::now();
 
 	/* Solving in CPU */
-	///Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
-	/////Eigen::CholmodSupernodalLLT<Eigen::SparseMatrix<double>> sparseSolver;
-	/////Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver; 
-	///sparseSolver.analyzePattern(LHS);
-	///sparseSolver.factorize(LHS);
-	///vOutBar = sparseSolver.solve(rhs);
-	
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//Eigen::CholmodSupernodalLLT<Eigen::SparseMatrix<double>> sparseSolver;
+	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver; 
+	sparseSolver.analyzePattern(LHS);
+	sparseSolver.factorize(LHS);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Factorize the system " << duration.count() * 1000 << " mili seconds" << endl;
+
+	t2 = chrono::high_resolution_clock::now();
+	vOutBar = sparseSolver.solve(rhs);
+	t3 = chrono::high_resolution_clock::now();
+	duration = t3 - t2;
+	cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
+
 	/* Solving in GPU ==> SPARSE */
-	LHSRow = LHS;
-	performSystemSolve(LHSRow, rhs, vOutBar);
+	//LHSRow = LHS;
+	//performSystemSolve(LHSRow, rhs, vOutBar);
 
 	/* Solving in GPU ==> DENSE */
 	//performDenseSystemSolve(lambda, vOutBar);
 
-	t3 = chrono::high_resolution_clock::now();
-	duration = t3 - t2;
-	cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
+	//t3 = chrono::high_resolution_clock::now();
+	//duration = t3 - t2;
+	//cout << "__ Solving the system " << duration.count() * 1000 << " mili seconds" << endl;
 
 	t2 = chrono::high_resolution_clock::now();
 	//smoothedVoigt = Basis*vOutBar;
