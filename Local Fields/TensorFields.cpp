@@ -2268,11 +2268,11 @@ void TensorFields::smoothingRed_Implicit_Geometric(igl::opengl::glfw::Viewer &vi
 	///vOutBar = sparseSolver.solve(rhs);
 	
 	/* Solving in GPU ==> SPARSE */
-	//LHSRow = LHS;
-	//performSystemSolve(LHSRow, rhs, vOutBar);
+	LHSRow = LHS;
+	performSystemSolve(LHSRow, rhs, vOutBar);
 
 	/* Solving in GPU ==> DENSE */
-	performDenseSystemSolve(lambda, vOutBar);
+	//performDenseSystemSolve(lambda, vOutBar);
 
 	t3 = chrono::high_resolution_clock::now();
 	duration = t3 - t2;
@@ -3054,66 +3054,127 @@ void TensorFields::initializeDenseSystemSolve()
 	const int m = MFbar.rows();
 	const int lda = m;
 
-	double *h_Mdata = (double*)std::malloc(m*lda * sizeof(double));
-	double *h_Sdata = (double*)std::malloc(m*lda * sizeof(double));
-	h_Mdata = MbarD.data();
-	h_Sdata = SbarD.data();
+	///double *h_Mdata = (double*)std::malloc(m*lda * sizeof(double));
+	///double *h_Sdata = (double*)std::malloc(m*lda * sizeof(double));
+	///h_Mdata = MbarD.data();
+	///h_Sdata = SbarD.data();
 
 	// Allocating and copying to GPU
 	cudaStat = cudaMalloc((void**)&d_solveMdata, sizeof(double) * lda * m);				cout << "Allocating 1: " << cudaStat << endl; 
 	cudaStat = cudaMalloc((void**)&d_solveSdata, sizeof(double) * lda * m);				cout << "Allocating 2: " << cudaStat << endl;
 	cudaStat = cudaMalloc((void**)&d_solveLHSdata, sizeof(double) * lda * m);			cout << "Allocating 3: " << cudaStat << endl;	
-	cudaStat = cudaMalloc(&d_solveRHSdata, sizeof(double) * lda);						cout << "Allocating 4: " << cudaStat << endl;
-	cudaStat = cudaMemcpy(d_solveMdata, h_Mdata, sizeof(double) * lda * m, cudaMemcpyHostToDevice);	cout << "Copying 1: " << cudaStat << endl; 
-	cudaStat = cudaMemcpy(d_solveSdata, h_Sdata, sizeof(double) * lda * m, cudaMemcpyHostToDevice);	cout << "Copying 2: " << cudaStat << endl; 
-
+	cudaStat = cudaMalloc((void**)&d_solveRHSdata, sizeof(double) * lda);				cout << "Allocating 4: " << cudaStat << endl;
+	cudaStat = cudaMemcpy(d_solveMdata, MbarD.data(), sizeof(double) * lda * m, cudaMemcpyHostToDevice);	cout << "Copying 1: " << cudaStat << endl; 
+	cudaStat = cudaMemcpy(d_solveSdata, SbarD.data(), sizeof(double) * lda * m, cudaMemcpyHostToDevice);	cout << "Copying 2: " << cudaStat << endl; 
+	cudaStat = cudaDeviceSynchronize(); cout << "Sync state: " << cudaStat << endl;
 }
 
 void TensorFields::performDenseSystemSolve(double mu, Eigen::VectorXd& vSol)
 {
 	cusolverStatus_t	cusolver_status = CUSOLVER_STATUS_SUCCESS;
 	cudaError_t			cudaStat = cudaSuccess;
-	cublasFillMode_t uplo = CUBLAS_FILL_MODE_LOWER; 
+	cublasFillMode_t uplo = CUBLAS_FILL_MODE_LOWER;
 
 	const int nrows = MFbar.rows();
-	const int lda = nrows; 
-	int lwork;
+	const int lda = nrows;
+	cout << "Rows: " << nrows << "| lda: " << lda << endl;
+	int lwork = 0;
+	int h_info = 0;			/* host copy of error info */
+	double *d_work = NULL; /* device workspace for getrf */
+	int *d_ipiv = NULL; /* pivoting sequence */
+	int *d_info = NULL; /* error info */
+
 	double *h_solve = (double*)std::malloc(lda * sizeof(double));
-	int* d_ipiv; cudaMalloc(&d_ipiv, lda * sizeof(int));
+	cudaStat = cudaMemcpy(d_solveRHSdata, vInBar.data(), sizeof(double) * lda, cudaMemcpyHostToDevice);	cout << "Copying RHS to GPU: " << cudaStat << endl;
+	//cout << "Vinbar:" << vInBar.block(0, 0, 20, 1).transpose() << endl; 
+	//double h_solve[2000];
+	//int* d_ipiv; cudaMalloc((void**)&d_ipiv, lda * sizeof(int));
+
+	cusolver_status = cusolverDnDgetrf_bufferSize(denseSolveHandle, nrows, nrows, d_solveSdata, lda, &lwork);
+	cout << "Lwork: " << lwork << " status of allocation: " << cusolver_status << endl; 
+
+	cudaStat = cudaMalloc((void**)&d_work, sizeof(double)*lwork);
+	cout << "allocating d_workd: " << cudaStat << endl; 
+
+	// factorize
+	cudaStat = cudaMalloc((void**)&d_ipiv, sizeof(int) * nrows);		cout << "Alloc1: " << cudaStat << endl;
+	cudaStat = cudaMalloc((void**)&d_info, sizeof(int));				cout << "Alloc1: " << cudaStat << endl;
+	cusolver_status = cusolverDnDgetrf(denseSolveHandle, nrows, nrows, d_solveSdata, lda, d_work, d_ipiv, d_info);	
+	cudaDeviceSynchronize();
+
+	cudaMemcpy(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
+	cudaDeviceSynchronize();
+	cout << "LU factorization: " << cusolver_status << "| h_info: " << h_info << endl;
 	
-	///cudaStat = cudaMalloc((void**)&d_solveRHSdata, sizeof(double) * lda);			cout << "Allocating 4: " << cudaStat << endl;
-	cudaStat = cudaMemcpy(d_solveRHSdata, vInBar.data(), sizeof(double) * lda, cudaMemcpyHostToDevice);	cout << "Copying 1: " << cudaStat << endl;
 
-	// computing the required space
-	//cusolver_status = cusolverDnDpotrf_bufferSize(denseSolveHandle, uplo, nrows, d_solveSdata, lda, &lwork);
-	cusolver_status = cusolverDnDsytrf_bufferSize(denseSolveHandle, nrows, d_solveSdata, lda, &lwork);
-	cout << "Computing the space: " << cusolver_status  << ", with lworkd: " << lwork << endl; 
+	// solve
+	cusolver_status = cusolverDnDgetrs(denseSolveHandle, CUBLAS_OP_N, nrows, nrows, d_solveSdata, lda, d_ipiv, d_solveRHSdata, lda, d_info);
+	cudaMemcpy(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
+	cout << "Solving: " << cusolver_status << "| h_info: " << h_info << endl;
+	cudaDeviceSynchronize();
 
-	// factorization
-	double* d_workspace;
-	int devInfo;
-	//cudaStat1 = cudaMalloc((void**)&d_work, sizeof(double)*lwork);
-	cudaStat = cudaMalloc((void**)&d_workspace, lwork * sizeof(double));				cout << "Allocating 1: " << cudaStat << endl;
-	//cusolver_status = cusolverDnDpotrf(denseSolveHandle, uplo, nrows, d_solveSdata, lda, d_workspace, lwork, &devInfo);
-	//cout << "Factorization successful? " << cusolver_status << " and " << devInfo << endl;
-	cusolver_status = cusolverDnDsytrf(denseSolveHandle, uplo, nrows, d_solveSdata, lda, d_ipiv, d_workspace, lwork, &devInfo);
-	cout << "Factorization successful? " << cusolver_status << endl; 
-
-	// solving
-	int nrhs = 1;
-	cusolver_status = cusolverDnDpotrs(denseSolveHandle, uplo, nrows, nrhs, d_solveSdata, lda, d_solveRHSdata, lda, &devInfo);
-	cout << "Solving the problem: " << cusolver_status << " and " << devInfo << endl;
-
-	cudaStat = cudaMemcpy(h_solve, d_solveRHSdata, lda*sizeof(double), cudaMemcpyDeviceToHost);
+	cudaStat = cudaMemcpy(h_solve, d_solveRHSdata, lda * sizeof(double), cudaMemcpyDeviceToHost);
 	cout << "Copying back to CPU: " << cudaStat << "| "<< cudaGetErrorName(cudaStat) << " : " << cudaGetErrorString(cudaStat) << endl; 
-
+	
 	//XFullDim.resize(2 * F.rows());
 	vSol = Eigen::Map<Eigen::VectorXd>(h_solve, lda);
-	cout << "Solution: " << vSol.block(0, 0, 10, 1).transpose() << endl; 
-
-	///cudaFree(d_solveRHSdata);
-
+	cout << vSol.block(0, 0, 40, 1).transpose() << endl; 
 }
+
+
+//void TensorFields::performDenseSystemSolve(double mu, Eigen::VectorXd& vSol)
+//{
+//	cusolverStatus_t	cusolver_status = CUSOLVER_STATUS_SUCCESS;
+//	cudaError_t			cudaStat = cudaSuccess;
+//	cublasFillMode_t uplo = CUBLAS_FILL_MODE_LOWER; 
+//
+//	const int nrows = MFbar.rows();
+//	const int lda = nrows; 
+//	int lwork;
+//	double *h_solve = (double*)std::malloc(lda * sizeof(double));
+//	int* d_ipiv; cudaMalloc((void**)&d_ipiv, lda * sizeof(int));
+//	
+//	///cudaStat = cudaMalloc((void**)&d_solveRHSdata, sizeof(double) * lda);			cout << "Allocating 4: " << cudaStat << endl;
+//	cudaStat = cudaMemcpy(d_solveRHSdata, vInBar.data(), sizeof(double) * lda, cudaMemcpyHostToDevice);	cout << "Copying 1: " << cudaStat << endl;
+//	cudaStat = cudaDeviceSynchronize(); cout << "Sync state: " << cudaStat << endl;
+//
+//	// computing the required space
+//	//cusolver_status = cusolverDnDpotrf_bufferSize(denseSolveHandle, uplo, nrows, d_solveSdata, lda, &lwork);
+//	cusolver_status = cusolverDnDsytrf_bufferSize(denseSolveHandle, nrows, d_solveSdata, lda, &lwork);
+//	cout << "Computing the space: " << cusolver_status  << ", with lwork: " << lwork << endl; 
+//
+//	cudaStat = cudaDeviceSynchronize(); cout << "Sync state: " << cudaStat << endl;
+//
+//	// factorization
+//	double* d_workspace;
+//	int devInfo;
+//	//cudaStat1 = cudaMalloc((void**)&d_work, sizeof(double)*lwork);
+//	cudaStat = cudaMalloc(&d_workspace, lwork * sizeof(double));				cout << "Allocating 1: " << cudaStat << endl;
+//	cudaStat = cudaDeviceSynchronize(); cout << "Sync state: " << cudaStat << endl;
+//
+//	//cusolver_status = cusolverDnDpotrf(denseSolveHandle, uplo, nrows, d_solveSdata, lda, d_workspace, lwork, &devInfo);
+//	//cout << "Factorization successful? " << cusolver_status << " and " << devInfo << endl;
+//	cusolver_status = cusolverDnDsytrf(denseSolveHandle, uplo, nrows, d_solveSdata, lda, d_ipiv, d_workspace, lwork, &devInfo);
+//	cout << "Factorization successful? " << cusolver_status << "| dev: " << devInfo << "| lwork" << lwork << endl; 
+//
+//	cudaStat = cudaDeviceSynchronize(); cout << "Sync state: " << cudaStat << endl; 
+//
+//	
+//	// solving
+//	int nrhs = 1;
+//	cusolver_status = cusolverDnDpotrs(denseSolveHandle, uplo, nrows, nrhs, d_solveSdata, lda, d_solveRHSdata, lda, &devInfo);
+//	cout << "Solving the problem: " << cusolver_status << " and " << devInfo << endl;
+//
+//	cudaStat = cudaMemcpy(h_solve, d_solveRHSdata, lda*sizeof(double), cudaMemcpyDeviceToHost);
+//	cout << "Copying back to CPU: " << cudaStat << "| "<< cudaGetErrorName(cudaStat) << " : " << cudaGetErrorString(cudaStat) << endl; 
+//
+//	//XFullDim.resize(2 * F.rows());
+//	vSol = Eigen::Map<Eigen::VectorXd>(h_solve, lda);
+//	cout << "Solution: " << vSol.block(0, 0, 10, 1).transpose() << endl; 
+//
+//	///cudaFree(d_solveRHSdata);
+//
+//}
 
 /* APPLICATION :: Sub-space Projection */
 void TensorFields::subspaceProjection(const Eigen::VectorXd& refField)
