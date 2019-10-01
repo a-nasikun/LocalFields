@@ -1652,6 +1652,11 @@ void VectorFields::constructMatrixB()
 	
 	// FREE-ing Memory, not the best practice but used to save space for large mesh
 	//SF2D.resize(0, 0);
+
+	///Eigen::SparseMatrix<double> SB = SF2DAsym + B2DAsym;
+
+	///cout << "NON-ZERO-ness \n";
+	///printf("__Harmonic (S): %d \n__Biharmonic (B): %d \n__Sum (S+B): %d \n", SF2DAsym.nonZeros(), B2DAsym.nonZeros(), SB.nonZeros());
 }
 
 // GETTER AND SETTER of IMPORTANT ELEMENTS

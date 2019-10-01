@@ -1392,7 +1392,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	computeFrameRotation(viewer);
-	selectFaceToDraw(75000); 
+	selectFaceToDraw(5000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1473,12 +1473,12 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testSparseMatrix();
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	if (false)
+	if (true)
 	{
 		cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
 		numSample = 1000;
 		numSupport = 40.0;
-		string model = "AntiqueHead_";
+		string model = "Arma_";
 		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 		//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
@@ -1603,12 +1603,14 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 		visualizeApproxResult(viewer);
 	}
 
-	setupGlobalProblem(lambda);
-	setupGlobalProblem(lambda);
-	setupGlobalProblem(lambda);
-	setupGlobalProblem(lambda);
-	setupGlobalProblem(lambda);
-	visualizeApproximatedFields(viewer);
+	//if(false){
+	//setupGlobalProblem(lambda);
+	//setupGlobalProblem(lambda);
+	//setupGlobalProblem(lambda);
+	//setupGlobalProblem(lambda);
+	//setupGlobalProblem(lambda);
+	//visualizeApproximatedFields(viewer);
+	//}
 
 	/* MEASURE ACCURACY */
 	//measureApproxAccuracyL2Norm();
