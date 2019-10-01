@@ -1935,74 +1935,78 @@ void VectorFields::constructCurves_antiqueHead()
 
 void VectorFields::constructSoftConstraints()
 {
-	//constructCurves_antiqueHead();
+	constructCurves_antiqueHead();
 
-	const int NUM_CURVES = 8;
-	curvesConstraints.resize(NUM_CURVES);
-	
-	srand(time(NULL));
-	int init_, end_; 
-	vector<int> aCurve; 
+	if (false)
+	{
 
-	int constCounter = 0;
+		const int NUM_CURVES = 8;
+		curvesConstraints.resize(NUM_CURVES);
+
+		srand(time(NULL));
+		int init_, end_;
+		vector<int> aCurve;
+
+		int constCounter = 0;
 
 
-	////* Manual set-up for Chinese Dragon */
-	///// Face
-	///constructCurvesAsConstraints(152474, 51474, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// Back
-	///constructCurvesAsConstraints(44109, 68907, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// body - bottom
-	///constructCurvesAsConstraints(13471, 195817, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// body - right
-	///constructCurvesAsConstraints(123036, 247143, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// body - left
-	///constructCurvesAsConstraints(234815, 232296, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// front_right_leg
-	///constructCurvesAsConstraints(75468, 7716, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// front_left_leg
-	///constructCurvesAsConstraints(231495, 77171, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
-	///
-	///// tail
-	///constructCurvesAsConstraints(230301, 113500, aCurve);
-	///curvesConstraints[constCounter++] = aCurve;
+		////* Manual set-up for Chinese Dragon */
+		///// Face
+		///constructCurvesAsConstraints(152474, 51474, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// Back
+		///constructCurvesAsConstraints(44109, 68907, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// body - bottom
+		///constructCurvesAsConstraints(13471, 195817, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// body - right
+		///constructCurvesAsConstraints(123036, 247143, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// body - left
+		///constructCurvesAsConstraints(234815, 232296, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// front_right_leg
+		///constructCurvesAsConstraints(75468, 7716, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// front_left_leg
+		///constructCurvesAsConstraints(231495, 77171, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
+		///
+		///// tail
+		///constructCurvesAsConstraints(230301, 113500, aCurve);
+		///curvesConstraints[constCounter++] = aCurve;
 
-	/* Manual set-up for Armadillo */
-	// Head
-	constructCurvesAsConstraints(68818,6278, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Stomach
-	constructCurvesAsConstraints(56965, 41616, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Leg/Foot (R then L)
-	constructCurvesAsConstraints(28590, 16119, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	constructCurvesAsConstraints(25037, 571, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Arm/Hand
-	constructCurvesAsConstraints(55454, 6877, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	constructCurvesAsConstraints(49059, 36423, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Back
-	constructCurvesAsConstraints(68331, 72522, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
-	// Tail
-	constructCurvesAsConstraints(24056, 1075, aCurve);
-	curvesConstraints[constCounter++] = aCurve;
+		/* Manual set-up for Armadillo */
+		// Head
+		constructCurvesAsConstraints(68818, 6278, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		// Stomach
+		constructCurvesAsConstraints(56965, 41616, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		// Leg/Foot (R then L)
+		constructCurvesAsConstraints(28590, 16119, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		constructCurvesAsConstraints(25037, 571, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		// Arm/Hand
+		constructCurvesAsConstraints(55454, 6877, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		constructCurvesAsConstraints(49059, 36423, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		// Back
+		constructCurvesAsConstraints(68331, 72522, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+		// Tail
+		constructCurvesAsConstraints(24056, 1075, aCurve);
+		curvesConstraints[constCounter++] = aCurve;
+	}
 
 	/* Project elements to local frame */
 	projectCurvesToFrame();
@@ -3001,29 +3005,30 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 	// For Timing
 	chrono::high_resolution_clock::time_point	t1, t2, t3;
 	chrono::duration<double>					duration;
-	t1 = chrono::high_resolution_clock::now();
+	
 	cout << "> Solving the global system (Pardiso LDLT)... \n";
-
+	t1 = chrono::high_resolution_clock::now();
 	//cout << "Starting to solve problem." << endl;
 	Xf.resize(B2DAsym.rows());
+
 
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
 	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
-
-
 	sparseSolver.analyzePattern(A_LHS);
 	sparseSolver.factorize(A_LHS);
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
-	cout << "....Factorizing the LHS in " << duration.count()*1000 << " m.seconds" << endl;
+	cout << "....Factorizing the LHS in " << duration.count() << " seconds" << endl;
 
 
 	// FIRST BASIS
 	//cout << "....Solving first problem (first frame)..." << endl;
+	t2 = chrono::high_resolution_clock::now();
+	Xf = sparseSolver.solve(b);
 	t3 = chrono::high_resolution_clock::now();
-	Eigen::VectorXd x = sparseSolver.solve(b);
+
 	duration = t3 - t2;
 	cout << "....Solving the LHS in " << duration.count()*1000 << " m.seconds" << endl;
 
@@ -3038,14 +3043,13 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 		return;
 	}
 
-	Xf = x;
-
-	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());
-
+	//Xf = x;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << "in " << duration.count() << " seconds" << endl;
+
+	printf("____Xf size is %dx%d\n", Xf.rows(), Xf.cols());
 }
 
 // Alignment fields (Maximal curvature direction) 
@@ -5143,10 +5147,10 @@ void VectorFields::solveUserSystemMappedLDLTSoftConstraints(Eigen::SparseMatrix<
 void VectorFields::mapSolutionToFullRes()
 {
 	// For Timing
-	///chrono::high_resolution_clock::time_point	t0, t1, t2;
-	///chrono::duration<double>					duration;
-	///t0 = chrono::high_resolution_clock::now();
-	///cout << "> Mapping to full-resolution...";
+	chrono::high_resolution_clock::time_point	t0, t1, t2;
+	chrono::duration<double>					duration;
+	cout << "___Mapping to full-resolution...";
+	t0 = chrono::high_resolution_clock::now();
 
 	//XFullDim = Basis * XLowDim;
 	//SparseMatrix_Vector_Multiplication(Basis, XLowDim, XFullDim);
@@ -5154,9 +5158,9 @@ void VectorFields::mapSolutionToFullRes()
 	//SparseMatrix_Vector_Multiplication_CSR(BasisRow, XLowDim, XFullDim);
 	performLifting();
 
-	///t2 = chrono::high_resolution_clock::now();
-	///duration = t2 - t0;
-	///cout << " in " << duration.count() << " seconds." << endl;
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t0;
+	cout << " in " << duration.count() << " seconds." << endl;
 
 	//cout << "Fields \n";
 	//cout << XFullDim.block(0, 0, 100, 1) << endl; 
@@ -5210,8 +5214,8 @@ void VectorFields::performLifting()
 	const int n = BasisRow.cols();
 
 	// Populating data in CPU
-	double* h_a = (double*)malloc(n * sizeof(double));
-	h_a = XLowDim.data();
+	//double* h_a = (double*)malloc(n * sizeof(double));
+	//h_a = XLowDim.data();
 	double* h_b = (double*)malloc(m * sizeof(double));
 	for (int i = 0; i < m; i++) h_b[i] = 0.5;
 
@@ -5220,7 +5224,7 @@ void VectorFields::performLifting()
 	double *d_b;  cudaStat1 = cudaMalloc(&d_b, m * sizeof(double));				 //cout << "__alloc_status:" << cudaStat1 << endl;
 
 	// Copying data to CUDA/GPU
-	cudaStat1 = cudaMemcpy(d_a, h_a, n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
+	cudaStat1 = cudaMemcpy(d_a, XLowDim.data(), n * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 	cudaStat1 = cudaMemcpy(d_b, h_b, m * sizeof(double), cudaMemcpyHostToDevice);					//cout << "__alloc_status:" << cudaStat1 << endl;
 
 	// The multiciplication
@@ -5593,7 +5597,7 @@ void VectorFields::measureDirichletEnergy()
 {
 	double dirichlet = Xf.transpose() * ((SF2DAsym) * Xf);
 	cout << "__Dirichlet Energy\n \t__FullRes: " << dirichlet; 
-	dirichlet = XFullDim.transpose() * SF2DAsym * XFullDim); 
+	dirichlet = XFullDim.transpose() * SF2DAsym * XFullDim; 
 	cout << ": Reduced: " << dirichlet << endl; 
 
 }
