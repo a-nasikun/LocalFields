@@ -1476,7 +1476,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	if (true)
 	{
 		cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-		numSample = 100;
+		numSample = 250;
 		numSupport = 40.0;
 		string model = "Brach_";
 		string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
@@ -1492,7 +1492,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 		}
 		constructSamples(numSample);
 		constructBasis();
-		storeBasis(filename_basis);			// Binary, Eigen-base
+		//storeBasis(filename_basis);			// Binary, Eigen-base
 		//constructMultiBasis();
 		//retrieveBasis(filename_basis);
 		//visualizeSamples(viewer);

@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
-	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
+	string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
-	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Plane/squarePlane_16k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Sphere/sphere10k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Dragon/Dragon_150k.off";
@@ -225,6 +225,7 @@ int main(int argc, char *argv[])
 		case '1':
 			if (fieldsType == FieldsType::VECTOR)
 			{				
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 				///viewer.data().lines.resize(0, 9);
 				//vectorFields.visualizeSubdomain(viewer);
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);	
@@ -232,7 +233,9 @@ int main(int argc, char *argv[])
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//vectorFields.visualizeSingularitiesConstraints(viewer);	
 
-				vectorFields.visualizeCurveConstraints(viewer);		
+				//vectorFields.visualizeCurveConstraints(viewer);		
+				
+				vectorFields.visualizeGlobalConstraints(viewer);
 				vectorFields.visualizeApproximatedFields(viewer);
 				
 			}
@@ -254,6 +257,7 @@ int main(int argc, char *argv[])
 		case '2':
 			if (fieldsType == FieldsType::VECTOR)
 			{
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 				///viewer.data().lines.resize(0, 9);
 
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
@@ -415,6 +419,7 @@ int main(int argc, char *argv[])
 			viewer.selected_data_index = 0;
 			viewer.data().clear();
 			viewer.data().set_mesh(V, F);
+			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 			///vectorFields.selectAdaptiveRegions(viewer);
 			//viewer.selected_data_index = 1;
 			//viewer.data().clear();
@@ -864,6 +869,8 @@ int main(int argc, char *argv[])
 					vectorFields.setAndSolveInteractiveSystem(lambda);
 
 					viewer.data().lines.resize(0, 9);
+					viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+
 					vectorFields.visualizeGlobalConstraints(viewer);
 					vectorFields.visualizeApproxResult(viewer);
 				}

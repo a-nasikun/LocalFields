@@ -639,7 +639,7 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0; 
-	const double EDGE_RATIO = 10.0;
+	const double EDGE_RATIO = 3.0;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color(0.0, 0.0, 0.2);
 	
