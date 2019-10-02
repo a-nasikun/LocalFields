@@ -615,7 +615,7 @@ void VectorFields::visualizeApproxResult(igl::opengl::glfw::Viewer &viewer)
 	
 	//cout << "Size of X_Lifted " << XFullDim.rows() << "x" << XFullDim.cols() << "." << endl;
 	//visualize2Dfields(viewer, XFullDim, colorInput, 3, false);
-	visualize2Dfields(viewer, XFullDim, color, 5.0, false);
+	visualize2Dfields(viewer, XFullDim, color, 2.0, false);
 	//visualize2Dfields(viewer, XFullDim, color, 10, true);
 	//visualize2Dfields_viaSet(viewer, XFullDim, color, 3, false);
 	//cout << "XFULL approx. \n " << XFullDim.block(0, 0, 100, 1) << endl; 
@@ -678,7 +678,15 @@ void  VectorFields::visualizeGlobalConstraints(igl::opengl::glfw::Viewer &viewer
 	 
 	viewer.selected_data_index = 0; 	
 	viewer.data().line_width = 1.0;
+	viewer.data().point_size = 20.0;
 	//viewer.data().line_width = 1.0;
+	if (userSingularConstraints.size()>0)
+	{
+		for (int k : userSingularConstraints)
+		{
+			viewer.data().add_points(V.row(k), Eigen::RowVector3d(0.5, 0.0, 0.5));
+		}
+	}
 }
 
 void VectorFields::visualizeSingularitiesConstraints(igl::opengl::glfw::Viewer &viewer)

@@ -3,6 +3,7 @@
 #include "TensorFields.h"
 
 #include <igl/unproject_onto_mesh.h>
+#include <igl/mat_max.h>
 
 #include "TestSolver.h"
 
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
 
 	/* READING DATA */
 
-	const string model = "Armadillo_";
+	const string model = "Brach_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -96,10 +97,11 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_round_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Cube/Cube_sharp_50k_2.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Torus_3k_jv.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Plane/squarePlane_16k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Sphere/sphere10k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Dragon/Dragon_150k.off";
+	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/octopus_small.obj";
 
 
 	/* ====================== VECTOR FIELDS  ====================*/
@@ -181,7 +183,9 @@ int main(int argc, char *argv[])
 	bool represent_tensor_in_voigt = false; 
 
 	/* N-RoSy stuff */
-	NRoSy nRoSy; 
+	NRoSy nRoSy;
+
+	int vSingId;
 
 	double tensor_lambda = 0.1;
 
@@ -221,7 +225,7 @@ int main(int argc, char *argv[])
 		case '1':
 			if (fieldsType == FieldsType::VECTOR)
 			{				
-				viewer.data().lines.resize(0, 9);
+				///viewer.data().lines.resize(0, 9);
 				//vectorFields.visualizeSubdomain(viewer);
 				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);	
 				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
@@ -250,11 +254,12 @@ int main(int argc, char *argv[])
 		case '2':
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				viewer.data().lines.resize(0, 9);
+				///viewer.data().lines.resize(0, 9);
 
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
 				//vectorFields.visualizeSoftConstraints(viewer);
-				vectorFields.visualizeCurveConstraints(viewer);
+				///vectorFields.visualizeCurveConstraints(viewer);
+				vectorFields.visualizeGlobalConstraints(viewer);
 				vectorFields.visualizeApproxResult(viewer);
 				
 				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
@@ -594,8 +599,8 @@ int main(int argc, char *argv[])
 				//vectorFields.constructInteractiveConstraints();
 				//vectorFields.constructHardConstraintsWithSingularitiesWithGauss(viewer);
 				vectorFields.setupGlobalProblem(lambda);
-				vectorFields.visualizeApproximatedFields(viewer);
 				vectorFields.visualizeGlobalConstraints(viewer);
+				vectorFields.visualizeApproximatedFields(viewer);
 
 				//nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy);
 			}
@@ -758,9 +763,10 @@ int main(int argc, char *argv[])
 
 	
 	viewer.callback_mouse_move =
-		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields, &nRoSyFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
+		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields, &vSingId, &nRoSyFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
 		int fid;
+		int vid;
 		Eigen::Vector3f bc;
 		/* Collect the selected faces */
 		
@@ -771,13 +777,23 @@ int main(int argc, char *argv[])
 			if (igl::unproject_onto_mesh(Eigen::Vector2f(x, y), viewer.core.view /** viewer.core.model*/,
 				viewer.core.proj, viewer.core.viewport, V, F, fid, bc))
 			{	
+				Eigen::VectorXi maxIndices;
+				Eigen::VectorXf maxVals;
+				igl::mat_max(bc, 1, maxVals, maxIndices);
+				
+
 				if (singularConstraint)
 				{
 					ChosenFaces.push_back(fid);
 					selectFace = !selectFace;
 					for (int i : ChosenFaces)
-						viewer.data().add_points(vectorFields.V.row(F(fid,0)), Eigen::RowVector3d(0.0, 0.8, 0.0));
+					{
+						printf("Selected face: %d ", i);
+						vSingId = F(fid, maxIndices(0));
+						printf("| vert: %d \n", vSingId);
+						viewer.data().add_points(vectorFields.V.row(vSingId), Eigen::RowVector3d(0.5, 0.0, 0.5));
 						//viewer.data().add_points(vectorFields.FC.row(fid), Eigen::RowVector3d(0.0, 0.8, 0.0));
+					}
 				}
 				else {
 					// paint hit red
@@ -811,9 +827,9 @@ int main(int argc, char *argv[])
 				{
 					if (singularConstraint)
 					{
-						for (int i : ChosenFaces) {
-							vectorFields.userSingularConstraints.push_back(F(i, 0));
-							printf("Inserting %d as singularity constraints \n", F(i,0));
+						for (int i : ChosenFaces) {	
+							vectorFields.userSingularConstraints.push_back(vSingId);
+							printf("Inserting %d as singularity constraints (%d, %d, %d) \n", vSingId,  F(i,0), F(i, 1), F(i, 2));
 							vectorFields.addSingularityConstraints();
 						}
 					}
@@ -847,8 +863,9 @@ int main(int argc, char *argv[])
 					//vectorFields.setAndSolveUserSystem(lambda);
 					vectorFields.setAndSolveInteractiveSystem(lambda);
 
-					vectorFields.visualizeApproxResult(viewer);
+					viewer.data().lines.resize(0, 9);
 					vectorFields.visualizeGlobalConstraints(viewer);
+					vectorFields.visualizeApproxResult(viewer);
 				}
 				else if (fieldsType == FieldsType::NROSY)
 				{
@@ -914,7 +931,7 @@ int main(int argc, char *argv[])
 
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;	
-	viewer.data().point_size = 10.0f;
+	viewer.data().point_size = 15.0f;
 	viewer.data().line_width = 1.5f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();

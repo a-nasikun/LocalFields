@@ -1392,7 +1392,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructEVList();
 	constructEFList(); 
 	computeFrameRotation(viewer);
-	selectFaceToDraw(5000); 
+	selectFaceToDraw(75000); 
 	//selectFaceToDraw(max((int) round(F.rows()/20.0), 5000));
 	//selectFaceToDraw(F.rows());
 
@@ -1476,10 +1476,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	if (true)
 	{
 		cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-		numSample = 1000;
+		numSample = 100;
 		numSupport = 40.0;
-		string model = "Arma_";
-		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		string model = "Brach_";
+		string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 		//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
 		bool adaptiveSampling = false;
@@ -1494,7 +1494,7 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 		constructBasis();
 		storeBasis(filename_basis);			// Binary, Eigen-base
 		//constructMultiBasis();
-		///retrieveBasis(filename_basis);
+		//retrieveBasis(filename_basis);
 		//visualizeSamples(viewer);
 		//visualizeSubdomain(viewer);
 
@@ -1592,9 +1592,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizePatchDijkstra(viewer);
 
 	/* SOFT CONSTRAINTS */
-	constructSoftConstraints();
 	if (false)
 	{
+		constructSoftConstraints();
 		precomputeForSoftConstraints(lambda);
 		setAndSolveUserSystem(lambda);
 		//visualizeCurveConstraints(viewer);

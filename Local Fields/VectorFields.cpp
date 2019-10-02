@@ -2814,16 +2814,16 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	// lambda 2: (soft-) constraint	
 
 	//constructConstraints();
-	//setupRHSGlobalProblemMapped(g, h, vEst, b);
-	//setupLHSGlobalProblemMapped(A_LHS);
-	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	setupRHSGlobalProblemMapped(g, h, vEst, b);
+	setupLHSGlobalProblemMapped(A_LHS);
+	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 
 	arbField2D = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
-	setupRHSGlobalProblemSoftConstraints(lambda, b);
-	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	///setupRHSGlobalProblemSoftConstraints(lambda, b);
+	///setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	///solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 
 	//B2D = tempB2D;
 }
@@ -5266,8 +5266,8 @@ void VectorFields::setAndSolveInteractiveSystem(const Eigen::Vector3d& lambda)
 
 void VectorFields::obtainConstraints()
 {
-	//getUserConstraints();
-	getUserConstraintsEfficient();
+	getUserConstraints();
+	//getUserConstraintsEfficient();
 }
 
 void VectorFields::preComputeReducedElements()
