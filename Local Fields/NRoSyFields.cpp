@@ -1285,7 +1285,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 0.001;
 	//double scale = 0.1;
 	//double scale = 0.25;
-	double scale = 1.0;
+	double scale = 2.0;
 	//double scale = 3.0;
 	//double scale = 2.5;
 	//double scale = 5.0; 
@@ -1363,6 +1363,7 @@ void NRoSyFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Eig
 	const double HEAD_RATIO = 3.0;
 	const double EDGE_RATIO = scale;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
+	viewer.data().line_width = 1.5; 
 	//>>>>>>> master
 
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
@@ -1647,7 +1648,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 	/* Some constants for arrow drawing */
 	const double HEAD_RATIO = 3.0;
 	const double ARRAW_RATIO = 4.0;
-	const double EDGE_RATIO = 2.0;
+	const double EDGE_RATIO = 10.0;
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 	Eigen::RowVector3d color2(0.2, 0.8, 0.1);
 	Eigen::RowVector3d color(0.1, 0.1, 0.1);
@@ -1658,7 +1659,7 @@ void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
 
 	cout << "Drawing on the overlay mesh \n";
 	viewer.selected_data_index = 0;
-	viewer.data().line_width = 1.0;
+	viewer.data().line_width = 4.0;
 	viewer.data().point_size = 5.0;
 	viewer.data().show_lines = false;
 
@@ -1789,8 +1790,8 @@ void NRoSyFields::nRoSyFieldsDesignRef_HardConstraints()
 	//constructRandomHardConstraints(C, c);
 	///constructInteractiveConstraints();
 	//setupWeight(mu, lambda);
-	setupRHSBiharmSystemRef(BF, C, c, g, h, vEst, b);
-	setupLHSBiharmSystemRef(BF, C, c, A_LHS);
+	setupRHSBiharmSystemRef(BM, C, c, g, h, vEst, b);
+	setupLHSBiharmSystemRef(BM, C, c, A_LHS);
 	solveBiharmSystemRef(vEst, A_LHS, b, Xf);
 }
 
@@ -3553,13 +3554,14 @@ void NRoSyFields::preComputeReducedElements()
 	t0 = chrono::high_resolution_clock::now();
 	cout << "Precompute B2D, vEst, and B2D*vEst ...";
 
-
+	BMBar = B2DBar + lambda[1] * MFBar;
+	
 	// Factorization of B2DBar;
-	B2DBarFactor.analyzePattern(B2DBar);
-	B2DBarFactor.factorize(B2DBar);
+	B2DBarFactor.analyzePattern(BMBar);
+	B2DBarFactor.factorize(BMBar);
 
 	// Set up the estimation variable vAdd
-	vAdd.resize(B2DBar.rows());
+	vAdd.resize(BMBar.rows());
 	for (int i = 0; i < vAdd.rows(); i++) {
 		vAdd(i) = 0.5;
 	}
@@ -3567,7 +3569,7 @@ void NRoSyFields::preComputeReducedElements()
 	// setup the Bv
 	BvBar = B2DBar * vAdd;
 	//if (useAlignment) BvBar -= lambda[1]*MFBar*(Basis.transpose()*alignFields);
-	if (useAlignment) BvBar -= lambda[1] * (Basis.transpose()*(MF*alignFields));
+	if (useAlignment) BvBar -= lambda[1] * MvBar;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t0;
@@ -3761,7 +3763,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Brezel_";
+	string model = "Blade125k_";
+	//string model = "Brezel_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3785,7 +3788,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
 
-	selectFaceToDraw(10000);
+	selectFaceToDraw(20000);
 	//selectFaceToDraw(F.rows()/3.0);
 	Eigen::VectorXd inputNFields;
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"_InputFields";
@@ -3820,7 +3823,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 100;
+	numSample = 1000;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	//constructBasis();
@@ -3854,8 +3857,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 		weight += doubleArea(i);
 	}
 	//weight /= 2.0; 
-	weight = 1.0;
-
+	//weight = 0.05;
+	
 	
 	lambda.resize(2);
 	lambda[0] = 1.0;
@@ -3865,22 +3868,22 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.0000001 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000005 / weight;			//  for scaled rocker arm
 	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
-	//lambda[1] = 0.000005 / weight;
-	lambda[1] = 0.05 / weight;
+	lambda[1] = 0.000005;
+	//lambda[1] = 1.0 / weight;
 	BF = SF*MFinv*SF;
 	BF = 0.25*BF + SF;
 
-	Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
-	const int factor1 = id.transpose()*BF*id;
-	const int factor2 = id.transpose()*MF*id;
+	//Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
+	//const int factor1 = id.transpose()*BF*id;
+	//const int factor2 = id.transpose()*MF*id;
 	//lambda[1] = lambda[1]*factor1 / factor2; 
 
 	useAlignment = true; 
 	
 	createAlignmentField(alignFields);
-	if (useAlignment) BF += lambda[1] * MF;
-	B2DBar = Basis.transpose()*BF*Basis;
-	MFBar = Basis.transpose()*MF*Basis;
+	
+	if (useAlignment) BM =  lambda[0]*BF + lambda[1] * MF;
+	else BM = BF; 
 	
 	//BM = lambda[0] * BF;
 	//BFBar = Basis.transpose()*BF*Basis;
@@ -3889,8 +3892,13 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	XfBar = alignFields;
 	Xf = alignFields;
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	sendFieldsToMailSlot_PerFace(nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
 	//visualizeConstrainedFields_Reduced(viewer);
+	
+	B2DBar = Basis.transpose()*BF*Basis;
+	MFBar = Basis.transpose()*MF*Basis;
+	MvBar = Basis.transpose()*MF*alignFields;
 
 	preComputeReducedElements();
 	initializeParametersForLifting();
@@ -4408,6 +4416,12 @@ void NRoSyFields::sendFieldsToMailSlot(const NRoSy& nRoSy)
 
 void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 {
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	t1 = chrono::high_resolution_clock::now();
+	cout << "> Sending files via mailslot... ";
+
 	/* Converting the n-Rosy to collection of 1-fields */
 	double scale = 1.0;
 	Eigen::Vector2d b(1, 0);
@@ -4456,7 +4470,8 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 
 	/* Specifying the mailslot data */
 	const int data_size = sizeof(float);
-	unsigned char *myMessage = (unsigned char*)malloc(3 * F.rows() * data_size);
+	//unsigned char *myMessage = (unsigned char*)malloc(3 * F.rows() * data_size);
+	float *myMessage = (float*)malloc(3 * F.rows() * data_size);
 
 
 	/* Writing to mailslot */
@@ -4467,22 +4482,21 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 			for (int k = 0; k < 3; k++)	// every entry of the x,y,z 
 			{
 				float field = static_cast<float>(nFields3d[0](3 * i + k));
-				unsigned char* data = (unsigned char*)&field;	
-
-
-				for (int l = 0; l < data_size; l++)	// every byte of a floating point representation
-				{
-					myMessage[data_size*(3 * i + k) + l] = data[data_size - l - 1];	// Little ENDian
-				}
+				unsigned char* data = (unsigned char*)&field;
+				myMessage[3 * i + k] = field;
 			}
 		}
 	//}
 
 
 	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
-	printf("[%d] Data written %d \n", retWrite, numWritten);
+	//printf("[%d] Data written %d \n", retWrite, numWritten);
 
 	CloseHandle(msHandle);
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 	
 }
 

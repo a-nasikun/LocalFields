@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
 	/* READING DATA */
 
-	const string model = "Brezel_";
+	const string model = "Blade_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -81,11 +81,11 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -447,37 +447,65 @@ int main(int argc, char *argv[])
 			break; 
 		case 'M':
 		case 'm':
-			showSmoothed = !showSmoothed;
-			viewer.data().clear();
-			viewer.data().set_mesh(V, F);
-			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
-			//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
-			if (!showSmoothed) {				
-				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
-			}
-			else
+			if (fieldsType == FieldsType::VECTOR)
 			{
-				tensorFields.smoothingRef(viewer, inputTensor, outputTensor);
-				tensorFields.visualizeSmoothedTensorFields(viewer);
-				inputTensor = outputTensor;
+				
 			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.lambda[1] /= 5.0;
+				cout << "lambda 1 is: " << nRoSyFields.lambda[1] << endl; 
+				nRoSyFields.preComputeReducedElements();				
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				showSmoothed = !showSmoothed;
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
+				if (!showSmoothed) {				
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensorFields.smoothingRef(viewer, inputTensor, outputTensor);
+					tensorFields.visualizeSmoothedTensorFields(viewer);
+					inputTensor = outputTensor;
+				}
+			}
+			
 			break;
 		// Reduced smoothing
 		case ',':
-			showSmoothed = !showSmoothed;
-			viewer.data().clear();
-			viewer.data().set_mesh(V, F);
-			viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
-			//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
-			if (!showSmoothed) {
-				tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
-			}
-			else
+			if (fieldsType == FieldsType::VECTOR)
 			{
-				tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
-				tensorFields.visualizeSmoothedAppTensorFields(viewer);
-				inputTensorRed = outputTensorRed;
+
 			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				nRoSyFields.lambda[1] *= 5.0; 
+				cout << "lambda 1 is: " << nRoSyFields.lambda[1] << endl;
+				nRoSyFields.preComputeReducedElements();
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+				showSmoothed = !showSmoothed;
+				viewer.data().clear();
+				viewer.data().set_mesh(V, F);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				//viewer.data().set_colors(Eigen::RowVector3d(186.0 / 255.0, 225.0 / 255.0, 255.0 / 255.0));
+				if (!showSmoothed) {
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensorFields.smoothingRed(viewer, inputTensorRed, tensor_lambda, outputTensorRed);
+					tensorFields.visualizeSmoothedAppTensorFields(viewer);
+					inputTensorRed = outputTensorRed;
+				}
+			}
+			
 			break;
 
 		case 'g':

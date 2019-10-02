@@ -211,7 +211,7 @@ public:
 	Eigen::VectorXd					cBar;										// representation vector of the constraints
 	Eigen::SparseMatrix<double>		CBar, CBarT;								// reduced constraints/selector matrix, its transpose;
 	Eigen::SparseMatrix<double>		BFBar, BMBar, MFBar, B2DBar;				// reduced matrices
-	Eigen::VectorXd					vAdd, BvBar;	
+	Eigen::VectorXd					vAdd, BvBar, MvBar;	
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> B2DBarFactor;				// factorization 
 	Eigen::MatrixXd					BC;
 	int								deltaConstraints;
