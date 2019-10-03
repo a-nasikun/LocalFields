@@ -160,6 +160,7 @@ public:
 	void sendFieldsToMailSlot(const NRoSy& nRoSy);
 	void sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy);
 	void sendTestDataToMailSlot();
+	void sendCameraToMailSlot(igl::opengl::glfw::Viewer &viewer);
 	void readFieldsFromMailSlot(HANDLE &msHandle);
 	void readTestDataFromMailSlot(HANDLE &msHandle);
 public:

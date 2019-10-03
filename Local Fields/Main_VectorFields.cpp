@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
+	///string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
@@ -787,6 +787,11 @@ int main(int argc, char *argv[])
 	viewer.callback_mouse_move =
 		[&V, &F, &C, &lambda, &selectFace, &ChosenFaces, &constraintDir, &vectorFields, &nRoSyFields](igl::opengl::glfw::Viewer& viewer, int, int)->bool
 	{
+		if (fieldsType == FieldsType::NROSY)
+		{
+			nRoSyFields.sendCameraToMailSlot(viewer);
+		}
+
 		int fid;
 		Eigen::Vector3f bc;
 		/* Collect the selected faces */
@@ -891,7 +896,7 @@ int main(int argc, char *argv[])
 						constraintDir = nRoSyFields.FC.row(ChosenFaces[constraintSize - 1]) - nRoSyFields.FC.row(ChosenFaces[0]);
 						///viewer.data().add_edges(nRoSyFields.FC.row(ChosenFaces[0]), nRoSyFields.FC.row(ChosenFaces[0]) + constraintDir, Eigen::RowVector3d(1.0, 0.0, 0.1));
 						nRoSyFields.pushNewUserConstraints(ChosenFaces[0], ChosenFaces[constraintSize - 1]);
-						printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
+						//printf("Pair [%d]->[%d] is inserted\n", ChosenFaces[0], ChosenFaces[constraintSize - 1]);
 						nRoSyFields.addHardConstraints();
 						//nRoSyFields.constructInteractiveConstraints();
 					}
