@@ -1939,8 +1939,7 @@ void VectorFields::constructSoftConstraints()
 
 	if (false)
 	{
-
-		const int NUM_CURVES = 8;
+		const int NUM_CURVES =33;
 		curvesConstraints.resize(NUM_CURVES);
 
 		srand(time(NULL));
@@ -1949,6 +1948,22 @@ void VectorFields::constructSoftConstraints()
 
 		int constCounter = 0;
 
+		int begin_, last_;
+
+		/* Random number generator */
+		std::random_device rd;								// Will be used to obtain a seed for the random number engine
+		std::mt19937 gen(rd());								// Standard mersenne_twister_engine seeded with rd()
+		std::uniform_int_distribution<> dis(0, F.rows() - 1); // From 0 to F.rows()-1
+
+
+
+		for (int i = 0; i < NUM_CURVES; i++)
+		{
+			begin_ = dis(gen);
+			last_ = (begin_ + dis(gen)) % F.rows();
+			constructCurvesAsConstraints(begin_, last_, aCurve);
+			curvesConstraints[constCounter++] = aCurve;
+		}
 
 		////* Manual set-up for Chinese Dragon */
 		///// Face
@@ -1985,27 +2000,27 @@ void VectorFields::constructSoftConstraints()
 
 		/* Manual set-up for Armadillo */
 		// Head
-		constructCurvesAsConstraints(68818, 6278, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		// Stomach
-		constructCurvesAsConstraints(56965, 41616, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		// Leg/Foot (R then L)
-		constructCurvesAsConstraints(28590, 16119, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		constructCurvesAsConstraints(25037, 571, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		// Arm/Hand
-		constructCurvesAsConstraints(55454, 6877, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		constructCurvesAsConstraints(49059, 36423, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		// Back
-		constructCurvesAsConstraints(68331, 72522, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
-		// Tail
-		constructCurvesAsConstraints(24056, 1075, aCurve);
-		curvesConstraints[constCounter++] = aCurve;
+		//constructCurvesAsConstraints(68818, 6278, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//// Stomach
+		//constructCurvesAsConstraints(56965, 41616, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//// Leg/Foot (R then L)
+		//constructCurvesAsConstraints(28590, 16119, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//constructCurvesAsConstraints(25037, 571, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//// Arm/Hand
+		//constructCurvesAsConstraints(55454, 6877, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//constructCurvesAsConstraints(49059, 36423, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//// Back
+		//constructCurvesAsConstraints(68331, 72522, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
+		//// Tail
+		//constructCurvesAsConstraints(24056, 1075, aCurve);
+		//curvesConstraints[constCounter++] = aCurve;
 	}
 
 	/* Project elements to local frame */
@@ -2814,16 +2829,16 @@ void VectorFields::setupGlobalProblem(const Eigen::Vector3d& lambda)
 	// lambda 2: (soft-) constraint	
 
 	//constructConstraints();
-	setupRHSGlobalProblemMapped(g, h, vEst, b);
-	setupLHSGlobalProblemMapped(A_LHS);
-	solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
+	//setupRHSGlobalProblemMapped(g, h, vEst, b);
+	//setupLHSGlobalProblemMapped(A_LHS);
+	//solveGlobalSystemMappedLDLT(vEst, A_LHS, b);
 
 	arbField2D = Xf; 
 	//solveGlobalSystemMappedLU_GPU();
 
-	///setupRHSGlobalProblemSoftConstraints(lambda, b);
-	///setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
-	///solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
+	setupRHSGlobalProblemSoftConstraints(lambda, b);
+	setupLHSGlobalProblemSoftConstraints(lambda, A_LHS);		
+	solveGlobalSystemMappedLDLTSoftConstraints(A_LHS, b);
 
 	//B2D = tempB2D;
 }
@@ -2921,8 +2936,8 @@ void VectorFields::setupLHSGlobalProblemSoftConstraints(const Eigen::Vector3d& l
 	//Eigen::SparseMatrix<double> Mconst = C*MF2D*C.transpose();	
 	//A_LHS = lambda(0)*SF2DAsym + lambda(1)*B2D + lambda(2)*C.transpose()*C;
 	//A_LHS = lambda(0)*SF2DAsym + lambda(2)*C.transpose()*Mconst*C;
-	//A_LHS = lambda(0)*SF2DAsym + lambda(2)*C.transpose()*C;
-	A_LHS = lambda(0)*SF2DAsym + lambda(1)*B2DAsym + lambda(2)*C.transpose()*C;
+	A_LHS = lambda(0)*SF2DAsym + lambda(2)*C.transpose()*C;
+	//A_LHS = lambda(0)*SF2DAsym + lambda(1)*B2DAsym + lambda(2)*C.transpose()*C;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -3015,7 +3030,6 @@ void VectorFields::solveGlobalSystemMappedLDLTSoftConstraints(Eigen::SparseMatri
 	// Setting up the solver
 	//Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> sparseSolver(A_LHS);
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
-	//Eigen::PastixLDLT<Eigen::SparseMatrix<double>,1> sparseSolver(A_LHS);
 	sparseSolver.analyzePattern(A_LHS);
 	sparseSolver.factorize(A_LHS);
 	t2 = chrono::high_resolution_clock::now();

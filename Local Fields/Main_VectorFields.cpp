@@ -42,14 +42,14 @@ int main(int argc, char *argv[])
 
 	/* READING DATA */
 
-	const string model = "Brach_";
+	const string model = "AntiqueHead_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
 
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_small.obj";
 	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_1500.obj";
-	string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
+	//string meshFile = "../LocalFields/Models/Sphere/round_sphere_10242.obj";
 	//string meshFile = "../LocalFields/Models/Thorus/Thorus_2304.obj";	
 	//string meshFile = "../LocalFields/Models/Thorus/torus.obj";
 
@@ -78,7 +78,8 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/centaur0.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Screwdriver/40_screwdriver.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
-	///string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Turbosquid_Antique Head/antique_tris.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/771_oil_pump_1Mfaces_holes_filled2.off";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Turbosquid_Antique Head/antique_tris.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";

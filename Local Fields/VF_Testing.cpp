@@ -1367,6 +1367,9 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	readMesh(meshFile);
 	scaleMesh(V, F);
 
+	bool ReducedSystemON = false;
+	bool FullSystemON = true; 
+
 	viewer.data().set_mesh(V, F);
 	//viewer.append_mesh();
 	//viewer.selected_data_index = 1;
@@ -1415,8 +1418,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//////* ====================== GLOBAL PROBLEM ====================*/
 	////////cout << "\n========================= GLOBAL PROBLEM =============================\n";
 	Eigen::Vector3d lambda;
-	lambda(0) = 0.25; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
-	lambda(1) = 1e-2; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
+	lambda(0) = 0.5; // 100 * MF2D.coeff(0, 0) / SF2D.coeff(0, 0);		// on harmonic energy
+	lambda(1) = 1e-1; // 100 * MF2D.coeff(0, 0) / B2D.coeff(0, 0);		// on bi-harmonic energy
 	lambda(2) = 4;
 	///constructSingularities();
 	///constructHardConstraintsWithSingularitiesWithGauss(viewer);
@@ -1473,13 +1476,13 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//testSparseMatrix();
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
-	if (true)
+	if (ReducedSystemON)
 	{
 		cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-		numSample = 250;
+		numSample = 1000;
 		numSupport = 40.0;
-		string model = "Brach_";
-		string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
+		string model = "AntiqueHead_";
+		string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 		//string filename_basis = "D:/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
 		//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_EigFields10_" + to_string((int)numSupport) + "sup";
 		bool adaptiveSampling = false;
@@ -1491,10 +1494,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 			faceScale.resize(F.rows()); faceScale.setConstant(1.0);
 		}
 		constructSamples(numSample);
-		constructBasis();
+		//constructBasis();
 		//storeBasis(filename_basis);			// Binary, Eigen-base
 		//constructMultiBasis();
-		//retrieveBasis(filename_basis);
+		retrieveBasis(filename_basis);
 		//visualizeSamples(viewer);
 		//visualizeSubdomain(viewer);
 
@@ -1592,9 +1595,10 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//visualizePatchDijkstra(viewer);
 
 	/* SOFT CONSTRAINTS */
-	if (false)
+	constructSoftConstraints();
+
+	if (ReducedSystemON)
 	{
-		constructSoftConstraints();
 		precomputeForSoftConstraints(lambda);
 		setAndSolveUserSystem(lambda);
 		//visualizeCurveConstraints(viewer);
@@ -1603,14 +1607,14 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 		visualizeApproxResult(viewer);
 	}
 
-	//if(false){
-	//setupGlobalProblem(lambda);
-	//setupGlobalProblem(lambda);
-	//setupGlobalProblem(lambda);
-	//setupGlobalProblem(lambda);
-	//setupGlobalProblem(lambda);
-	//visualizeApproximatedFields(viewer);
-	//}
+	if (FullSystemON) {
+		for (int i = 0; i < 1; i++)
+		{
+			setupGlobalProblem(lambda);
+			visualizeCurveConstraints(viewer);
+			visualizeApproximatedFields(viewer);
+		}
+	}
 
 	/* MEASURE ACCURACY */
 	//measureApproxAccuracyL2Norm();
