@@ -1820,6 +1820,9 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	/* Read + construct utilities */
 	readMesh(meshFile);
 	scaleMesh();
+
+	bool fullResON = false;
+	bool redResON = true; 
 	
 	viewer.data().set_mesh(V, F);
 	viewer.append_mesh();
@@ -1838,7 +1841,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	constructFaceAdjacency2RingMatrix();
 	constructEVList();
 	constructEFList();
-	selectFaceToDraw(75000);
+	selectFaceToDraw(25000);
 
 	/* Construct necessary elements for tensor analysis */
 	constructCurvatureTensor(viewer);
@@ -1860,7 +1863,7 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	///visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
-	if (false)
+	if (redResON)
 	{
 		numSupport = 40.0;
 		numSample = 667;
@@ -1890,14 +1893,14 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//settingAdaptiveWeightGradual(viewer, adaptiveWeight);
 	///projectTheContraints(adaptiveWeight, WMbar);
 
-	printf("NNz MFinv: %d \n", MFinv.nonZeros());
+	//printf("NNz MFinv: %d \n", MFinv.nonZeros());
 	BF = SF * MFinv * SF; 
-	cout << "MFinv: \n" << MFinv.block(0, 0, 12, 12) << endl << endl; 
-	cout << "SF: \n" << SF.block(0, 0, 12, 12) << endl << endl;
-	cout << "BF: \n" << BF.block(0, 0, 12, 12) << endl << endl;
-	cout << "MF: \n" << MF.block(0, 0, 12, 12) << endl << endl;
+	//cout << "MFinv: \n" << MFinv.block(0, 0, 12, 12) << endl << endl; 
+	//cout << "SF: \n" << SF.block(0, 0, 12, 12) << endl << endl;
+	//cout << "BF: \n" << BF.block(0, 0, 12, 12) << endl << endl;
+	//cout << "MF: \n" << MF.block(0, 0, 12, 12) << endl << endl;
 
-	if (false) {
+	if (redResON) {
 		prepareSmoothingRed();
 		initializeParametersForProjection();
 		initializeParametersForLifting();
@@ -1907,12 +1910,14 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 		initializeDenseSystemSolve();
 	}
 
-	Eigen::MatrixXd randTensor; 
-	for(int i=0; i<5; i++) 	
-		smoothingRef(viewer, Tensor, randTensor);
+	
+	if (fullResON) {
+		Eigen::MatrixXd randTensor;
+		for (int i = 0; i < 5; i++)
+			smoothingRef(viewer, Tensor, randTensor);
 
-	visualizeTensorFields(viewer, tensorFields);
-
+		visualizeTensorFields(viewer, tensorFields);
+	}
 	//smoothingRed_Implicit_Geometric_Adaptive(viewer, Tensor, Eigen::VectorXd(10), Tensor);
 	//visualizeSmoothedAppTensorFields(viewer);
 }

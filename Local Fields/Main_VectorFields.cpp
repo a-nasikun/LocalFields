@@ -180,7 +180,8 @@ int main(int argc, char *argv[])
 	/* N-RoSy stuff */
 	NRoSy nRoSy; 
 
-	double tensor_lambda =12.5;
+	double tensor_lambda =0.125;
+	//double tensor_lambda = 51200.0;
 
 	const auto &key_down = [&](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
 	{

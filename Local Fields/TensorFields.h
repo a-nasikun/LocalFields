@@ -132,7 +132,7 @@ public:
 	vector<set<int>>				AdjMF2Ring;				// 2-ring neighborhood of triangles
 	Eigen::MatrixXi					FE, EF;					// Face-Edge and Edge-Face neighboring information matrix
 	//double							scale = 10000000;
-	//double							scale = 100;		// regular eigenfields => arma 10k
+	double							scale = 100;		// regular eigenfields => arma 10k
 	//double							scale = 1000.0;		// regular eigenfields => arma 43k
 	//double								scale = 10;
 	//double							scale = 2.5;
@@ -141,7 +141,7 @@ public:
 	//double								scale = 0.25;		// smoothing torus
 	//double								scale = 0.1;		// smoothing
 	//double								scale = 0.05;		// smoothing
-	double								scale = 0.01;		// smoothing
+	//double								scale = 0.01;		// smoothing
 	//double								scale = 0.001;		// smoothing
 
 	//
