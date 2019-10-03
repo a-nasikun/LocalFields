@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "../LocalFields/Models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "../LocalFields/Models/Bunny/Bunny.obj";
 
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/heart/Heart3.obj";
 	/* MODEL FOR TESTING, LARGE ONES */
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/771_Oil_pump_55kfaces.off";
 	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/771_oil_pump_1Mfaces_holes_filled2.off";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Turbosquid_Antique Head/antique_tris.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
@@ -589,11 +590,18 @@ int main(int argc, char *argv[])
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
-				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				showSmoothed = !showSmoothed;
 				viewer.data().lines.resize(0, 9);
+				viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+				if (!showSmoothed) {
+					tensorFields.visualizeTensorFields(viewer, tensorFields.tensorFields);
+				}
+				else
+				{
+					tensorFields.smoothingRef(viewer, inputTensor, outputTensor);
+					tensorFields.visualizeSmoothedTensorFields(viewer);
+				}
 
-				tensorFields.smoothingRef(viewer, inputTensor, outputTensor);
-				tensorFields.visualizeSmoothedTensorFields(viewer);
 			}
 			break;
 		case 's':
@@ -848,12 +856,13 @@ int main(int argc, char *argv[])
 
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;	
-	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.5f; 
-	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
+	//viewer.data().point_size = 10.0f;
+	//viewer.data().line_width = 1.5f; 
+
+	viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
 	/* Trick for remote desktop */
-	//getchar();
-	//return 1;
+	getchar();
+	return 1;
 }

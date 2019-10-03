@@ -197,7 +197,11 @@ void TensorFields::constructEVList()
 
 void TensorFields::constructEFList()
 {
-	cout << "Constructing F-E lists\n";
+	// For Timing
+	chrono::high_resolution_clock::time_point	t1, t2;
+	chrono::duration<double>					duration;
+	cout << "> Constructing F-E lists...";
+	t1 = chrono::high_resolution_clock::now();
 	FE.resize(F.rows(), 3);
 	EF.resize(E.rows(), 2);
 
@@ -235,6 +239,10 @@ void TensorFields::constructEFList()
 			counter++;
 		}
 	}
+
+	t2 = chrono::high_resolution_clock::now();
+	duration = t2 - t1;
+	cout << "in " << duration.count() << " seconds" << endl;
 
 	/* For test */
 	//int ft = rand() % F.rows();
@@ -462,7 +470,7 @@ void TensorFields::constructFaceAdjacency3NMatrix()
 	EdgePairsList.clear();
 	EdgePairsList.shrink_to_fit();
 
-	printf("Size of EdgePairMatrix = %dx%d (F=%dx%d)\n", EdgePairMatrix.rows(), EdgePairMatrix.cols(), F.rows(), F.cols());
+	//printf("Size of EdgePairMatrix = %dx%d (F=%dx%d)\n", EdgePairMatrix.rows(), EdgePairMatrix.cols(), F.rows(), F.cols());
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
@@ -1852,16 +1860,19 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	///visualizeEigenTensorFields(viewer, 0);
 
 	/*Subspace construction */
-	numSupport = 40.0;
-	numSample = 667;
-	string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model +to_string(3*numSample)+"_Tensor_Eigfields_"+ to_string(int(numSupport))+"_sup";
-	constructSamples(numSample);
-	//constructBasis();
-	//storeBasis(fileBasis);
-	retrieveBasis(fileBasis);
-	//visualizeBasis(viewer, 0);
-	//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
-	//visualizeSubdomain(viewer);
+	if (false)
+	{
+		numSupport = 40.0;
+		numSample = 667;
+		string fileBasis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(3 * numSample) + "_Tensor_Eigfields_" + to_string(int(numSupport)) + "_sup";
+		constructSamples(numSample);
+		//constructBasis();
+		//storeBasis(fileBasis);
+		retrieveBasis(fileBasis);
+		//visualizeBasis(viewer, 0);
+		//WriteSparseMatrixToMatlab(Basis, "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Matlab Prototyping/Data/" + model + "Basis");
+		//visualizeSubdomain(viewer);
+	}
 
 	///for (int i = 0; i < min((int)eigFieldsTensorRef.cols(), 0); i++)
 	///{
@@ -1879,13 +1890,28 @@ void TensorFields::TEST_TENSOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//settingAdaptiveWeightGradual(viewer, adaptiveWeight);
 	///projectTheContraints(adaptiveWeight, WMbar);
 
-	prepareSmoothingRed();
-	initializeParametersForProjection();
-	initializeParametersForLifting();
-	initializeParametersForRHS();
-	initializeParametersForLHS();
-	initializeSystemSolve();
-	initializeDenseSystemSolve();
+	printf("NNz MFinv: %d \n", MFinv.nonZeros());
+	BF = SF * MFinv * SF; 
+	cout << "MFinv: \n" << MFinv.block(0, 0, 12, 12) << endl << endl; 
+	cout << "SF: \n" << SF.block(0, 0, 12, 12) << endl << endl;
+	cout << "BF: \n" << BF.block(0, 0, 12, 12) << endl << endl;
+	cout << "MF: \n" << MF.block(0, 0, 12, 12) << endl << endl;
+
+	if (false) {
+		prepareSmoothingRed();
+		initializeParametersForProjection();
+		initializeParametersForLifting();
+		initializeParametersForRHS();
+		initializeParametersForLHS();
+		initializeSystemSolve();
+		initializeDenseSystemSolve();
+	}
+
+	Eigen::MatrixXd randTensor; 
+	for(int i=0; i<5; i++) 	
+		smoothingRef(viewer, Tensor, randTensor);
+
+	visualizeTensorFields(viewer, tensorFields);
 
 	//smoothingRed_Implicit_Geometric_Adaptive(viewer, Tensor, Eigen::VectorXd(10), Tensor);
 	//visualizeSmoothedAppTensorFields(viewer);
@@ -2087,11 +2113,12 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	cout << "> Smoothing (reference)... \n";
 	t1 = chrono::high_resolution_clock::now();
 
-	double lambda = 12.5;
-	Eigen::VectorXd id(MF.rows());
-	id.setConstant(1.0);
-	double factor1 = id.transpose()*MF*id;
-	double factor2 = id.transpose()*SF*id;
+	//double lambda = 12.5;
+	double lambda = 1.0;
+	//Eigen::VectorXd id(MF.rows());
+	//id.setConstant(1.0);
+	//double factor1 = id.transpose()*MF*id;
+	//double factor2 = id.transpose()*SF*id;
 	//lambda = lambda * factor1 / factor2;
 	
 	Eigen::VectorXd inputVoigt;
@@ -2101,15 +2128,34 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 	Eigen::MatrixXd smoothedFields;
 	Eigen::VectorXd smoothedVoigt;
 
-	// for randome scaling
-	srand(time(NULL));
-	const double randScale = (double) ( rand() % 5 + 1.0);
-	lambda *= randScale;
+	printf("Lambda 1: %.2f |", lambda);
 
+	//Eigen::VectorXd id(3 * F.rows()); id.setConstant(1.0);
+	//double factor1 = id.transpose()*MF*id;
+	//double factor2 = id.transpose()*BF*id;
+	//lambda = lambda * factor1 / factor2;
+	//printf("Lambda 2: %.32f |", lambda);
+
+	// for randome scaling
+	srand(static_cast<unsigned int>(clock()));
+	//const double randScale = (double) ( rand() % (5000-1000) + 1000 + 1);
+	int randScale =rand() % (100 + 1);
+	
+	if(randScale%2==0)
+		lambda *= (double) randScale;
+	else
+		lambda /= (double) randScale;
+
+	printf("scale: %.1f | lambda: %.10f \n ", (double) randScale, lambda);
+	//printf("scale: %.2f | M w: %.2f | B w: %.2f | lambda: %.2f \n ", randScale, factor1, factor2, lambda);
+	//cout << "Lambda_ " << lambda << "| scale:" << factor1/factor2 << "| m weight: " << factor1 << endl; 
+
+	printf("BF nnz: %d | SF: %d \n", BF.nonZeros(), SF.nonZeros());
 
 	t2 = chrono::high_resolution_clock::now();
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
-	Eigen::SparseMatrix<double> LHS = MF + lambda*SF;
+	//Eigen::SparseMatrix<double> LHS = MF + lambda*(SF + 0.25*BF);
+	Eigen::SparseMatrix<double> LHS = MF + sqrt(lambda)*SF + lambda*(BF);
 	t3 = chrono::high_resolution_clock::now();
 	duration = t3 - t2;
 	cout << "__Set LHS in " << duration.count() << " seconds" << endl;
@@ -2135,14 +2181,15 @@ void TensorFields::smoothing_Implicit_Geometric(igl::opengl::glfw::Viewer &viewe
 
 	convertVoigtToTensor(smoothedVoigt, smoothedTensorRef);
 	outputTensor = smoothedTensorRef;
+	TensorRed = outputTensor;
 
 	t2 = chrono::high_resolution_clock::now();
 	duration = t2 - t1;
 	cout << " in " << duration.count() << " seconds" << endl;
 
-	double inputEnergy = inputVoigt.transpose()*SF*inputVoigt;
-	double outputEnergy = smoothedVoigt.transpose()*SF*smoothedVoigt;
-	printf("Energy: %.10f ==> %.10f \n", inputEnergy, outputEnergy);
+	double inputEnergy = inputVoigt.transpose()*LHS*inputVoigt;
+	double outputEnergy = smoothedVoigt.transpose()*LHS*smoothedVoigt;
+	printf("Energy: %.10f ==> %.32f \n", inputEnergy, outputEnergy);
 
 	//double dir = smoothedVoigt.transpose()*SF*smoothedVoigt;
 	//printf("The energy is %.10f\n", dir);
@@ -2161,8 +2208,11 @@ void TensorFields::prepareSmoothingRed()
 	duration = t2 - t1;
 	cout << "____ Mass matrix in " << duration.count() << " seconds" << endl;
 
+	
+
+
 	t2 = chrono::high_resolution_clock::now();
-	SFbar = Basis.transpose()*SF*Basis;
+	SFbar = Basis.transpose()*(SF + 0.25*BF)*Basis;
 	t3 = chrono::high_resolution_clock::now();
 	duration = t3 - t2;
 	cout << "____ Stiffness matrix in " << duration.count() << " seconds" << endl;

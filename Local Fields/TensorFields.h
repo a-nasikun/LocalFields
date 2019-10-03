@@ -125,7 +125,7 @@ public:
 	Eigen::SparseMatrix<double>		A;						// A map from local to to world coordinate
 	Eigen::SparseMatrix<double>		MF, MFinv;				// Triangle/face-based mass matrices (3 values per face)
 	Eigen::SparseMatrix<double>		MF3DhNeg, MF3DhPos;		// 
-	Eigen::SparseMatrix<double>		SF;						// Laplace matrix for the tensor fields (finite difference approach)
+	Eigen::SparseMatrix<double>		SF,BF;					// Laplace matrix for the tensor fields (finite difference approach)
 	double							avgEdgeLength;			// avg edge length -> to scale the fields
 	vector<int>						FaceToDraw;				// Indices to faces that we'll draw the fields upon
 	vector<set<int>>				VENeighbors;			// Vertex-Edge neighboring information
@@ -142,6 +142,7 @@ public:
 	//double								scale = 0.1;		// smoothing
 	//double								scale = 0.05;		// smoothing
 	double								scale = 0.01;		// smoothing
+	//double								scale = 0.001;		// smoothing
 
 	//
 	Eigen::MatrixXd eigFieldsTensorRef;
