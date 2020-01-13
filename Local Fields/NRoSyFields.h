@@ -163,6 +163,11 @@ public:
 	void sendCameraToMailSlot(igl::opengl::glfw::Viewer &viewer);
 	void readFieldsFromMailSlot(HANDLE &msHandle);
 	void readTestDataFromMailSlot(HANDLE &msHandle);
+
+	/* DIRECTION FIELDS ALIGNMENT */
+	void normalizedAlignedFields();
+	void constructAlignedDirFields();
+
 public:
 	NRoSy							nRoSy;
 	Eigen::MatrixXd					V, FC;
@@ -203,7 +208,8 @@ public:
 	vector<int>						singularities;
 	vector<vector<int>>				SingNeighCC;
 	Eigen::VectorXd					alignFields;
-	Eigen::SparseMatrix<double>		BF, BM;
+	Eigen::SparseMatrix<double>		BF;										// Weighted sum of S (harmonic) and B (biharmonic energy)
+	Eigen::SparseMatrix<double>		BM;										// weighter sum of BF and mass matrix M (for constrained system)
 
 	/* Variable related to REDUCED n-RoSy fields design */
 	bool							useAlignment;								// Flag to turn-on/off the aligntment fields
@@ -228,6 +234,10 @@ public:
 	Eigen::VectorXd					wb;											// projected representation fields
 	vector<vector<int>>				curvesConstraints;
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
+
+	/* Aligned Direction Fields */
+	Eigen::VectorXd					dirFields;
+	Eigen::VectorXd					dirFieldsAlignment;							// vector used as alignment for the direction fields
 
 	/* Testing variables */
 	int								testID = 5;

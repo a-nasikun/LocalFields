@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
 	/* READING DATA */
 
-	const string model = "Blade_";
+	const string model = "Arma40k_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_long_36k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
@@ -789,7 +789,7 @@ int main(int argc, char *argv[])
 	{
 		if (fieldsType == FieldsType::NROSY)
 		{
-			nRoSyFields.sendCameraToMailSlot(viewer);
+			//nRoSyFields.sendCameraToMailSlot(viewer);
 		}
 
 		int fid;
@@ -911,7 +911,7 @@ int main(int argc, char *argv[])
 					NRoSy nRoSy_;
 					nRoSyFields.convertRepVectorsToNRoSy(nRoSyFields.XfBar, nRoSy_);
 					//nRoSyFields.sendFieldsToMailSlot(nRoSy_);
-					nRoSyFields.sendFieldsToMailSlot_PerFace(nRoSy_);
+					//nRoSyFields.sendFieldsToMailSlot_PerFace(nRoSy_);
 
 					/* Full res*/
 					//if (F.rows() < 50000)

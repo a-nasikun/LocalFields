@@ -1284,10 +1284,10 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 1.0 / 100000.0; 
 	//double scale = 0.001;
 	//double scale = 0.1;
-	//double scale = 0.25;
-	double scale = 2.0;
-	//double scale = 3.0;
+	double scale = 0.25;
+	//double scale = 2.0;
 	//double scale = 2.5;
+	//double scale = 3.0;
 	//double scale = 5.0; 
 	//double scale = 50.0;
 	//double scale = 250.0; 
@@ -3762,12 +3762,12 @@ void NRoSyFields::measureAccuracy()
 /* ============================= Testing stuff ============================= */
 void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
 {
-	nRot = 2;
+	nRot = 4;
 	readMesh(meshFile);
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
-	string model = "Blade125k_";
-	//string model = "Brezel_";
+	//string model = "Blade125k_";
+	string model = "Arma43k_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3791,7 +3791,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	buildStiffnessMatrix_Geometric();
 	//buildStiffnessMatrix_Combinatorial();
 
-	selectFaceToDraw(20000);
+	selectFaceToDraw(5000);
 	//selectFaceToDraw(F.rows()/3.0);
 	Eigen::VectorXd inputNFields;
 	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"_InputFields";
@@ -3826,12 +3826,12 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 1000;
+	numSample = 500;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
-	//constructBasis();
+	constructBasis();
 	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	//retrieveBasis(basisFile);
 	BasisT = Basis.transpose(); 
 	//visualizeBasis(viewer, 0);
 
@@ -3855,10 +3855,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Prepare for n-fields design */
 	
-	double weight = 0;
-	for (int i = 0; i < doubleArea.size(); i += 2){
-		weight += doubleArea(i);
-	}
+	//double weight = 0;
+	//for (int i = 0; i < doubleArea.size(); i += 2){
+	//	weight += doubleArea(i);
+	//}
 	//weight /= 2.0; 
 	//weight = 0.05;
 	
@@ -3884,7 +3884,15 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	useAlignment = true; 
 	
 	createAlignmentField(alignFields);
+	convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+
+	constructAlignedDirFields();
+	convertRepVectorsToNRoSy(dirFieldsAlignment, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.1, 0.9));
 	
+	/* TO SETUP REDUCED SYSTEM FOR FIELDS DESIGN*/
+	/*
 	if (useAlignment) BM =  lambda[0]*BF + lambda[1] * MF;
 	else BM = BF; 
 	
@@ -3905,6 +3913,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	preComputeReducedElements();
 	initializeParametersForLifting();
+	*/
 	
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
@@ -5008,4 +5017,25 @@ void NRoSyFields::readTestDataFromMailSlot(HANDLE &msHandle)
 		}
 	}
 	CloseHandle(hEvent);
+}
+/* DIRECTION FIELDS ALIGNMENT */
+void NRoSyFields::normalizedAlignedFields()
+{
+	if (alignFields.size() < 1) return;
+
+	double sScale = alignFields.transpose()*MF*alignFields;
+	sScale = sqrt(sScale);
+	printf("Scale: %.5f to ", sScale);
+
+	dirFieldsAlignment = alignFields / sScale;
+	
+	sScale = dirFieldsAlignment.transpose() * MF * dirFieldsAlignment;
+	printf("%.5f. \n", sScale);
+}
+
+void NRoSyFields::constructAlignedDirFields()
+{
+	normalizedAlignedFields();
+
+
 }
