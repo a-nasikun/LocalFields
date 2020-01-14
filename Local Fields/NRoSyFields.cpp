@@ -3768,7 +3768,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
 	//string model = "Blade125k_";
-	string model = "Arma43k_";
+	string model = "Mechanics-1_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3827,7 +3827,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* Build reduced space */
 	numSupport = 40.0;
-	numSample = 500;
+	numSample = 1000;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
 	constructBasis();
@@ -3885,8 +3885,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	useAlignment = true; 
 	
 	createAlignmentField(alignFields);
-	///convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	///visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+	string fileNRoSyRef = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
+	//writeNRoSyFieldsToFile(nRoSy_, fileNRoSyRef);
 
 	constructAlignedDirFieldsRef(viewer);
 	convertRepVectorsToNRoSy(dirFieldsAlignment, nRoSy_);
@@ -3898,6 +3900,8 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	constructAlignedDirFieldsRed();
 	convertRepVectorsToNRoSy(dirFieldsRed, nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.9, 0.1, 0.1));
+	string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
+	//writeNRoSyFieldsToFile(nRoSy_, fileNRoSyRed);
 
 	/* TO SETUP REDUCED SYSTEM FOR FIELDS DESIGN*/
 	/*
@@ -3907,9 +3911,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//BM = lambda[0] * BF;
 	//BFBar = Basis.transpose()*BF*Basis;
 	//BMBar = BFBar;
-	
+	*/
 	XfBar = alignFields;
 	Xf = alignFields;
+	/*
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	sendFieldsToMailSlot_PerFace(nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
@@ -3946,15 +3951,17 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	
 	//nRoSyFieldsDesign_Reduced();
 	//measureAccuracy();
-	//
-	//NRoSy nRoSy_temp; 
-	//convertRepVectorsToNRoSy(Xf, nRoSy_temp);
-	//string fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_reference.txt";
-	//writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRef);
-	//
-	//convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
-	//string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_approximation.txt";
-	//writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
+	
+
+	/* Writing fields to file */
+	NRoSy nRoSy_temp; 
+	convertRepVectorsToNRoSy(Xf, nRoSy_temp);
+	fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
+	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRef);
+	
+	convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
+	fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
+	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
 
 }
 
@@ -4005,9 +4012,11 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 		printf("__|F|=%d  | vfields=%d\n", F.rows(), nFields3d[0].size());
 		for (int i = 0; i < F.rows(); i++)
 		{
+			// Depending on what we intended, it could be "_" instead of "\n"
 			for (int j = 0; j < FIELD_TO_WRITE; j++)
 			{
-				myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
+				//myfile << nFields3d[j](3 * i) << "\n" << nFields3d[j](3 * i + 1) << "\n" << nFields3d[j](3 * i + 2) << "\n";
+				myfile << nFields3d[j](2 * i) << "\n" << nFields3d[j](2 * i + 1) << "\n";
 			}			
 		}
 		myfile.close();
