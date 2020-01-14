@@ -1815,7 +1815,8 @@ void NRoSyFields::createAlignmentField(Eigen::VectorXd& v)
 	id.setConstant(1.0);
 	double factor1 = id.transpose()*MF*id;
 	double factor2 = id.transpose()*SF*id;
-	double lambda =150;
+	//double lambda =150;
+	double lambda = 10;
 	double mu = lambda * factor1 / factor2;
 
 	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
@@ -3768,7 +3769,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	scaleMesh();
 	igl::doublearea(V, F, doubleArea);
 	//string model = "Blade125k_";
-	string model = "Mechanics-1_";
+	string model = "RockerArm-3_";
 	NRoSy nRoSy_;
 
 	viewer.data().set_mesh(V, F);
@@ -3888,7 +3889,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	///visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
 	string fileNRoSyRef = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
-	//writeNRoSyFieldsToFile(nRoSy_, fileNRoSyRef);
+	writeNRoSyFieldsToFile_Local(nRoSy_, fileNRoSyRef);
 
 	constructAlignedDirFieldsRef(viewer);
 	convertRepVectorsToNRoSy(dirFieldsAlignment, nRoSy_);
@@ -3901,7 +3902,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	convertRepVectorsToNRoSy(dirFieldsRed, nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.9, 0.1, 0.1));
 	string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
-	//writeNRoSyFieldsToFile(nRoSy_, fileNRoSyRed);
+	writeNRoSyFieldsToFile_Local(nRoSy_, fileNRoSyRed);
 
 	/* TO SETUP REDUCED SYSTEM FOR FIELDS DESIGN*/
 	/*
@@ -3954,14 +3955,14 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	
 
 	/* Writing fields to file */
-	NRoSy nRoSy_temp; 
-	convertRepVectorsToNRoSy(Xf, nRoSy_temp);
-	fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
-	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRef);
-	
-	convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
-	fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
-	writeNRoSyFieldsToFile(nRoSy_temp, fileNRoSyRed);
+	//NRoSy nRoSy_temp; 
+	//convertRepVectorsToNRoSy(Xf, nRoSy_temp);
+	//fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
+	//writeNRoSyFieldsToFile_Local(nRoSy_temp, fileNRoSyRef);
+	//
+	//convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
+	//fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
+	//writeNRoSyFieldsToFile_Local(nRoSy_temp, fileNRoSyRed);
 
 }
 
@@ -4015,8 +4016,7 @@ void NRoSyFields::writeNRoSyFieldsToFile(const NRoSy& nRoSy, const string& filen
 			// Depending on what we intended, it could be "_" instead of "\n"
 			for (int j = 0; j < FIELD_TO_WRITE; j++)
 			{
-				//myfile << nFields3d[j](3 * i) << "\n" << nFields3d[j](3 * i + 1) << "\n" << nFields3d[j](3 * i + 2) << "\n";
-				myfile << nFields3d[j](2 * i) << "\n" << nFields3d[j](2 * i + 1) << "\n";
+				myfile << nFields3d[j](3 * i) << " " << nFields3d[j](3 * i + 1) << " " << nFields3d[j](3 * i + 2) << "\n";
 			}			
 		}
 		myfile.close();
@@ -5057,7 +5057,7 @@ void NRoSyFields::constructAlignedDirFieldsRef(igl::opengl::glfw::Viewer &viewer
 
 	/* Setting the regularizer*/
 	cout << "__Setting the regularizer \n";
-	double myu = 1.0;
+	double myu = -5.0;
 	Eigen::SparseMatrix<double> MyuMat(SF.rows(), SF.cols());
 	MyuMat.setIdentity();
 	MyuMat = myu * MyuMat;
@@ -5097,7 +5097,7 @@ void NRoSyFields::constructAlignedDirFieldsRed()
 
 	/* Setting the regularizer*/
 	cout << "__Setting the regularizer \n";
-	double myu = 1.0;
+	double myu = -0.01;
 	Eigen::SparseMatrix<double> MyuMat(SF.rows(), SF.cols());
 	MyuMat.setIdentity();
 	MyuMat = myu * MyuMat;
