@@ -166,7 +166,8 @@ public:
 
 	/* DIRECTION FIELDS ALIGNMENT */
 	void normalizedAlignedFields();
-	void constructAlignedDirFields();
+	void constructAlignedDirFieldsRef(igl::opengl::glfw::Viewer &viewer);
+	void constructAlignedDirFieldsRed();
 
 public:
 	NRoSy							nRoSy;
@@ -236,7 +237,7 @@ public:
 	vector<vector<Eigen::Vector2d>>	constraintVect2D;
 
 	/* Aligned Direction Fields */
-	Eigen::VectorXd					dirFields;
+	Eigen::VectorXd					dirFields, dirFieldsRed;
 	Eigen::VectorXd					dirFieldsAlignment;							// vector used as alignment for the direction fields
 
 	/* Testing variables */

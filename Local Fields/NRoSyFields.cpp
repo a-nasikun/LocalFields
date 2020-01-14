@@ -1152,6 +1152,7 @@ void NRoSyFields::convertNRoSyToRepVectors(const NRoSy& nRoSyFields, Eigen::Vect
 
 void NRoSyFields::convertRepVectorsToNRoSy(const Eigen::VectorXd& repVect, NRoSy& nRoSyFields)
 {
+
 	const int nSize = repVect.size() / 2;
 	nRoSyFields.theta.resize(nSize);
 	nRoSyFields.magnitude.resize(nSize);
@@ -3884,13 +3885,20 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	useAlignment = true; 
 	
 	createAlignmentField(alignFields);
-	convertRepVectorsToNRoSy(alignFields, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+	///convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	///visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
 
-	constructAlignedDirFields();
+	constructAlignedDirFieldsRef(viewer);
 	convertRepVectorsToNRoSy(dirFieldsAlignment, nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.1, 0.9));
-	
+	convertRepVectorsToNRoSy(dirFields, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.9, 0.1));
+
+	/* Reduced systems */
+	constructAlignedDirFieldsRed();
+	convertRepVectorsToNRoSy(dirFieldsRed, nRoSy_);
+	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.9, 0.1, 0.1));
+
 	/* TO SETUP REDUCED SYSTEM FOR FIELDS DESIGN*/
 	/*
 	if (useAlignment) BM =  lambda[0]*BF + lambda[1] * MF;
@@ -5033,9 +5041,84 @@ void NRoSyFields::normalizedAlignedFields()
 	printf("%.5f. \n", sScale);
 }
 
-void NRoSyFields::constructAlignedDirFields()
+void NRoSyFields::constructAlignedDirFieldsRef(igl::opengl::glfw::Viewer &viewer)
 {
+	cout << "Working on the direction fields \n";
 	normalizedAlignedFields();
 
+	/* Setting the regularizer*/
+	cout << "__Setting the regularizer \n";
+	double myu = 1.0;
+	Eigen::SparseMatrix<double> MyuMat(SF.rows(), SF.cols());
+	MyuMat.setIdentity();
+	MyuMat = myu * MyuMat;
 
+	/* Settign the LHS */
+	cout << "__Settign the LHS \n";
+	Eigen::SparseMatrix<double> LHS = SF - MyuMat;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.compute(LHS);
+
+	/* Solve the linear system */
+	cout << "__Solving the linear systems \n";
+	Eigen::VectorXd w = sparseSolver.solve(dirFieldsAlignment);
+
+	/* Checking the result */	
+	double wNorm = w.transpose()*MF*w;
+	printf("The resulting vector has L2-norm of %.5f \n", wNorm);
+
+	/* Point-wise normalization */
+	cout << "__Normalization \n";
+	dirFields.resize(w.rows());
+	Eigen::Vector2d vtemp;
+	for (int i = 0; i < w.rows() / 2; i++) {
+		vtemp = w.block(2 * i, 0, 2, 1);
+		vtemp.normalize();
+		dirFields.block(2*i, 0, 2, 1) = vtemp;
+	}
+
+	/* Visualizing the result */
+
+}
+
+void NRoSyFields::constructAlignedDirFieldsRed()
+{
+	cout << "Working on the direction fields \n";
+	normalizedAlignedFields();
+
+	/* Setting the regularizer*/
+	cout << "__Setting the regularizer \n";
+	double myu = 1.0;
+	Eigen::SparseMatrix<double> MyuMat(SF.rows(), SF.cols());
+	MyuMat.setIdentity();
+	MyuMat = myu * MyuMat;
+
+	/* Settign the LHS */
+	cout << "__Settign the LHS \n";
+	Eigen::SparseMatrix<double> LHS = SF - MyuMat;
+	LHS = Basis.transpose()*LHS*Basis;
+	Eigen::PardisoLDLT<Eigen::SparseMatrix<double>> sparseSolver;
+	sparseSolver.compute(LHS);
+
+	/* Solve the linear system */
+	Eigen::VectorXd rhs = Basis.transpose()*dirFieldsAlignment;
+	cout << "__Solving the linear systems \n";
+	Eigen::VectorXd w = sparseSolver.solve(rhs);
+
+	/* Checking the result */
+	w = Basis * w;
+	double wNorm = w.transpose()*MF*w;
+	printf("The resulting vector has L2-norm of %.5f \n", wNorm);
+
+	/* Point-wise normalization */
+	cout << "__Normalization \n";
+	dirFieldsRed.resize(w.rows());
+	Eigen::Vector2d vtemp;
+	for (int i = 0; i < w.rows() / 2; i++) {
+		vtemp = w.block(2 * i, 0, 2, 1);
+		vtemp.normalize();
+		dirFieldsRed.block(2 * i, 0, 2, 1) = vtemp;
+	}
+
+	/* Visualizing the result */
 }
