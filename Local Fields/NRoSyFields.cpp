@@ -3766,7 +3766,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 {
 	nRot = 4;
 	readMesh(meshFile);
-	scaleMesh();
+	//scaleMesh();
 	igl::doublearea(V, F, doubleArea);
 	//string model = "Blade125k_";
 	string model = "RockerArm-3_";
@@ -3915,7 +3915,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	*/
 	XfBar = alignFields;
 	Xf = alignFields;
-	/*
+	
 	convertRepVectorsToNRoSy(alignFields, nRoSy_);
 	sendFieldsToMailSlot_PerFace(nRoSy_);
 	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
@@ -3927,7 +3927,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	preComputeReducedElements();
 	initializeParametersForLifting();
-	*/
+	
 	
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
