@@ -14,7 +14,7 @@ int saveId = 2;
 bool singularConstraint = false; 
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::NROSY;
+FieldsType fieldsType = FieldsType::VECTOR;
 
 
 
@@ -37,11 +37,13 @@ int main(int argc, char *argv[])
 	Eigen::MatrixXd					V;
 	Eigen::MatrixXi					F, E;
 
+
+	int subDomId = 0;
 	// Hell there this is main function.
 
 	/* READING DATA */
 
-	const string model = "Rocker-Arm1_";
+	const string model = "Armadillo_";
 	
 	//string meshFile = "../LocalFields/Models/Cube/Cube_1400.obj";
 	//string meshFile = "../LocalFields/Models/Plane/square_plane.obj";
@@ -54,7 +56,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -79,7 +81,7 @@ int main(int argc, char *argv[])
 	///string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Large_Ones/m3_25k_vert2.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/TOSCA_hires-mat/cat4_750k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm.off";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Articles/19ApproxFields/models/rocker_arm_remesh/Rocker-Arm_3.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Articles/19ApproxFields/models/rocker_arm_remesh/Rocker-Arm_3.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Pulley_full/pulley_40k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Rocker-arm/38_rocker-arm_800k.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/blade_smooth/blade_smooth.obj";
@@ -201,6 +203,19 @@ int main(int argc, char *argv[])
 
 		switch (key)
 		{
+		case 'd':
+		case 'D':
+			if (subDomId > 0) subDomId--;
+			std::cout << "The id is" << subDomId << std::endl;
+			vectorFields.visualizeSubdomain(viewer, subDomId);
+			break;
+		case 'f':
+		case 'F':
+			if (subDomId <50) subDomId++;
+			std::cout << "The id is" << subDomId << std::endl;
+			vectorFields.visualizeSubdomain(viewer, subDomId);
+			break;
+
 		case '-':
 			//vectorFields.projectionTest();
 			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);

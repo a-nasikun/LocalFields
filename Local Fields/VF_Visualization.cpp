@@ -1198,7 +1198,7 @@ void VectorFields::visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer)
 	viewer.data().set_colors(vColor);
 }
 
-void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
+void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer, const int id)
 {
 	/* Color map => JET */
 	//Eigen::VectorXd dom(F.rows());
@@ -1221,26 +1221,36 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 	/* My Own */
 	vColor.resize(F.rows(), 3);
 	// 0:background => eeeeee; 0.3:selected region; 0.7:boundary
+	vColor.setConstant(0.93333333);
+	std::cout << "Visualizaing domain #" << id << std::endl;
 	for (int i = 0; i < F.rows(); i++)
 	{
-		if (localSystem(i) < 0.1)
+		 if (localSystems[id](i) > 0.25)
 		{
-			vColor.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
-		}
-		else if (localSystem(i) > 0.6)
-		{
-			//cout << "This does happen\n";
-			vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
-			
-		}
-		else
-		{
-			//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
-			//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
-			//vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);	
-			vColor.row(i) = Eigen::RowVector3d(223.0/255.0, 180.0/255.0, 240.0/255.0);
+			 vColor.row(i) = Eigen::RowVector3d(223.0 / 255.0, 180.0 / 255.0, 240.0 / 255.0);			
 		}
 	}
+
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	if (localSystem(i) < 0.1)
+	//	{
+	//		vColor.row(i) = Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333);
+	//	}
+	//	else if (localSystem(i) > 0.6)
+	//	{
+	//		//cout << "This does happen\n";
+	//		vColor.row(i) = Eigen::RowVector3d(0.96078431372, 0.36470588235, 0.2431372549);
+	//		
+	//	}
+	//	else
+	//	{
+	//		//vColor.row(i) = Eigen::RowVector3d(1, 0.88235294117, 0.77647058823);
+	//		//vColor.row(i) = Eigen::RowVector3d(0.89803921568, 0.94901960784, 0.78823529411);
+	//		//vColor.row(i) = Eigen::RowVector3d(186.0/255.0, 212.0/255.0, 170.0/255.0);	
+	//		vColor.row(i) = Eigen::RowVector3d(223.0/255.0, 180.0/255.0, 240.0/255.0);
+	//	}
+	//}
 
 	printf("Local system: %d x %d \n", localSystem.rows(), localSystem.cols());
 	cout << localSystem.block(0, 0, 3, 3) << endl;
@@ -1249,6 +1259,12 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer)
 
 	
 	viewer.data().set_colors(vColor);
+	viewer.data().points.resize(0, 6);
+
+	int fId = Sample[id];
+	Eigen::RowVector3d fCoord = (V.row(F(fId, 0)) + V.row(F(fId, 1)) + V.row(F(fId, 2))) / 3.0;
+	viewer.data().point_size = 15.0;
+	viewer.data().add_points(fCoord, Eigen::RowVector3d(0.9, 0.1, 0.2));
 	//viewer.data().set_colors(Eigen::RowVector3d(0.0, 1.0, 0.0));
 }
 

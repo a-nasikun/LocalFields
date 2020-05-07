@@ -1493,13 +1493,13 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 	//constructMultiBasis();
 	//retrieveBasis(filename_basis);
 	//visualizeSamples(viewer);
-	//visualizeSubdomain(viewer);
+	visualizeSubdomain(viewer);
 
-	/* Set-up/Precomputation for reduced system */	
-	BasisT = Basis.transpose();
-	setupReducedBiLaplacian();
-	preComputeReducedElements();
-	initializeParametersForLifting();
+	////* Set-up/Precomputation for reduced system */	
+	///BasisT = Basis.transpose();
+	///setupReducedBiLaplacian();
+	///preComputeReducedElements();
+	///initializeParametersForLifting();
 
 	//setAndSolveUserSystem(lambda);
 	//WriteEigenVectorToTxtFile(arbField2D, filename_vfields);

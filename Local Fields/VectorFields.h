@@ -277,7 +277,7 @@ public:
 	void visualizeArbField(igl::opengl::glfw::Viewer &viewer);
 	void visualizeRandomFace(igl::opengl::glfw::Viewer &viewer, const int &faceID);
 	void visualizeDijkstraFace(igl::opengl::glfw::Viewer &viewer);
-	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer);
+	void visualizeSubdomain(igl::opengl::glfw::Viewer &viewer, const int id=0);
 	void visualizeSamples(igl::opengl::glfw::Viewer &viewer);
 	void visualizeSharedEdges(igl::opengl::glfw::Viewer &viewer);
 	void visualizeLocalSubdomain(igl::opengl::glfw::Viewer &viewer);
@@ -394,6 +394,7 @@ public:
 public: 
 	//Eigen::VectorXd					dijkstraFace, arbField, arbField2D, wb;
 	Eigen::VectorXd					localSystem;
+	vector<Eigen::VectorXd>			localSystems;
 	Eigen::VectorXd					eigValuesFull, eigValuesReduced;
 	Eigen::MatrixXd					eigFieldReduced2D, eigFieldFull2D;
 	Eigen::MatrixXd					eigFieldsLocal;

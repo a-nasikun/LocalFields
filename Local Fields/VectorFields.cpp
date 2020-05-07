@@ -3123,9 +3123,9 @@ void VectorFields::farthestPointSampling()
 
 	srand(time(NULL));
 	//Sample[0] = rand() % F.rows();
-	Sample[0] = 0;
+	//Sample[0] = 0;
 	//Sample[0] = 70267; // Arma 43k
-	//Sample[0] = 69298; // Arma 43k
+	Sample[0] = 69298; // Arma 43k
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
@@ -3188,7 +3188,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	for (int i = 0; i < F.rows(); i++) avg_area += doubleArea(i) / 2.0;
 	avg_area /= (double)F.rows();
 
-	this->numSupport = 40.0;
+	this->numSupport = 25.0;
 	bool adaptiveBasis = false;			// IMPORTANT FLAG!!!!!
 	if (adaptiveBasis) this->numSupport *= 4.0; 
 
@@ -3231,6 +3231,13 @@ void VectorFields::constructBasis_LocalEigenProblem()
 		//localSystem(fid) = 1-0.3725;
 		localSystem(fid) = 0;
 	}
+	const int numSubDoms = 50;
+	localSystems.resize(numSubDoms);
+	for (int i = 0; i < numSubDoms; ++i) {
+		//localSystems[i].resize(F.rows());
+		localSystems[i].setZero(F.rows());
+	}
+
 
 	int id, tid, ntids, ipts, istart, iproc;	
 
@@ -3372,6 +3379,13 @@ void VectorFields::constructBasis_LocalEigenProblem()
 				//localSystem(localField.sampleID) = 1.0;			
 			
 			}
+
+			if (id < numSubDoms) {
+				for (int fid : localField.SubDomain) {
+					localSystems[id](fid) = 0.3;
+				}
+			}
+
 
 			/* Localized eigenproblems */
 			//if (id == 15)
