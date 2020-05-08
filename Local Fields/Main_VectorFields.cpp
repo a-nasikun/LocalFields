@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_1083.obj";
 	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_10812.obj";	
-	string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
+	//string meshFile = "../LocalFields/Models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/894_dragon_tris.obj";
 	//string meshFile = "../LocalFields/Models/AIM894_Chinese Dragon/dragon_2000.obj";
 	//string meshFile = "../LocalFields/Models/AIM_fertility_watertight/fertility.obj";
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	///string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
-	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_2525.obj";
+	string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_5046.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Isidore_horse/424_Isidore_horse.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
@@ -207,13 +207,15 @@ int main(int argc, char *argv[])
 		case 'D':
 			if (subDomId > 0) subDomId--;
 			std::cout << "The id is" << subDomId << std::endl;
-			vectorFields.visualizeSubdomain(viewer, subDomId);
+			//vectorFields.visualizeSubdomain(viewer, subDomId);
+			vectorFields.visualizeFunctionAsFields(viewer, subDomId);
 			break;
 		case 'f':
 		case 'F':
 			if (subDomId <50) subDomId++;
 			std::cout << "The id is" << subDomId << std::endl;
-			vectorFields.visualizeSubdomain(viewer, subDomId);
+			//vectorFields.visualizeSubdomain(viewer, subDomId);
+			vectorFields.visualizeFunctionAsFields(viewer, subDomId);
 			break;
 
 		case '-':
@@ -297,13 +299,13 @@ int main(int argc, char *argv[])
 
 			if (fieldsType == FieldsType::VECTOR)
 			{
-				vectorFields.visualizeBasis(viewer, basisId);
 				printf("Showing the %d-th basis \n", basisId);
+				vectorFields.visualizeBasis(viewer, basisId);
 			}
 			else if (fieldsType == FieldsType::NROSY)
 			{
-				nRoSyFields.visualizeBasis(viewer, basisId);
 				printf("Showing the %d-th basis \n", basisId);
+				nRoSyFields.visualizeBasis(viewer, basisId);
 			}
 			else if (fieldsType == FieldsType::TENSOR)
 			{
@@ -311,8 +313,27 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case '4':
-			basisId = min(basisId + 1, 2*numSample-1);
-			vectorFields.visualizeBasis(viewer, basisId);
+			//basisId = min(basisId + 1, 2*numSample-1);
+			//
+			//
+			//vectorFields.visualizeBasis(viewer, basisId);
+
+			basisId = basisId++;
+
+			if (fieldsType == FieldsType::VECTOR)
+			{
+				printf("Showing the %d-th basis \n", basisId);
+				vectorFields.visualizeBasis(viewer, basisId);
+			}
+			else if (fieldsType == FieldsType::NROSY)
+			{
+				printf("Showing the %d-th basis \n", basisId);
+				nRoSyFields.visualizeBasis(viewer, basisId);
+			}
+			else if (fieldsType == FieldsType::TENSOR)
+			{
+
+			}
 			break;
 		case '5':
 			viewer.data().clear();
@@ -976,7 +997,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 1.0f; 
+	viewer.data().line_width = 3.0f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 

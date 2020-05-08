@@ -157,6 +157,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	double lengthScale = EDGE_RATIO*avgEdgeLength;
 //>>>>>>> master
 
+	std::cout << "Computing the rotation angle \n";
 	/* Computing the rotation angle for 1:3 ratio of arrow head */
 	double rotAngle = M_PI - atan(1.0 / 3.0);
 	Eigen::Matrix2d rotMat1, rotMat2;
@@ -166,10 +167,12 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	R2Triplet.reserve(2 * 2 * FaceToDraw.size());
 	Eigen::MatrixXd FCLoc(FaceToDraw.size(), 3);
 
+	std::cout << "Defining the rotation angle \n";
 	/* Defining the rotation matrix (2-by-2) on the local frame */
 	rotMat1 << cos(rotAngle), -sin(rotAngle), sin(rotAngle), cos(rotAngle);
 	rotMat2 << cos(-rotAngle), -sin(-rotAngle), sin(-rotAngle), cos(-rotAngle);
 
+	std::cout << "Selecting face to draw \n";
 	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
 		/* Rotation matrix for the first head */
@@ -190,6 +193,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	MRot1.setFromTriplets(R1Triplet.begin(), R1Triplet.end());
 	MRot2.setFromTriplets(R2Triplet.begin(), R2Triplet.end());
 
+	std::cout << "Getting local data \n";
 	/* Getting the local data from the population of data */
 	Eigen::SparseMatrix<double> ALoc(3 * FaceToDraw.size(), 2 * FaceToDraw.size());
 	vector<Eigen::Triplet<double>> ATriplet;
@@ -197,6 +201,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	Eigen::VectorXd fieldLoc(2 * FaceToDraw.size()), fields3D(3 * FaceToDraw.size()), rot1Field, rot2Field;
 	Eigen::MatrixXd TFields(FaceToDraw.size(), F.cols()), Head1Fields(FaceToDraw.size(), F.cols()), Head2Fields(FaceToDraw.size(), F.cols());
 
+	std::cout << "Local data \n";
 	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
 		/* Getting the selected ALoc from A */
@@ -213,12 +218,14 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 	ALoc.setFromTriplets(ATriplet.begin(), ATriplet.end());
 	fields3D = ALoc * fieldLoc;
 
+	std::cout << "Mapping \n";
 	/* The head of the arrows */
 	rot1Field = MRot1*fieldLoc;
 	rot1Field = ALoc * rot1Field;
 	rot2Field = MRot2*fieldLoc;
 	rot2Field = ALoc * rot2Field;
 
+	std::cout << "Matrix format \n";
 	/* Transform field to Matrix format */
 	for (int i = 0; i < FaceToDraw.size(); i++)
 	{
@@ -234,6 +241,7 @@ void VectorFields::visualize2Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 		Head1Fields.rowwise().normalize();
 		Head2Fields.rowwise().normalize();
 	}
+	std::cout << "Drawing \n";
 
 	/* Draw the fields in MATRIX format (much faster then looping over each face and draw them) */
 	//viewer.data().add_edges(FCLoc, FCLoc + TFields*lengthScale, color);
@@ -496,17 +504,26 @@ void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 		totalGrad += blockLength(i);
 	}
 
+	/* converting vector fields as matrix */
+	Eigen::MatrixXd VectorRow(F.rows(), 3);
+	VectorRow.setZero();
+	for (int i = 0; i < F.rows(); ++i) {
+		VectorRow.row(i) = field3D.block(3 * i, 0, 3, 1).transpose();
+	}
+
 	//averageGrad = totalGrad / (double)F.rows();
 	double lengthScale = 0.2*avgEdgeLength; // / averageGrad;
 
-	for (int i = 0; i < F.rows(); i++)
-	{
-		Eigen::RowVector3d c;
-		c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
-		//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
-		viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
-		//viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(1.0, 0.1, 0.2));
-	}
+	viewer.data().add_edges(FC, FC + lengthScale*VectorRow, color);
+
+	//for (int i = 0; i < F.rows(); i++)
+	//{
+	//	Eigen::RowVector3d c;
+	//	c = (V.row(F(i, 0)) + V.row(F(i, 1)) + V.row(F(i, 2))) / 3.0;
+	//	//viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, Eigen::RowVector3d(1.0, 0.1, 0.2));
+	//	viewer.data().add_edges(c, c + VectorBlock.row(i)*lengthScale, color);
+	//	//viewer.data().add_edges(c, c + VectorBlock.row(i).normalized()*avgEdgeLength, Eigen::RowVector3d(1.0, 0.1, 0.2));
+	//}
 }
 
 void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
@@ -530,7 +547,8 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 
 	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id/2]);
 	//visualize2DfieldsScaled(viewer, BasisTemp, bId, color);
-	visualize2Dfields(viewer, BasisTemp.col(bId), color, 1.0);
+	//visualize2Dfields(viewer, BasisTemp.col(bId), color, 1.0);
+	visualize2Dfields(viewer, Basis.col(bId), color, 1.0);
 
 	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
 	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
@@ -1252,19 +1270,19 @@ void VectorFields::visualizeSubdomain(igl::opengl::glfw::Viewer &viewer, const i
 	//	}
 	//}
 
-	printf("Local system: %d x %d \n", localSystem.rows(), localSystem.cols());
-	cout << localSystem.block(0, 0, 3, 3) << endl;
-	printf("Color system: %d x %d \n", vColor.rows(), vColor.cols());
-	cout << vColor.block(0, 0, 3, 3) << endl;
+	///printf("Local system: %d x %d \n", localSystem.rows(), localSystem.cols());
+	///cout << localSystem.block(0, 0, 3, 3) << endl;
+	///printf("Color system: %d x %d \n", vColor.rows(), vColor.cols());
+	///cout << vColor.block(0, 0, 3, 3) << endl;
 
 	
 	viewer.data().set_colors(vColor);
-	viewer.data().points.resize(0, 6);
+	//viewer.data().points.resize(0, 6);
 
 	int fId = Sample[id];
 	Eigen::RowVector3d fCoord = (V.row(F(fId, 0)) + V.row(F(fId, 1)) + V.row(F(fId, 2))) / 3.0;
 	viewer.data().point_size = 15.0;
-	viewer.data().add_points(fCoord, Eigen::RowVector3d(0.9, 0.1, 0.2));
+	//viewer.data().add_points(fCoord, Eigen::RowVector3d(0.9, 0.1, 0.2));
 	//viewer.data().set_colors(Eigen::RowVector3d(0.0, 1.0, 0.0));
 }
 

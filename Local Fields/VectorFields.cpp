@@ -3125,8 +3125,13 @@ void VectorFields::farthestPointSampling()
 	//Sample[0] = rand() % F.rows();
 	//Sample[0] = 0;
 	//Sample[0] = 70267; // Arma 43k
-	Sample[0] = 69298; // Arma 43k
+	//Sample[0] = 69298; // Arma 43k	(chest)
+	//Sample[0] = 36147; // Arma 43k	(right leg)
 	//Sample[0] = 5461;	// For Armadilo of 10k vertices
+	//Sample[0] = 9106;	// For Armadilo of 10k vertices
+	//Sample[0] = 910;	// For Armadilo of 1k vertices
+	Sample[0] = 4270;	// For Armadilo of 5k vertices
+
 
 	//computeDijkstraDistanceFaceForSampling(Sample[0], D);
 	//Eigen::VectorXi::Index maxIndex1;
@@ -3188,7 +3193,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	for (int i = 0; i < F.rows(); i++) avg_area += doubleArea(i) / 2.0;
 	avg_area /= (double)F.rows();
 
-	this->numSupport = 25.0;
+	this->numSupport = 10.0;
 	bool adaptiveBasis = false;			// IMPORTANT FLAG!!!!!
 	if (adaptiveBasis) this->numSupport *= 4.0; 
 

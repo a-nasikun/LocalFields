@@ -1474,8 +1474,8 @@ void VectorFields::TEST_VECTOR(igl::opengl::glfw::Viewer &viewer, const string& 
 
 	//string filename_vfields = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/CDragon_constraintFields_1.txt"; //farthest point constraint
 	cout << "\n========================= REDUCED/LOCAL-PROBLEM =============================\n";
-	numSample = 1000; 
-	numSupport = 40.0;
+	numSample = 250; 
+	numSupport = 10.0;
 	string model = "Armadillo_";	
 	//string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 	string filename_basis = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup_adaptiveScale_7.5";
@@ -2198,5 +2198,41 @@ void VectorFields::testSparseMatrix()
 		//Basis.data().clear();
 		Basis.data().squeeze();
 		Basis.setIdentity();
+	}
+}
+
+void VectorFields::visualizeFunctionAsFields(igl::opengl::glfw::Viewer &viewer, const int id)
+{
+	viewer.data().clear();
+	viewer.data().set_mesh(V, F);
+	viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.93333333));
+
+	/* Defining constant fields */
+	vector<Eigen::VectorXd> xyzFields(3);
+	xyzFields[0].setZero(3*F.rows());
+	xyzFields[1].setZero(3 * F.rows());
+	xyzFields[2].setZero(3 * F.rows());
+
+
+	/* Getting the magnitude of each field */
+	//Eigen::VectorXd basisField = Basis.col(2 * id);
+	Eigen::VectorXd basisField = Basis.col(0);
+
+	for (int i = 0; i < F.rows(); ++i) {
+		double magn = basisField.block(2 * i, 0, 2, 1).norm();
+		if (magn < 10 * std::numeric_limits<double>::epsilon()) continue;
+		for (int j = 0; j < 3; ++j) {
+			xyzFields[j](3 * i + j) = magn;
+		}
+	}
+		
+	if (id % 3 == 0) {
+		visualize3Dfields(viewer, xyzFields[0], Eigen::RowVector3d(155, 60, 46)/255.0);
+	}
+	else if (id % 3 == 1) {
+		visualize3Dfields(viewer, xyzFields[1], Eigen::RowVector3d(119, 139, 64)/255.0);
+	}
+	else {
+		visualize3Dfields(viewer, xyzFields[2], Eigen::RowVector3d(119, 158, 203)/255.0);
 	}
 }

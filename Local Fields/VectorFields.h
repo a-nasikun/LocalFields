@@ -265,6 +265,8 @@ public:
 	void testSpectra();
 	void testSparseMatrix();
 	
+	void visualizeFunctionAsFields(igl::opengl::glfw::Viewer &viewer, const int id = 0);
+
 	
 	// VISUALIZATION of TESTING
 	//void visualizeSparseMatrixInMatlab(const Eigen::SparseMatrix<double> &M);
