@@ -528,8 +528,9 @@ void VectorFields::visualize3Dfields(igl::opengl::glfw::Viewer &viewer, const Ei
 
 void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &id)
 {
-	//viewer.data().clear();
-	//viewer.data().set_mesh(V, F);
+	viewer.data().clear();
+	viewer.data().set_mesh(V, F);
+	viewer.data().line_width = 10.0;
 
 	int bId = id;
 	Eigen::RowVector3d color;
@@ -548,10 +549,13 @@ void VectorFields::visualizeBasis(igl::opengl::glfw::Viewer &viewer, const int &
 	printf("Showing the %d BasisTemp field (Sample=%d) \n", bId, Sample[id/2]);
 	//visualize2DfieldsScaled(viewer, BasisTemp, bId, color);
 	//visualize2Dfields(viewer, BasisTemp.col(bId), color, 1.0);
-	visualize2Dfields(viewer, Basis.col(bId), color, 1.0);
+	Eigen::VectorXd basisFields = Basis.col(bId);
+	visualize2DfieldsSlow(viewer, basisFields, color, 0.3);
+	//visualize2Dfields(viewer, Basis.col(bId), color, 1.0);
+	viewer.data().line_width = 2.5;
 
-	Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
-	viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
+	//Eigen::RowVector3d const c1 = (V.row(F(Sample[bId / 2], 0)) + V.row(F(Sample[bId / 2], 1)) + V.row(F(Sample[bId / 2], 2))) / 3.0;
+	//viewer.data().add_points(c1, Eigen::RowVector3d(0.1, 0.1, 0.1));
 }
 
 void VectorFields::visualizeBasisNormalized(igl::opengl::glfw::Viewer &viewer, const int &id)

@@ -3193,7 +3193,7 @@ void VectorFields::constructBasis_LocalEigenProblem()
 	for (int i = 0; i < F.rows(); i++) avg_area += doubleArea(i) / 2.0;
 	avg_area /= (double)F.rows();
 
-	this->numSupport = 10.0;
+	this->numSupport = 40.0;
 	bool adaptiveBasis = false;			// IMPORTANT FLAG!!!!!
 	if (adaptiveBasis) this->numSupport *= 4.0; 
 
