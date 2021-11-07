@@ -2573,7 +2573,8 @@ void TensorFields::performLifting(Eigen::VectorXd& voigtRed, Eigen::VectorXd& vo
 																									// The multiciplication
 	double alpha = 1.0;
 	double beta = 0.0;
-	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(liftHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, liftDescrA, d_liftCsrVal, d_liftCsrRowPtr, d_liftCsrColInd, d_a, &beta, d_b);
+	//cusparseStatus_t cusparseStat1 = cusparseDcsrmv(liftHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, liftDescrA, d_liftCsrVal, d_liftCsrRowPtr, d_liftCsrColInd, d_a, &beta, d_b);
+	cusparseStatus_t cusparseStat1 = cusparseDbsrmv(liftHandle, CUSPARSE_DIRECTION_ROW, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, liftDescrA, d_liftCsrVal, d_liftCsrRowPtr, d_liftCsrColInd, 1, d_a, &beta, d_b);
 	//cout << "__status:" << cusparseStat1 << endl;
 
 	// Copying to CPU
@@ -2653,7 +2654,9 @@ void TensorFields::performSubspaceProjection(Eigen::VectorXd& voigtFull, Eigen::
 																									// The multiciplication
 	double alpha = 1.0;
 	double beta = 0.0;
-	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(projHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, projDescrA, d_projCsrVal, d_projCsrRowPtr, d_projCsrColInd, d_a, &beta, d_b);
+	//cusparseStatus_t cusparseStat1 = cusparseDcsrmv(projHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, projDescrA, d_projCsrVal, d_projCsrRowPtr, d_projCsrColInd, d_a, &beta, d_b);
+	cusparseStatus_t cusparseStat1 = cusparseDbsrmv(projHandle, CUSPARSE_DIRECTION_ROW, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, projDescrA, d_projCsrVal, d_projCsrRowPtr, d_projCsrColInd, 1, d_a, &beta, d_b);
+
 	//cout << "__status:" << cusparseStat1 << endl;
 
 	// Copying to CPU
@@ -2735,7 +2738,8 @@ void TensorFields::performSettingRHS(Eigen::VectorXd& voigtRed, double lambda, E
 																									// The multiciplication
 	double alpha = lambda;
 	double beta = 0.0;
-	cusparseStatus_t cusparseStat1 = cusparseDcsrmv(rhsHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, rhsDescrA, d_rhsCsrVal, d_rhsCsrRowPtr, d_rhsCsrColInd, d_a, &beta, d_b);
+	//cusparseStatus_t cusparseStat1 = cusparseDcsrmv(rhsHandle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, rhsDescrA, d_rhsCsrVal, d_rhsCsrRowPtr, d_rhsCsrColInd, d_a, &beta, d_b);
+	cusparseStatus_t cusparseStat1 = cusparseDbsrmv(rhsHandle, CUSPARSE_DIRECTION_ROW, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, rhsDescrA, d_rhsCsrVal, d_rhsCsrRowPtr, d_rhsCsrColInd,1, d_a, &beta, d_b);
 	//cout << "__status:" << cusparseStat1 << endl;
 
 	// Copying to CPU
@@ -2825,18 +2829,18 @@ void TensorFields::initializeParametersForLHS()
 	//free(h_ScsrColInd);
 }
 
-void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> &LHS)
+void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double>& LHS)
 {
 	// Setting up some variable
 	cudaError_t			cudaStat1 = cudaSuccess;
 
-	
+
 	cusparseCreateMatDescr(&lhsDescrB);
 	cusparseSetMatType(lhsDescrB, CUSPARSE_MATRIX_TYPE_GENERAL);
 	cusparseSetMatIndexBase(lhsDescrB, CUSPARSE_INDEX_BASE_ZERO);
 
-	int baseC, nnzC;	
-	int *nnzTotalDevHostPtr = &nnzC; // nnzTotalDevHostPtr points to host memory
+	int baseC, nnzC;
+	int* nnzTotalDevHostPtr = &nnzC; // nnzTotalDevHostPtr points to host memory
 
 	/* Getting the size of the matrices */
 	const int nnzM = MFBarRow.nonZeros();
@@ -2852,19 +2856,34 @@ void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> 
 	cusparseCreateMatDescr(&lhsDescrC);
 	cusparseSetMatType(lhsDescrC, CUSPARSE_MATRIX_TYPE_GENERAL);
 	cusparseSetMatIndexBase(lhsDescrC, CUSPARSE_INDEX_BASE_ZERO);
-	double*							d_lhsCCsrVal;
-	int*							d_lhsCCsrRowPtr;
-	int*							d_lhsCCsrColInd;
-	int*							d_lhsCCooRowInd;
+	double* d_lhsCCsrVal;
+	int* d_lhsCCsrRowPtr;
+	int* d_lhsCCsrColInd;
+	int* d_lhsCCooRowInd;
 
 	cout << "Determining sparsity patter in the GPU \n";
 	/* Determining sparsity patter in the GPU */
 	cusparseSetPointerMode(lhsHandle, CUSPARSE_POINTER_MODE_HOST);
-	cudaMalloc((void**)&d_lhsCCsrRowPtr, sizeof(int)*(mM + 1));
-	cusparseXcsrgeamNnz(lhsHandle, mM, nM,
-		lhsDescrA, nnzM, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
-		lhsDescrB, nnzS, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
-		lhsDescrC, d_lhsCCsrRowPtr, nnzTotalDevHostPtr);
+	cudaMalloc((void**)&d_lhsCCsrRowPtr, sizeof(int) * (mM + 1));
+	// The old code from cuda 9.1
+	//cusparseXcsrgeamNnz(lhsHandle, mM, nM,
+	//	lhsDescrA, nnzM, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
+	//	lhsDescrB, nnzS, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
+	//	lhsDescrC, d_lhsCCsrRowPtr, nnzTotalDevHostPtr);
+
+	double alpha = 1.0;
+	//double beta = lambda;
+	double beta = 1.0;
+	size_t bufferSizeInBytes;
+	char* buffer = NULL;
+
+
+	cusparseDcsrgeam2_bufferSizeExt(lhsHandle, mM, nM, &alpha, lhsDescrA, nnzM, d_lhsMCsrVal, d_lhsMCsrRowPtr, d_lhsMCsrColInd, &beta, lhsDescrB, nnzS, d_lhsSCsrVal, d_lhsSCsrRowPtr, d_lhsSCsrColInd, lhsDescrC, d_solveCsrVal, d_solveCsrRowPtr, d_solveCsrColInd, &bufferSizeInBytes);
+	cudaMalloc((void**)&buffer, sizeof(char) * bufferSizeInBytes);
+
+	cusparseXcsrgeam2Nnz(lhsHandle, mM, nM, lhsDescrA, nnzM, d_lhsMCsrRowPtr, d_lhsMCsrColInd, lhsDescrB, nnzS, d_lhsSCsrRowPtr, d_lhsSCsrColInd, lhsDescrC, d_solveCsrRowPtr, nnzTotalDevHostPtr, buffer);
+
+
 	if (NULL != nnzTotalDevHostPtr) {
 		nnzC = *nnzTotalDevHostPtr;
 	}
@@ -2897,20 +2916,32 @@ void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> 
 	printf("Non-zeroes S:%d | M:%d | S+M: %d \n", nnzS, nnzM, nnzC);
 	cout << "Performing the computation of C = S + a*M \n";
 	/* Performing the computation of C = S + a*M */
-	double alpha = 1.0;
-	//double beta = lambda;
-	double beta = 1.0;
-	cudaMalloc((void**)&d_lhsCCsrColInd, sizeof(int)*nnzC);
-	cudaMalloc((void**)&d_lhsCCsrVal, sizeof(double)*nnzC);
-	cusparseDcsrgeam(lhsHandle, mM, nM,
-		&alpha, 
+	//double alpha = 1.0;
+	////double beta = lambda;
+	//double beta = 1.0;
+	cudaMalloc((void**)&d_lhsCCsrColInd, sizeof(int) * nnzC);
+	cudaMalloc((void**)&d_lhsCCsrVal, sizeof(double) * nnzC);
+	// OLD CUDA 9.1
+	//cusparseDcsrgeam(lhsHandle, mM, nM,
+	//	&alpha, 
+	//	lhsDescrA, nnzS,
+	//	d_lhsSCsrVal, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
+	//	&beta,
+	//	lhsDescrB, nnzM,
+	//	d_lhsMCsrVal, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
+	//	lhsDescrC,
+	//	d_lhsCCsrVal, d_lhsCCsrRowPtr, d_lhsCCsrColInd);
+
+	cusparseDcsrgeam2(lhsHandle, mM, nM,
+		&alpha,
 		lhsDescrA, nnzS,
 		d_lhsSCsrVal, d_lhsSCsrRowPtr, d_lhsSCsrColInd,
 		&beta,
 		lhsDescrB, nnzM,
 		d_lhsMCsrVal, d_lhsMCsrRowPtr, d_lhsMCsrColInd,
 		lhsDescrC,
-		d_lhsCCsrVal, d_lhsCCsrRowPtr, d_lhsCCsrColInd);
+		d_lhsCCsrVal, d_lhsCCsrRowPtr, d_lhsCCsrColInd, buffer);
+
 
 	cout << "Converting CSR to COO \n";
 	/* Converting CSR to COO */
@@ -2919,10 +2950,10 @@ void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> 
 
 	cout << "Copying to CPU \n";
 	/* COpy back to CPU */
-	double* h_CcsrVal   = (double*)malloc(nnzC * sizeof(double));
-	int*	h_CcooRowInd = (int*)malloc(nnzC * sizeof(int));
-	int*	h_CcsrColInd = (int*)malloc(nnzC * sizeof(int));
-	cudaMemcpy(h_CcsrVal   , d_lhsMCsrVal,   nnzM  * sizeof(double), cudaMemcpyDeviceToHost);
+	double* h_CcsrVal = (double*)malloc(nnzC * sizeof(double));
+	int* h_CcooRowInd = (int*)malloc(nnzC * sizeof(int));
+	int* h_CcsrColInd = (int*)malloc(nnzC * sizeof(int));
+	cudaMemcpy(h_CcsrVal, d_lhsMCsrVal, nnzM * sizeof(double), cudaMemcpyDeviceToHost);
 	cudaMemcpy(h_CcooRowInd, d_lhsCCooRowInd, nnzC * sizeof(int), cudaMemcpyDeviceToHost);
 	cudaMemcpy(h_CcsrColInd, d_lhsCCsrColInd, nnzC * sizeof(int), cudaMemcpyDeviceToHost);
 
@@ -2931,7 +2962,7 @@ void TensorFields::performSettingLHS(double lambda, Eigen::SparseMatrix<double> 
 	/* Setting the the LHS Matrix*/
 	vector<Eigen::Triplet<double>> LTriplet; LTriplet.reserve(nnzC);
 	LHS.resize(mS, nS);
-	
+
 	printf("LHS M=%d \n", nnzM);
 	for (int i = 0; i < nnzC; i++)
 	{

@@ -691,7 +691,10 @@ void SparseMatrix_Vector_Multiplication_CSR(Eigen::SparseMatrix<double, Eigen::R
 	double alpha = 1.0; 
 	double beta = 0.0;
 	
-	cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	//cusparseStat1 = cusparseDcsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, d_a, &beta, d_b);
+	//cusparseStatus_t 
+	cusparseStat1 = cusparseDbsrmv(handle, CUSPARSE_DIRECTION_ROW, CUSPARSE_OPERATION_NON_TRANSPOSE, m, n, nnz, &alpha, descrA, d_csrVal, d_csrRowPtr, d_csrColInd, 1, d_a, &beta, d_b);
+
 	//cout << "__status:" << cusparseStat1 << endl;
 	
 	//cout << "Copying to CPU \n";
