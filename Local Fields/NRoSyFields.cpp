@@ -1285,8 +1285,8 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 1.0 / 100000.0; 
 	//double scale = 0.001;
 	//double scale = 0.1;
-	double scale = 0.25;
-	//double scale = 2.0;
+	//double scale = 0.25;
+	double scale = 2.0;
 	//double scale = 2.5;
 	//double scale = 3.0;
 	//double scale = 5.0; 
@@ -1627,7 +1627,7 @@ void NRoSyFields::visualizeConstrainedFields(igl::opengl::glfw::Viewer &viewer)
 
 void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &viewer)
 {
-	///cout << "Visualizing the fields \n";
+	cout << "Visualizing the fields \n";
 	Eigen::RowVector3d color = Eigen::RowVector3d(0.9, 0.1, 0.1);
 	//visualizeRepVectorFields(viewer, Xf);
 
@@ -3115,8 +3115,8 @@ void NRoSyFields::gatherBasisElements(const vector<vector<Eigen::Triplet<double>
 /* ============================= REDUCED N-FIELDS DESIGN ============================= */
 void NRoSyFields::nRoSyFieldsDesign_Reduced()
 {
-	nRoSyFieldsDesign_Reduced_HardConstraints();
-	//nRoSyFieldsDesign_Reduced_SoftConstraints();
+	//nRoSyFieldsDesign_Reduced_HardConstraints();
+	nRoSyFieldsDesign_Reduced_SoftConstraints();
 }
 
 void NRoSyFields::nRoSyFieldsDesign_Reduced_HardConstraints()
@@ -3242,6 +3242,7 @@ void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, cons
 
 	cout << "Lifting: \n";
 	XfBar = Basis * XLowDim;
+	cout << "Lifting done: \n";
 }
 void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
 {
@@ -3763,9 +3764,9 @@ void NRoSyFields::measureAccuracy()
 
 
 /* ============================= Testing stuff ============================= */
-void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& meshFile)
+void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer& viewer, const string& meshFile)
 {
-	nRot = 4;
+	nRot = 2;
 	readMesh(meshFile);
 	//scaleMesh();
 	igl::doublearea(V, F, doubleArea);
@@ -3778,7 +3779,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	viewer.data().set_mesh(V, F);
 	viewer.data().show_lines = false;
 	viewer.selected_data_index = 0;
-	
+
 	computeAverageEdgeLength();
 	computeFaceCenter();
 	constructFaceAdjacency3NMatrix();
@@ -3797,7 +3798,7 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	selectFaceToDraw(5000);
 	//selectFaceToDraw(F.rows()/3.0);
 	Eigen::VectorXd inputNFields;
-	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/"+model+"_InputFields";
+	string fieldsfile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + "_InputFields";
 	//ReadVectorFromMatlab(inputNFields,fieldsfile, 2*F.rows());
 	//visualize2Dfields(viewer, inputNFields, Eigen::RowVector3d(0.1, 0.2, 0.2), 1.0);
 	//createNRoSyFromVectors(inputNFields, nRoSy);
@@ -3825,17 +3826,17 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	//Xf = eigFieldsNRoSyRef.col(0);
 
-	
+
 
 	/* Build reduced space */
 	numSupport = 40.0;
 	numSample = 1000;
 	constructSamples(numSample);
-	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
+	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample * 2) + "_Eigfields_" + to_string((int)numSupport) + "sup";
 	constructBasis();
 	//storeBasis(basisFile);
 	//retrieveBasis(basisFile);
-	BasisT = Basis.transpose(); 
+	BasisT = Basis.transpose();
 	//visualizeBasis(viewer, 0);
 
 	/* Projection */
@@ -3857,15 +3858,15 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//XfBar = outputF;
 
 	/* Prepare for n-fields design */
-	
+
 	//double weight = 0;
 	//for (int i = 0; i < doubleArea.size(); i += 2){
 	//	weight += doubleArea(i);
 	//}
 	//weight /= 2.0; 
 	//weight = 0.05;
-	
-	
+
+
 	lambda.resize(2);
 	lambda[0] = 1.0;
 	//lambda[1] = 0.5 / weight;	// perfect for armadillo (not-scaled)
@@ -3876,94 +3877,103 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	//lambda[1] = 0.0000000001 / weight;			//  for scaled rocker arm
 	lambda[1] = 0.000005;
 	//lambda[1] = 1.0 / weight;
-	BF = SF*MFinv*SF;
-	BF = 0.25*BF + SF;
+	BF = SF * MFinv * SF;
+	BF = 0.25 * BF + SF;
 
-	//Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
-	//const int factor1 = id.transpose()*BF*id;
-	//const int factor2 = id.transpose()*MF*id;
-	//lambda[1] = lambda[1]*factor1 / factor2; 
+	Eigen::VectorXd id(MF.rows()); id.setConstant(1.0);
+	const int factor1 = id.transpose()*BF*id;
+	const int factor2 = id.transpose()*MF*id;
+	lambda[1] = lambda[1]*factor1 / factor2; 
 
-	useAlignment = true; 
-	
-	createAlignmentField(alignFields);
-	convertRepVectorsToNRoSy(alignFields, nRoSy_);
-	///visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
-	string fileNRoSyRef = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
-	writeNRoSyFieldsToFile_Local(nRoSy_, fileNRoSyRef);
+	useAlignment = true;
 
-	constructAlignedDirFieldsRef(viewer);
-	convertRepVectorsToNRoSy(dirFieldsAlignment, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.1, 0.9));
-	convertRepVectorsToNRoSy(dirFields, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.9, 0.1));
+	/* Aligning toward a predefined fields */
+	if (true) {
+		createAlignmentField(alignFields);
+		convertRepVectorsToNRoSy(alignFields, nRoSy_);
+		///visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+		string fileNRoSyRef = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
+		writeNRoSyFieldsToFile_Local(nRoSy_, fileNRoSyRef);
 
-	/* Reduced systems */
-	constructAlignedDirFieldsRed();
-	convertRepVectorsToNRoSy(dirFieldsRed, nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.9, 0.1, 0.1));
-	string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
-	writeNRoSyFieldsToFile_Local(nRoSy_, fileNRoSyRed);
 
-	/* TO SETUP REDUCED SYSTEM FOR FIELDS DESIGN*/
-	/*
-	if (useAlignment) BM =  lambda[0]*BF + lambda[1] * MF;
-	else BM = BF; 
-	
-	//BM = lambda[0] * BF;
-	//BFBar = Basis.transpose()*BF*Basis;
-	//BMBar = BFBar;
-	*/
-	XfBar = alignFields;
-	Xf = alignFields;
-	
-	convertRepVectorsToNRoSy(alignFields, nRoSy_);
-	sendFieldsToMailSlot_PerFace(nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
-	//visualizeConstrainedFields_Reduced(viewer);
-	
-	B2DBar = Basis.transpose()*BF*Basis;
-	MFBar = Basis.transpose()*MF*Basis;
-	MvBar = Basis.transpose()*MF*alignFields;
+		constructAlignedDirFieldsRef(viewer);
+		convertRepVectorsToNRoSy(dirFieldsAlignment, nRoSy_);
+		//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.1, 0.9));
+		convertRepVectorsToNRoSy(dirFields, nRoSy_);
+		//visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.1, 0.9, 0.1));
 
-	preComputeReducedElements();
-	initializeParametersForLifting();
-	
-	
 
-	/* =========== N-ROSY FIELDS DESIGN ===============*/
-	/* Constrained fields (biharmonic) */
-	//nRoSyFieldsDesignRef();
-	//visualizeConstraints(viewer);
-	//visualizeConstrainedFields(viewer);
-	
-	///* Reduced Constrained fields (biharmonic)--hard constraints */
-	//constructRandomHardConstraints(C, c);
-	//nRoSyFieldsDesign_Reduced();
-	//visualizeConstrainedFields_Reduced(viewer);
-	//visualizeConstraints(viewer);
-	//measureAccuracy();
+		/* Reduced alignment systems */
+		constructAlignedDirFieldsRed();
+		convertRepVectorsToNRoSy(dirFieldsRed, nRoSy_);
+		visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.9, 0.1, 0.1));
+		string fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
+		//writeNRoSyFieldsToFile_Local(nRoSy_, fileNRoSyRed);
+	}
 
-	/* Constrained fields (SOFT constraints) */
-	//constructSoftConstraints();
-	//nRoSyFieldsDesignRef();
-	//visualizeSoftConstraints(viewer);
-	//visualizeConstrainedFields(viewer);
+	if (true) {
 
-	
-	//nRoSyFieldsDesign_Reduced();
-	//measureAccuracy();
-	
+		/* TO SETUP REDUCED SYSTEM FOR FIELDS DESIGN*/
+		/*
+		if (useAlignment) BM =  lambda[0]*BF + lambda[1] * MF;
+		else BM = BF;
 
-	/* Writing fields to file */
-	//NRoSy nRoSy_temp; 
-	//convertRepVectorsToNRoSy(Xf, nRoSy_temp);
-	//fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
-	//writeNRoSyFieldsToFile_Local(nRoSy_temp, fileNRoSyRef);
-	//
-	//convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
-	//fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
-	//writeNRoSyFieldsToFile_Local(nRoSy_temp, fileNRoSyRed);
+		//BM = lambda[0] * BF;
+		//BFBar = Basis.transpose()*BF*Basis;
+		//BMBar = BFBar;
+		*/
+		XfBar = alignFields;
+		Xf = alignFields;
+
+		///convertRepVectorsToNRoSy(alignFields, nRoSy_);
+		///sendFieldsToMailSlot_PerFace(nRoSy_);				// THIS HAS TO WORK!
+		///visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+		//visualizeConstrainedFields_Reduced(viewer);
+
+		B2DBar = Basis.transpose() * BF * Basis;
+		MFBar = Basis.transpose() * MF * Basis;
+		MvBar = Basis.transpose() * MF * alignFields;
+
+		preComputeReducedElements();
+		initializeParametersForLifting();
+
+
+
+		/* =========== N-ROSY FIELDS DESIGN ===============*/
+		/* Constrained fields (biharmonic) */
+		//nRoSyFieldsDesignRef();
+		//visualizeConstraints(viewer);
+		//visualizeConstrainedFields(viewer);
+
+		///* Reduced Constrained fields (biharmonic)--hard constraints */
+		constructRandomHardConstraints(C, c);
+		nRoSyFieldsDesign_Reduced();
+		//visualizeConstrainedFields_Reduced(viewer);
+		//visualizeConstraints(viewer);
+		//measureAccuracy();
+
+	}
+
+/* Constrained fields (SOFT constraints) */
+//constructSoftConstraints();
+//nRoSyFieldsDesignRef();
+//visualizeSoftConstraints(viewer);
+//visualizeConstrainedFields(viewer);
+
+
+//nRoSyFieldsDesign_Reduced();
+//measureAccuracy();
+
+
+/* Writing fields to file */
+//NRoSy nRoSy_temp; 
+//convertRepVectorsToNRoSy(Xf, nRoSy_temp);
+//fileNRoSyRef= "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_ref.txt";
+//writeNRoSyFieldsToFile_Local(nRoSy_temp, fileNRoSyRef);
+//
+//convertRepVectorsToNRoSy(XfBar, nRoSy_temp);
+//fileNRoSyRed = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/VFields/" + model + to_string(nRot) + "_dirFields_red.txt";
+//writeNRoSyFieldsToFile_Local(nRoSy_temp, fileNRoSyRed);
 
 }
 
@@ -4512,6 +4522,7 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	//for (int i = 0; i < nRot; i++)
 	for (int i = 0; i < FIELD_TO_WRITE; i++)			// Send only 1 fields
 	{
+		std::cout << "Send data \n";
 		nFields[i].resize(2 * F.rows()); 
 		for (int j = 0; j<F.rows(); j++)
 		{
@@ -4527,6 +4538,7 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 		}
 	}
 
+	std::cout << "Work in world coordiantes \n";
 	/* Work in world coordinate*/
 	vector<Eigen::VectorXd> nFields3d(nRot);
 	//for (int j = 0; j < nRot; j++)
@@ -4538,6 +4550,7 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	/* Creating the mailslot */
 	string mailslot_address = "\\\\.\\mailslot\\sandy";
 	HANDLE msHandle;	
+	std::cout << "Creating mailslot \n";
 	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
 	if (msHandle == INVALID_HANDLE_VALUE){
 		printf("CreateMailslot failed: %d\n", GetLastError());
@@ -4549,12 +4562,14 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	BOOL     err;
 	DWORD    numWritten;
 
+	std::cout << "Specify data \n";
 	/* Specifying the mailslot data */
 	const int data_size = sizeof(float);
 	//unsigned char *myMessage = (unsigned char*)malloc(3 * F.rows() * data_size);
 	float *myMessage = (float*)malloc(3 * F.rows() * data_size);
 
 
+	std::cout << "Write data\n";
 	/* Writing to mailslot */
 	//for (int j = 0; j < FIELD_TO_WRITE; j++)
 	//{
@@ -4574,6 +4589,7 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
 	//printf("[%d] Data written %d \n", retWrite, numWritten);
 
+	std::cout << "Terminate \n";
 	CloseHandle(msHandle);
 
 	t2 = chrono::high_resolution_clock::now();

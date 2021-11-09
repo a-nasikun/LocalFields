@@ -14,7 +14,7 @@ int saveId = 2;
 bool singularConstraint = false; 
 
 enum class FieldsType {VECTOR, NROSY, TENSOR};
-FieldsType fieldsType = FieldsType::VECTOR;
+FieldsType fieldsType = FieldsType::NROSY;
 
 
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_4k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Thorus/Thorus_73k.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_5000.obj";
-	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
+	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Kitten-watertight/366_kitten_final.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Vase-lion/177_vase-lion.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Ramesses_clean_watertight/814_Ramesses_1.5Mtriangles_clean.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Bimba_1M faces_clean_watertight/bimba.obj";	
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus5_33k.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/HighGenus/Genus2_60k.obj";
 	///string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Brezel/Brezel_1920.obj";
-	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
+	string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_43243.obj";
 	//string meshFile = "D:/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/Armadillo/Armadillo_5046.obj";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Neptune_clean__watertight_4M triangles/803_neptune_4Mtriangles_manifold.off";
 	//string meshFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/EigenTrial/models/AIM_Isidore_horse/424_Isidore_horse.off";
@@ -223,9 +223,9 @@ int main(int argc, char *argv[])
 			//vectorFields.visualize2Dfields(viewer, vectorFields.projRef, Eigen::RowVector3d(0.0, 0.9, 0.1), 2.0, true);
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);	
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.8, 0.1, 0.8), 3.0, false);
-			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(180.0/255.0, 173.0/255.0, 234.0 / 255.0), 3.0, false);
+			vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(180.0/255.0, 173.0/255.0, 234.0 / 255.0), 3.0, false);
 			//vectorFields.visualize2Dfields(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
-			vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
+			//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wbEigen, Eigen::RowVector3d(0.0 / 255.0, 200.0 / 255.0, 0.0 / 255.0), 3.0, false);
 			///vectorFields.selectAdaptiveRegions(viewer);
 			//vectorFields.visualizeGlobalConstraints(viewer); 	
 			break;
@@ -239,9 +239,9 @@ int main(int argc, char *argv[])
 			if (fieldsType == FieldsType::VECTOR)
 			{				
 				//vectorFields.visualizeSubdomain(viewer);
-				//vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
+				vectorFields.visualize2DfieldsScaled(viewer, vectorFields.arbField2D, Eigen::RowVector3d(0.1, 0.1, 0.8), 1.0);			
 				//vectorFields.visualizeApproximatedFields(viewer);
-				vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
+				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.0, 0.1, 0.8), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
 				//vectorFields.visualizeSingularitiesConstraints(viewer);				
 				
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 				///vectorFields.visualize2Dfields(viewer, vectorFields.pertFields, Eigen::RowVector3d(0.0, 0.9, 0.1), 3.0, false);
 				//vectorFields.visualizeApproxResult(viewer);
 				
-				//vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
+				vectorFields.visualize2Dfields(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.wb, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualize2DfieldsSlow(viewer, vectorFields.Xf, Eigen::RowVector3d(0.8, 0.1, 0.1), 3.0, false);
 				//vectorFields.visualizeGlobalConstraints(viewer);
@@ -997,7 +997,7 @@ int main(int argc, char *argv[])
 	Eigen::Vector4f bgCol(1.0, 1.0, 1.0, 1.0);
 	viewer.core.background_color = bgCol;	
 	viewer.data().point_size = 10.0f;
-	viewer.data().line_width = 10.0f; 
+	viewer.data().line_width = 2.0f; 
 	//viewer.data().set_colors(Eigen::RowVector3d(0.93333333, 0.93333333, 0.9333333));
 	return viewer.launch();
 
