@@ -1291,6 +1291,7 @@ void NRoSyFields::visualizeNRoSyFields(igl::opengl::glfw::Viewer &viewer, const 
 	//double scale = 5.0; 
 	//double scale = 50.0;
 	//double scale = 250.0; 
+	//double scale = 50000.0;
 	Eigen::Vector2d b(1, 0);
 	
 
@@ -1637,8 +1638,11 @@ void NRoSyFields::visualizeConstrainedFields_Reduced(igl::opengl::glfw::Viewer &
 	NRoSy nRoSy_;
 	//visualizeRepVectorFields(viewer, XfBar, color);
 	//viewer.data().lines.resize(0,9);
+	std::cout << "Converting XfBar for visualization \n";
 	convertRepVectorsToNRoSy(XfBar, nRoSy_);
+	std::cout << "Visualizing XfBar \n";
 	visualizeNRoSyFields(viewer, nRoSy_, color);
+	std::cout << "After visualization. \n";
 }
 
 void NRoSyFields::visualizeConstraints(igl::opengl::glfw::Viewer &viewer)
@@ -3239,7 +3243,11 @@ void NRoSyFields::solveBiharmSystem_Reduced(const Eigen::VectorXd& vEstBar, cons
 	cout << "vEst Bar: " << vEstBar.block(0, 0, 10, 1) << endl; 
 
 	cout << "Lifting: \n";
+	std::cout << "XLowDim: \n" << XLowDim.topLeftCorner(10, 10) << std::endl << std::endl;
+	std::cout << "Basis: \n" << Basis.topLeftCorner(10, 10) << std::endl << std::endl;
 	XfBar = Basis * XLowDim;
+	std::cout << "XfBar: \n" << XfBar.topLeftCorner(10, 10) << std::endl << std::endl;
+
 }
 void NRoSyFields::nRoSyFieldsDesign_Reduced_Splines()
 {
@@ -3829,9 +3837,10 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	numSample = 1000;
 	constructSamples(numSample);
 	string basisFile = "D:/Nasikun/4_SCHOOL/TU Delft/Research/Projects/LocalFields/Data/Basis/Basis_" + model + to_string(nRot) + "-fields_" + to_string(numSample*2) + "_Eigfields_"+ to_string((int)numSupport) + "sup";
-	//constructBasis();
+	constructBasis();
+	std::cout << "Basis: \n" << Basis.topLeftCorner(10, 10) << std::endl << std::endl;
 	//storeBasis(basisFile);
-	retrieveBasis(basisFile);
+	//retrieveBasis(basisFile);
 	BasisT = Basis.transpose(); 
 	//visualizeBasis(viewer, 0);
 
@@ -3894,9 +3903,9 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 	
 	XfBar = alignFields;
 	Xf = alignFields;
-	convertRepVectorsToNRoSy(alignFields, nRoSy_);
-	sendFieldsToMailSlot_PerFace(nRoSy_);
-	visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
+	////convertRepVectorsToNRoSy(alignFields, nRoSy_);
+	////sendFieldsToMailSlot_PerFace(nRoSy_);
+	////visualizeNRoSyFields(viewer, nRoSy_, Eigen::RowVector3d(0.8, 0.1, 0.1));
 	//visualizeConstrainedFields_Reduced(viewer);
 	
 	B2DBar = Basis.transpose()*BF*Basis;
@@ -3909,22 +3918,28 @@ void NRoSyFields::TEST_NROSY(igl::opengl::glfw::Viewer &viewer, const string& me
 
 	/* =========== N-ROSY FIELDS DESIGN ===============*/
 	/* Constrained fields (biharmonic) */
-	//nRoSyFieldsDesignRef();
-	//visualizeConstraints(viewer);
-	//visualizeConstrainedFields(viewer);
-	
+	bool isShowReferenceFields = false;
+	if (isShowReferenceFields) {
+		nRoSyFieldsDesignRef();
+		visualizeConstraints(viewer);
+		visualizeConstrainedFields(viewer);
+	}
+
 	///* Reduced Constrained fields (biharmonic)--hard constraints */
-	//constructRandomHardConstraints(C, c);
-	//nRoSyFieldsDesign_Reduced();
-	//visualizeConstrainedFields_Reduced(viewer);
-	//visualizeConstraints(viewer);
-	//measureAccuracy();
+	////constructRandomHardConstraints(C, c);
+	////nRoSyFieldsDesign_Reduced();
+	////std::cout << "Try to visualize the fields \n";
+	////visualizeConstrainedFields_Reduced(viewer);
+	////std::cout << "Try to visualize the constraints \n";
+	////visualizeConstraints(viewer);
+	////std::cout << "Can visualize the constraints \n";
+	//////measureAccuracy();
 
 	/* Constrained fields (SOFT constraints) */
-	//constructSoftConstraints();
-	//nRoSyFieldsDesignRef();
-	//visualizeSoftConstraints(viewer);
-	//visualizeConstrainedFields(viewer);
+	constructSoftConstraints();
+	nRoSyFieldsDesignRef();
+	visualizeSoftConstraints(viewer);
+	visualizeConstrainedFields(viewer);
 
 	
 	//nRoSyFieldsDesign_Reduced();
@@ -4473,7 +4488,7 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	chrono::duration<double>					duration;
 	t1 = chrono::high_resolution_clock::now();
 	//cout << "> Sending files via mailslot... ";
-	cout << "> MailSlot... ";
+	cout << "> MailSlot per face... ";
 
 	/* Converting the n-Rosy to collection of 1-fields */
 	double scale = 1.0;
@@ -4509,14 +4524,16 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 	}
 		
 	/* Creating the mailslot */
-	string mailslot_address = "\\\\.\\mailslot\\sandy";
+	string mailslot_address = "\\\\.\\mailslot\\sandy2";
 	HANDLE msHandle;	
 	msHandle = CreateFile(mailslot_address.c_str(), GENERIC_WRITE, FILE_SHARE_READ, (LPSECURITY_ATTRIBUTES)NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)NULL);
 	if (msHandle == INVALID_HANDLE_VALUE){
 		printf("CreateMailslot failed: %d\n", GetLastError());
+		std::cout << mailslot_address << std::endl;
 	}
 	else {
-		//printf("Successfully create the handle\n");
+		std::cout << mailslot_address;
+		printf(" Successfully create the handle\n");
 	}
 	static LPTSTR message = "1.0";
 	BOOL     err;
@@ -4545,7 +4562,7 @@ void NRoSyFields::sendFieldsToMailSlot_PerFace(const NRoSy& nRoSy)
 
 
 	int retWrite = WriteFile(msHandle, myMessage, 3 * F.rows() * data_size, &numWritten, 0);
-	//printf("[%d] Data written %d \n", retWrite, numWritten);
+	printf("[%d] Data written %d \n", retWrite, numWritten);
 
 	CloseHandle(msHandle);
 
